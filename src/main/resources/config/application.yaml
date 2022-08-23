@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: sensitivity-analysis-server
+
+  cloud:
+    function:
+      definition: consumeRun;consumeCancel
+    stream:
+      bindings:
+        consumeRun-in-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}sensitivityanalysis.run
+          group: sensitivityanalysisGroup
+        publishRun-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}sensitivityanalysis.run
+        publishResult-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}sensitivityanalysis.result
+        consumeCancel-in-0:
+            destination: ${powsybl-ws.rabbitmq.destination.prefix:}sensitivityanalysis.cancel
+        publishCancel-out-0:
+            destination: ${powsybl-ws.rabbitmq.destination.prefix:}sensitivityanalysis.cancel
+        publishStopped-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}sensitivityanalysis.stopped
+        publishFailed-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}sensitivityanalysis.failed
+      source: publishRun;publishResult;publishCancel;publishStopped;publishFailed
+
+dbName: sensitivityanalysis
+
+# default values for loadflow providers "Hades2" or "OpenLoadFlow"
+loadflow:
+  default-provider: OpenLoadFlow
