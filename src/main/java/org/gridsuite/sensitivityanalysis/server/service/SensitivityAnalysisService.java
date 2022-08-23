@@ -11,7 +11,6 @@ import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -37,7 +36,6 @@ public class SensitivityAnalysisService {
         this.objectMapper = Objects.requireNonNull(objectMapper);
     }
 
-    @Transactional
     public UUID runAndSaveResult(SensitivityAnalysisRunContext runContext) {
         Objects.requireNonNull(runContext);
         var resultUuid = uuidGeneratorService.generate();
@@ -68,7 +66,6 @@ public class SensitivityAnalysisService {
         resultRepository.insertStatus(resultUuids, status);
     }
 
-    @Transactional
     public void stop(UUID resultUuid, String receiver) {
         notificationService.sendCancelMessage(new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
     }

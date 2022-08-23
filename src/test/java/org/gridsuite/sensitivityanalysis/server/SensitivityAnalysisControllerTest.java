@@ -38,6 +38,7 @@ import com.powsybl.sensitivity.SensitivityValue;
 import com.powsybl.sensitivity.SensitivityVariableType;
 import lombok.SneakyThrows;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.gridsuite.sensitivityanalysis.server.service.ReportService;
@@ -64,6 +65,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -72,7 +74,6 @@ import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -128,6 +129,7 @@ public class SensitivityAnalysisControllerTest {
 
     private static final UUID VARIABLES_LIST_UUID = UUID.randomUUID();
     private static final UUID VARIABLES_LIST_UUID_VARIANT = UUID.randomUUID();
+    private static final UUID VARIABLES_LIST_UUID_MERGING_VIEW = UUID.randomUUID();
 
     private static final List<IdentifiableAttributes> VARIABLES = List.of(
         new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR),
@@ -138,9 +140,11 @@ public class SensitivityAnalysisControllerTest {
         new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR),
         new IdentifiableAttributes("LOAD", IdentifiableType.LOAD)
     );
+    private static final List<IdentifiableAttributes> VARIABLES_MERGING_VIEW = Collections.emptyList();
 
     private static final UUID QUADS_LIST_UUID = UUID.randomUUID();
     private static final UUID QUADS_LIST_UUID_VARIANT = UUID.randomUUID();
+    private static final UUID QUADS_LIST_UUID_MERGING_VIEW = UUID.randomUUID();
 
     private static final List<IdentifiableAttributes> QUADS = List.of(
         new IdentifiableAttributes("v1", IdentifiableType.LINE),
@@ -152,6 +156,7 @@ public class SensitivityAnalysisControllerTest {
         new IdentifiableAttributes("v1", IdentifiableType.TWO_WINDINGS_TRANSFORMER),
         new IdentifiableAttributes("v2", IdentifiableType.LINE)
     );
+    private static final List<IdentifiableAttributes> QUADS_MERGING_VIEW = Collections.emptyList();
 
     private static final List<SensitivityFactor> SENSITIVITY_FACTORS = List.of(new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l",
         SensitivityVariableType.INJECTION_ACTIVE_POWER, "g",
@@ -222,11 +227,11 @@ public class SensitivityAnalysisControllerTest {
         Network otherNetworkForMergingView = new NetworkFactoryImpl().createNetwork("other", "test 2");
         given(networkStoreService.getNetwork(OTHER_NETWORK_FOR_MERGING_VIEW_UUID, PreloadingStrategy.COLLECTION)).willReturn(otherNetworkForMergingView);
 
+        Network network1 = EurostagTutorialExample1Factory.createWithMoreGenerators(new NetworkFactoryImpl());
+        network1.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_2_ID);
         when(networkStoreService.getNetwork(NETWORK_STOP_UUID, PreloadingStrategy.COLLECTION)).thenAnswer((Answer<?>) invocation -> {
             //Needed so the stop call doesn't arrive too late
             Thread.sleep(2000);
-            Network network1 = new NetworkFactoryImpl().createNetwork("other", "test");
-            network1.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_2_ID);
             return network1;
         });
 
@@ -263,10 +268,8 @@ public class SensitivityAnalysisControllerTest {
             .willReturn(VARIABLES);
         given(filterService.getIdentifiablesFromFilter(VARIABLES_LIST_UUID, NETWORK_STOP_UUID, VARIANT_2_ID))
             .willReturn(VARIABLES);
-        given(filterService.getIdentifiablesFromFilter(VARIABLES_LIST_UUID, NETWORK_FOR_MERGING_VIEW_UUID, null))
-            .willReturn(VARIABLES);
-        given(filterService.getIdentifiablesFromFilter(VARIABLES_LIST_UUID, OTHER_NETWORK_FOR_MERGING_VIEW_UUID, null))
-            .willReturn(VARIABLES);
+        given(filterService.getIdentifiablesFromFilter(VARIABLES_LIST_UUID_MERGING_VIEW, NETWORK_UUID, null))
+            .willReturn(VARIABLES_MERGING_VIEW);
 
         // filter service mocking for quads
         given(filterService.getIdentifiablesFromFilter(QUADS_LIST_UUID, NETWORK_UUID, VARIANT_1_ID))
@@ -279,10 +282,8 @@ public class SensitivityAnalysisControllerTest {
             .willReturn(QUADS);
         given(filterService.getIdentifiablesFromFilter(QUADS_LIST_UUID, NETWORK_STOP_UUID, VARIANT_2_ID))
             .willReturn(QUADS);
-        given(filterService.getIdentifiablesFromFilter(QUADS_LIST_UUID, NETWORK_FOR_MERGING_VIEW_UUID, null))
-            .willReturn(QUADS);
-        given(filterService.getIdentifiablesFromFilter(QUADS_LIST_UUID, OTHER_NETWORK_FOR_MERGING_VIEW_UUID, null))
-            .willReturn(QUADS);
+        given(filterService.getIdentifiablesFromFilter(QUADS_LIST_UUID_MERGING_VIEW, NETWORK_UUID, null))
+            .willReturn(QUADS_MERGING_VIEW);
 
         // report service mocking
         doAnswer(i -> null).when(reportService).sendReport(any(), any());
@@ -296,6 +297,7 @@ public class SensitivityAnalysisControllerTest {
         given(runner.runAsync(eq(network), eq(VARIANT_1_ID), anyList(), anyList(), anyList(), any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class))).willReturn(CompletableFuture.completedFuture(RESULT));
         given(runner.runAsync(eq(network), eq(VARIANT_2_ID), anyList(), anyList(), anyList(), any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class))).willReturn(CompletableFuture.completedFuture(RESULT));
         given(runner.runAsync(eq(network), eq(VARIANT_3_ID), anyList(), anyList(), anyList(), any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class))).willReturn(CompletableFuture.completedFuture(RESULT_VARIANT));
+        given(runner.runAsync(eq(network1), eq(VARIANT_2_ID), anyList(), anyList(), anyList(), any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class))).willReturn(CompletableFuture.completedFuture(RESULT));
         workerService.setSensitivityAnalysisFactorySupplier(provider -> runner);
 
         // purge messages
@@ -316,8 +318,8 @@ public class SensitivityAnalysisControllerTest {
     @SneakyThrows
     @After
     public void tearDown() {
-//        mockMvc.perform(delete("/" + VERSION + "/results"))
-//            .andExpect(status().isOk());
+        mockMvc.perform(delete("/" + VERSION + "/results"))
+            .andExpect(status().isOk());
     }
 
     @Test
@@ -385,7 +387,7 @@ public class SensitivityAnalysisControllerTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
-        assertEquals(RESULT_UUID.toString(), result.getResponse().getContentAsString());
+        assertEquals(RESULT_UUID, mapper.readValue(result.getResponse().getContentAsString(), UUID.class));
 
         output.receive(TIMEOUT, "sensitivityanalysis.result");
 
@@ -401,12 +403,12 @@ public class SensitivityAnalysisControllerTest {
     public void mergingViewTest() {
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/run?contingencyListUuid=" + CONTINGENCY_LIST_UUID +
-                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&quadFiltersListUuid=" + QUADS_LIST_UUID +
+                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID_MERGING_VIEW + "&quadFiltersListUuid=" + QUADS_LIST_UUID_MERGING_VIEW +
                     "&networkUuid=" + OTHER_NETWORK_FOR_MERGING_VIEW_UUID, NETWORK_FOR_MERGING_VIEW_UUID))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
-        assertEquals(mapper.writeValueAsString(RESULT), result.getResponse().getContentAsString());
+        assertEquals("", result.getResponse().getContentAsString());
     }
 
     @SneakyThrows
@@ -415,9 +417,8 @@ public class SensitivityAnalysisControllerTest {
         MvcResult result = mockMvc.perform(get(
                 "/" + VERSION + "/results/{resultUuid}/status", RESULT_UUID))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
-        assertNull(result.getResponse().getContentAsString());
+        assertEquals("", result.getResponse().getContentAsString());
 
         mockMvc.perform(put("/" + VERSION + "/results/invalidate-status?resultUuid=" + RESULT_UUID))
             .andExpect(status().isOk());
@@ -427,7 +428,7 @@ public class SensitivityAnalysisControllerTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
-        assertEquals("NOT_DONE", result.getResponse().getContentAsString());
+        assertEquals(SensitivityAnalysisStatus.NOT_DONE.name(), result.getResponse().getContentAsString());
     }
 
     @SneakyThrows
@@ -440,7 +441,7 @@ public class SensitivityAnalysisControllerTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
-        assertEquals(RESULT_UUID.toString(), result.getResponse().getContentAsString());
+        assertEquals(RESULT_UUID, mapper.readValue(result.getResponse().getContentAsString(), UUID.class));
 
         mockMvc.perform(put("/" + VERSION + "/results/{resultUuid}/stop" + "?receiver=me", RESULT_UUID))
             .andExpect(status().isOk());
@@ -461,7 +462,7 @@ public class SensitivityAnalysisControllerTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
-        assertEquals(RESULT_UUID.toString(), result.getResponse().getContentAsString());
+        assertEquals(RESULT_UUID, mapper.readValue(result.getResponse().getContentAsString(), UUID.class));
 
         // Message stopped has been sent
         Message<byte[]> cancelMessage = output.receive(TIMEOUT, "sensitivityanalysis.failed");

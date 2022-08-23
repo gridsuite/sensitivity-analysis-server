@@ -13,7 +13,6 @@ import org.gridsuite.sensitivityanalysis.server.RestTemplateConfig;
 import org.gridsuite.sensitivityanalysis.server.entities.GlobalStatusEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.ResultEntity;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.UncheckedIOException;
@@ -48,24 +47,21 @@ public class SensitivityAnalysisResultRepository {
         return new GlobalStatusEntity(resultUuid, status);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void insertStatus(List<UUID> resultUuids, String status) {
         Objects.requireNonNull(resultUuids);
-        System.out.println("******** insertStatus : resultUuid = " + resultUuids.get(0) + " status = " + status);
         globalStatusRepository.saveAll(resultUuids.stream()
             .map(uuid -> toStatusEntity(uuid, status)).collect(Collectors.toList()));
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void insert(UUID resultUuid, SensitivityAnalysisResult result) {
         Objects.requireNonNull(resultUuid);
         Objects.requireNonNull(result);
 
         try {
-            System.out.println("******** insert : resultUuid = " + resultUuid + " result = " + objectMapper.writeValueAsString(result));
             resultRepository.save(toResultEntity(resultUuid, objectMapper.writeValueAsString(result)));
         } catch (JsonProcessingException e) {
-            System.out.println("******** insert : exception !!!!");
             throw new UncheckedIOException(e);
         }
     }
@@ -86,7 +82,6 @@ public class SensitivityAnalysisResultRepository {
     @Transactional(readOnly = true)
     public String find(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        System.out.println("******** find : resultUuid = " + resultUuid);
         ResultEntity resultEntity = resultRepository.findByResultUuid(resultUuid);
         return resultEntity != null ? resultEntity.getResult() : null;
     }
@@ -98,7 +93,6 @@ public class SensitivityAnalysisResultRepository {
         if (globalEntity != null) {
             return globalEntity.getStatus();
         } else {
-            System.out.println("********** find status : not found !!!!!!");
             return null;
         }
     }

@@ -32,7 +32,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
@@ -206,7 +205,6 @@ public class SensitivityAnalysisWorkerService {
             CompletableFuture<SensitivityAnalysisResult> future = futures.get(cancelContext.getResultUuid());
             if (future != null) {
                 future.cancel(true);  // cancel computation in progress
-
                 cleanSensitivityAnalysisResultsAndPublishCancel(cancelContext.getResultUuid(), cancelContext.getReceiver());
             }
         } finally {
@@ -250,7 +248,6 @@ public class SensitivityAnalysisWorkerService {
             } catch (Exception e) {
                 if (!(e instanceof CancellationException)) {
                     notificationService.publishFail(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver(), e.getMessage());
-                    LOGGER.info("********* Exception thrown !!!!");
                     resultRepository.delete(resultContext.getResultUuid());
                 }
             } finally {
@@ -262,7 +259,6 @@ public class SensitivityAnalysisWorkerService {
     }
 
     @Bean
-    @Transactional
     public Consumer<Message<String>> consumeCancel() {
         return message -> cancelSensitivityAnalysisAsync(SensitivityAnalysisCancelContext.fromMessage(message));
     }

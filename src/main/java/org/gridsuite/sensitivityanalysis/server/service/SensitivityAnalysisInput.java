@@ -6,9 +6,12 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.contingency.ContingencyContext;
+import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.IdentifiableType;
+import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.sensitivity.SensitivityFactor;
 import com.powsybl.sensitivity.SensitivityFunctionType;
@@ -61,9 +64,19 @@ public class SensitivityAnalysisInput {
                 Double sum = 0D;
                 for (IdentifiableAttributes identifiableAttributes : variablesList) {
                     if (identifiableAttributes.getType() == IdentifiableType.GENERATOR) {
-                        sum += network.getGenerator(identifiableAttributes.getId()).getMaxP();
+                        Generator generator = network.getGenerator(identifiableAttributes.getId());
+                        if (generator != null) {
+                            sum += generator.getMaxP();
+                        } else {
+                            throw new PowsyblException("Generator '" + identifiableAttributes.getId() + "' not found !!");
+                        }
                     } else if (identifiableAttributes.getType() == IdentifiableType.LOAD) {
-                        sum += network.getLoad(identifiableAttributes.getId()).getP0();
+                        Load load = network.getLoad(identifiableAttributes.getId());
+                        if (load != null) {
+                            sum += load.getP0();
+                        } else {
+                            throw new PowsyblException("Load '" + identifiableAttributes.getId() + "' not found !!");
+                        }
                     }
                 }
 
@@ -97,25 +110,23 @@ public class SensitivityAnalysisInput {
 
         quadFilters.forEach(identifiableAttributes -> {
             // for each quad, generation of one sensitivitiy factor for each variable set generated before in buildSensitivityVariableSets method
-            variableSets.forEach(variableSet -> {
-                factors.add(new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1,
-                                      identifiableAttributes.getId(),
-                                      SensitivityVariableType.INJECTION_ACTIVE_POWER,
-                                      variableSet.getId(),
-                                      true,
-                                      contingencies.isEmpty() ? ContingencyContext.none() : ContingencyContext.all()));
-            });
-
-            // for each quad, one sensitivity factor for each identifiable (TD or HVDC) memorized before in buildSensitivityVariableSets method
-            identifiables.forEach(identifiable -> {
+            variableSets.forEach(variableSet ->
                 factors.add(new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1,
                     identifiableAttributes.getId(),
-                    identifiable.getType() == IdentifiableType.TWO_WINDINGS_TRANSFORMER || identifiable.getType() == IdentifiableType.THREE_WINDINGS_TRANSFORMER
-                        ? SensitivityVariableType.TRANSFORMER_PHASE : SensitivityVariableType.HVDC_LINE_ACTIVE_POWER,
-                    identifiable.getId(),
-                    false,
-                    contingencies.isEmpty() ? ContingencyContext.none() : ContingencyContext.all()));
-            });
+                    SensitivityVariableType.INJECTION_ACTIVE_POWER,
+                    variableSet.getId(),
+                    true,
+                    contingencies.isEmpty() ? ContingencyContext.none() : ContingencyContext.all()))
+            );
+
+            // for each quad, one sensitivity factor for each identifiable (TD or HVDC) memorized before in buildSensitivityVariableSets method
+            identifiables.forEach(identifiable -> factors.add(new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1,
+                identifiableAttributes.getId(),
+                identifiable.getType() == IdentifiableType.TWO_WINDINGS_TRANSFORMER || identifiable.getType() == IdentifiableType.THREE_WINDINGS_TRANSFORMER
+                    ? SensitivityVariableType.TRANSFORMER_PHASE : SensitivityVariableType.HVDC_LINE_ACTIVE_POWER,
+                identifiable.getId(),
+                false,
+                contingencies.isEmpty() ? ContingencyContext.none() : ContingencyContext.all())));
         });
     }
 

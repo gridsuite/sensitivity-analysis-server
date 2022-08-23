@@ -44,13 +44,11 @@ public class NotificationService {
     @Autowired
     private StreamBridge publisher;
 
-    @PostCompletion
     public void sendRunMessage(Message<String> message) {
         RUN_MESSAGE_LOGGER.debug("Sending message : {}", message);
         publisher.send("publishRun-out-0", message);
     }
 
-    @PostCompletion
     public void sendCancelMessage(Message<String> message) {
         CANCEL_MESSAGE_LOGGER.debug("Sending message : {}", message);
         publisher.send("publishCancel-out-0", message);
