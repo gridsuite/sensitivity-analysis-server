@@ -100,9 +100,10 @@ public class SensitivityAnalysisController {
     @Operation(summary = "Get a sensitivity analysis result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis result"),
                            @ApiResponse(responseCode = "404", description = "Sensitivity analysis result has not been found")})
-    public ResponseEntity<SensitivityAnalysisResult> getResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        SensitivityAnalysisResult result = service.getResult(resultUuid);
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result);
+    public ResponseEntity<String> getResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+        String result = service.getResult(resultUuid);
+        return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result)
+            : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping(value = "/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)

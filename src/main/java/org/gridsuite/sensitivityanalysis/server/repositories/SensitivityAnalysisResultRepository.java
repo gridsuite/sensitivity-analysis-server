@@ -8,11 +8,12 @@ package org.gridsuite.sensitivityanalysis.server.repositories;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
+import org.gridsuite.sensitivityanalysis.server.RestTemplateConfig;
 import org.gridsuite.sensitivityanalysis.server.entities.GlobalStatusEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.ResultEntity;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.UncheckedIOException;
@@ -31,7 +32,7 @@ public class SensitivityAnalysisResultRepository {
 
     private ResultRepository resultRepository;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = RestTemplateConfig.objectMapper();
 
     public SensitivityAnalysisResultRepository(GlobalStatusRepository globalStatusRepository,
                                                ResultRepository resultRepository) {
@@ -47,7 +48,7 @@ public class SensitivityAnalysisResultRepository {
         return new GlobalStatusEntity(resultUuid, status);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void insertStatus(List<UUID> resultUuids, String status) {
         Objects.requireNonNull(resultUuids);
         System.out.println("******** insertStatus : resultUuid = " + resultUuids.get(0) + " status = " + status);
@@ -55,7 +56,7 @@ public class SensitivityAnalysisResultRepository {
             .map(uuid -> toStatusEntity(uuid, status)).collect(Collectors.toList()));
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void insert(UUID resultUuid, SensitivityAnalysisResult result) {
         Objects.requireNonNull(resultUuid);
         Objects.requireNonNull(result);
@@ -83,19 +84,11 @@ public class SensitivityAnalysisResultRepository {
     }
 
     @Transactional(readOnly = true)
-    public SensitivityAnalysisResult find(UUID resultUuid) {
+    public String find(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         System.out.println("******** find : resultUuid = " + resultUuid);
         ResultEntity resultEntity = resultRepository.findByResultUuid(resultUuid);
-        if (resultEntity != null) {
-            try {
-                return objectMapper.readValue(resultEntity.getResult(), SensitivityAnalysisResult.class);
-            } catch (JsonProcessingException e) {
-                throw new UncheckedIOException(e);
-            }
-        } else {
-            throw new PowsyblException("Sensitivity analysis result not found !!");
-        }
+        return resultEntity != null ? resultEntity.getResult() : null;
     }
 
     @Transactional(readOnly = true)

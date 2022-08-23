@@ -14,6 +14,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.io.Serializable;
 import java.util.UUID;
 
 /**
@@ -24,16 +25,11 @@ import java.util.UUID;
 @NoArgsConstructor
 @Entity
 @Table(name = "result")
-public class ResultEntity extends AbstractManuallyAssignedIdentifierEntity<UUID> {
+public class ResultEntity implements Serializable {
 
     @Id
     private UUID resultUuid;
 
     @Column(name = "result", columnDefinition = "CLOB")
     private String result;
-
-    @Override
-    public UUID getId() {
-        return resultUuid;
-    }
 }

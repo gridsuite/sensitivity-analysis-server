@@ -7,7 +7,6 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +48,7 @@ public class SensitivityAnalysisService {
         return resultUuid;
     }
 
-    public SensitivityAnalysisResult getResult(UUID resultUuid) {
+    public String getResult(UUID resultUuid) {
         return resultRepository.find(resultUuid);
     }
 

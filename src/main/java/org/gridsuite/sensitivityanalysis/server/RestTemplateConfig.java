@@ -41,13 +41,13 @@ public class RestTemplateConfig {
         return restTemplate;
     }
 
-    public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
+    private MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
         converter.setObjectMapper(objectMapper());
         return converter;
     }
 
-    private ObjectMapper createObjectMapper() {
+    private static ObjectMapper createObjectMapper() {
         var objectMapper = Jackson2ObjectMapperBuilder.json().build();
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         objectMapper.registerModule(new ContingencyJsonModule());
@@ -60,7 +60,7 @@ public class RestTemplateConfig {
     }
 
     @Bean
-    public ObjectMapper objectMapper() {
+    public static ObjectMapper objectMapper() {
         return createObjectMapper();
     }
 }

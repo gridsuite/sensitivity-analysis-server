@@ -357,8 +357,6 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(RESULT_UUID.toString(), resultMessage.getHeaders().get("resultUuid"));
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
 
-        Thread.sleep(3000);
-
         result = mockMvc.perform(get(
                 "/" + VERSION + "/results/{resultUuid}", RESULT_UUID))
             .andExpect(status().isOk())
