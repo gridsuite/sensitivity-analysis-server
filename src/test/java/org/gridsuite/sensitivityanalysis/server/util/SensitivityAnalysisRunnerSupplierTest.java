@@ -6,11 +6,9 @@
  */
 package org.gridsuite.sensitivityanalysis.server.util;
 
-import com.powsybl.commons.PowsyblException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -23,17 +21,11 @@ import static org.junit.Assert.*;
 @SpringBootTest
 public class SensitivityAnalysisRunnerSupplierTest {
 
-    @Value("${loadflow.default-provider}")
-    String defaultLoadflowProvider;
-
     @Autowired
     SensitivityAnalysisRunnerSupplier sensitivityAnalysisRunnerSupplier;
 
     @Test
     public void test() {
-        assertEquals("OpenLoadFlow", sensitivityAnalysisRunnerSupplier.getRunner("OpenLoadFlow").getName());
-        assertEquals(defaultLoadflowProvider, sensitivityAnalysisRunnerSupplier.getRunner(null).getName());
-        PowsyblException e = assertThrows(PowsyblException.class, () -> sensitivityAnalysisRunnerSupplier.getRunner("XXX"));
-        assertEquals("SensitivityAnalysisProvider 'XXX' not found", e.getMessage());
+        assertEquals("Sensi2", sensitivityAnalysisRunnerSupplier.getRunner(null).getName());
     }
 }
