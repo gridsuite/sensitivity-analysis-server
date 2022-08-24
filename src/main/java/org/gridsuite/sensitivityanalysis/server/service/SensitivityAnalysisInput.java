@@ -109,7 +109,7 @@ public class SensitivityAnalysisInput {
             .collect(Collectors.toList());
 
         quadFilters.forEach(identifiableAttributes -> {
-            // for each quad, generation of one sensitivitiy factor for each variable set generated before in buildSensitivityVariableSets method
+            // for each quad, generation of one sensitivity factor for each variable set generated before in buildSensitivityVariableSets method
             variableSets.forEach(variableSet ->
                 factors.add(new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1,
                     identifiableAttributes.getId(),

@@ -246,6 +246,7 @@ public class SensitivityAnalysisWorkerService {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
+                LOGGER.error(FAIL_MESSAGE, e);
                 if (!(e instanceof CancellationException)) {
                     notificationService.publishFail(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver(), e.getMessage());
                     resultRepository.delete(resultContext.getResultUuid());

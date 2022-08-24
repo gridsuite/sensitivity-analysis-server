@@ -69,11 +69,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -209,29 +213,42 @@ public class SensitivityAnalysisControllerTest {
     private final RestTemplateConfig restTemplateConfig = new RestTemplateConfig();
     private final ObjectMapper mapper = restTemplateConfig.objectMapper();
 
+    private ExecutorService executorService = Executors.newCachedThreadPool();
+    private CountDownLatch waitStartSensitivityAnalysis;
+    private CountDownLatch blockSensitivityAnalysis;
+
+    private Network network;
+    private Network network1;
+    private Network networkForMergingView;
+    private Network otherNetworkForMergingView;
+
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
 
         // network store service mocking
-        Network network = EurostagTutorialExample1Factory.createWithMoreGenerators(new NetworkFactoryImpl());
+        network = EurostagTutorialExample1Factory.createWithMoreGenerators(new NetworkFactoryImpl());
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_1_ID);
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_2_ID);
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_3_ID);
 
         given(networkStoreService.getNetwork(NETWORK_UUID, PreloadingStrategy.COLLECTION)).willReturn(network);
 
-        Network networkForMergingView = new NetworkFactoryImpl().createNetwork("mergingView", "test");
+        networkForMergingView = new NetworkFactoryImpl().createNetwork("mergingView", "test");
         given(networkStoreService.getNetwork(NETWORK_FOR_MERGING_VIEW_UUID, PreloadingStrategy.COLLECTION)).willReturn(networkForMergingView);
 
-        Network otherNetworkForMergingView = new NetworkFactoryImpl().createNetwork("other", "test 2");
+        otherNetworkForMergingView = new NetworkFactoryImpl().createNetwork("other", "test 2");
         given(networkStoreService.getNetwork(OTHER_NETWORK_FOR_MERGING_VIEW_UUID, PreloadingStrategy.COLLECTION)).willReturn(otherNetworkForMergingView);
 
-        Network network1 = EurostagTutorialExample1Factory.createWithMoreGenerators(new NetworkFactoryImpl());
+        waitStartSensitivityAnalysis = new CountDownLatch(1);
+        blockSensitivityAnalysis = new CountDownLatch(1);
+
+        network1 = EurostagTutorialExample1Factory.createWithMoreGenerators(new NetworkFactoryImpl());
         network1.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_2_ID);
         when(networkStoreService.getNetwork(NETWORK_STOP_UUID, PreloadingStrategy.COLLECTION)).thenAnswer((Answer<?>) invocation -> {
             //Needed so the stop call doesn't arrive too late
-            Thread.sleep(2000);
+            waitStartSensitivityAnalysis.countDown();
+            blockSensitivityAnalysis.await();
             return network1;
         });
 
@@ -431,22 +448,29 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(SensitivityAnalysisStatus.NOT_DONE.name(), result.getResponse().getContentAsString());
     }
 
-    @SneakyThrows
     @Test
-    public void stopTest() {
-        MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run-and-save?contingencyListUuid=" + CONTINGENCY_LIST_UUID +
-                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&quadFiltersListUuid=" + QUADS_LIST_UUID +
-                    "&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_STOP_UUID))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
-        assertEquals(RESULT_UUID, mapper.readValue(result.getResponse().getContentAsString(), UUID.class));
+    public void stopTest() throws Exception {
+        CompletableFuture.runAsync(() -> {
+            try {
+                mockMvc.perform(post(
+                    "/" + VERSION + "/networks/{networkUuid}/run-and-save?contingencyListUuid=" + CONTINGENCY_LIST_UUID +
+                        "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&quadFiltersListUuid=" + QUADS_LIST_UUID +
+                        "&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_STOP_UUID))
+                    .andExpect(status().isOk());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, executorService);
 
+        // stop sensitivity analysis
+        waitStartSensitivityAnalysis.await();
+        assertNotNull(output.receive(TIMEOUT, "sensitivityanalysis.run"));
         mockMvc.perform(put("/" + VERSION + "/results/{resultUuid}/stop" + "?receiver=me", RESULT_UUID))
             .andExpect(status().isOk());
+        assertNotNull(output.receive(TIMEOUT, "sensitivityanalysis.cancel"));
 
-        Message<byte[]> message = output.receive(TIMEOUT * 3, "sensitivityanalysis.stopped");
+        Message<byte[]> message = output.receive(TIMEOUT, "sensitivityanalysis.stopped");
+        assertNotNull(message);
         assertEquals(RESULT_UUID.toString(), message.getHeaders().get("resultUuid"));
         assertEquals("me", message.getHeaders().get("receiver"));
         assertEquals(CANCEL_MESSAGE, message.getHeaders().get("message"));

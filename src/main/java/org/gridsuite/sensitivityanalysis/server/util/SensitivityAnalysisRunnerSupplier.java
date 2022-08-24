@@ -6,7 +6,6 @@
  */
 package org.gridsuite.sensitivityanalysis.server.util;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.powsybl.sensitivity.SensitivityAnalysis;
@@ -17,14 +16,8 @@ import com.powsybl.sensitivity.SensitivityAnalysis;
 @Service
 public class SensitivityAnalysisRunnerSupplier {
 
-    @Value("${loadflow.default-provider}")
-    private String defaultProvider;
-
     public SensitivityAnalysis.Runner getRunner(String provider) {
-        if (provider != null) {
-            return SensitivityAnalysis.find(provider);
-        } else {
-            return SensitivityAnalysis.find(defaultProvider);
-        }
+        // at the moment, we use the default sensitivity analysis provider
+        return SensitivityAnalysis.find();
     }
 }
