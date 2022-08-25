@@ -22,6 +22,7 @@ import com.powsybl.sensitivity.SensitivityAnalysis;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityFactor;
 import com.powsybl.sensitivity.SensitivityVariableSet;
+import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
@@ -99,20 +100,24 @@ public class SensitivityAnalysisWorkerService {
         this.sensitivityAnalysisFactorySupplier = Objects.requireNonNull(sensitivityAnalysisFactorySupplier);
     }
 
-    private Network getNetwork(UUID networkUuid) {
+    private Network getNetwork(UUID networkUuid, String variantId) {
+        Network network;
         try {
-            return networkStoreService.getNetwork(networkUuid, PreloadingStrategy.COLLECTION);
+            network = networkStoreService.getNetwork(networkUuid, PreloadingStrategy.COLLECTION);
+            String variant = StringUtils.isBlank(variantId) ? VariantManagerConstants.INITIAL_VARIANT_ID : variantId;
+            network.getVariantManager().setWorkingVariant(variant);
         } catch (PowsyblException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
+        return network;
     }
 
-    private Network getNetwork(UUID networkUuid, List<UUID> otherNetworkUuids) {
-        Network network = getNetwork(networkUuid);
+    private Network getNetwork(UUID networkUuid, List<UUID> otherNetworkUuids, String variantId) {
+        Network network = getNetwork(networkUuid, variantId);
         if (otherNetworkUuids.isEmpty()) {
             return network;
         } else {
-            List<Network> otherNetworks = otherNetworkUuids.stream().map(this::getNetwork).collect(Collectors.toList());
+            List<Network> otherNetworks = otherNetworkUuids.stream().map(uuid -> getNetwork(uuid, variantId)).collect(Collectors.toList());
             List<Network> networks = new ArrayList<>();
             networks.add(network);
             networks.addAll(otherNetworks);
@@ -141,7 +146,7 @@ public class SensitivityAnalysisWorkerService {
             context.getContingencyListUuids().stream().collect(Collectors.toList()),
             context.getVariablesFiltersListUuids().stream().collect(Collectors.toList()),
             context.getQuadFiltersListUuids().stream().collect(Collectors.toList()));
-        Network network = getNetwork(context.getNetworkUuid(), context.getOtherNetworkUuids());
+        Network network = getNetwork(context.getNetworkUuid(), context.getOtherNetworkUuids(), context.getVariantId());
 
         SensitivityAnalysisInput sensitivityAnalysisInput = new SensitivityAnalysisInput(network, context, actionsService, filterService);
         sensitivityAnalysisInput.build();
