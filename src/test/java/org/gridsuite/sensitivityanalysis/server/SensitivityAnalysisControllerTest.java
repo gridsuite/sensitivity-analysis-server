@@ -135,7 +135,10 @@ public class SensitivityAnalysisControllerTest {
     private static final List<IdentifiableAttributes> VARIABLES = List.of(
         new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR),
         new IdentifiableAttributes("GEN2", IdentifiableType.GENERATOR),
-        new IdentifiableAttributes("LOAD", IdentifiableType.LOAD)
+        new IdentifiableAttributes("LOAD", IdentifiableType.LOAD),
+        new IdentifiableAttributes("2WT", IdentifiableType.TWO_WINDINGS_TRANSFORMER),
+        new IdentifiableAttributes("3WT", IdentifiableType.THREE_WINDINGS_TRANSFORMER),
+        new IdentifiableAttributes("HVDC", IdentifiableType.HVDC_LINE)
     );
     private static final List<IdentifiableAttributes> VARIABLES_VARIANT = List.of(
         new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR),
