@@ -205,8 +205,8 @@ public class SensitivityAnalysisWorkerService {
             CompletableFuture<SensitivityAnalysisResult> future = futures.get(cancelContext.getResultUuid());
             if (future != null) {
                 future.cancel(true);  // cancel computation in progress
-                cleanSensitivityAnalysisResultsAndPublishCancel(cancelContext.getResultUuid(), cancelContext.getReceiver());
             }
+            cleanSensitivityAnalysisResultsAndPublishCancel(cancelContext.getResultUuid(), cancelContext.getReceiver());
         } finally {
             lockRunAndCancelSensitivityAnalysis.unlock();
         }

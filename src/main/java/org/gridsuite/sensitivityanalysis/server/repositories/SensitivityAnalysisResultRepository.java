@@ -57,10 +57,9 @@ public class SensitivityAnalysisResultRepository {
     @Transactional
     public void insert(UUID resultUuid, SensitivityAnalysisResult result) {
         Objects.requireNonNull(resultUuid);
-        Objects.requireNonNull(result);
 
         try {
-            resultRepository.save(toResultEntity(resultUuid, objectMapper.writeValueAsString(result)));
+            resultRepository.save(toResultEntity(resultUuid, result != null ? objectMapper.writeValueAsString(result) : null));
         } catch (JsonProcessingException e) {
             throw new UncheckedIOException(e);
         }
