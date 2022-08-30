@@ -26,5 +26,6 @@ spring:
 
 dbName: sensitivityanalysis
 
-sensitivity-analysis:
-  default-impl-name: Sensi2
+# default values for loadflow providers "Hades2" or "OpenLoadFlow"
+loadflow:
+  default-provider: Hades2
