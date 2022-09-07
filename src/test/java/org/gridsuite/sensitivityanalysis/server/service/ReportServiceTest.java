@@ -22,12 +22,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.client.RestClientException;
 
 import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -38,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 public class ReportServiceTest {
 
     private static final UUID REPORT_UUID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
+    private static final UUID REPORT_ERROR_UUID = UUID.fromString("9928181c-7977-4592-ba19-88027e4254e4");
 
     private static final String REPORT_JSON = "{\"version\":\"1.0\",\"reportTree\":{\"taskKey\":\"test\"},\"dics\":{\"default\":{\"test\":\"a test\"}}}";
 
@@ -71,6 +74,8 @@ public class ReportServiceTest {
                 if (requestPath.equals(String.format("/v1/reports/%s", REPORT_UUID))) {
                     assertEquals(REPORT_JSON, request.getBody().readUtf8());
                     return new MockResponse().setResponseCode(HttpStatus.OK.value());
+                } else if (requestPath.equals(String.format("/v1/reports/%s", REPORT_ERROR_UUID))) {
+                    return new MockResponse().setResponseCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
                 } else {
                     return new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value()).setBody("Path not supported: " + request.getPath());
                 }
@@ -88,5 +93,6 @@ public class ReportServiceTest {
     public void test() {
         Reporter reporter = new ReporterModel("test", "a test");
         reportService.sendReport(REPORT_UUID, reporter);
+        assertThrows(RestClientException.class, () -> reportService.sendReport(REPORT_ERROR_UUID, reporter));
     }
 }
