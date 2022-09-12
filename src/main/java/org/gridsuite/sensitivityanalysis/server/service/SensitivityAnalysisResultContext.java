@@ -69,7 +69,7 @@ public class SensitivityAnalysisResultContext {
         List<UUID> otherNetworkUuids = getHeaderList(headers, "otherNetworkUuids");
         List<UUID> contingencyListUuids = getHeaderList(headers, "contingencyListUuids");
         List<UUID> variablesFiltersListUuids = getHeaderList(headers, "variablesFiltersListUuids");
-        List<UUID> quadFiltersListUuids = getHeaderList(headers, "quadFiltersListUuids");
+        List<UUID> branchFiltersListUuids = getHeaderList(headers, "branchFiltersListUuids");
 
         String receiver = (String) headers.get("receiver");
         String provider = (String) headers.get("provider");
@@ -81,7 +81,7 @@ public class SensitivityAnalysisResultContext {
         }
         UUID reportUuid = headers.containsKey(REPORT_UUID) ? UUID.fromString((String) headers.get(REPORT_UUID)) : null;
         SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid,
-            variantId, otherNetworkUuids, variablesFiltersListUuids, contingencyListUuids, quadFiltersListUuids,
+            variantId, otherNetworkUuids, variablesFiltersListUuids, contingencyListUuids, branchFiltersListUuids,
             receiver, provider, parameters, reportUuid);
         return new SensitivityAnalysisResultContext(resultUuid, runContext);
     }
@@ -100,7 +100,7 @@ public class SensitivityAnalysisResultContext {
                 .setHeader("otherNetworkUuids", runContext.getOtherNetworkUuids().stream().map(UUID::toString).collect(Collectors.joining(",")))
                 .setHeader("contingencyListUuids", runContext.getContingencyListUuids().stream().map(UUID::toString).collect(Collectors.joining(",")))
                 .setHeader("variablesFiltersListUuids", runContext.getVariablesFiltersListUuids().stream().map(UUID::toString).collect(Collectors.joining(",")))
-                .setHeader("quadFiltersListUuids", runContext.getQuadFiltersListUuids().stream().map(UUID::toString).collect(Collectors.joining(",")))
+                .setHeader("branchFiltersListUuids", runContext.getBranchFiltersListUuids().stream().map(UUID::toString).collect(Collectors.joining(",")))
                 .setHeader("receiver", runContext.getReceiver())
                 .setHeader("provider", runContext.getProvider())
                 .setHeader(REPORT_UUID, runContext.getReportUuid())

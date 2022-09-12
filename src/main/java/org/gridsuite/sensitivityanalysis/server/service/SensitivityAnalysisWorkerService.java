@@ -76,7 +76,7 @@ public class SensitivityAnalysisWorkerService {
 
     private Set<UUID> runRequests = Sets.newConcurrentHashSet();
 
-    private Lock lockRunAndCancelSensitivityAnalysis = new ReentrantLock();
+    private final Lock lockRunAndCancelSensitivityAnalysis = new ReentrantLock();
 
     @Autowired
     NotificationService notificationService;
@@ -142,10 +142,10 @@ public class SensitivityAnalysisWorkerService {
     private SensitivityAnalysisResult run(SensitivityAnalysisRunContext context, UUID resultUuid) throws ExecutionException, InterruptedException {
         Objects.requireNonNull(context);
 
-        LOGGER.info("Run sensitivity analysis :\nwith contingency lists: {}\nwith variables filters lists: {}\nwith quads filters lists: {}",
+        LOGGER.info("Run sensitivity analysis :\nwith contingency lists: {}\nwith variables filters lists: {}\nwith branch filters lists: {}",
             context.getContingencyListUuids().stream().collect(Collectors.toList()),
             context.getVariablesFiltersListUuids().stream().collect(Collectors.toList()),
-            context.getQuadFiltersListUuids().stream().collect(Collectors.toList()));
+            context.getBranchFiltersListUuids().stream().collect(Collectors.toList()));
         Network network = getNetwork(context.getNetworkUuid(), context.getOtherNetworkUuids(), context.getVariantId());
 
         SensitivityAnalysisInput sensitivityAnalysisInput = new SensitivityAnalysisInput(network, context, actionsService, filterService);

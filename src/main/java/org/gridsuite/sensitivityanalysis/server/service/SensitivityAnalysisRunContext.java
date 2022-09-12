@@ -27,7 +27,7 @@ public class SensitivityAnalysisRunContext {
 
     private final List<UUID> contingencyListUuids;
 
-    private final List<UUID> quadFiltersListUuids;
+    private final List<UUID> branchFiltersListUuids;
 
     private final String receiver;
 
@@ -39,14 +39,14 @@ public class SensitivityAnalysisRunContext {
 
     public SensitivityAnalysisRunContext(UUID networkUuid, String variantId, List<UUID> otherNetworkUuids,
                                          List<UUID> variablesFiltersListUuids, List<UUID> contingencyListUuids,
-                                         List<UUID> quadFiltersListUuids,
+                                         List<UUID> branchFiltersListUuids,
                                          String receiver, String provider, SensitivityAnalysisParameters parameters, UUID reportUuid) {
         this.networkUuid = Objects.requireNonNull(networkUuid);
         this.variantId = variantId;
         this.otherNetworkUuids = Objects.requireNonNull(otherNetworkUuids);
         this.variablesFiltersListUuids = Objects.requireNonNull(variablesFiltersListUuids);
         this.contingencyListUuids = Objects.requireNonNull(contingencyListUuids);
-        this.quadFiltersListUuids = Objects.requireNonNull(quadFiltersListUuids);
+        this.branchFiltersListUuids = Objects.requireNonNull(branchFiltersListUuids);
         this.receiver = receiver;
         this.provider = provider;
         this.parameters = Objects.requireNonNull(parameters);
@@ -73,8 +73,8 @@ public class SensitivityAnalysisRunContext {
         return contingencyListUuids;
     }
 
-    public List<UUID> getQuadFiltersListUuids() {
-        return quadFiltersListUuids;
+    public List<UUID> getBranchFiltersListUuids() {
+        return branchFiltersListUuids;
     }
 
     public String getReceiver() {

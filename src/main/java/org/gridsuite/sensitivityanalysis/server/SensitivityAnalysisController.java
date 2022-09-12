@@ -64,13 +64,13 @@ public class SensitivityAnalysisController {
                                                          @Parameter(description = "Other networks UUID (to merge with main one))") @RequestParam(name = "networkUuid", required = false) List<UUID> otherNetworkUuids,
                                                          @Parameter(description = "Variables filters list uuids") @RequestParam(name = "variablesFiltersListUuid", required = false) List<UUID> variablesFiltersListUuids,
                                                          @Parameter(description = "Contingency list uuids") @RequestParam(name = "contingencyListUuid", required = false) List<UUID> contingencyListUuids,
-                                                         @Parameter(description = "Quad filters list uuids") @RequestParam(name = "quadFiltersListUuid", required = false) List<UUID> quadFiltersListUuids,
+                                                         @Parameter(description = "Branch filters list uuids") @RequestParam(name = "branchFiltersListUuid", required = false) List<UUID> branchFiltersListUuids,
                                                          @Parameter(description = "Provider") @RequestParam(name = "provider", required = false) String provider,
                                                          @Parameter(description = "reportUuid") @RequestParam(name = "reportUuid", required = false) UUID reportUuid,
                                                          @RequestBody(required = false) SensitivityAnalysisParameters parameters) {
         SensitivityAnalysisParameters nonNullParameters = getNonNullParameters(parameters);
         List<UUID> nonNullOtherNetworkUuids = getNonNullOtherNetworkUuids(otherNetworkUuids);
-        SensitivityAnalysisResult result = workerService.run(new SensitivityAnalysisRunContext(networkUuid, variantId, nonNullOtherNetworkUuids, variablesFiltersListUuids, contingencyListUuids, quadFiltersListUuids, null, provider, nonNullParameters, reportUuid));
+        SensitivityAnalysisResult result = workerService.run(new SensitivityAnalysisRunContext(networkUuid, variantId, nonNullOtherNetworkUuids, variablesFiltersListUuids, contingencyListUuids, branchFiltersListUuids, null, provider, nonNullParameters, reportUuid));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result);
     }
 
@@ -85,14 +85,14 @@ public class SensitivityAnalysisController {
                                            @Parameter(description = "Other networks UUID (to merge with main one))") @RequestParam(name = "networkUuid", required = false) List<UUID> otherNetworkUuids,
                                            @Parameter(description = "Variables filters list uuids") @RequestParam(name = "variablesFiltersListUuid", required = false) List<UUID> variablesFiltersListUuids,
                                            @Parameter(description = "Contingency list uuids") @RequestParam(name = "contingencyListUuid", required = false) List<UUID> contingencyListUuids,
-                                           @Parameter(description = "Quad filters list uuids") @RequestParam(name = "quadFiltersListUuid", required = false) List<UUID> quadFiltersListUuids,
+                                           @Parameter(description = "Branch filters list uuids") @RequestParam(name = "branchFiltersListUuid", required = false) List<UUID> branchFiltersListUuids,
                                            @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver,
                                            @Parameter(description = "Provider") @RequestParam(name = "provider", required = false) String provider,
                                            @Parameter(description = "reportUuid") @RequestParam(name = "reportUuid", required = false) UUID reportUuid,
                                            @RequestBody(required = false) SensitivityAnalysisParameters parameters) {
         SensitivityAnalysisParameters nonNullParameters = getNonNullParameters(parameters);
         List<UUID> nonNullOtherNetworkUuids = getNonNullOtherNetworkUuids(otherNetworkUuids);
-        UUID resultUuid = service.runAndSaveResult(new SensitivityAnalysisRunContext(networkUuid, variantId, nonNullOtherNetworkUuids, variablesFiltersListUuids, contingencyListUuids, quadFiltersListUuids, receiver, provider, nonNullParameters, reportUuid));
+        UUID resultUuid = service.runAndSaveResult(new SensitivityAnalysisRunContext(networkUuid, variantId, nonNullOtherNetworkUuids, variablesFiltersListUuids, contingencyListUuids, branchFiltersListUuids, receiver, provider, nonNullParameters, reportUuid));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 

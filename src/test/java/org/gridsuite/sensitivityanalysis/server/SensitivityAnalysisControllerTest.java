@@ -146,21 +146,21 @@ public class SensitivityAnalysisControllerTest {
     );
     private static final List<IdentifiableAttributes> VARIABLES_MERGING_VIEW = Collections.emptyList();
 
-    private static final UUID QUADS_LIST_UUID = UUID.randomUUID();
-    private static final UUID QUADS_LIST_UUID_VARIANT = UUID.randomUUID();
-    private static final UUID QUADS_LIST_UUID_MERGING_VIEW = UUID.randomUUID();
+    private static final UUID BRANCHES_LIST_UUID = UUID.randomUUID();
+    private static final UUID BRANCHES_LIST_UUID_VARIANT = UUID.randomUUID();
+    private static final UUID BRANCHES_LIST_UUID_MERGING_VIEW = UUID.randomUUID();
 
-    private static final List<IdentifiableAttributes> QUADS = List.of(
+    private static final List<IdentifiableAttributes> BRANCHES = List.of(
         new IdentifiableAttributes("v1", IdentifiableType.LINE),
         new IdentifiableAttributes("v2", IdentifiableType.LINE),
         new IdentifiableAttributes("v3", IdentifiableType.TWO_WINDINGS_TRANSFORMER),
         new IdentifiableAttributes("v4", IdentifiableType.LINE)
     );
-    private static final List<IdentifiableAttributes> QUADS_VARIANT = List.of(
+    private static final List<IdentifiableAttributes> BRANCHES_VARIANT = List.of(
         new IdentifiableAttributes("v1", IdentifiableType.TWO_WINDINGS_TRANSFORMER),
         new IdentifiableAttributes("v2", IdentifiableType.LINE)
     );
-    private static final List<IdentifiableAttributes> QUADS_MERGING_VIEW = Collections.emptyList();
+    private static final List<IdentifiableAttributes> BRANCHES_MERGING_VIEW = Collections.emptyList();
 
     private static final List<SensitivityFactor> SENSITIVITY_FACTORS = List.of(new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l",
         SensitivityVariableType.INJECTION_ACTIVE_POWER, "g",
@@ -280,19 +280,19 @@ public class SensitivityAnalysisControllerTest {
         given(filterService.getIdentifiablesFromFilter(VARIABLES_LIST_UUID_MERGING_VIEW, NETWORK_UUID, null))
             .willReturn(VARIABLES_MERGING_VIEW);
 
-        // filter service mocking for quads
-        given(filterService.getIdentifiablesFromFilter(QUADS_LIST_UUID, NETWORK_UUID, VARIANT_1_ID))
-            .willReturn(QUADS);
-        given(filterService.getIdentifiablesFromFilter(QUADS_LIST_UUID_VARIANT, NETWORK_UUID, VARIANT_3_ID))
-            .willReturn(QUADS_VARIANT);
-        given(filterService.getIdentifiablesFromFilter(QUADS_LIST_UUID, NETWORK_UUID, VARIANT_2_ID))
-            .willReturn(QUADS);
-        given(filterService.getIdentifiablesFromFilter(QUADS_LIST_UUID, NETWORK_UUID, null))
-            .willReturn(QUADS);
-        given(filterService.getIdentifiablesFromFilter(QUADS_LIST_UUID, NETWORK_STOP_UUID, VARIANT_2_ID))
-            .willReturn(QUADS);
-        given(filterService.getIdentifiablesFromFilter(QUADS_LIST_UUID_MERGING_VIEW, NETWORK_UUID, null))
-            .willReturn(QUADS_MERGING_VIEW);
+        // filter service mocking for branch
+        given(filterService.getIdentifiablesFromFilter(BRANCHES_LIST_UUID, NETWORK_UUID, VARIANT_1_ID))
+            .willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(BRANCHES_LIST_UUID_VARIANT, NETWORK_UUID, VARIANT_3_ID))
+            .willReturn(BRANCHES_VARIANT);
+        given(filterService.getIdentifiablesFromFilter(BRANCHES_LIST_UUID, NETWORK_UUID, VARIANT_2_ID))
+            .willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(BRANCHES_LIST_UUID, NETWORK_UUID, null))
+            .willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(BRANCHES_LIST_UUID, NETWORK_STOP_UUID, VARIANT_2_ID))
+            .willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(BRANCHES_LIST_UUID_MERGING_VIEW, NETWORK_UUID, null))
+            .willReturn(BRANCHES_MERGING_VIEW);
 
         // report service mocking
         doAnswer(i -> null).when(reportService).sendReport(any(), any());
@@ -336,7 +336,7 @@ public class SensitivityAnalysisControllerTest {
         // run with specific variant
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/run?contingencyListUuid=" + CONTINGENCY_LIST_UUID_VARIANT +
-                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID_VARIANT + "&quadFiltersListUuid=" + QUADS_LIST_UUID_VARIANT +
+                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID_VARIANT + "&branchFiltersListUuid=" + BRANCHES_LIST_UUID_VARIANT +
                     "&variantId=" + VARIANT_3_ID, NETWORK_UUID))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -346,7 +346,7 @@ public class SensitivityAnalysisControllerTest {
         // run with implicit initial variant
         result = mockMvc.perform(post(
             "/" + VERSION + "/networks/{networkUuid}/run?contingencyListUuid=" + CONTINGENCY_LIST_UUID +
-                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&quadFiltersListUuid=" + QUADS_LIST_UUID, NETWORK_UUID))
+                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&branchFiltersListUuid=" + BRANCHES_LIST_UUID, NETWORK_UUID))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
@@ -357,7 +357,7 @@ public class SensitivityAnalysisControllerTest {
     public void runAndSaveTest() throws Exception {
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/run-and-save?contingencyListUuid=" + CONTINGENCY_LIST_UUID +
-                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&quadFiltersListUuid=" + QUADS_LIST_UUID
+                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&branchFiltersListUuid=" + BRANCHES_LIST_UUID
                         + "&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_UUID))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -392,7 +392,7 @@ public class SensitivityAnalysisControllerTest {
     public void deleteResultsTest() {
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/run-and-save?contingencyListUuid=" + CONTINGENCY_LIST_UUID +
-                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&quadFiltersListUuid=" + QUADS_LIST_UUID, NETWORK_UUID))
+                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&branchFiltersListUuid=" + BRANCHES_LIST_UUID, NETWORK_UUID))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
@@ -412,7 +412,7 @@ public class SensitivityAnalysisControllerTest {
     public void mergingViewTest() {
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/run?contingencyListUuid=" + CONTINGENCY_LIST_UUID +
-                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID_MERGING_VIEW + "&quadFiltersListUuid=" + QUADS_LIST_UUID_MERGING_VIEW +
+                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID_MERGING_VIEW + "&branchFiltersListUuid=" + BRANCHES_LIST_UUID_MERGING_VIEW +
                     "&networkUuid=" + OTHER_NETWORK_FOR_MERGING_VIEW_UUID, NETWORK_FOR_MERGING_VIEW_UUID))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -444,7 +444,7 @@ public class SensitivityAnalysisControllerTest {
     public void stopTest() throws Exception {
         mockMvc.perform(post(
             "/" + VERSION + "/networks/{networkUuid}/run-and-save?contingencyListUuid=" + CONTINGENCY_LIST_UUID +
-                "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&quadFiltersListUuid=" + QUADS_LIST_UUID +
+                "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&branchFiltersListUuid=" + BRANCHES_LIST_UUID +
                 "&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_STOP_UUID))
             .andExpect(status().isOk());
 
@@ -466,7 +466,7 @@ public class SensitivityAnalysisControllerTest {
     public void runTestWithError() {
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/run-and-save?contingencyListUuid=" + CONTINGENCY_LIST_ERROR_UUID +
-                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&quadFiltersListUuid=" + QUADS_LIST_UUID +
+                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&branchFiltersListUuid=" + BRANCHES_LIST_UUID +
                     "&receiver=me&variantId=" + VARIANT_1_ID, NETWORK_UUID))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -489,7 +489,7 @@ public class SensitivityAnalysisControllerTest {
     public void runWithReportTest() {
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/run?contingencyListUuid=" + CONTINGENCY_LIST_UUID +
-                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&quadFiltersListUuid=" + QUADS_LIST_UUID +
+                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&branchFiltersListUuid=" + BRANCHES_LIST_UUID +
                     "&reportUuid=" + REPORT_UUID, NETWORK_UUID))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
