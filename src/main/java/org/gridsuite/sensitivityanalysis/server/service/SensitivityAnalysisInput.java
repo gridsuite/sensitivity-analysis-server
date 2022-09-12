@@ -7,6 +7,9 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.reporter.Report;
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.contingency.ContingencyContext;
 import com.powsybl.iidm.network.Generator;
@@ -24,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -91,9 +95,25 @@ public class SensitivityAnalysisInput {
         });
     }
 
-    private void buildSensitivityFactors() {
+    private void buildSensitivityFactors(Reporter reporter) {
         List<IdentifiableAttributes> branchFilters = context.getBranchFiltersListUuids().stream()
-            .flatMap(branchFilterUuid -> filterService.getIdentifiablesFromFilter(branchFilterUuid, context.getNetworkUuid(), context.getVariantId()).stream())
+            .flatMap(branchFilterUuid -> {
+                List<IdentifiableAttributes> list = filterService.getIdentifiablesFromFilter(branchFilterUuid, context.getNetworkUuid(), context.getVariantId());
+                // check that filter is effectively a branch filter
+                if (list.stream().allMatch(i -> i.getType() == IdentifiableType.LINE ||
+                    i.getType() == IdentifiableType.TWO_WINDINGS_TRANSFORMER ||
+                    i.getType() == IdentifiableType.THREE_WINDINGS_TRANSFORMER)) {
+                    return list.stream();
+                } else {
+                    reporter.report(Report.builder()
+                        .withKey("notBranchFilter")
+                        .withDefaultMessage("Filter for monitored branches with id=${id} is not a branch filter : it is ignored")
+                        .withValue("id", branchFilterUuid.toString())
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
+                    return Stream.empty();
+                }
+            })
             .collect(Collectors.toList());
 
         branchFilters.forEach(identifiableAttributes -> {
@@ -118,10 +138,10 @@ public class SensitivityAnalysisInput {
         });
     }
 
-    public void build() {
+    public void build(Reporter reporter) {
         buildContingencies();
         buildSensitivityVariableSets();
-        buildSensitivityFactors();
+        buildSensitivityFactors(reporter);
     }
 
     public List<Contingency> getContingencies() {

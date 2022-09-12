@@ -148,10 +148,10 @@ public class SensitivityAnalysisWorkerService {
             context.getBranchFiltersListUuids().stream().collect(Collectors.toList()));
         Network network = getNetwork(context.getNetworkUuid(), context.getOtherNetworkUuids(), context.getVariantId());
 
-        SensitivityAnalysisInput sensitivityAnalysisInput = new SensitivityAnalysisInput(network, context, actionsService, filterService);
-        sensitivityAnalysisInput.build();
-
         Reporter reporter = context.getReportUuid() != null ? new ReporterModel("SensitivityAnalysis", "Sensitivity analysis") : Reporter.NO_OP;
+
+        SensitivityAnalysisInput sensitivityAnalysisInput = new SensitivityAnalysisInput(network, context, actionsService, filterService);
+        sensitivityAnalysisInput.build(reporter);
 
         CompletableFuture<SensitivityAnalysisResult> future = runSensitivityAnalysisAsync(context,
             network,
