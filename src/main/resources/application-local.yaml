@@ -1,0 +1,18 @@
+server:
+  port: 5030
+
+spring:
+  rabbitmq:
+    addresses: localhost
+
+network-store-server:
+  base-uri: http://localhost:8080
+
+actions-server:
+  base-uri: http://localhost:5022
+
+filter-server:
+  base-uri: http://localhost:5027
+
+report-server:
+  base-uri: http://localhost:5028
