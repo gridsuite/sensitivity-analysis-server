@@ -26,7 +26,9 @@ spring:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}sensitivityanalysis.failed
       source: publishRun;publishResult;publishCancel;publishStopped;publishFailed
 
-dbName: sensitivityanalysis
+powsybl-ws:
+  database:
+    name: sensitivityanalysis
 
 # default values for loadflow providers "Hades2" or "OpenLoadFlow"
 loadflow:
