@@ -80,11 +80,15 @@ public class SensitivityAnalysisInput {
                         } else {
                             throw new PowsyblException("Load '" + identifiableAttributes.getId() + "' not found !!");
                         }
-                    } else {
+                    } else if (identifiableAttributes.getType() == IdentifiableType.TWO_WINDINGS_TRANSFORMER ||
+                               identifiableAttributes.getType() == IdentifiableType.THREE_WINDINGS_TRANSFORMER ||
+                               identifiableAttributes.getType() == IdentifiableType.HVDC_LINE) {
                         // no variableSet generated for TD or HVDC : we keep the identifiables, to be used further
                         // when generating the sensitivity factors
                         createVariablesSet = false;
                         identifiables.add(identifiableAttributes);
+                    } else {
+                        createVariablesSet = false;
                     }
                 }
                 if (createVariablesSet) {
