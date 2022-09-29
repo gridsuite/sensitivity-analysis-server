@@ -69,6 +69,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
@@ -123,10 +124,16 @@ public class SensitivityAnalysisControllerTest {
         new Contingency("la", new ThreeWindingsTransformerContingency("l0")), // Contingencies are reordered by id
         new Contingency("lb", new StaticVarCompensatorContingency("la"))
     );
+    private static final List<SensitivityAnalysisResult.SensitivityContingencyStatus> CONTINGENCIES_STATUSES = CONTINGENCIES.stream()
+            .map(c -> new SensitivityAnalysisResult.SensitivityContingencyStatus(c.getId(), SensitivityAnalysisResult.Status.SUCCESS))
+            .collect(Collectors.toList());
     private static final List<Contingency> CONTINGENCIES_VARIANT = List.of(
         new Contingency("l3", new BusbarSectionContingency("l3")),
         new Contingency("l4", new LineContingency("l4"))
     );
+    private static final List<SensitivityAnalysisResult.SensitivityContingencyStatus> CONTINGENCIES_VARIANT_STATUSES = CONTINGENCIES_VARIANT.stream()
+            .map(c -> new SensitivityAnalysisResult.SensitivityContingencyStatus(c.getId(), SensitivityAnalysisResult.Status.SUCCESS))
+            .collect(Collectors.toList());
 
     private static final UUID VARIABLES_LIST_UUID = UUID.randomUUID();
     private static final UUID VARIABLES_LIST_UUID_VARIANT = UUID.randomUUID();
@@ -173,10 +180,10 @@ public class SensitivityAnalysisControllerTest {
     private static final List<SensitivityValue> SENSITIVITY_VALUES_VARIANT = List.of(new SensitivityValue(0, 0, 3d, 4d));
 
     private static final SensitivityAnalysisResult RESULT = new SensitivityAnalysisResult(SENSITIVITY_FACTORS,
-        CONTINGENCIES,
+        CONTINGENCIES_STATUSES,
         SENSITIVITY_VALUES);
 
-    private static final SensitivityAnalysisResult RESULT_VARIANT = new SensitivityAnalysisResult(SENSITIVITY_FACTORS_VARIANT, CONTINGENCIES_VARIANT, SENSITIVITY_VALUES_VARIANT);
+    private static final SensitivityAnalysisResult RESULT_VARIANT = new SensitivityAnalysisResult(SENSITIVITY_FACTORS_VARIANT, CONTINGENCIES_VARIANT_STATUSES, SENSITIVITY_VALUES_VARIANT);
 
     private static final String VARIANT_1_ID = "variant_1";
     private static final String VARIANT_2_ID = "variant_2";
