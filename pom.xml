@@ -48,7 +48,7 @@
         <jaxb-api.version>2.4.0-b180830.0359</jaxb-api.version>
         <jaxb-runtime.version>2.4.0-b180830.0438</jaxb-runtime.version>
         <jib.from.image>gridsuite/java-hades2</jib.from.image>
-        <gridsuite-dependencies.version>19-SNAPSHOT</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>19</gridsuite-dependencies.version>
         <liquibase-hibernate-package>org.gridsuite.sensitivityanalysis.server</liquibase-hibernate-package>
         <mockito-inline.version>3.11.1</mockito-inline.version>
     </properties>
