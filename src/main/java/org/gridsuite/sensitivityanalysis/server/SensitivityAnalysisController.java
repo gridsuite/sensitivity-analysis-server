@@ -6,7 +6,12 @@
  */
 package org.gridsuite.sensitivityanalysis.server;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
+import com.powsybl.sensitivity.SensitivityFunctionType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,6 +21,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisRunContext;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService;
@@ -23,10 +30,15 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 /**
@@ -96,10 +108,63 @@ public class SensitivityAnalysisController {
             : ResponseEntity.notFound().build();
     }
 
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    @Getter
+    @JsonDeserialize
+    @Schema(description = "Results selector")
+    static class ResultsSelector {
+        @Schema(description = "ids of the functions (branches) to limit to")
+        Collection<String> functionIds;
+        @Schema(description = "ids of the variables to limit to")
+        Collection<String> variableIds;
+        @Schema(description = "ids of the contingencied to limit to")
+        Collection<String> contingencyIds;
+        @Schema(description = "function type (/MV /MA /kV)")
+        SensitivityFunctionType functionType;
+        @Schema(description = "true for N, false for N-k")
+        @JsonProperty(value = "isJustBefore")
+        boolean isJustBefore;
+    }
+
+    @GetMapping(value = "/results/{resultUuid}/tabbed", produces = APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get a sensitivity analysis result from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis result"),
+        @ApiResponse(responseCode = "404", description = "Sensitivity analysis result has not been found")})
+    public ResponseEntity<List<? extends SensitivityOfTo>> getResultAfter(@Parameter(description = "Result UUID")
+        @PathVariable("resultUuid") UUID resultUuid,
+        @RequestParam(value = "selector") String selectorJson) {
+
+        ObjectMapper mapper = new ObjectMapper();
+        ResultsSelector selector;
+        try {
+            selector = mapper.readValue(selectorJson, ResultsSelector.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (selector.isJustBefore) {
+            List<SensitivityOfTo> result = service.getResult(resultUuid,
+                selector.functionIds, selector.variableIds,
+                selector.functionType);
+            return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result)
+                : ResponseEntity.notFound().build();
+        } else {
+            List<SensitivityWithContingency> result = service.getResult(resultUuid,
+                selector.functionIds, selector.variableIds, selector.contingencyIds,
+                selector.functionType);
+            return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result)
+                : ResponseEntity.notFound().build();
+        }
+    }
+
     @DeleteMapping(value = "/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Delete a sensitivity analysis result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis result has been deleted")})
-    public ResponseEntity<Void> deleteResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
+    public ResponseEntity<Void> deleteResult(
+        @Parameter(description = "Result UUID")
+        @PathVariable("resultUuid") UUID resultUuid) {
         service.deleteResult(resultUuid);
         return ResponseEntity.ok().build();
     }
