@@ -19,6 +19,7 @@ import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.sensitivity.SensitivityAnalysis;
+import com.powsybl.sensitivity.SensitivityAnalysisParameters;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityFactor;
 import com.powsybl.sensitivity.SensitivityVariableSet;
@@ -142,22 +143,19 @@ public class SensitivityAnalysisWorkerService {
     private SensitivityAnalysisResult run(SensitivityAnalysisRunContext context, UUID resultUuid) throws ExecutionException, InterruptedException {
         Objects.requireNonNull(context);
 
-        LOGGER.info("Run sensitivity analysis :\nwith contingency lists: {}\nwith variables filters lists: {}\nwith branch filters lists: {}",
-            context.getContingencyListUuids().stream().collect(Collectors.toList()),
-            context.getVariablesFiltersListUuids().stream().collect(Collectors.toList()),
-            context.getBranchFiltersListUuids().stream().collect(Collectors.toList()));
+        LOGGER.info("Run sensitivity analysis");
         Network network = getNetwork(context.getNetworkUuid(), context.getOtherNetworkUuids(), context.getVariantId());
 
         Reporter reporter = context.getReportUuid() != null ? new ReporterModel("SensitivityAnalysis", "Sensitivity analysis") : Reporter.NO_OP;
 
-        SensitivityAnalysisInput sensitivityAnalysisInput = new SensitivityAnalysisInput(network, context, actionsService, filterService);
-        sensitivityAnalysisInput.build(reporter);
+        SensitivityAnalysisInputBuilder sensitivityAnalysisInputBuilder = new SensitivityAnalysisInputBuilder(network, context, actionsService, filterService);
+        sensitivityAnalysisInputBuilder.build(reporter);
 
         CompletableFuture<SensitivityAnalysisResult> future = runSensitivityAnalysisAsync(context,
             network,
-            sensitivityAnalysisInput.getFactors(),
-            sensitivityAnalysisInput.getContingencies(),
-            sensitivityAnalysisInput.getVariableSets(),
+            sensitivityAnalysisInputBuilder.getFactors(),
+            sensitivityAnalysisInputBuilder.getContingencies(),
+            sensitivityAnalysisInputBuilder.getVariableSets(),
             reporter,
             resultUuid);
 
@@ -183,13 +181,19 @@ public class SensitivityAnalysisWorkerService {
             SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(context.getProvider());
             String variantId = context.getVariantId() != null ? context.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID;
 
+            SensitivityAnalysisParameters sensitivityAnalysisParameters = context.getSensitivityAnalysisInputData().getParameters() != null
+                ? context.getSensitivityAnalysisInputData().getParameters()
+                : new SensitivityAnalysisParameters();
+
+            // TODO : context.getSensitivityAnalysisInputData().getResultsThreshold() ?
+
             CompletableFuture<SensitivityAnalysisResult> future = sensitivityAnalysisRunner.runAsync(
                 network,
                 variantId,
                 factors,
                 contingencies,
                 variableSets,
-                context.getParameters(),
+                sensitivityAnalysisParameters,
                 LocalComputationManager.getDefault(),
                 reporter);
             if (resultUuid != null) {

@@ -38,6 +38,7 @@ import com.powsybl.sensitivity.SensitivityValue;
 import com.powsybl.sensitivity.SensitivityVariableType;
 import lombok.SneakyThrows;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
@@ -65,7 +66,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -99,18 +99,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextHierarchy({@ContextConfiguration(classes = {SensitivityAnalysisApplication.class, TestChannelBinderConfiguration.class})})
 public class SensitivityAnalysisControllerTest {
 
-    private static final UUID NETWORK_UUID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
-    private static final UUID NETWORK_STOP_UUID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e6");
-    private static final UUID RESULT_UUID = UUID.fromString("0c8de370-3e6c-4d72-b292-d355a97e0d5d");
-    private static final UUID REPORT_UUID = UUID.fromString("0c4de370-3e6a-4d72-b292-d355a97e0d53");
-    private static final UUID OTHER_RESULT_UUID = UUID.fromString("0c8de370-3e6c-4d72-b292-d355a97e0d5a");
-    private static final UUID NETWORK_FOR_MERGING_VIEW_UUID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
-    private static final UUID OTHER_NETWORK_FOR_MERGING_VIEW_UUID = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
+    private static final UUID NETWORK_UUID = UUID.randomUUID();
+    private static final UUID NETWORK_STOP_UUID = UUID.randomUUID();
+    private static final UUID NETWORK_ERROR_UUID = UUID.randomUUID();
+    private static final UUID RESULT_UUID = UUID.randomUUID();
+    private static final UUID REPORT_UUID = UUID.randomUUID();
+    private static final UUID OTHER_RESULT_UUID = UUID.randomUUID();
+    private static final UUID NETWORK_FOR_MERGING_VIEW_UUID = UUID.randomUUID();
+    private static final UUID OTHER_NETWORK_FOR_MERGING_VIEW_UUID = UUID.randomUUID();
 
-    private static final UUID CONTINGENCY_LIST_UUID = UUID.randomUUID();
-    private static final UUID CONTINGENCY_LIST2_UUID = UUID.randomUUID();
-    private static final UUID CONTINGENCY_LIST_ERROR_UUID = UUID.randomUUID();
-    private static final UUID CONTINGENCY_LIST_UUID_VARIANT = UUID.randomUUID();
+    private static final UUID MONITORED_BRANCHES_FILTERS_INJECTIONS_SET_UUID = UUID.randomUUID();
+    private static final UUID GENERATORS_FILTERS_INJECTIONS_SET_UUID = UUID.randomUUID();
+    private static final UUID LOADS_FILTERS_INJECTIONS_SET_UUID = UUID.randomUUID();
+    private static final UUID CONTINGENCIES_INJECTIONS_SET_UUID = UUID.randomUUID();
+    private static final UUID MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID = UUID.randomUUID();
+    private static final UUID GENERATORS_FILTERS_INJECTIONS_UUID = UUID.randomUUID();
+    private static final UUID CONTINGENCIES_INJECTIONS_UUID1 = UUID.randomUUID();
+    private static final UUID CONTINGENCIES_INJECTIONS_UUID2 = UUID.randomUUID();
+    private static final UUID MONITORED_BRANCHES_FILTERS_HVDC_UUID = UUID.randomUUID();
+    private static final UUID HVDC_FILTERS_UUID = UUID.randomUUID();
+    private static final UUID CONTINGENCIES_HVDCS_UUID = UUID.randomUUID();
+    private static final UUID MONITORED_BRANCHES_FILTERS_PST_UUID = UUID.randomUUID();
+    private static final UUID PST_FILTERS_UUID1 = UUID.randomUUID();
+    private static final UUID PST_FILTERS_UUID2 = UUID.randomUUID();
+    private static final UUID CONTINGENCIES_PSTS_UUID = UUID.randomUUID();
+    private static final UUID MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID = UUID.randomUUID();
+    private static final UUID EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID = UUID.randomUUID();
+    private static final UUID CONTINGENCIES_NODES_UUID = UUID.randomUUID();
 
     private static final List<Contingency> CONTINGENCIES = List.of(
         new Contingency("l1", new BranchContingency("l1")),
@@ -127,6 +142,7 @@ public class SensitivityAnalysisControllerTest {
     private static final List<SensitivityAnalysisResult.SensitivityContingencyStatus> CONTINGENCIES_STATUSES = CONTINGENCIES.stream()
             .map(c -> new SensitivityAnalysisResult.SensitivityContingencyStatus(c.getId(), SensitivityAnalysisResult.Status.SUCCESS))
             .collect(Collectors.toList());
+
     private static final List<Contingency> CONTINGENCIES_VARIANT = List.of(
         new Contingency("l3", new BusbarSectionContingency("l3")),
         new Contingency("l4", new LineContingency("l4"))
@@ -135,39 +151,63 @@ public class SensitivityAnalysisControllerTest {
             .map(c -> new SensitivityAnalysisResult.SensitivityContingencyStatus(c.getId(), SensitivityAnalysisResult.Status.SUCCESS))
             .collect(Collectors.toList());
 
-    private static final UUID VARIABLES_LIST_UUID = UUID.randomUUID();
-    private static final UUID VARIABLES_LIST_UUID_VARIANT = UUID.randomUUID();
-    private static final UUID VARIABLES_LIST_UUID_MERGING_VIEW = UUID.randomUUID();
-
-    private static final List<IdentifiableAttributes> VARIABLES = List.of(
+    private static final List<IdentifiableAttributes> GENERATORS = List.of(
         new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR),
-        new IdentifiableAttributes("GEN2", IdentifiableType.GENERATOR),
-        new IdentifiableAttributes("LOAD", IdentifiableType.LOAD),
-        new IdentifiableAttributes("2WT", IdentifiableType.TWO_WINDINGS_TRANSFORMER),
-        new IdentifiableAttributes("3WT", IdentifiableType.THREE_WINDINGS_TRANSFORMER),
-        new IdentifiableAttributes("HVDC", IdentifiableType.HVDC_LINE)
+        new IdentifiableAttributes("GEN2", IdentifiableType.GENERATOR)
     );
-    private static final List<IdentifiableAttributes> VARIABLES_VARIANT = List.of(
-        new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR),
+
+    private static final List<IdentifiableAttributes> GENERATORS_VARIANT = List.of(
+        new IdentifiableAttributes("GEN2", IdentifiableType.GENERATOR)
+    );
+
+    private static final List<IdentifiableAttributes> LOADS = List.of(
         new IdentifiableAttributes("LOAD", IdentifiableType.LOAD)
     );
-    private static final List<IdentifiableAttributes> VARIABLES_MERGING_VIEW = Collections.emptyList();
 
-    private static final UUID BRANCHES_LIST_UUID = UUID.randomUUID();
-    private static final UUID BRANCHES_LIST_UUID_VARIANT = UUID.randomUUID();
-    private static final UUID BRANCHES_LIST_UUID_MERGING_VIEW = UUID.randomUUID();
+    private static final List<IdentifiableAttributes> LOADS_VARIANT = List.of(
+        new IdentifiableAttributes("LOAD", IdentifiableType.LOAD)
+    );
 
     private static final List<IdentifiableAttributes> BRANCHES = List.of(
-        new IdentifiableAttributes("v1", IdentifiableType.LINE),
-        new IdentifiableAttributes("v2", IdentifiableType.LINE),
-        new IdentifiableAttributes("v3", IdentifiableType.TWO_WINDINGS_TRANSFORMER),
-        new IdentifiableAttributes("v4", IdentifiableType.LINE)
+        new IdentifiableAttributes("l1", IdentifiableType.LINE),
+        new IdentifiableAttributes("l2", IdentifiableType.LINE),
+        new IdentifiableAttributes("l3", IdentifiableType.TWO_WINDINGS_TRANSFORMER),
+        new IdentifiableAttributes("l4", IdentifiableType.LINE)
     );
     private static final List<IdentifiableAttributes> BRANCHES_VARIANT = List.of(
-        new IdentifiableAttributes("v1", IdentifiableType.TWO_WINDINGS_TRANSFORMER),
-        new IdentifiableAttributes("v2", IdentifiableType.LINE)
+        new IdentifiableAttributes("l1", IdentifiableType.TWO_WINDINGS_TRANSFORMER),
+        new IdentifiableAttributes("l2", IdentifiableType.LINE)
     );
-    private static final List<IdentifiableAttributes> BRANCHES_MERGING_VIEW = Collections.emptyList();
+
+    private static final List<IdentifiableAttributes> HVDCS = List.of(
+        new IdentifiableAttributes("hvdc1", IdentifiableType.HVDC_LINE)
+    );
+    private static final List<IdentifiableAttributes> HVDCS_VARIANT = List.of(
+        new IdentifiableAttributes("hvdc2", IdentifiableType.HVDC_LINE)
+    );
+
+    private static final List<IdentifiableAttributes> PSTS = List.of(
+        new IdentifiableAttributes("t1", IdentifiableType.TWO_WINDINGS_TRANSFORMER)
+    );
+    private static final List<IdentifiableAttributes> PSTS_VARIANT = List.of(
+        new IdentifiableAttributes("t2", IdentifiableType.TWO_WINDINGS_TRANSFORMER)
+    );
+
+    private static final List<IdentifiableAttributes> VOLTAGE_LEVELS = List.of(
+        new IdentifiableAttributes("v1", IdentifiableType.VOLTAGE_LEVEL)
+    );
+    private static final List<IdentifiableAttributes> VOLTAGE_LEVELS_VARIANT = List.of(
+        new IdentifiableAttributes("v2", IdentifiableType.VOLTAGE_LEVEL),
+        new IdentifiableAttributes("v3", IdentifiableType.VOLTAGE_LEVEL)
+    );
+
+    private static final List<IdentifiableAttributes> EQUIPMENTS_IN_VOLTAGE_REGULATION = List.of(
+        new IdentifiableAttributes("e1", IdentifiableType.GENERATOR),
+        new IdentifiableAttributes("e2", IdentifiableType.GENERATOR)
+    );
+    private static final List<IdentifiableAttributes> EQUIPMENTS_IN_VOLTAGE_REGULATION_VARIANT = List.of(
+        new IdentifiableAttributes("e3", IdentifiableType.GENERATOR)
+    );
 
     private static final List<SensitivityFactor> SENSITIVITY_FACTORS = List.of(new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l",
         SensitivityVariableType.INJECTION_ACTIVE_POWER, "g",
@@ -192,6 +232,8 @@ public class SensitivityAnalysisControllerTest {
     private static final int TIMEOUT = 1000;
 
     private static final String ERROR_MESSAGE = "Error message test";
+
+    private static String SENSITIVITY_INPUT;
 
     @Autowired
     private OutputDestination output;
@@ -226,6 +268,7 @@ public class SensitivityAnalysisControllerTest {
     private Network otherNetworkForMergingView;
 
     @Before
+    @SneakyThrows
     public void setUp() {
         MockitoAnnotations.initMocks(this);
 
@@ -236,6 +279,7 @@ public class SensitivityAnalysisControllerTest {
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_3_ID);
 
         given(networkStoreService.getNetwork(NETWORK_UUID, PreloadingStrategy.COLLECTION)).willReturn(network);
+        given(networkStoreService.getNetwork(NETWORK_ERROR_UUID, PreloadingStrategy.COLLECTION)).willThrow(new RuntimeException(ERROR_MESSAGE));
 
         networkForMergingView = new NetworkFactoryImpl().createNetwork("mergingView", "test");
         given(networkStoreService.getNetwork(NETWORK_FOR_MERGING_VIEW_UUID, PreloadingStrategy.COLLECTION)).willReturn(networkForMergingView);
@@ -251,55 +295,116 @@ public class SensitivityAnalysisControllerTest {
             return network1;
         });
 
+        SensitivityAnalysisInputData sensitivityAnalysisInputData = SensitivityAnalysisInputData.builder()
+            .resultsThreshold(0.20)
+            .sensitivityInjectionsSet(SensitivityAnalysisInputData.SensitivityInjectionsSet.builder()
+                .monitoredBranches(List.of(MONITORED_BRANCHES_FILTERS_INJECTIONS_SET_UUID))
+                .injections(List.of(GENERATORS_FILTERS_INJECTIONS_SET_UUID, LOADS_FILTERS_INJECTIONS_SET_UUID))
+                .distributionType(SensitivityAnalysisInputData.DistributionType.REGULAR)
+                .contingencies(List.of(CONTINGENCIES_INJECTIONS_SET_UUID)).build())
+            .sensitivityInjection(SensitivityAnalysisInputData.SensitivityInjection.builder()
+                .monitoredBranches(List.of(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID))
+                .injections(List.of(GENERATORS_FILTERS_INJECTIONS_UUID))
+                .contingencies(List.of(CONTINGENCIES_INJECTIONS_UUID1, CONTINGENCIES_INJECTIONS_UUID2)).build())
+            .sensitivityHVDC(SensitivityAnalysisInputData.SensitivityHVDC.builder()
+                .monitoredBranches(List.of(MONITORED_BRANCHES_FILTERS_HVDC_UUID))
+                .sensitivityType(SensitivityAnalysisInputData.SensitivityType.DELTA_MW)
+                .hvdcs(List.of(HVDC_FILTERS_UUID))
+                .contingencies(List.of(CONTINGENCIES_HVDCS_UUID)).build())
+            .sensitivityPST(SensitivityAnalysisInputData.SensitivityPST.builder()
+                .monitoredBranches(List.of(MONITORED_BRANCHES_FILTERS_PST_UUID))
+                .sensitivityType(SensitivityAnalysisInputData.SensitivityType.DELTA_A)
+                .psts(List.of(PST_FILTERS_UUID1, PST_FILTERS_UUID2))
+                .contingencies(List.of(CONTINGENCIES_PSTS_UUID)).build())
+            .sensitivityNodes(SensitivityAnalysisInputData.SensitivityNodes.builder()
+                .monitoredVoltageLevels(List.of(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID))
+                .equipmentsInVoltageRegulation(List.of(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID))
+                .contingencies(List.of(CONTINGENCIES_NODES_UUID)).build())
+            .parameters(SensitivityAnalysisParameters.load())
+            .build();
+        SENSITIVITY_INPUT = mapper.writeValueAsString(sensitivityAnalysisInputData);
+
         // action service mocking
-        given(actionsService.getContingencyList(CONTINGENCY_LIST_UUID, NETWORK_UUID, VARIANT_1_ID))
-                .willReturn(CONTINGENCIES);
-        given(actionsService.getContingencyList(CONTINGENCY_LIST_UUID_VARIANT, NETWORK_UUID, VARIANT_3_ID))
-            .willReturn(CONTINGENCIES_VARIANT);
-        given(actionsService.getContingencyList(CONTINGENCY_LIST_UUID, NETWORK_UUID, VARIANT_2_ID))
-            .willReturn(CONTINGENCIES);
-        given(actionsService.getContingencyList(CONTINGENCY_LIST_UUID, NETWORK_UUID, null))
-            .willReturn(CONTINGENCIES);
-        given(actionsService.getContingencyList(CONTINGENCY_LIST2_UUID, NETWORK_UUID, VARIANT_1_ID))
-                .willReturn(CONTINGENCIES);
-        given(actionsService.getContingencyList(CONTINGENCY_LIST_UUID, NETWORK_STOP_UUID, VARIANT_2_ID))
-                .willReturn(CONTINGENCIES);
-        given(actionsService.getContingencyList(CONTINGENCY_LIST2_UUID, NETWORK_STOP_UUID, VARIANT_2_ID))
-                .willReturn(CONTINGENCIES);
-        given(actionsService.getContingencyList(CONTINGENCY_LIST_ERROR_UUID, NETWORK_UUID, VARIANT_1_ID))
-                .willThrow(new RuntimeException(ERROR_MESSAGE));
-        given(actionsService.getContingencyList(CONTINGENCY_LIST_UUID, NETWORK_FOR_MERGING_VIEW_UUID, null))
-            .willReturn(CONTINGENCIES);
-        given(actionsService.getContingencyList(CONTINGENCY_LIST_UUID, OTHER_NETWORK_FOR_MERGING_VIEW_UUID, null))
-            .willReturn(CONTINGENCIES);
+        given(actionsService.getContingencyList(CONTINGENCIES_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(CONTINGENCIES);
+        given(actionsService.getContingencyList(CONTINGENCIES_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(CONTINGENCIES_VARIANT);
+        given(actionsService.getContingencyList(CONTINGENCIES_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(CONTINGENCIES);
+        given(actionsService.getContingencyList(CONTINGENCIES_INJECTIONS_UUID1, NETWORK_UUID, VARIANT_1_ID)).willReturn(CONTINGENCIES);
+        given(actionsService.getContingencyList(CONTINGENCIES_INJECTIONS_UUID1, NETWORK_UUID, VARIANT_3_ID)).willReturn(CONTINGENCIES_VARIANT);
+        given(actionsService.getContingencyList(CONTINGENCIES_INJECTIONS_UUID1, NETWORK_UUID, VARIANT_2_ID)).willReturn(CONTINGENCIES);
+        given(actionsService.getContingencyList(CONTINGENCIES_INJECTIONS_UUID2, NETWORK_UUID, VARIANT_1_ID)).willReturn(CONTINGENCIES);
+        given(actionsService.getContingencyList(CONTINGENCIES_INJECTIONS_UUID2, NETWORK_UUID, VARIANT_3_ID)).willReturn(CONTINGENCIES_VARIANT);
+        given(actionsService.getContingencyList(CONTINGENCIES_INJECTIONS_UUID2, NETWORK_UUID, VARIANT_2_ID)).willReturn(CONTINGENCIES);
+        given(actionsService.getContingencyList(CONTINGENCIES_HVDCS_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(CONTINGENCIES);
+        given(actionsService.getContingencyList(CONTINGENCIES_HVDCS_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(CONTINGENCIES_VARIANT);
+        given(actionsService.getContingencyList(CONTINGENCIES_HVDCS_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(CONTINGENCIES);
+        given(actionsService.getContingencyList(CONTINGENCIES_PSTS_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(CONTINGENCIES);
+        given(actionsService.getContingencyList(CONTINGENCIES_PSTS_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(CONTINGENCIES_VARIANT);
+        given(actionsService.getContingencyList(CONTINGENCIES_PSTS_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(CONTINGENCIES);
+        given(actionsService.getContingencyList(CONTINGENCIES_NODES_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(CONTINGENCIES);
+        given(actionsService.getContingencyList(CONTINGENCIES_NODES_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(CONTINGENCIES_VARIANT);
+        given(actionsService.getContingencyList(CONTINGENCIES_NODES_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(CONTINGENCIES);
 
-        // filter service mocking for variables
-        given(filterService.getIdentifiablesFromFilter(VARIABLES_LIST_UUID, NETWORK_UUID, VARIANT_1_ID))
-                .willReturn(VARIABLES);
-        given(filterService.getIdentifiablesFromFilter(VARIABLES_LIST_UUID_VARIANT, NETWORK_UUID, VARIANT_3_ID))
-            .willReturn(VARIABLES_VARIANT);
-        given(filterService.getIdentifiablesFromFilter(VARIABLES_LIST_UUID, NETWORK_UUID, VARIANT_2_ID))
-            .willReturn(VARIABLES);
-        given(filterService.getIdentifiablesFromFilter(VARIABLES_LIST_UUID, NETWORK_UUID, null))
-            .willReturn(VARIABLES);
-        given(filterService.getIdentifiablesFromFilter(VARIABLES_LIST_UUID, NETWORK_STOP_UUID, VARIANT_2_ID))
-            .willReturn(VARIABLES);
-        given(filterService.getIdentifiablesFromFilter(VARIABLES_LIST_UUID_MERGING_VIEW, NETWORK_UUID, null))
-            .willReturn(VARIABLES_MERGING_VIEW);
-
-        // filter service mocking for branch
-        given(filterService.getIdentifiablesFromFilter(BRANCHES_LIST_UUID, NETWORK_UUID, VARIANT_1_ID))
-            .willReturn(BRANCHES);
-        given(filterService.getIdentifiablesFromFilter(BRANCHES_LIST_UUID_VARIANT, NETWORK_UUID, VARIANT_3_ID))
-            .willReturn(BRANCHES_VARIANT);
-        given(filterService.getIdentifiablesFromFilter(BRANCHES_LIST_UUID, NETWORK_UUID, VARIANT_2_ID))
-            .willReturn(BRANCHES);
-        given(filterService.getIdentifiablesFromFilter(BRANCHES_LIST_UUID, NETWORK_UUID, null))
-            .willReturn(BRANCHES);
-        given(filterService.getIdentifiablesFromFilter(BRANCHES_LIST_UUID, NETWORK_STOP_UUID, VARIANT_2_ID))
-            .willReturn(BRANCHES);
-        given(filterService.getIdentifiablesFromFilter(BRANCHES_LIST_UUID_MERGING_VIEW, NETWORK_UUID, null))
-            .willReturn(BRANCHES_MERGING_VIEW);
+        // filter service mocking
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(BRANCHES_VARIANT);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_SET_UUID, NETWORK_UUID, null)).willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_SET_UUID, NETWORK_STOP_UUID, VARIANT_2_ID)).willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(GENERATORS_FILTERS_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(GENERATORS);
+        given(filterService.getIdentifiablesFromFilter(GENERATORS_FILTERS_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(GENERATORS_VARIANT);
+        given(filterService.getIdentifiablesFromFilter(GENERATORS_FILTERS_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(GENERATORS);
+        given(filterService.getIdentifiablesFromFilter(GENERATORS_FILTERS_INJECTIONS_SET_UUID, NETWORK_UUID, null)).willReturn(GENERATORS);
+        given(filterService.getIdentifiablesFromFilter(GENERATORS_FILTERS_INJECTIONS_SET_UUID, NETWORK_STOP_UUID, VARIANT_2_ID)).willReturn(GENERATORS);
+        given(filterService.getIdentifiablesFromFilter(LOADS_FILTERS_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(LOADS);
+        given(filterService.getIdentifiablesFromFilter(LOADS_FILTERS_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(LOADS_VARIANT);
+        given(filterService.getIdentifiablesFromFilter(LOADS_FILTERS_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(LOADS);
+        given(filterService.getIdentifiablesFromFilter(LOADS_FILTERS_INJECTIONS_SET_UUID, NETWORK_UUID, null)).willReturn(LOADS);
+        given(filterService.getIdentifiablesFromFilter(LOADS_FILTERS_INJECTIONS_SET_UUID, NETWORK_STOP_UUID, VARIANT_2_ID)).willReturn(LOADS);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(BRANCHES_VARIANT);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, NETWORK_UUID, null)).willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, NETWORK_STOP_UUID, VARIANT_2_ID)).willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(BRANCHES_VARIANT);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, NETWORK_UUID, null)).willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, NETWORK_STOP_UUID, VARIANT_2_ID)).willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(GENERATORS_FILTERS_INJECTIONS_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(GENERATORS);
+        given(filterService.getIdentifiablesFromFilter(GENERATORS_FILTERS_INJECTIONS_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(GENERATORS_VARIANT);
+        given(filterService.getIdentifiablesFromFilter(GENERATORS_FILTERS_INJECTIONS_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(GENERATORS);
+        given(filterService.getIdentifiablesFromFilter(GENERATORS_FILTERS_INJECTIONS_UUID, NETWORK_UUID, null)).willReturn(GENERATORS);
+        given(filterService.getIdentifiablesFromFilter(GENERATORS_FILTERS_INJECTIONS_UUID, NETWORK_STOP_UUID, VARIANT_2_ID)).willReturn(GENERATORS);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_HVDC_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_HVDC_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(BRANCHES_VARIANT);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_HVDC_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_HVDC_UUID, NETWORK_UUID, null)).willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_HVDC_UUID, NETWORK_STOP_UUID, VARIANT_2_ID)).willReturn(BRANCHES);
+        given(filterService.getIdentifiablesFromFilter(HVDC_FILTERS_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(HVDCS);
+        given(filterService.getIdentifiablesFromFilter(HVDC_FILTERS_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(HVDCS_VARIANT);
+        given(filterService.getIdentifiablesFromFilter(HVDC_FILTERS_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(HVDCS);
+        given(filterService.getIdentifiablesFromFilter(HVDC_FILTERS_UUID, NETWORK_UUID, null)).willReturn(HVDCS);
+        given(filterService.getIdentifiablesFromFilter(HVDC_FILTERS_UUID, NETWORK_STOP_UUID, VARIANT_2_ID)).willReturn(HVDCS);
+        given(filterService.getIdentifiablesFromFilter(PST_FILTERS_UUID1, NETWORK_UUID, VARIANT_1_ID)).willReturn(PSTS);
+        given(filterService.getIdentifiablesFromFilter(PST_FILTERS_UUID1, NETWORK_UUID, VARIANT_3_ID)).willReturn(PSTS_VARIANT);
+        given(filterService.getIdentifiablesFromFilter(PST_FILTERS_UUID1, NETWORK_UUID, VARIANT_2_ID)).willReturn(PSTS);
+        given(filterService.getIdentifiablesFromFilter(PST_FILTERS_UUID1, NETWORK_UUID, null)).willReturn(PSTS);
+        given(filterService.getIdentifiablesFromFilter(PST_FILTERS_UUID1, NETWORK_STOP_UUID, VARIANT_2_ID)).willReturn(PSTS);
+        given(filterService.getIdentifiablesFromFilter(PST_FILTERS_UUID2, NETWORK_UUID, VARIANT_1_ID)).willReturn(PSTS);
+        given(filterService.getIdentifiablesFromFilter(PST_FILTERS_UUID2, NETWORK_UUID, VARIANT_3_ID)).willReturn(PSTS_VARIANT);
+        given(filterService.getIdentifiablesFromFilter(PST_FILTERS_UUID2, NETWORK_UUID, VARIANT_2_ID)).willReturn(PSTS);
+        given(filterService.getIdentifiablesFromFilter(PST_FILTERS_UUID2, NETWORK_UUID, null)).willReturn(PSTS);
+        given(filterService.getIdentifiablesFromFilter(PST_FILTERS_UUID2, NETWORK_STOP_UUID, VARIANT_2_ID)).willReturn(PSTS);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(VOLTAGE_LEVELS);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(VOLTAGE_LEVELS_VARIANT);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(VOLTAGE_LEVELS);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID, NETWORK_UUID, null)).willReturn(VOLTAGE_LEVELS);
+        given(filterService.getIdentifiablesFromFilter(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID, NETWORK_STOP_UUID, VARIANT_2_ID)).willReturn(VOLTAGE_LEVELS);
+        given(filterService.getIdentifiablesFromFilter(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(EQUIPMENTS_IN_VOLTAGE_REGULATION);
+        given(filterService.getIdentifiablesFromFilter(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(EQUIPMENTS_IN_VOLTAGE_REGULATION_VARIANT);
+        given(filterService.getIdentifiablesFromFilter(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(EQUIPMENTS_IN_VOLTAGE_REGULATION);
+        given(filterService.getIdentifiablesFromFilter(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, NETWORK_UUID, null)).willReturn(EQUIPMENTS_IN_VOLTAGE_REGULATION);
+        given(filterService.getIdentifiablesFromFilter(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, NETWORK_STOP_UUID, VARIANT_2_ID)).willReturn(EQUIPMENTS_IN_VOLTAGE_REGULATION);
 
         // report service mocking
         doAnswer(i -> null).when(reportService).sendReport(any(), any());
@@ -340,11 +445,12 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     public void runTest() throws Exception {
+
         // run with specific variant
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run?contingencyListUuid=" + CONTINGENCY_LIST_UUID_VARIANT +
-                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID_VARIANT + "&branchFiltersListUuid=" + BRANCHES_LIST_UUID_VARIANT +
-                    "&variantId=" + VARIANT_3_ID, NETWORK_UUID))
+                "/" + VERSION + "/networks/{networkUuid}/run?variantId=" + VARIANT_3_ID, NETWORK_UUID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(SENSITIVITY_INPUT))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
@@ -352,8 +458,9 @@ public class SensitivityAnalysisControllerTest {
 
         // run with implicit initial variant
         result = mockMvc.perform(post(
-            "/" + VERSION + "/networks/{networkUuid}/run?contingencyListUuid=" + CONTINGENCY_LIST_UUID +
-                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&branchFiltersListUuid=" + BRANCHES_LIST_UUID, NETWORK_UUID))
+            "/" + VERSION + "/networks/{networkUuid}/run", NETWORK_UUID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(SENSITIVITY_INPUT))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
@@ -363,9 +470,9 @@ public class SensitivityAnalysisControllerTest {
     @Test
     public void runAndSaveTest() throws Exception {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run-and-save?contingencyListUuid=" + CONTINGENCY_LIST_UUID +
-                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&branchFiltersListUuid=" + BRANCHES_LIST_UUID
-                        + "&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_UUID))
+                "/" + VERSION + "/networks/{networkUuid}/run-and-save?receiver=me&variantId=" + VARIANT_2_ID, NETWORK_UUID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(SENSITIVITY_INPUT))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
@@ -398,8 +505,9 @@ public class SensitivityAnalysisControllerTest {
     @Test
     public void deleteResultsTest() {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run-and-save?contingencyListUuid=" + CONTINGENCY_LIST_UUID +
-                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&branchFiltersListUuid=" + BRANCHES_LIST_UUID, NETWORK_UUID))
+                "/" + VERSION + "/networks/{networkUuid}/run-and-save", NETWORK_UUID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(SENSITIVITY_INPUT))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
@@ -418,13 +526,13 @@ public class SensitivityAnalysisControllerTest {
     @Test
     public void mergingViewTest() {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run?contingencyListUuid=" + CONTINGENCY_LIST_UUID +
-                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID_MERGING_VIEW + "&branchFiltersListUuid=" + BRANCHES_LIST_UUID_MERGING_VIEW +
-                    "&networkUuid=" + OTHER_NETWORK_FOR_MERGING_VIEW_UUID, NETWORK_FOR_MERGING_VIEW_UUID))
+                "/" + VERSION + "/networks/{networkUuid}/run-and-save?networkUuid=" + OTHER_NETWORK_FOR_MERGING_VIEW_UUID, NETWORK_FOR_MERGING_VIEW_UUID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(SENSITIVITY_INPUT))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
-        assertEquals("", result.getResponse().getContentAsString());
+        assertEquals(RESULT_UUID, mapper.readValue(result.getResponse().getContentAsString(), UUID.class));
     }
 
     @SneakyThrows
@@ -450,9 +558,9 @@ public class SensitivityAnalysisControllerTest {
     @Test
     public void stopTest() throws Exception {
         mockMvc.perform(post(
-            "/" + VERSION + "/networks/{networkUuid}/run-and-save?contingencyListUuid=" + CONTINGENCY_LIST_UUID +
-                "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&branchFiltersListUuid=" + BRANCHES_LIST_UUID +
-                "&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_STOP_UUID))
+            "/" + VERSION + "/networks/{networkUuid}/run-and-save?receiver=me&variantId=" + VARIANT_2_ID, NETWORK_STOP_UUID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(SENSITIVITY_INPUT))
             .andExpect(status().isOk());
 
         // stop sensitivity analysis
@@ -472,9 +580,9 @@ public class SensitivityAnalysisControllerTest {
     @Test
     public void runTestWithError() {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run-and-save?contingencyListUuid=" + CONTINGENCY_LIST_ERROR_UUID +
-                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&branchFiltersListUuid=" + BRANCHES_LIST_UUID +
-                    "&receiver=me&variantId=" + VARIANT_1_ID, NETWORK_UUID))
+                "/" + VERSION + "/networks/{networkUuid}/run-and-save?receiver=me&variantId=" + VARIANT_1_ID, NETWORK_ERROR_UUID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(SENSITIVITY_INPUT))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
@@ -495,9 +603,9 @@ public class SensitivityAnalysisControllerTest {
     @Test
     public void runWithReportTest() {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run?contingencyListUuid=" + CONTINGENCY_LIST_UUID +
-                    "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&branchFiltersListUuid=" + BRANCHES_LIST_UUID +
-                    "&reportUuid=" + REPORT_UUID, NETWORK_UUID))
+                "/" + VERSION + "/networks/{networkUuid}/run?reportUuid=" + REPORT_UUID, NETWORK_UUID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(SENSITIVITY_INPUT))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
