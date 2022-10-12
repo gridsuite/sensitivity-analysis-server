@@ -185,7 +185,7 @@ public class SensitivityAnalysisWorkerService {
                 ? context.getSensitivityAnalysisInputData().getParameters()
                 : new SensitivityAnalysisParameters();
 
-            // TODO : context.getSensitivityAnalysisInputData().getResultsThreshold() ?
+            // TODO : how to use context.getSensitivityAnalysisInputData().getResultsThreshold() ?
 
             CompletableFuture<SensitivityAnalysisResult> future = sensitivityAnalysisRunner.runAsync(
                 network,

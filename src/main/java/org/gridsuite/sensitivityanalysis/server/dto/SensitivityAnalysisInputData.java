@@ -99,19 +99,19 @@ public class SensitivityAnalysisInputData {
     private double resultsThreshold;
 
     @Schema(description = "Sensitivity relatively to injections set")
-    private SensitivityInjectionsSet sensitivityInjectionsSet;
+    private List<SensitivityInjectionsSet> sensitivityInjectionsSets;
 
     @Schema(description = "Sensitivity relatively to each injection")
-    private SensitivityInjection sensitivityInjection;
+    private List<SensitivityInjection> sensitivityInjections;
 
     @Schema(description = "Sensitivity relatively to each HVDC")
-    private SensitivityHVDC sensitivityHVDC;
+    private List<SensitivityHVDC> sensitivityHVDCs;
 
     @Schema(description = "Sensitivity relatively to each PST")
-    private SensitivityPST sensitivityPST;
+    private List<SensitivityPST> sensitivityPSTs;
 
     @Schema(description = "Sensitivity relatively to nodes")
-    private SensitivityNodes sensitivityNodes;
+    private List<SensitivityNodes> sensitivityNodes;
 
     @Schema(description = "Sensitivity parameters")
     private SensitivityAnalysisParameters parameters;
