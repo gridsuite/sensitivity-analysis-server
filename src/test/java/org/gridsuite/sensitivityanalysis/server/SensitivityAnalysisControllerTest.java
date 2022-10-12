@@ -497,7 +497,7 @@ public class SensitivityAnalysisControllerTest {
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/run?contingencyListUuid=" + CONTINGENCY_LIST_UUID +
                     "&variablesFiltersListUuid=" + VARIABLES_LIST_UUID + "&branchFiltersListUuid=" + BRANCHES_LIST_UUID +
-                    "&reportUuid=" + REPORT_UUID, NETWORK_UUID))
+                    "&provider=testProvider" + "&reportUuid=" + REPORT_UUID + "&reporterId=" + UUID.randomUUID(), NETWORK_UUID))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
