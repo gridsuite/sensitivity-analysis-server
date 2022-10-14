@@ -6,6 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.computation.ComputationManager;
@@ -39,6 +40,8 @@ import com.powsybl.sensitivity.SensitivityValue;
 import com.powsybl.sensitivity.SensitivityVariableType;
 import lombok.SneakyThrows;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.gridsuite.sensitivityanalysis.server.service.ReportService;
@@ -220,8 +223,12 @@ public class SensitivityAnalysisControllerTest {
         false, ContingencyContext.none()));
 
     private static final List<SensitivityValue> SENSITIVITY_VALUES = List.of(
-        new SensitivityValue(0, 0, 500.7, 2.8),
-        new SensitivityValue(0, -1, 500.7, 2.8)
+        new SensitivityValue(0, -1, 500.1, 2.9),
+        new SensitivityValue(1, -1, 500.2, 2.8),
+        new SensitivityValue(0, 0, 500.3, 2.7),
+        new SensitivityValue(0, 1, 500.4, 2.6),
+        new SensitivityValue(1, 0, 500.5, 2.5),
+        new SensitivityValue(1, 1, 500.6, 2.4)
     );
     private static final List<SensitivityValue> SENSITIVITY_VALUES_VARIANT = List.of(new SensitivityValue(0, 0, 3d, 4d));
 
@@ -501,7 +508,7 @@ public class SensitivityAnalysisControllerTest {
 
         // run with implicit initial variant
         for (String sensitivityInput : List.of(SENSITIVITY_INPUT_1, SENSITIVITY_INPUT_2, SENSITIVITY_INPUT_3, SENSITIVITY_INPUT_4, SENSITIVITY_INPUT_5, SENSITIVITY_INPUT_6)) {
-            result = mockMvc.perform(post(
+        result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/run", NETWORK_UUID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(sensitivityInput))
@@ -516,9 +523,9 @@ public class SensitivityAnalysisControllerTest {
                 "/" + VERSION + "/networks/{networkUuid}/run?provider=OpenLoadFlow", NETWORK_UUID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(SENSITIVITY_INPUT_HVDC_DELTA_A))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
         assertEquals(mapper.writeValueAsString(RESULT), result.getResponse().getContentAsString());
     }
 
@@ -552,9 +559,9 @@ public class SensitivityAnalysisControllerTest {
         SensitivityAnalysisController.ResultsSelector selectorNK = SensitivityAnalysisController.ResultsSelector.builder()
             .isJustBefore(false)
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
-            .contingencyIds(CONTINGENCIES.stream().map(Contingency::getId).collect(Collectors.toList()))
-            .functionIds(BRANCHES.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
-            .variableIds(VARIABLES.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
+            .contingencyIds(CONTINGENCIES_VARIANT.stream().map(Contingency::getId).collect(Collectors.toList()))
+            .functionIds(BRANCHES_VARIANT.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
+            .variableIds(VARIABLES_VARIANT.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
             .build();
 
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
@@ -562,20 +569,25 @@ public class SensitivityAnalysisControllerTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
+        List<SensitivityOfTo> resN = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(2, resN.size());
 
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
                 mapper.writeValueAsString(selectorNK)))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
+        List<SensitivityWithContingency> resNK = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(4, resNK.size());
 
-        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
+        mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
                 "bogusJSON"))
             .andExpect(status().is4xxClientError())
             .andReturn();
 
+        //noinspection UnnecessaryLocalVariable
         final UUID bogusUuid = REPORT_UUID;
-        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", bogusUuid,
+        mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", bogusUuid,
                 mapper.writeValueAsString(selectorN)))
             .andExpect(status().isNotFound())
             .andReturn();

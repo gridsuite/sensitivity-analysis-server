@@ -12,4 +12,8 @@ public class SensitivityOfTo {
 
     private double value;
     private double functionReference;
+
+    // ObjectMapper.readValue to deserialize a list of, for tests
+    @SuppressWarnings("unused") protected SensitivityOfTo() {
+    }
 }
