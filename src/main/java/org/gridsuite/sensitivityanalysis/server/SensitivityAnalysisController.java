@@ -139,7 +139,7 @@ public class SensitivityAnalysisController {
         try {
             selector = mapper.readValue(selectorJson, ResultsSelector.class);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            return ResponseEntity.badRequest().build();
         }
 
         if (Boolean.TRUE.equals(selector.isJustBefore)) {

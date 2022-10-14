@@ -123,7 +123,6 @@ public class SensitivityAnalysisResultRepository {
     public String find(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         ResultEntity resultEntity = resultRepository.findByResultUuid(resultUuid);
-        var res  = analysisResultRepository.findByResultUuid(resultUuid);
         return resultEntity != null ? resultEntity.getResult() : null;
     }
 
@@ -168,28 +167,30 @@ public class SensitivityAnalysisResultRepository {
         List<SensitivityOfTo> ret = new ArrayList<>();
 
         AnalysisResultEntity sas = analysisResultRepository.findByResultUuid(resultUuid);
-        if (sas != null) {
-            List<ContingencyEmbeddable> cs = sas.getContingencies();
-            List<SensitivityFactorP> fs = sas.getFactors();
-
-            if (funcIds != null && fs.stream().noneMatch(f -> funcIds.contains(f.getFunctionId()))) {
-                return ret;
-            }
-            if (varIds != null && fs.stream().noneMatch(f -> varIds.contains(f.getVariableId()))) {
-                return ret;
-            }
-            if (sensitivityFunctionType != null && fs.stream().noneMatch(f -> f.getFunctionType() == sensitivityFunctionType)) {
-                return ret;
-            }
-
-            apply(sas, funcIds, varIds, cs, fs, (sar, c, f) -> ret.add(SensitivityOfTo.builder()
-                .funcId(f.getFunctionId())
-                .varId(f.getVariableId())
-                .varIsAFilter(f.isVariableSet())
-                .value(sar.getValue())
-                .functionReference(sar.getFunctionReference())
-                .build()));
+        if (sas == null) {
+            return null;
         }
+
+        List<ContingencyEmbeddable> cs = sas.getContingencies();
+        List<SensitivityFactorP> fs = sas.getFactors();
+
+        if (funcIds != null && fs.stream().noneMatch(f -> funcIds.contains(f.getFunctionId()))) {
+            return ret;
+        }
+        if (varIds != null && fs.stream().noneMatch(f -> varIds.contains(f.getVariableId()))) {
+            return ret;
+        }
+        if (sensitivityFunctionType != null && fs.stream().noneMatch(f -> f.getFunctionType() == sensitivityFunctionType)) {
+            return ret;
+        }
+
+        apply(sas, funcIds, varIds, cs, fs, (sar, c, f) -> ret.add(SensitivityOfTo.builder()
+            .funcId(f.getFunctionId())
+            .varId(f.getVariableId())
+            .varIsAFilter(f.isVariableSet())
+            .value(sar.getValue())
+            .functionReference(sar.getFunctionReference())
+            .build()));
         return ret;
     }
 
@@ -199,54 +200,55 @@ public class SensitivityAnalysisResultRepository {
 
         List<SensitivityWithContingency> ret = new ArrayList<>();
         AnalysisResultEntity sas = analysisResultRepository.findByResultUuid(resultUuid);
-        if (sas != null) {
-            List<ContingencyEmbeddable> cs = sas.getContingencies();
-            List<SensitivityFactorP> fs = sas.getFactors();
-
-            if (contingencies != null && cs.stream().noneMatch(c -> contingencies.contains(c.getId()))) {
-                return ret;
-            }
-            if (funcIds != null && fs.stream().noneMatch(f -> funcIds.contains(f.getFunctionId()))) {
-                return ret;
-            }
-            if (varIds != null && fs.stream().noneMatch(f -> varIds.contains(f.getVariableId()))) {
-                return ret;
-            }
-            if (sensitivityFunctionType != null && fs.stream().noneMatch(f -> f.getFunctionType() == sensitivityFunctionType)) {
-                return ret;
-            }
-
-            Map<Pair<String, String>, SensitivityOfTo> before = new HashMap<>();
-            apply(sas, funcIds, varIds, cs, fs, (sar, c, f) -> {
-                if (c != null) {
-                    return;
-                }
-                before.put(Pair.of(f.getFunctionId(), f.getVariableId()), SensitivityOfTo.builder()
-                    .funcId(f.getFunctionId())
-                    .varId(f.getVariableId())
-                    .varIsAFilter(f.isVariableSet())
-                    .value(sar.getValue())
-                    .functionReference(sar.getFunctionReference())
-                    .build());
-            });
-
-            apply(sas, funcIds, varIds, cs, fs, (sar, c, f) -> {
-                if (c == null) {
-                    return;
-                }
-                SensitivityOfTo b = before.get(Pair.of(f.getFunctionId(), f.getVariableId()));
-                SensitivityWithContingency r = SensitivityWithContingency.toBuilder(b)
-                    .funcId(f.getFunctionId())
-                    .varId(f.getVariableId())
-                    .varIsAFilter(f.isVariableSet())
-                    .valueAfter(sar.getValue())
-                    .functionReferenceAfter(sar.getFunctionReference())
-                    .contingencyId(c.getId())
-                    .build();
-                ret.add(r);
-            });
-
+        if (sas == null) {
+            return null;
         }
+
+        List<ContingencyEmbeddable> cs = sas.getContingencies();
+        List<SensitivityFactorP> fs = sas.getFactors();
+
+        if (contingencies != null && cs.stream().noneMatch(c -> contingencies.contains(c.getId()))) {
+            return ret;
+        }
+        if (funcIds != null && fs.stream().noneMatch(f -> funcIds.contains(f.getFunctionId()))) {
+            return ret;
+        }
+        if (varIds != null && fs.stream().noneMatch(f -> varIds.contains(f.getVariableId()))) {
+            return ret;
+        }
+        if (sensitivityFunctionType != null && fs.stream().noneMatch(f -> f.getFunctionType() == sensitivityFunctionType)) {
+            return ret;
+        }
+
+        Map<Pair<String, String>, SensitivityOfTo> before = new HashMap<>();
+        apply(sas, funcIds, varIds, cs, fs, (sar, c, f) -> {
+            if (c != null) {
+                return;
+            }
+            before.put(Pair.of(f.getFunctionId(), f.getVariableId()), SensitivityOfTo.builder()
+                .funcId(f.getFunctionId())
+                .varId(f.getVariableId())
+                .varIsAFilter(f.isVariableSet())
+                .value(sar.getValue())
+                .functionReference(sar.getFunctionReference())
+                .build());
+        });
+
+        apply(sas, funcIds, varIds, cs, fs, (sar, c, f) -> {
+            if (c == null) {
+                return;
+            }
+            SensitivityOfTo b = before.get(Pair.of(f.getFunctionId(), f.getVariableId()));
+            SensitivityWithContingency r = SensitivityWithContingency.toBuilder(b)
+                .funcId(f.getFunctionId())
+                .varId(f.getVariableId())
+                .varIsAFilter(f.isVariableSet())
+                .valueAfter(sar.getValue())
+                .functionReferenceAfter(sar.getFunctionReference())
+                .contingencyId(c.getId())
+                .build();
+            ret.add(r);
+        });
 
         return ret;
     }

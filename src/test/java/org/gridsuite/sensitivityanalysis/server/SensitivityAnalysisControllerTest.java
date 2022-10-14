@@ -569,6 +569,17 @@ public class SensitivityAnalysisControllerTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
 
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
+                "bogusJSON"))
+            .andExpect(status().is4xxClientError())
+            .andReturn();
+
+        final UUID bogusUuid = REPORT_UUID;
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", bogusUuid,
+                mapper.writeValueAsString(selectorN)))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
         // should throw not found if result does not exist
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", OTHER_RESULT_UUID))
             .andExpect(status().isNotFound());
