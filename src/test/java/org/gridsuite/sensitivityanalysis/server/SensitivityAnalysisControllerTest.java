@@ -13,6 +13,7 @@ import com.powsybl.contingency.BranchContingency;
 import com.powsybl.contingency.BusbarSectionContingency;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.contingency.ContingencyContext;
+import com.powsybl.contingency.ContingencyContextType;
 import com.powsybl.contingency.DanglingLineContingency;
 import com.powsybl.contingency.GeneratorContingency;
 import com.powsybl.contingency.HvdcLineContingency;
@@ -208,14 +209,20 @@ public class SensitivityAnalysisControllerTest {
         new IdentifiableAttributes("e3", IdentifiableType.GENERATOR, null)
     );
 
-    private static final List<SensitivityFactor> SENSITIVITY_FACTORS = List.of(new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l",
-        SensitivityVariableType.INJECTION_ACTIVE_POWER, "g",
-        false, ContingencyContext.all()));
+    private static final List<SensitivityFactor> SENSITIVITY_FACTORS = List.of(
+        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "v1",
+            SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN", false, ContingencyContext.all()),
+        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "v2",
+            SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN", false, ContingencyContext.create("l1", ContingencyContextType.SPECIFIC))
+    );
     private static final List<SensitivityFactor> SENSITIVITY_FACTORS_VARIANT = List.of(new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l2",
-        SensitivityVariableType.INJECTION_ACTIVE_POWER, "g2",
+        SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN2",
         false, ContingencyContext.none()));
 
-    private static final List<SensitivityValue> SENSITIVITY_VALUES = List.of(new SensitivityValue(0, 0, 1d, 2d));
+    private static final List<SensitivityValue> SENSITIVITY_VALUES = List.of(
+        new SensitivityValue(0, 0, 500.7, 2.8),
+        new SensitivityValue(0, -1, 500.7, 2.8)
+    );
     private static final List<SensitivityValue> SENSITIVITY_VALUES_VARIANT = List.of(new SensitivityValue(0, 0, 3d, 4d));
 
     private static final SensitivityAnalysisResult RESULT = new SensitivityAnalysisResult(SENSITIVITY_FACTORS,
@@ -530,12 +537,37 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(RESULT_UUID.toString(), resultMessage.getHeaders().get("resultUuid"));
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
 
-        result = mockMvc.perform(get(
-                "/" + VERSION + "/results/{resultUuid}", RESULT_UUID))
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", RESULT_UUID))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
         assertEquals(mapper.writeValueAsString(RESULT), result.getResponse().getContentAsString());
+
+        SensitivityAnalysisController.ResultsSelector selectorN = SensitivityAnalysisController.ResultsSelector.builder()
+            .isJustBefore(true)
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+            .functionIds(BRANCHES.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
+            .variableIds(VARIABLES.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
+            .build();
+        SensitivityAnalysisController.ResultsSelector selectorNK = SensitivityAnalysisController.ResultsSelector.builder()
+            .isJustBefore(false)
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+            .contingencyIds(CONTINGENCIES.stream().map(Contingency::getId).collect(Collectors.toList()))
+            .functionIds(BRANCHES.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
+            .variableIds(VARIABLES.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
+            .build();
+
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
+                mapper.writeValueAsString(selectorN)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
+                mapper.writeValueAsString(selectorNK)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
 
         // should throw not found if result does not exist
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", OTHER_RESULT_UUID))

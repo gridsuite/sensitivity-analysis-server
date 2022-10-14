@@ -6,10 +6,8 @@
  */
 package org.gridsuite.sensitivityanalysis.server;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityFunctionType;
 import io.swagger.v3.oas.annotations.Operation;
@@ -101,7 +99,7 @@ public class SensitivityAnalysisController {
     @GetMapping(value = "/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Get a sensitivity analysis result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis result"),
-                           @ApiResponse(responseCode = "404", description = "Sensitivity analysis result has not been found")})
+        @ApiResponse(responseCode = "404", description = "Sensitivity analysis result has not been found")})
     public ResponseEntity<String> getResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
         String result = service.getResult(resultUuid);
         return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result)
@@ -112,9 +110,8 @@ public class SensitivityAnalysisController {
     @AllArgsConstructor
     @Builder
     @Getter
-    @JsonDeserialize
     @Schema(description = "Results selector")
-    static class ResultsSelector {
+    public static class ResultsSelector {
         @Schema(description = "ids of the functions (branches) to limit to")
         Collection<String> functionIds;
         @Schema(description = "ids of the variables to limit to")
@@ -123,9 +120,10 @@ public class SensitivityAnalysisController {
         Collection<String> contingencyIds;
         @Schema(description = "function type (/MV /MA /kV)")
         SensitivityFunctionType functionType;
-        @Schema(description = "true for N, false for N-k")
-        @JsonProperty(value = "isJustBefore")
-        boolean isJustBefore;
+        @Schema(description = "true for N, false for N-k", name = "isJustBefore")
+        // object Boolean, not type boolean or else json round trip is broken
+        // as a "justBefore" property would be added when a "isJustBefore" would be looked after
+        Boolean                 isJustBefore;
     }
 
     @GetMapping(value = "/results/{resultUuid}/tabbed", produces = APPLICATION_JSON_VALUE)
@@ -144,7 +142,7 @@ public class SensitivityAnalysisController {
             throw new RuntimeException(e);
         }
 
-        if (selector.isJustBefore) {
+        if (Boolean.TRUE.equals(selector.isJustBefore)) {
             List<SensitivityOfTo> result = service.getResult(resultUuid,
                 selector.functionIds, selector.variableIds,
                 selector.functionType);

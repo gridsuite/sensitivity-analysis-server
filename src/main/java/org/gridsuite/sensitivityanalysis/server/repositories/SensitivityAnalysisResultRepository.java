@@ -119,8 +119,6 @@ public class SensitivityAnalysisResultRepository {
         analysisResultRepository.deleteAll();
     }
 
-    //@Transactional(readOnly = true)
-
     @Transactional(readOnly = true)
     public String find(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
@@ -184,15 +182,13 @@ public class SensitivityAnalysisResultRepository {
                 return ret;
             }
 
-            apply(sas, funcIds, varIds, cs, fs, (sar, c, f) -> {
-                ret.add(SensitivityOfTo.builder()
-                    .funcId(f.getFunctionId())
-                    .varId(f.getVariableId())
-                    .varIsAFilter(f.isVariableSet())
-                    .value(sar.getValue())
-                    .functionReference(sar.getFunctionReference())
-                    .build());
-            });
+            apply(sas, funcIds, varIds, cs, fs, (sar, c, f) -> ret.add(SensitivityOfTo.builder()
+                .funcId(f.getFunctionId())
+                .varId(f.getVariableId())
+                .varIsAFilter(f.isVariableSet())
+                .value(sar.getValue())
+                .functionReference(sar.getFunctionReference())
+                .build()));
         }
         return ret;
     }

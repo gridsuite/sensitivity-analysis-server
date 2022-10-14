@@ -8,6 +8,10 @@ import lombok.experimental.SuperBuilder;
 public class SensitivityWithContingency extends SensitivityOfTo {
 
     public static SensitivityWithContingencyBuilder<?, ?> toBuilder(SensitivityOfTo base) {
+        if (base == null) {
+            return builder();
+        }
+
         return builder().funcId(base.getFuncId()).varId(base.getVarId()).value(base.getValue()).functionReference(
             base.getFunctionReference()).varIsAFilter(base.isVarIsAFilter());
     }
