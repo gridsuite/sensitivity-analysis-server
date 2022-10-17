@@ -21,6 +21,7 @@ import com.powsybl.sensitivity.SensitivityFunctionType;
 import com.powsybl.sensitivity.SensitivityVariableSet;
 import com.powsybl.sensitivity.SensitivityVariableType;
 import com.powsybl.sensitivity.WeightedSensitivityVariable;
+import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 
@@ -250,7 +251,7 @@ public class SensitivityAnalysisInputBuilder {
                     reporter.report(Report.builder()
                         .withKey("badMonitoredEquipmentType")
                         .withDefaultMessage("Monitored equipments type in filter with name=${name} should be ${expectedType} : filter is ignored")
-                        .withValue("id", monitoredEquimentsListIdent.getName())
+                        .withValue("name", monitoredEquimentsListIdent.getName())
                         .withValue("expectedType", monitoredEquipmentsTypesAllowed.toString())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
@@ -338,15 +339,30 @@ public class SensitivityAnalysisInputBuilder {
         List<SensitivityAnalysisInputData.SensitivityHVDC> sensitivityHVDCs = context.getSensitivityAnalysisInputData().getSensitivityHVDCs();
         sensitivityHVDCs.forEach(sensitivityHVDC -> {
             List<Contingency> cHVDC = buildContingencies(sensitivityHVDC.getContingencies());
+            SensitivityFunctionType sensitivityFunctionType = sensitivityHVDC.getSensitivityType() == SensitivityAnalysisInputData.SensitivityType.DELTA_MW
+                    ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1
+                    : SensitivityFunctionType.BRANCH_CURRENT_1;
+            // TODO : SensitivityType.DELTA_A is not yet supported with OpenLoadFlow
+            // check to be removed further ...
+            if (sensitivityHVDC.getSensitivityType() == SensitivityAnalysisInputData.SensitivityType.DELTA_A &&
+                StringUtils.equals("OpenLoadFlow", context.getProvider())) {
+                reporter.report(Report.builder()
+                    .withKey("sensitivityTypeNotYetSupported")
+                    .withDefaultMessage("Sensitivity type ${sensitivityType} is not yet supported with OpenLoadFlow : type forced to ${replacingSensitivityType}")
+                    .withValue("sensitivityType", sensitivityHVDC.getSensitivityType().name())
+                    .withValue("replacingSensitivityType", SensitivityAnalysisInputData.SensitivityType.DELTA_MW.name())
+                    .withSeverity(TypedValue.WARN_SEVERITY)
+                    .build());
+                sensitivityFunctionType = SensitivityFunctionType.BRANCH_ACTIVE_POWER_1;
+            }
+
             List<SensitivityFactor> fHVDC = buildSensitivityFactorsFromEquipments(
                 List.of(IdentifiableType.LINE, IdentifiableType.TWO_WINDINGS_TRANSFORMER),
                 sensitivityHVDC.getMonitoredBranches(),
                 List.of(IdentifiableType.HVDC_LINE),
                 sensitivityHVDC.getHvdcs(),
                 cHVDC,
-                sensitivityHVDC.getSensitivityType() == SensitivityAnalysisInputData.SensitivityType.DELTA_MW
-                    ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1
-                    : SensitivityFunctionType.BRANCH_CURRENT_1,
+                sensitivityFunctionType,
                 SensitivityVariableType.HVDC_LINE_ACTIVE_POWER,
                 reporter);
 
@@ -378,6 +394,15 @@ public class SensitivityAnalysisInputBuilder {
 
     private void buildSensitivityNodes(Reporter reporter) {
         List<SensitivityAnalysisInputData.SensitivityNodes> sensitivityNodes = context.getSensitivityAnalysisInputData().getSensitivityNodes();
+        // nodes sensitivity is only available with OpenLoadFlow
+        if (!sensitivityNodes.isEmpty() && !StringUtils.equals("OpenLoadFlow", context.getProvider())) {
+            reporter.report(Report.builder()
+                .withKey("sensitivityNodesComputationNotSupported")
+                .withDefaultMessage("Sensitivity nodes computation is only supported with OpenLoadFlow : computation ignored")
+                .withSeverity(TypedValue.WARN_SEVERITY)
+                .build());
+            return;
+        }
         sensitivityNodes.forEach(sensitivityNode -> {
             List<Contingency> cNodes = buildContingencies(sensitivityNode.getContingencies());
             List<SensitivityFactor> fNodes = buildSensitivityFactorsFromEquipments(
