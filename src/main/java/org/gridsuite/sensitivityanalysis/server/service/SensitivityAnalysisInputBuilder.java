@@ -51,9 +51,9 @@ public class SensitivityAnalysisInputBuilder {
         this.filterService = filterService;
     }
 
-    private List<Contingency> buildContingencies(List<UUID> contingencyListUuids) {
-        return contingencyListUuids.stream()
-            .flatMap(contingencyListUuid -> actionsService.getContingencyList(contingencyListUuid, context.getNetworkUuid(), context.getVariantId()).stream())
+    private List<Contingency> buildContingencies(List<SensitivityAnalysisInputData.Ident> contingencyListsIdents) {
+        return contingencyListsIdents.stream()
+            .flatMap(contingencyListIdent -> actionsService.getContingencyList(contingencyListIdent.getId(), context.getNetworkUuid(), context.getVariantId()).stream())
             .collect(Collectors.toList());
     }
 
@@ -83,6 +83,7 @@ public class SensitivityAnalysisInputBuilder {
         double weight;
         switch (distributionType) {
             case PROPORTIONAL:
+            case PROPORTIONAL_MAXP: // simpler to use the same enum for generator and load
                 weight = load.getP0();
                 break;
             case REGULAR:
@@ -99,21 +100,21 @@ public class SensitivityAnalysisInputBuilder {
     }
 
     private List<SensitivityVariableSet> buildSensitivityVariableSets(List<IdentifiableType> variablesTypesAllowed,
-                                                                      List<UUID> variablesFiltersListUuids,
+                                                                      List<SensitivityAnalysisInputData.Ident> variablesFiltersListIdents,
                                                                       SensitivityAnalysisInputData.DistributionType distributionType,
                                                                       Reporter reporter) {
         List<SensitivityVariableSet> result = new ArrayList<>();
 
-        List<List<IdentifiableAttributes>> variablesFiltersLists = variablesFiltersListUuids.stream()
-            .map(variablesFilterUuid -> {
-                List<IdentifiableAttributes> list = filterService.getIdentifiablesFromFilter(variablesFilterUuid, context.getNetworkUuid(), context.getVariantId());
+        List<List<IdentifiableAttributes>> variablesFiltersLists = variablesFiltersListIdents.stream()
+            .map(variablesFilterIdent -> {
+                List<IdentifiableAttributes> list = filterService.getIdentifiablesFromFilter(variablesFilterIdent.getId(), context.getNetworkUuid(), context.getVariantId());
                 if (list.stream().allMatch(i -> variablesTypesAllowed.contains(i.getType()))) {
                     return list;
                 } else {
                     reporter.report(Report.builder()
                         .withKey("badEquipmentType")
-                        .withDefaultMessage("Equipments type in filter with id=${id} should be ${expectedType} : filter is ignored")
-                        .withValue("id", variablesFilterUuid.toString())
+                        .withDefaultMessage("Equipments type in filter with name=${name} should be ${expectedType} : filter is ignored")
+                        .withValue("name", variablesFilterIdent.getName())
                         .withValue("expectedType", variablesTypesAllowed.toString())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
@@ -152,7 +153,7 @@ public class SensitivityAnalysisInputBuilder {
     }
 
     private List<SensitivityFactor> buildSensitivityFactorsFromVariablesSets(List<IdentifiableType> monitoredEquipmentsTypesAllowed,
-                                                                             List<UUID> monitoredEquipmentsListUuids,
+                                                                             List<SensitivityAnalysisInputData.Ident> monitoredEquipmentsListIdents,
                                                                              List<SensitivityVariableSet> variablesSets,
                                                                              List<Contingency> contingencies,
                                                                              SensitivityFunctionType sensitivityFunctionType,
@@ -160,17 +161,17 @@ public class SensitivityAnalysisInputBuilder {
                                                                              Reporter reporter) {
         List<SensitivityFactor> result = new ArrayList<>();
 
-        List<IdentifiableAttributes> monitoredEquipments = monitoredEquipmentsListUuids.stream()
-            .flatMap(equimentsListUuid -> {
-                List<IdentifiableAttributes> list = filterService.getIdentifiablesFromFilter(equimentsListUuid, context.getNetworkUuid(), context.getVariantId());
+        List<IdentifiableAttributes> monitoredEquipments = monitoredEquipmentsListIdents.stream()
+            .flatMap(equimentsListIdent -> {
+                List<IdentifiableAttributes> list = filterService.getIdentifiablesFromFilter(equimentsListIdent.getId(), context.getNetworkUuid(), context.getVariantId());
                 // check that monitored equipments type is allowed
                 if (list.stream().allMatch(i -> monitoredEquipmentsTypesAllowed.contains(i.getType()))) {
                     return list.stream();
                 } else {
                     reporter.report(Report.builder()
                         .withKey("badMonitoredEquipmentType")
-                        .withDefaultMessage("Monitored equipments type in filter with id=${id} should be ${expectedType} : filter is ignored")
-                        .withValue("id", equimentsListUuid.toString())
+                        .withDefaultMessage("Monitored equipments type in filter with name=${name} should be ${expectedType} : filter is ignored")
+                        .withValue("name", equimentsListIdent.getName())
                         .withValue("expectedType", monitoredEquipmentsTypesAllowed.toString())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
@@ -212,25 +213,25 @@ public class SensitivityAnalysisInputBuilder {
     }
 
     private List<SensitivityFactor> buildSensitivityFactorsFromEquipments(List<IdentifiableType> monitoredEquipmentsTypesAllowed,
-                                                                          List<UUID> monitoredEquipmentsListUuids,
+                                                                          List<SensitivityAnalysisInputData.Ident> monitoredEquipmentsListIdents,
                                                                           List<IdentifiableType> equipmentsTypesAllowed,
-                                                                          List<UUID> equipmentsListUuids,
+                                                                          List<SensitivityAnalysisInputData.Ident> equipmentsListIdents,
                                                                           List<Contingency> contingencies,
                                                                           SensitivityFunctionType sensitivityFunctionType,
                                                                           SensitivityVariableType sensitivityVariableType,
                                                                           Reporter reporter) {
         List<SensitivityFactor> result = new ArrayList<>();
 
-        List<IdentifiableAttributes> equipments = equipmentsListUuids.stream()
-            .flatMap(equipmentsListUuid -> {
-                List<IdentifiableAttributes> list = filterService.getIdentifiablesFromFilter(equipmentsListUuid, context.getNetworkUuid(), context.getVariantId());
+        List<IdentifiableAttributes> equipments = equipmentsListIdents.stream()
+            .flatMap(equipmentsListIdent -> {
+                List<IdentifiableAttributes> list = filterService.getIdentifiablesFromFilter(equipmentsListIdent.getId(), context.getNetworkUuid(), context.getVariantId());
                 if (list.stream().allMatch(i -> equipmentsTypesAllowed.contains(i.getType()))) {
                     return list.stream();
                 } else {
                     reporter.report(Report.builder()
                         .withKey("badEquipmentType")
-                        .withDefaultMessage("Equipments type in filter with id=${id} should be ${expectedType} : filter is ignored")
-                        .withValue("id", equipmentsListUuid.toString())
+                        .withDefaultMessage("Equipments type in filter with name=${name} should be ${expectedType} : filter is ignored")
+                        .withValue("name", equipmentsListIdent.getName())
                         .withValue("expectedType", equipmentsTypesAllowed.toString())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
@@ -239,17 +240,17 @@ public class SensitivityAnalysisInputBuilder {
             })
             .collect(Collectors.toList());
 
-        List<IdentifiableAttributes> monitoredEquipments = monitoredEquipmentsListUuids.stream()
-            .flatMap(monitoredEquimentsListUuid -> {
-                List<IdentifiableAttributes> list = filterService.getIdentifiablesFromFilter(monitoredEquimentsListUuid, context.getNetworkUuid(), context.getVariantId());
+        List<IdentifiableAttributes> monitoredEquipments = monitoredEquipmentsListIdents.stream()
+            .flatMap(monitoredEquimentsListIdent -> {
+                List<IdentifiableAttributes> list = filterService.getIdentifiablesFromFilter(monitoredEquimentsListIdent.getId(), context.getNetworkUuid(), context.getVariantId());
                 // check that monitored equipments type is allowed
                 if (list.stream().allMatch(i -> monitoredEquipmentsTypesAllowed.contains(i.getType()))) {
                     return list.stream();
                 } else {
                     reporter.report(Report.builder()
                         .withKey("badMonitoredEquipmentType")
-                        .withDefaultMessage("Monitored equipments type in filter with id=${id} should be ${expectedType} : filter is ignored")
-                        .withValue("id", monitoredEquimentsListUuid.toString())
+                        .withDefaultMessage("Monitored equipments type in filter with name=${name} should be ${expectedType} : filter is ignored")
+                        .withValue("id", monitoredEquimentsListIdent.getName())
                         .withValue("expectedType", monitoredEquipmentsTypesAllowed.toString())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
