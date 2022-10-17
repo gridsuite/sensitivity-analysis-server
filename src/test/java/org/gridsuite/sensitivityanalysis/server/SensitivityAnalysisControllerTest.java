@@ -323,7 +323,6 @@ public class SensitivityAnalysisControllerTest {
             .parameters(SensitivityAnalysisParameters.load())
             .build();
         SENSITIVITY_INPUT = mapper.writeValueAsString(sensitivityAnalysisInputData);
-        System.out.println("SENSITIVITY_INPUT = *" + SENSITIVITY_INPUT + "*");
 
         // action service mocking
         given(actionsService.getContingencyList(CONTINGENCIES_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(CONTINGENCIES);
