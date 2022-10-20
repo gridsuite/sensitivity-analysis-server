@@ -1,6 +1,7 @@
 package org.gridsuite.sensitivityanalysis.server.dto;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 @Getter
@@ -16,6 +17,7 @@ public class SensitivityWithContingency extends SensitivityOfTo {
             base.getFunctionReference()).varIsAFilter(base.isVarIsAFilter());
     }
 
+    @NonNull
     private String contingencyId;
 
     private double valueAfter;

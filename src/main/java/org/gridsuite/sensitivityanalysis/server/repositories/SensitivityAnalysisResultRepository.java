@@ -8,10 +8,15 @@ package org.gridsuite.sensitivityanalysis.server.repositories;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -20,7 +25,9 @@ import java.time.LocalDateTime;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.sensitivityanalysis.server.RestTemplateConfig;
+import org.gridsuite.sensitivityanalysis.server.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.ContingencyEmbeddable;
@@ -141,12 +148,29 @@ public class SensitivityAnalysisResultRepository {
         void consume(SensitivityEmbeddable sar, ContingencyEmbeddable c, SensitivityFactorP f);
     }
 
-    private void apply(AnalysisResultEntity sas, Collection<String> funcIds, Collection<String> varIds,
-        List<ContingencyEmbeddable> cs, List<SensitivityFactorP> fs,
-        SensitivityConsumer handle) {
+    private int apply(AnalysisResultEntity sas, Collection<String> funcIds, Collection<String> varIds,
+        List<ContingencyEmbeddable> cs, List<SensitivityFactorP> fs, SensitivityFunctionType funcType, boolean beforeOverAfter,
+        Set<String> allFunctionIds, Set<String> allVariableIds, Set<String> allContingencyIds, SensitivityConsumer handle) {
+        int count = 0;
         for (SensitivityEmbeddable sar : sas.getSensitivities()) {
             int fi = sar.getFactorIndex();
             SensitivityFactorP f = fs.get(fi);
+
+            int ci = sar.getContingencyIndex();
+            ContingencyEmbeddable c = ci < 0 ? null : cs.get(ci);
+            if ((ci < 0) == beforeOverAfter && f.getFunctionType() == funcType) {
+                count += 1;
+                if (allFunctionIds != null) {
+                    allFunctionIds.add(f.getFunctionId());
+                }
+                if (allVariableIds != null) {
+                    allVariableIds.add(f.getVariableId());
+                }
+                if (allContingencyIds != null && c != null) {
+                    allContingencyIds.add(c.getId());
+                }
+            }
+
             if (varIds != null && !varIds.contains(f.getVariableId())) {
                 continue;
             }
@@ -154,11 +178,10 @@ public class SensitivityAnalysisResultRepository {
                 continue;
             }
 
-            int ci = sar.getContingencyIndex();
-            ContingencyEmbeddable c = ci < 0 ? null : cs.get(ci);
-
             handle.consume(sar, c, f);
         }
+
+        return count;
     }
 
     private boolean canOnlyReturnEmpty(Collection<String> funcIds, Collection<String> varIds, Collection<String> contingencies,
@@ -181,7 +204,190 @@ public class SensitivityAnalysisResultRepository {
         return false;
     }
 
-    public List<SensitivityOfTo> getSensitivities(UUID resultUuid, Collection<String> funcIds, Collection<String> varIds,
+    public SensitivityRunQueryResult getRunResult(UUID resultUuid, ResultsSelector selector) {
+        AnalysisResultEntity sas = analysisResultRepository.findByResultUuid(resultUuid);
+        if (sas == null) {
+            return null;
+        }
+
+        SensitivityRunQueryResult.SensitivityRunQueryResultBuilder retBuilder = SensitivityRunQueryResult.builder()
+            .isJustBefore(selector.getIsJustBefore())
+            .functionType(selector.getFunctionType())
+            .requestedChunkSize(selector.getChunkSize() == null ? 0 : selector.getChunkSize())
+            .chunkOffset(selector.getOffset() == null ? 0 : selector.getOffset());
+
+        List<ContingencyEmbeddable> cs = sas.getContingencies();
+        List<SensitivityFactorP> fs = sas.getFactors();
+        Collection<String> funcIds = selector.getFunctionIds();
+        Collection<String> varIds = selector.getVariableIds();
+        if (canOnlyReturnEmpty(funcIds, varIds, selector.getContingencyIds(), selector.getFunctionType(), cs, fs)) {
+            return retBuilder.build();
+        }
+
+        Map<Pair<String, String>, SensitivityOfTo> before = new HashMap<>();
+        Set<String> allFunctionIds = new TreeSet<>();
+        Set<String> allVariableIds = new TreeSet<>();
+        Set<String> allContingencyIds = new TreeSet<>();
+        int count = apply(sas, funcIds, varIds, cs, fs, selector.getFunctionType(), selector.getIsJustBefore(),
+            allFunctionIds, allVariableIds, null, (sar, c, f) -> {
+                if (c != null) {
+                    return;
+                }
+                before.put(Pair.of(f.getFunctionId(), f.getVariableId()), SensitivityOfTo.builder()
+                    .funcId(f.getFunctionId())
+                    .varId(f.getVariableId())
+                    .varIsAFilter(f.isVariableSet())
+                    .value(sar.getValue())
+                    .functionReference(sar.getFunctionReference())
+                    .build());
+            });
+
+        if (selector.getIsJustBefore()) {
+            Comparator<SensitivityOfTo> cmp = makeComparatorOfTo(selector.getSortKeysWithWeightAndDirection());
+            List<SensitivityOfTo> befores = new ArrayList<>(before.values());
+            if (cmp != null) {
+                befores.sort(cmp);
+            }
+            complete(retBuilder, allFunctionIds, allVariableIds, null, count, selector, befores);
+            return retBuilder.build();
+        } else {
+            List<SensitivityWithContingency> after = new ArrayList<>();
+            count = apply(sas, funcIds, varIds, cs, fs, selector.getFunctionType(), false,
+                allFunctionIds, allVariableIds, allContingencyIds, (sar, c, f) -> {
+                    if (c == null) {
+                        return;
+                    }
+                    SensitivityOfTo b = before.get(Pair.of(f.getFunctionId(), f.getVariableId()));
+                    SensitivityWithContingency r = SensitivityWithContingency.toBuilder(b)
+                        .funcId(f.getFunctionId())
+                        .varId(f.getVariableId())
+                        .varIsAFilter(f.isVariableSet())
+                        .valueAfter(sar.getValue())
+                        .functionReferenceAfter(sar.getFunctionReference())
+                        .contingencyId(c.getId())
+                        .build();
+                    after.add(r);
+                });
+            Comparator<SensitivityWithContingency> cmp = makeComparatorWith(selector.getSortKeysWithWeightAndDirection());
+            if (cmp != null) {
+                after.sort(cmp);
+            }
+
+            complete(retBuilder, allFunctionIds, allVariableIds, allContingencyIds, count, selector, after);
+            return retBuilder.build();
+        }
+    }
+
+    private void complete(SensitivityRunQueryResult.SensitivityRunQueryResultBuilder retBuilder,
+        Collection<String> allFunctionIds,
+        Collection<String> allVariableIds,
+        Collection<String> allContingencyIds,
+        int count,
+        ResultsSelector selector, List<? extends SensitivityOfTo> filtered
+
+    ) {
+        retBuilder.allFunctionIds(allFunctionIds.stream().sorted().collect(Collectors.toList()));
+        retBuilder.allVariablesUuids(allVariableIds.stream().sorted().collect(Collectors.toList()));
+        if (allContingencyIds != null) {
+            retBuilder.allContingenciesUuid(allContingencyIds.stream().sorted().collect(Collectors.toList()));
+        }
+        retBuilder.filteredSensitivitiesCount(filtered.size());
+        retBuilder.sensitivities(chunkIt(selector, filtered));
+        retBuilder.totalSensitivitiesCount(count);
+    }
+
+    private static <T extends SensitivityOfTo> List<T> chunkIt(ResultsSelector selector, List<T> befores) {
+        Integer byRunOf = selector.getChunkSize();
+        if (byRunOf != null && byRunOf > 0) {
+            int offset = selector.getOffset() == null ? 0 : selector.getOffset();
+            int start = Math.max(offset, 0);
+            int overEnd = Math.min(offset + byRunOf, befores.size());
+            return befores.subList(start, overEnd);
+        }
+        return befores;
+    }
+
+    Comparator<SensitivityWithContingency> makeComparatorWith(ResultsSelector.SortKey key) {
+        switch (key) {
+            case FUNCTION:
+                return Comparator.comparing(SensitivityWithContingency::getFuncId);
+            case VARIABLE:
+                return Comparator.comparing(SensitivityWithContingency::getVarId);
+            case CONTINGENCY:
+                return Comparator.comparing(SensitivityWithContingency::getContingencyId);
+            case REFERENCE:
+                return Comparator.comparing(SensitivityWithContingency::getFunctionReference);
+            case SENSITIVITY:
+                return Comparator.comparing(SensitivityWithContingency::getValue);
+            case POST_REFERENCE:
+                return Comparator.comparing(SensitivityWithContingency::getFunctionReferenceAfter);
+            case POST_SENSITIVITY:
+                return Comparator.comparing(SensitivityWithContingency::getValueAfter);
+        }
+        return null;
+    }
+
+    Comparator<SensitivityOfTo> makeComparatorOfTo(ResultsSelector.SortKey key) {
+        switch (key) {
+            case FUNCTION:
+                return Comparator.comparing(SensitivityOfTo::getFuncId);
+            case VARIABLE:
+                return Comparator.comparing(SensitivityOfTo::getVarId);
+            case REFERENCE:
+                return Comparator.comparing(SensitivityOfTo::getFunctionReference);
+            case SENSITIVITY:
+                return Comparator.comparing(SensitivityOfTo::getValue);
+        }
+        return null;
+    }
+
+    Comparator<SensitivityWithContingency> makeComparatorWith(
+        Map<ResultsSelector.SortKey, Integer> sortKeysWithWeightAndDirection) {
+        if (sortKeysWithWeightAndDirection == null) {
+            return null;
+        }
+        ArrayList<Pair<ResultsSelector.SortKey, Boolean>> sortedKeysToDirection = new ArrayList<>(Collections.nCopies(
+            sortKeysWithWeightAndDirection.size(), null));
+        sortKeysWithWeightAndDirection.forEach((k, s) -> {
+            Pair<ResultsSelector.SortKey, Boolean> prev = sortedKeysToDirection.get(Math.abs(s) - 1);
+            sortedKeysToDirection.set(Math.abs(s) - 1, Pair.of(k, s > 0));
+        });
+
+        Optional<Comparator<SensitivityWithContingency>> ret = sortedKeysToDirection.stream()
+            .filter(Objects::nonNull)
+            .map(kd -> {
+                Comparator<SensitivityWithContingency> direct = makeComparatorWith(kd.getKey());
+                return kd.getValue() ? direct : direct.reversed();
+            }).reduce(Comparator::thenComparing);
+
+        return ret.isEmpty() ? null : ret.get();
+    }
+
+    Comparator<SensitivityOfTo> makeComparatorOfTo(
+        Map<ResultsSelector.SortKey, Integer> sortKeysWithWeightAndDirection) {
+        if (sortKeysWithWeightAndDirection == null) {
+            return null;
+        }
+
+        ArrayList<Pair<ResultsSelector.SortKey, Boolean>> sortedKeysToDirection = new ArrayList<>(Collections.nCopies(
+            sortKeysWithWeightAndDirection.size(), null));
+        sortKeysWithWeightAndDirection.forEach((k, s) -> {
+            Pair<ResultsSelector.SortKey, Boolean> prev = sortedKeysToDirection.get(Math.abs(s) - 1);
+            sortedKeysToDirection.set(Math.abs(s) - 1, Pair.of(k, s > 0));
+        });
+
+        Optional<Comparator<SensitivityOfTo>> ret = sortedKeysToDirection.stream()
+            .filter(Objects::nonNull)
+            .map(kd -> {
+                Comparator<SensitivityOfTo> direct = makeComparatorOfTo(kd.getKey());
+                return kd.getValue() ? direct : direct.reversed();
+            }).reduce(Comparator::thenComparing);
+
+        return ret.isEmpty() ? null : ret.get();
+    }
+
+    public List<SensitivityOfTo> getSensitivities(UUID resultUuid,
+        Collection<String> funcIds, Collection<String> varIds,
         SensitivityFunctionType sensitivityFunctionType) {
 
         List<SensitivityOfTo> ret = new ArrayList<>();
@@ -198,7 +404,7 @@ public class SensitivityAnalysisResultRepository {
             return ret;
         }
 
-        apply(sas, funcIds, varIds, cs, fs, (sar, c, f) -> {
+        apply(sas, funcIds, varIds, cs, fs, sensitivityFunctionType, true, null, null, null, (sar, c, f) -> {
             if (c == null) {
                 ret.add(SensitivityOfTo.builder()
                     .funcId(f.getFunctionId())
@@ -213,7 +419,8 @@ public class SensitivityAnalysisResultRepository {
     }
 
     public List<SensitivityWithContingency> getSensitivities(UUID resultUuid,
-        Collection<String> funcIds, Collection<String> varIds, Collection<String> contingencies,
+        Collection<String> funcIds, Collection<String> varIds,
+        Collection<String> contingencies,
         SensitivityFunctionType sensitivityFunctionType) {
 
         List<SensitivityWithContingency> ret = new ArrayList<>();
@@ -229,7 +436,7 @@ public class SensitivityAnalysisResultRepository {
         }
 
         Map<Pair<String, String>, SensitivityOfTo> before = new HashMap<>();
-        apply(sas, funcIds, varIds, cs, fs, (sar, c, f) -> {
+        apply(sas, funcIds, varIds, cs, fs, sensitivityFunctionType, true, null, null, null, (sar, c, f) -> {
             if (c != null) {
                 return;
             }
@@ -242,7 +449,7 @@ public class SensitivityAnalysisResultRepository {
                 .build());
         });
 
-        apply(sas, funcIds, varIds, cs, fs, (sar, c, f) -> {
+        apply(sas, funcIds, varIds, cs, fs, sensitivityFunctionType, false, null, null, null, (sar, c, f) -> {
             if (c == null) {
                 return;
             }
