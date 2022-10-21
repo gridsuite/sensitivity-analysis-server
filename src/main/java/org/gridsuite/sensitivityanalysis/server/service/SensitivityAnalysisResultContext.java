@@ -26,6 +26,8 @@ public class SensitivityAnalysisResultContext {
 
     private static final String REPORT_UUID = "reportUuid";
 
+    public static final String REPORTER_ID_HEADER = "reporterId";
+
     private final UUID resultUuid;
 
     private final SensitivityAnalysisRunContext runContext;
@@ -78,8 +80,9 @@ public class SensitivityAnalysisResultContext {
             throw new UncheckedIOException(e);
         }
         UUID reportUuid = headers.containsKey(REPORT_UUID) ? UUID.fromString((String) headers.get(REPORT_UUID)) : null;
+        String reporterId = headers.containsKey(REPORTER_ID_HEADER) ? (String) headers.get(REPORTER_ID_HEADER) : null;
         SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid,
-            variantId, otherNetworkUuids, sensitivityAnalysisInputData, receiver, provider, reportUuid);
+            variantId, otherNetworkUuids, sensitivityAnalysisInputData, receiver, provider, reportUuid, reporterId);
         return new SensitivityAnalysisResultContext(resultUuid, runContext);
     }
 
@@ -98,6 +101,7 @@ public class SensitivityAnalysisResultContext {
                 .setHeader("receiver", runContext.getReceiver())
                 .setHeader("provider", runContext.getProvider())
                 .setHeader(REPORT_UUID, runContext.getReportUuid())
+                .setHeader(REPORTER_ID_HEADER, runContext.getReporterId())
                 .build();
     }
 }

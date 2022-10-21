@@ -52,6 +52,7 @@ import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -265,6 +266,9 @@ public class SensitivityAnalysisControllerTest {
     @SpyBean
     private SensitivityAnalysisWorkerService workerService;
 
+    @Value("${loadflow.default-provider}")
+    String defaultLoadflowProvider;
+
     private final RestTemplateConfig restTemplateConfig = new RestTemplateConfig();
     private final ObjectMapper mapper = restTemplateConfig.objectMapper();
 
@@ -447,6 +451,7 @@ public class SensitivityAnalysisControllerTest {
 
         // mock the powsybl sensitivity analysis runner
         SensitivityAnalysis.Runner runner = mock(SensitivityAnalysis.Runner.class);
+        given(runner.getName()).willReturn(defaultLoadflowProvider);
         given(runner.runAsync(eq(network), eq(VariantManagerConstants.INITIAL_VARIANT_ID), anyList(), anyList(), anyList(), any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class))).willReturn(CompletableFuture.completedFuture(RESULT));
         given(runner.runAsync(eq(network), eq(VARIANT_1_ID), anyList(), anyList(), anyList(), any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class))).willReturn(CompletableFuture.completedFuture(RESULT));
         given(runner.runAsync(eq(network), eq(VARIANT_2_ID), anyList(), anyList(), anyList(), any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class))).willReturn(CompletableFuture.completedFuture(RESULT));
@@ -648,7 +653,7 @@ public class SensitivityAnalysisControllerTest {
     @Test
     public void runWithReportTest() {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run?reportUuid=" + REPORT_UUID, NETWORK_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/run?reportUuid=" + REPORT_UUID + "&reporterId=" + UUID.randomUUID(), NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(SENSITIVITY_INPUT_1))
             .andExpect(status().isOk())
