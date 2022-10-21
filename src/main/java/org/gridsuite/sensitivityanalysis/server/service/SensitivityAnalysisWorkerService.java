@@ -185,7 +185,7 @@ public class SensitivityAnalysisWorkerService {
                 ? context.getSensitivityAnalysisInputData().getParameters()
                 : new SensitivityAnalysisParameters();
 
-            // TODO : how to use context.getSensitivityAnalysisInputData().getResultsThreshold() ?
+            // TODO : set resultsThreshold in SensitivityAnalysisParameters when it will be available in powsybl-core
 
             CompletableFuture<SensitivityAnalysisResult> future = sensitivityAnalysisRunner.runAsync(
                 network,
@@ -254,7 +254,7 @@ public class SensitivityAnalysisWorkerService {
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-            } catch (Exception e) {
+            } catch (Exception | OutOfMemoryError e) {
                 LOGGER.error(FAIL_MESSAGE, e);
                 if (!(e instanceof CancellationException)) {
                     notificationService.publishFail(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver(), e.getMessage());
