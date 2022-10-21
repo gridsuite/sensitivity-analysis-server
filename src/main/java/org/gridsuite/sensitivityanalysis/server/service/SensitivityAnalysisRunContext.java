@@ -37,10 +37,13 @@ public class SensitivityAnalysisRunContext {
 
     private final UUID reportUuid;
 
+    private final String reporterId;
+
     public SensitivityAnalysisRunContext(UUID networkUuid, String variantId, List<UUID> otherNetworkUuids,
                                          List<UUID> variablesFiltersListUuids, List<UUID> contingencyListUuids,
                                          List<UUID> branchFiltersListUuids,
-                                         String receiver, String provider, SensitivityAnalysisParameters parameters, UUID reportUuid) {
+                                         String receiver, String provider, SensitivityAnalysisParameters parameters,
+                                         UUID reportUuid, String reporterId) {
         this.networkUuid = Objects.requireNonNull(networkUuid);
         this.variantId = variantId;
         this.otherNetworkUuids = Objects.requireNonNull(otherNetworkUuids);
@@ -51,6 +54,7 @@ public class SensitivityAnalysisRunContext {
         this.provider = provider;
         this.parameters = Objects.requireNonNull(parameters);
         this.reportUuid = reportUuid;
+        this.reporterId = reporterId;
     }
 
     public UUID getNetworkUuid() {
@@ -91,5 +95,9 @@ public class SensitivityAnalysisRunContext {
 
     public UUID getReportUuid() {
         return reportUuid;
+    }
+
+    public String getReporterId() {
+        return reporterId;
     }
 }

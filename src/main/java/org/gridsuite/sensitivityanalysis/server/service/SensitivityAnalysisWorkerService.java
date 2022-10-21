@@ -58,6 +58,8 @@ public class SensitivityAnalysisWorkerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisWorkerService.class);
 
+    private static final String SENSI_TYPE_REPORT = "SensitivityAnalysis";
+
     private NetworkStoreService networkStoreService;
 
     private ActionsService actionsService;
@@ -148,12 +150,20 @@ public class SensitivityAnalysisWorkerService {
             context.getBranchFiltersListUuids().stream().collect(Collectors.toList()));
         Network network = getNetwork(context.getNetworkUuid(), context.getOtherNetworkUuids(), context.getVariantId());
 
-        Reporter reporter = context.getReportUuid() != null ? new ReporterModel("SensitivityAnalysis", "Sensitivity analysis") : Reporter.NO_OP;
+        SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(context.getProvider());
+
+        Reporter rootReporter = Reporter.NO_OP;
+        Reporter reporter = Reporter.NO_OP;
+        if (context.getReportUuid() != null) {
+            String rootReporterId = context.getReporterId() == null ? SENSI_TYPE_REPORT : context.getReporterId() + "@" + SENSI_TYPE_REPORT;
+            rootReporter = new ReporterModel(rootReporterId, rootReporterId);
+            reporter = rootReporter.createSubReporter(SENSI_TYPE_REPORT, SENSI_TYPE_REPORT + " (${providerToUse})", "providerToUse", sensitivityAnalysisRunner.getName());
+        }
 
         SensitivityAnalysisInput sensitivityAnalysisInput = new SensitivityAnalysisInput(network, context, actionsService, filterService);
         sensitivityAnalysisInput.build(reporter);
 
-        CompletableFuture<SensitivityAnalysisResult> future = runSensitivityAnalysisAsync(context,
+        CompletableFuture<SensitivityAnalysisResult> future = runSensitivityAnalysisAsync(context, sensitivityAnalysisRunner,
             network,
             sensitivityAnalysisInput.getFactors(),
             sensitivityAnalysisInput.getContingencies(),
@@ -163,12 +173,13 @@ public class SensitivityAnalysisWorkerService {
 
         SensitivityAnalysisResult result = future == null ? null : future.get();
         if (context.getReportUuid() != null) {
-            reportService.sendReport(context.getReportUuid(), reporter);
+            reportService.sendReport(context.getReportUuid(), rootReporter);
         }
         return result;
     }
 
     private CompletableFuture<SensitivityAnalysisResult> runSensitivityAnalysisAsync(SensitivityAnalysisRunContext context,
+                                                                                     SensitivityAnalysis.Runner sensitivityAnalysisRunner,
                                                                                      Network network,
                                                                                      List<SensitivityFactor> factors,
                                                                                      List<Contingency> contingencies,
@@ -180,7 +191,6 @@ public class SensitivityAnalysisWorkerService {
             if (resultUuid != null && cancelComputationRequests.get(resultUuid) != null) {
                 return null;
             }
-            SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(context.getProvider());
             String variantId = context.getVariantId() != null ? context.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID;
 
             CompletableFuture<SensitivityAnalysisResult> future = sensitivityAnalysisRunner.runAsync(

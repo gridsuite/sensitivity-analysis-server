@@ -67,10 +67,11 @@ public class SensitivityAnalysisController {
                                                          @Parameter(description = "Branch filters list uuids") @RequestParam(name = "branchFiltersListUuid", required = false) List<UUID> branchFiltersListUuids,
                                                          @Parameter(description = "Provider") @RequestParam(name = "provider", required = false) String provider,
                                                          @Parameter(description = "reportUuid") @RequestParam(name = "reportUuid", required = false) UUID reportUuid,
+                                                         @Parameter(description = "reporterId") @RequestParam(name = "reporterId", required = false) String reporterId,
                                                          @RequestBody(required = false) SensitivityAnalysisParameters parameters) {
         SensitivityAnalysisParameters nonNullParameters = getNonNullParameters(parameters);
         List<UUID> nonNullOtherNetworkUuids = getNonNullOtherNetworkUuids(otherNetworkUuids);
-        SensitivityAnalysisResult result = workerService.run(new SensitivityAnalysisRunContext(networkUuid, variantId, nonNullOtherNetworkUuids, variablesFiltersListUuids, contingencyListUuids, branchFiltersListUuids, null, provider, nonNullParameters, reportUuid));
+        SensitivityAnalysisResult result = workerService.run(new SensitivityAnalysisRunContext(networkUuid, variantId, nonNullOtherNetworkUuids, variablesFiltersListUuids, contingencyListUuids, branchFiltersListUuids, null, provider, nonNullParameters, reportUuid, reporterId));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result);
     }
 
@@ -89,10 +90,11 @@ public class SensitivityAnalysisController {
                                            @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver,
                                            @Parameter(description = "Provider") @RequestParam(name = "provider", required = false) String provider,
                                            @Parameter(description = "reportUuid") @RequestParam(name = "reportUuid", required = false) UUID reportUuid,
+                                           @Parameter(description = "reporterId") @RequestParam(name = "reporterId", required = false) String reporterId,
                                            @RequestBody(required = false) SensitivityAnalysisParameters parameters) {
         SensitivityAnalysisParameters nonNullParameters = getNonNullParameters(parameters);
         List<UUID> nonNullOtherNetworkUuids = getNonNullOtherNetworkUuids(otherNetworkUuids);
-        UUID resultUuid = service.runAndSaveResult(new SensitivityAnalysisRunContext(networkUuid, variantId, nonNullOtherNetworkUuids, variablesFiltersListUuids, contingencyListUuids, branchFiltersListUuids, receiver, provider, nonNullParameters, reportUuid));
+        UUID resultUuid = service.runAndSaveResult(new SensitivityAnalysisRunContext(networkUuid, variantId, nonNullOtherNetworkUuids, variablesFiltersListUuids, contingencyListUuids, branchFiltersListUuids, receiver, provider, nonNullParameters, reportUuid, reporterId));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
