@@ -36,6 +36,8 @@ import java.util.stream.Stream;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public class SensitivityAnalysisInputBuilder {
+    private static final String EXPECTED_TYPE = "expectedType";
+
     private final Network network;
     private final SensitivityAnalysisRunContext context;
     private final ActionsService actionsService;
@@ -116,7 +118,7 @@ public class SensitivityAnalysisInputBuilder {
                         .withKey("badEquipmentType")
                         .withDefaultMessage("Equipments type in filter with name=${name} should be ${expectedType} : filter is ignored")
                         .withValue("name", variablesFilterIdent.getName())
-                        .withValue("expectedType", variablesTypesAllowed.toString())
+                        .withValue(EXPECTED_TYPE, variablesTypesAllowed.toString())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
                     return Collections.<IdentifiableAttributes>emptyList();
@@ -173,7 +175,7 @@ public class SensitivityAnalysisInputBuilder {
                         .withKey("badMonitoredEquipmentType")
                         .withDefaultMessage("Monitored equipments type in filter with name=${name} should be ${expectedType} : filter is ignored")
                         .withValue("name", equimentsListIdent.getName())
-                        .withValue("expectedType", monitoredEquipmentsTypesAllowed.toString())
+                        .withValue(EXPECTED_TYPE, monitoredEquipmentsTypesAllowed.toString())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
                     return Stream.empty();
@@ -233,7 +235,7 @@ public class SensitivityAnalysisInputBuilder {
                         .withKey("badEquipmentType")
                         .withDefaultMessage("Equipments type in filter with name=${name} should be ${expectedType} : filter is ignored")
                         .withValue("name", equipmentsListIdent.getName())
-                        .withValue("expectedType", equipmentsTypesAllowed.toString())
+                        .withValue(EXPECTED_TYPE, equipmentsTypesAllowed.toString())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
                     return Stream.empty();
@@ -252,7 +254,7 @@ public class SensitivityAnalysisInputBuilder {
                         .withKey("badMonitoredEquipmentType")
                         .withDefaultMessage("Monitored equipments type in filter with name=${name} should be ${expectedType} : filter is ignored")
                         .withValue("name", monitoredEquimentsListIdent.getName())
-                        .withValue("expectedType", monitoredEquipmentsTypesAllowed.toString())
+                        .withValue(EXPECTED_TYPE, monitoredEquipmentsTypesAllowed.toString())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
                     return Stream.empty();
