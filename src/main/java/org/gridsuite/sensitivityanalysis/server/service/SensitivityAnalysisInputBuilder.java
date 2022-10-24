@@ -432,7 +432,7 @@ public class SensitivityAnalysisInputBuilder {
     }
 
     public List<Contingency> getContingencies() {
-        return contingencies;
+        return contingencies.stream().distinct().collect(Collectors.toList());
     }
 
     public List<SensitivityFactor> getFactors() {
