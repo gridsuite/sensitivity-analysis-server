@@ -661,4 +661,15 @@ public class SensitivityAnalysisControllerTest {
             .andReturn();
         assertEquals(mapper.writeValueAsString(RESULT), result.getResponse().getContentAsString());
     }
+
+    @SneakyThrows
+    @Test
+    public void testDefaultResultsThreshold() {
+        MvcResult result = mockMvc.perform(get(
+            "/" + VERSION + "/results-threshold-default-value"))
+            .andExpect(status().isOk())
+            .andReturn();
+        assertEquals("0.01", result.getResponse().getContentAsString());
+    }
+
 }
