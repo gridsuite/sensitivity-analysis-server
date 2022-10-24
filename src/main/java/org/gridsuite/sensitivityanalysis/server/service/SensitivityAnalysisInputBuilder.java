@@ -64,7 +64,7 @@ public class SensitivityAnalysisInputBuilder {
         double weight;
         switch (distributionType) {
             case PROPORTIONAL:
-                weight = generator.getTerminal().getP();
+                weight = !Double.isNaN(generator.getTerminal().getP()) ? generator.getTerminal().getP() : 0.;
                 break;
             case PROPORTIONAL_MAXP:
                 weight = generator.getMaxP();
