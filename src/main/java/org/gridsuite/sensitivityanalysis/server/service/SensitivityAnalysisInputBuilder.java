@@ -115,6 +115,7 @@ public class SensitivityAnalysisInputBuilder {
                         .withDefaultMessage("Ventilation distribution will be available with manual filters !!")
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
+            return result;
         }
 
         List<List<IdentifiableAttributes>> variablesFiltersLists = variablesFiltersListIdents.stream()
