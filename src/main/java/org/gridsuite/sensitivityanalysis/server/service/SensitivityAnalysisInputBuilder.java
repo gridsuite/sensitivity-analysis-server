@@ -108,6 +108,15 @@ public class SensitivityAnalysisInputBuilder {
                                                                       Reporter reporter) {
         List<SensitivityVariableSet> result = new ArrayList<>();
 
+        // TODO : check to be removed when manual filters will be available
+        if (distributionType == SensitivityAnalysisInputData.DistributionType.VENTILATION) {
+            reporter.report(Report.builder()
+                        .withKey("ventilationDistributionNotYetAvailable")
+                        .withDefaultMessage("Ventilation distribution will be available with manual filters !!")
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
+        }
+
         List<List<IdentifiableAttributes>> variablesFiltersLists = variablesFiltersListIdents.stream()
             .map(variablesFilterIdent -> {
                 List<IdentifiableAttributes> list = filterService.getIdentifiablesFromFilter(variablesFilterIdent.getId(), context.getNetworkUuid(), context.getVariantId());
