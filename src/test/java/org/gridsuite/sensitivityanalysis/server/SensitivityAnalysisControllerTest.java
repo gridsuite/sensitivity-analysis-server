@@ -153,61 +153,61 @@ public class SensitivityAnalysisControllerTest {
             .collect(Collectors.toList());
 
     private static final List<IdentifiableAttributes> GENERATORS = List.of(
-        new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR),
-        new IdentifiableAttributes("GEN2", IdentifiableType.GENERATOR)
+        new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR, null),
+        new IdentifiableAttributes("GEN2", IdentifiableType.GENERATOR, null)
     );
 
     private static final List<IdentifiableAttributes> GENERATORS_VARIANT = List.of(
-        new IdentifiableAttributes("GEN2", IdentifiableType.GENERATOR)
+        new IdentifiableAttributes("GEN2", IdentifiableType.GENERATOR, null)
     );
 
     private static final List<IdentifiableAttributes> LOADS = List.of(
-        new IdentifiableAttributes("LOAD", IdentifiableType.LOAD)
+        new IdentifiableAttributes("LOAD", IdentifiableType.LOAD, null)
     );
 
     private static final List<IdentifiableAttributes> LOADS_VARIANT = List.of(
-        new IdentifiableAttributes("LOAD", IdentifiableType.LOAD)
+        new IdentifiableAttributes("LOAD", IdentifiableType.LOAD, null)
     );
 
     private static final List<IdentifiableAttributes> BRANCHES = List.of(
-        new IdentifiableAttributes("l1", IdentifiableType.LINE),
-        new IdentifiableAttributes("l2", IdentifiableType.LINE),
-        new IdentifiableAttributes("l3", IdentifiableType.TWO_WINDINGS_TRANSFORMER),
-        new IdentifiableAttributes("l4", IdentifiableType.LINE)
+        new IdentifiableAttributes("l1", IdentifiableType.LINE, null),
+        new IdentifiableAttributes("l2", IdentifiableType.LINE, null),
+        new IdentifiableAttributes("l3", IdentifiableType.TWO_WINDINGS_TRANSFORMER, null),
+        new IdentifiableAttributes("l4", IdentifiableType.LINE, null)
     );
     private static final List<IdentifiableAttributes> BRANCHES_VARIANT = List.of(
-        new IdentifiableAttributes("l1", IdentifiableType.TWO_WINDINGS_TRANSFORMER),
-        new IdentifiableAttributes("l2", IdentifiableType.LINE)
+        new IdentifiableAttributes("l1", IdentifiableType.TWO_WINDINGS_TRANSFORMER, null),
+        new IdentifiableAttributes("l2", IdentifiableType.LINE, null)
     );
 
     private static final List<IdentifiableAttributes> HVDCS = List.of(
-        new IdentifiableAttributes("hvdc1", IdentifiableType.HVDC_LINE)
+        new IdentifiableAttributes("hvdc1", IdentifiableType.HVDC_LINE, null)
     );
     private static final List<IdentifiableAttributes> HVDCS_VARIANT = List.of(
-        new IdentifiableAttributes("hvdc2", IdentifiableType.HVDC_LINE)
+        new IdentifiableAttributes("hvdc2", IdentifiableType.HVDC_LINE, null)
     );
 
     private static final List<IdentifiableAttributes> PSTS = List.of(
-        new IdentifiableAttributes("t1", IdentifiableType.TWO_WINDINGS_TRANSFORMER)
+        new IdentifiableAttributes("t1", IdentifiableType.TWO_WINDINGS_TRANSFORMER, null)
     );
     private static final List<IdentifiableAttributes> PSTS_VARIANT = List.of(
-        new IdentifiableAttributes("t2", IdentifiableType.TWO_WINDINGS_TRANSFORMER)
+        new IdentifiableAttributes("t2", IdentifiableType.TWO_WINDINGS_TRANSFORMER, null)
     );
 
     private static final List<IdentifiableAttributes> VOLTAGE_LEVELS = List.of(
-        new IdentifiableAttributes("v1", IdentifiableType.VOLTAGE_LEVEL)
+        new IdentifiableAttributes("v1", IdentifiableType.VOLTAGE_LEVEL, null)
     );
     private static final List<IdentifiableAttributes> VOLTAGE_LEVELS_VARIANT = List.of(
-        new IdentifiableAttributes("v2", IdentifiableType.VOLTAGE_LEVEL),
-        new IdentifiableAttributes("v3", IdentifiableType.VOLTAGE_LEVEL)
+        new IdentifiableAttributes("v2", IdentifiableType.VOLTAGE_LEVEL, null),
+        new IdentifiableAttributes("v3", IdentifiableType.VOLTAGE_LEVEL, null)
     );
 
     private static final List<IdentifiableAttributes> EQUIPMENTS_IN_VOLTAGE_REGULATION = List.of(
-        new IdentifiableAttributes("e1", IdentifiableType.GENERATOR),
-        new IdentifiableAttributes("e2", IdentifiableType.GENERATOR)
+        new IdentifiableAttributes("e1", IdentifiableType.GENERATOR, null),
+        new IdentifiableAttributes("e2", IdentifiableType.GENERATOR, null)
     );
     private static final List<IdentifiableAttributes> EQUIPMENTS_IN_VOLTAGE_REGULATION_VARIANT = List.of(
-        new IdentifiableAttributes("e3", IdentifiableType.GENERATOR)
+        new IdentifiableAttributes("e3", IdentifiableType.GENERATOR, null)
     );
 
     private static final List<SensitivityFactor> SENSITIVITY_FACTORS = List.of(new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l",

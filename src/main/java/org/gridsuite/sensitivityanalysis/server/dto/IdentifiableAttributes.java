@@ -27,4 +27,7 @@ public class IdentifiableAttributes {
 
     @Schema(description = "identifiable type")
     private IdentifiableType type;
+
+    @Schema(description = "distribution key")
+    private Double distributionKey;
 }
