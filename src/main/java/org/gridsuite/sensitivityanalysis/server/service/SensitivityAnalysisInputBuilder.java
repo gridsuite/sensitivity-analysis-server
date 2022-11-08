@@ -61,17 +61,13 @@ public class SensitivityAnalysisInputBuilder {
     }
 
     private double getGeneratorWeight(Generator generator, SensitivityAnalysisInputData.DistributionType distributionType, Double distributionKey) {
-        double weight;
         switch (distributionType) {
             case PROPORTIONAL:
-                weight = !Double.isNaN(generator.getTerminal().getP()) ? generator.getTerminal().getP() : 0.;
-                break;
+                return !Double.isNaN(generator.getTerminal().getP()) ? generator.getTerminal().getP() : 0.;
             case PROPORTIONAL_MAXP:
-                weight = generator.getMaxP();
-                break;
+                return generator.getMaxP();
             case REGULAR:
-                weight = 1.;
-                break;
+                return 1.;
             case VENTILATION:
                 if (distributionKey == null) {
                     throw new PowsyblException("Distribution key required for VENTILATION distribution type !!");
@@ -80,19 +76,15 @@ public class SensitivityAnalysisInputBuilder {
             default:
                 throw new UnsupportedOperationException("Distribution type not allowed for generator");
         }
-        return weight;
     }
 
     private double getLoadWeight(Load load, SensitivityAnalysisInputData.DistributionType distributionType, Double distributionKey) {
-        double weight;
         switch (distributionType) {
             case PROPORTIONAL:
             case PROPORTIONAL_MAXP: // simpler to use the same enum for generator and load
-                weight = load.getP0();
-                break;
+                return load.getP0();
             case REGULAR:
-                weight = 1.;
-                break;
+                return 1.;
             case VENTILATION:
                 if (distributionKey == null) {
                     throw new PowsyblException("Distribution key required for VENTILATION distribution type !!");
@@ -101,7 +93,6 @@ public class SensitivityAnalysisInputBuilder {
             default:
                 throw new UnsupportedOperationException("Distribution type not allowed for load");
         }
-        return weight;
     }
 
     private List<SensitivityVariableSet> buildSensitivityVariableSets(List<IdentifiableType> variablesTypesAllowed,
@@ -126,32 +117,31 @@ public class SensitivityAnalysisInputBuilder {
                     return Collections.<IdentifiableAttributes>emptyList();
                 }
             })
+            .filter(list -> !list.isEmpty())
             .collect(Collectors.toList());
 
         variablesFiltersLists.forEach(variablesList -> {
             List<WeightedSensitivityVariable> variables = new ArrayList<>();
-            if (!variablesList.isEmpty()) {
-                for (IdentifiableAttributes identifiableAttributes : variablesList) {
-                    if (identifiableAttributes.getType() == IdentifiableType.GENERATOR) {
-                        Generator generator = network.getGenerator(identifiableAttributes.getId());
-                        if (generator != null) {
-                            double weight = getGeneratorWeight(generator, distributionType, identifiableAttributes.getDistributionKey());
-                            variables.add(new WeightedSensitivityVariable(identifiableAttributes.getId(), weight));
-                        } else {
-                            throw new PowsyblException("Generator '" + identifiableAttributes.getId() + "' not found !!");
-                        }
-                    } else if (identifiableAttributes.getType() == IdentifiableType.LOAD) {
-                        Load load = network.getLoad(identifiableAttributes.getId());
-                        if (load != null) {
-                            double weight = getLoadWeight(load, distributionType, identifiableAttributes.getDistributionKey());
-                            variables.add(new WeightedSensitivityVariable(identifiableAttributes.getId(), weight));
-                        } else {
-                            throw new PowsyblException("Load '" + identifiableAttributes.getId() + "' not found !!");
-                        }
+            for (IdentifiableAttributes identifiableAttributes : variablesList) {
+                if (identifiableAttributes.getType() == IdentifiableType.GENERATOR) {
+                    Generator generator = network.getGenerator(identifiableAttributes.getId());
+                    if (generator != null) {
+                        double weight = getGeneratorWeight(generator, distributionType, identifiableAttributes.getDistributionKey());
+                        variables.add(new WeightedSensitivityVariable(identifiableAttributes.getId(), weight));
+                    } else {
+                        throw new PowsyblException("Generator '" + identifiableAttributes.getId() + "' not found !!");
+                    }
+                } else if (identifiableAttributes.getType() == IdentifiableType.LOAD) {
+                    Load load = network.getLoad(identifiableAttributes.getId());
+                    if (load != null) {
+                        double weight = getLoadWeight(load, distributionType, identifiableAttributes.getDistributionKey());
+                        variables.add(new WeightedSensitivityVariable(identifiableAttributes.getId(), weight));
+                    } else {
+                        throw new PowsyblException("Load '" + identifiableAttributes.getId() + "' not found !!");
                     }
                 }
-                result.add(new SensitivityVariableSet(UUID.randomUUID().toString(), variables));
             }
+            result.add(new SensitivityVariableSet(UUID.randomUUID().toString(), variables));
         });
 
         return result;
