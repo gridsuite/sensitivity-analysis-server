@@ -41,7 +41,7 @@ public class ReportService {
 
     @Autowired
     public ReportService(ObjectMapper objectMapper,
-                         @Value("${report-server.base-uri:http://report-server/}") String reportServerBaseUri) {
+                         @Value("${backing-services.report-server.base-uri:http://report-server/}") String reportServerBaseUri) {
         this.reportServerBaseUri = reportServerBaseUri;
         this.objectMapper = objectMapper;
         ReporterModelJsonModule reporterModelJsonModule = new ReporterModelJsonModule();
