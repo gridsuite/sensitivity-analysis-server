@@ -195,11 +195,11 @@ public class SensitivityAnalysisControllerTest {
     );
 
     private static final List<IdentifiableAttributes> VOLTAGE_LEVELS = List.of(
-        new IdentifiableAttributes("v1", IdentifiableType.VOLTAGE_LEVEL, null)
+        new IdentifiableAttributes("VLGEN", IdentifiableType.VOLTAGE_LEVEL, null)
     );
     private static final List<IdentifiableAttributes> VOLTAGE_LEVELS_VARIANT = List.of(
-        new IdentifiableAttributes("v2", IdentifiableType.VOLTAGE_LEVEL, null),
-        new IdentifiableAttributes("v3", IdentifiableType.VOLTAGE_LEVEL, null)
+        new IdentifiableAttributes("VLHV1", IdentifiableType.VOLTAGE_LEVEL, null),
+        new IdentifiableAttributes("VLHV2", IdentifiableType.VOLTAGE_LEVEL, null)
     );
 
     private static final List<IdentifiableAttributes> EQUIPMENTS_IN_VOLTAGE_REGULATION = List.of(

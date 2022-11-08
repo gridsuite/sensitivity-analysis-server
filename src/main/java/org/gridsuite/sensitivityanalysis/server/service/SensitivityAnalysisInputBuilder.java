@@ -240,7 +240,14 @@ public class SensitivityAnalysisInputBuilder {
                 List<IdentifiableAttributes> list = filterService.getIdentifiablesFromFilter(monitoredEquimentsListIdent.getId(), context.getNetworkUuid(), context.getVariantId());
                 // check that monitored equipments type is allowed
                 if (list.stream().allMatch(i -> monitoredEquipmentsTypesAllowed.contains(i.getType()))) {
-                    return list.stream();
+                    if (!list.isEmpty() && list.get(0).getType() == IdentifiableType.VOLTAGE_LEVEL) {
+                        // for voltage levels, get the list of all buses
+                        return list.stream().flatMap(voltageLevel ->
+                            network.getVoltageLevel(voltageLevel.getId())
+                                .getBusView().getBusStream().map(bus -> new IdentifiableAttributes(bus.getId(), bus.getType(), null)));
+                    } else {
+                        return list.stream();
+                    }
                 } else {
                     reporter.report(Report.builder()
                         .withKey("badMonitoredEquipmentType")
@@ -388,7 +395,8 @@ public class SensitivityAnalysisInputBuilder {
 
     private void buildSensitivityNodes(Reporter reporter) {
         List<SensitivityAnalysisInputData.SensitivityNodes> sensitivityNodes = context.getSensitivityAnalysisInputData().getSensitivityNodes();
-        // nodes sensitivity is only available with OpenLoadFlow
+        // TODO: nodes sensitivity is only available with OpenLoadFlow
+        // check to be removed further ...
         if (!sensitivityNodes.isEmpty() && !StringUtils.equals("OpenLoadFlow", context.getProvider())) {
             reporter.report(Report.builder()
                 .withKey("sensitivityNodesComputationNotSupported")
