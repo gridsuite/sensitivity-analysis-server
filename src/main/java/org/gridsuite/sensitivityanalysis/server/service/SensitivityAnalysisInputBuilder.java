@@ -16,6 +16,8 @@ import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.TopologyKind;
+import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.sensitivity.SensitivityFactor;
 import com.powsybl.sensitivity.SensitivityFunctionType;
 import com.powsybl.sensitivity.SensitivityVariableSet;
@@ -28,6 +30,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -241,10 +244,23 @@ public class SensitivityAnalysisInputBuilder {
                 // check that monitored equipments type is allowed
                 if (list.stream().allMatch(i -> monitoredEquipmentsTypesAllowed.contains(i.getType()))) {
                     if (!list.isEmpty() && list.get(0).getType() == IdentifiableType.VOLTAGE_LEVEL) {
-                        // for voltage levels, get the list of all buses
-                        return list.stream().flatMap(voltageLevel ->
-                            network.getVoltageLevel(voltageLevel.getId())
-                                .getBusView().getBusStream().map(bus -> new IdentifiableAttributes(bus.getId(), bus.getType(), null)));
+                        // for voltage levels, get the list of all buses or busbar sections
+                        return list.stream().flatMap(voltageLevel -> {
+                            VoltageLevel vl = network.getVoltageLevel(voltageLevel.getId());
+                            if (vl != null) {
+                                if (vl.getTopologyKind() == TopologyKind.NODE_BREAKER) {
+                                    return vl.getNodeBreakerView().getBusbarSectionStream()
+                                        .filter(bbs -> bbs.getTerminal().getBusView().getBus() != null)
+                                        .map(bbs -> new IdentifiableAttributes(bbs.getId(), bbs.getType(), null));
+                                } else {
+                                    return vl.getBusBreakerView().getBusStream()
+                                        .filter(bus -> bus.getConnectedTerminalStream().map(t -> t.getBusView().getBus()).anyMatch(Objects::nonNull))
+                                        .map(bus -> new IdentifiableAttributes(bus.getId(), bus.getType(), null));
+                                }
+                            } else {
+                                throw new PowsyblException("Voltage level '" + voltageLevel.getId() + "' not found !!");
+                            }
+                        });
                     } else {
                         return list.stream();
                     }
