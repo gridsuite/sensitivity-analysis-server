@@ -25,5 +25,6 @@ public class SensitivityWithContingency extends SensitivityOfTo {
 
     // ObjectMapper.readValue to deserialize a list of, for tests
     @SuppressWarnings("unused") protected SensitivityWithContingency() {
+        contingencyId = "sonar think it should be initialized";
     }
 }

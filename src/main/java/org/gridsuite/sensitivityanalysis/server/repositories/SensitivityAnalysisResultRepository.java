@@ -344,6 +344,10 @@ public class SensitivityAnalysisResultRepository {
                 return Comparator.comparing(SensitivityOfTo::getFunctionReference);
             case SENSITIVITY:
                 return Comparator.comparing(SensitivityOfTo::getValue);
+            case POST_SENSITIVITY:
+            case CONTINGENCY:
+            case POST_REFERENCE:
+                return null; // completing the switch appeases Sonar
         }
         return null;
     }
