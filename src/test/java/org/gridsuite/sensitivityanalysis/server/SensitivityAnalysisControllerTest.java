@@ -227,8 +227,10 @@ public class SensitivityAnalysisControllerTest {
         new SensitivityValue(1, -1, 500.2, 2.8),
         new SensitivityValue(0, 0, 500.3, 2.7),
         new SensitivityValue(0, 1, 500.4, 2.6),
-        new SensitivityValue(1, 0, 500.5, 2.5),
-        new SensitivityValue(1, 1, 500.6, 2.4)
+        new SensitivityValue(0, 2, 500.5, 2.5),
+        new SensitivityValue(1, 1, 500.6, 2.4),
+        new SensitivityValue(1, 0, 500.7, 2.3),
+        new SensitivityValue(1, 2, 500.8, 2.2)
     );
     private static final List<SensitivityValue> SENSITIVITY_VALUES_VARIANT = List.of(new SensitivityValue(0, 0, 3d, 4d));
 
@@ -575,13 +577,15 @@ public class SensitivityAnalysisControllerTest {
         SensitivityRunQueryResult resN = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(2, (long) resN.getTotalSensitivitiesCount());
 
+        String selectorText = mapper.writeValueAsString(selectorNK);
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
-                mapper.writeValueAsString(selectorNK)))
+                selectorText))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
-        SensitivityRunQueryResult resNK = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(4, (long) resNK.getTotalSensitivitiesCount());
+        String bodyText = result.getResponse().getContentAsString();
+        SensitivityRunQueryResult resNK = mapper.readValue(bodyText, new TypeReference<>() { });
+        assertEquals(6, (long) resNK.getTotalSensitivitiesCount());
         assertEquals(2, resNK.getSensitivities().size());
 
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,

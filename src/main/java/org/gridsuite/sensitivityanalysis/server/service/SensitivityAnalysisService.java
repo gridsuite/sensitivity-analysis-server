@@ -6,23 +6,19 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
 import org.gridsuite.sensitivityanalysis.server.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.sensitivity.SensitivityFunctionType;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -67,17 +63,6 @@ public class SensitivityAnalysisService {
 
     public SensitivityRunQueryResult getRunResult(UUID resultUuid, ResultsSelector selector) {
         return resultRepository.getRunResult(resultUuid, selector);
-    }
-
-    public List<SensitivityOfTo> getResult(UUID resultUuid, Collection<String> funcIds, Collection<String> varIds,
-        SensitivityFunctionType sensitivityFunctionType) {
-        return resultRepository.getSensitivities(resultUuid, funcIds, varIds, sensitivityFunctionType);
-    }
-
-    public List<SensitivityWithContingency> getResult(UUID resultUuid,
-        Collection<String> funcIds, Collection<String> varIds, Collection<String> contingencyIds,
-        SensitivityFunctionType sensitivityFunctionType) {
-        return resultRepository.getSensitivities(resultUuid, funcIds, varIds, contingencyIds, sensitivityFunctionType);
     }
 
     public void deleteResult(UUID resultUuid) {

@@ -148,7 +148,7 @@ public class SensitivityAnalysisResultRepository {
         void consume(SensitivityEmbeddable sar, ContingencyEmbeddable c, SensitivityFactorP f);
     }
 
-    private int apply(AnalysisResultEntity sas, Collection<String> funcIds, Collection<String> varIds,
+    private int apply(AnalysisResultEntity sas, Collection<String> funcIds, Collection<String> varIds, Collection<String> contingencyIds,
         List<ContingencyEmbeddable> cs, List<SensitivityFactorP> fs, SensitivityFunctionType funcType, boolean beforeOverAfter,
         Set<String> allFunctionIds, Set<String> allVariableIds, Set<String> allContingencyIds, SensitivityConsumer handle) {
         int count = 0;
@@ -171,10 +171,13 @@ public class SensitivityAnalysisResultRepository {
                 }
             }
 
+            if (funcIds != null && !funcIds.contains(f.getFunctionId())) {
+                continue;
+            }
             if (varIds != null && !varIds.contains(f.getVariableId())) {
                 continue;
             }
-            if (funcIds != null && !funcIds.contains(f.getFunctionId())) {
+            if (c != null && contingencyIds != null && !contingencyIds.contains(c.getId())) {
                 continue;
             }
 
@@ -220,7 +223,11 @@ public class SensitivityAnalysisResultRepository {
         List<SensitivityFactorP> fs = sas.getFactors();
         Collection<String> funcIds = selector.getFunctionIds();
         Collection<String> varIds = selector.getVariableIds();
-        if (canOnlyReturnEmpty(funcIds, varIds, selector.getContingencyIds(), selector.getFunctionType(), cs, fs)) {
+        Collection<String> contingencyIds = selector.getContingencyIds();
+        if (canOnlyReturnEmpty(funcIds, varIds, contingencyIds, selector.getFunctionType(), cs, fs)) {
+            retBuilder.totalSensitivitiesCount(0);
+            retBuilder.filteredSensitivitiesCount(0);
+            retBuilder.sensitivities(List.of());
             return retBuilder.build();
         }
 
@@ -228,7 +235,7 @@ public class SensitivityAnalysisResultRepository {
         Set<String> allFunctionIds = new TreeSet<>();
         Set<String> allVariableIds = new TreeSet<>();
         Set<String> allContingencyIds = new TreeSet<>();
-        int count = apply(sas, funcIds, varIds, cs, fs, selector.getFunctionType(), selector.getIsJustBefore(),
+        int count = apply(sas, funcIds, varIds, null, cs, fs, selector.getFunctionType(), selector.getIsJustBefore(),
             allFunctionIds, allVariableIds, null, (sar, c, f) -> {
                 if (c != null) {
                     return;
@@ -252,7 +259,7 @@ public class SensitivityAnalysisResultRepository {
             return retBuilder.build();
         } else {
             List<SensitivityWithContingency> after = new ArrayList<>();
-            count = apply(sas, funcIds, varIds, cs, fs, selector.getFunctionType(), false,
+            count = apply(sas, funcIds, varIds, contingencyIds, cs, fs, selector.getFunctionType(), false,
                 allFunctionIds, allVariableIds, allContingencyIds, (sar, c, f) -> {
                     if (c == null) {
                         return;
@@ -384,87 +391,5 @@ public class SensitivityAnalysisResultRepository {
             }).reduce(Comparator::thenComparing);
 
         return ret.isEmpty() ? null : ret.get();
-    }
-
-    public List<SensitivityOfTo> getSensitivities(UUID resultUuid,
-        Collection<String> funcIds, Collection<String> varIds,
-        SensitivityFunctionType sensitivityFunctionType) {
-
-        List<SensitivityOfTo> ret = new ArrayList<>();
-
-        AnalysisResultEntity sas = analysisResultRepository.findByResultUuid(resultUuid);
-        if (sas == null) {
-            return null;
-        }
-
-        List<ContingencyEmbeddable> cs = sas.getContingencies();
-        List<SensitivityFactorP> fs = sas.getFactors();
-
-        if (canOnlyReturnEmpty(funcIds, varIds, null, sensitivityFunctionType, cs, fs)) {
-            return ret;
-        }
-
-        apply(sas, funcIds, varIds, cs, fs, sensitivityFunctionType, true, null, null, null, (sar, c, f) -> {
-            if (c == null) {
-                ret.add(SensitivityOfTo.builder()
-                    .funcId(f.getFunctionId())
-                    .varId(f.getVariableId())
-                    .varIsAFilter(f.isVariableSet())
-                    .value(sar.getValue())
-                    .functionReference(sar.getFunctionReference())
-                    .build());
-            }
-        });
-        return ret;
-    }
-
-    public List<SensitivityWithContingency> getSensitivities(UUID resultUuid,
-        Collection<String> funcIds, Collection<String> varIds,
-        Collection<String> contingencies,
-        SensitivityFunctionType sensitivityFunctionType) {
-
-        List<SensitivityWithContingency> ret = new ArrayList<>();
-        AnalysisResultEntity sas = analysisResultRepository.findByResultUuid(resultUuid);
-        if (sas == null) {
-            return null;
-        }
-
-        List<ContingencyEmbeddable> cs = sas.getContingencies();
-        List<SensitivityFactorP> fs = sas.getFactors();
-        if (canOnlyReturnEmpty(funcIds, varIds, contingencies, sensitivityFunctionType, cs, fs)) {
-            return ret;
-        }
-
-        Map<Pair<String, String>, SensitivityOfTo> before = new HashMap<>();
-        apply(sas, funcIds, varIds, cs, fs, sensitivityFunctionType, true, null, null, null, (sar, c, f) -> {
-            if (c != null) {
-                return;
-            }
-            before.put(Pair.of(f.getFunctionId(), f.getVariableId()), SensitivityOfTo.builder()
-                .funcId(f.getFunctionId())
-                .varId(f.getVariableId())
-                .varIsAFilter(f.isVariableSet())
-                .value(sar.getValue())
-                .functionReference(sar.getFunctionReference())
-                .build());
-        });
-
-        apply(sas, funcIds, varIds, cs, fs, sensitivityFunctionType, false, null, null, null, (sar, c, f) -> {
-            if (c == null) {
-                return;
-            }
-            SensitivityOfTo b = before.get(Pair.of(f.getFunctionId(), f.getVariableId()));
-            SensitivityWithContingency r = SensitivityWithContingency.toBuilder(b)
-                .funcId(f.getFunctionId())
-                .varId(f.getVariableId())
-                .varIsAFilter(f.isVariableSet())
-                .valueAfter(sar.getValue())
-                .functionReferenceAfter(sar.getFunctionReference())
-                .contingencyId(c.getId())
-                .build();
-            ret.add(r);
-        });
-
-        return ret;
     }
 }

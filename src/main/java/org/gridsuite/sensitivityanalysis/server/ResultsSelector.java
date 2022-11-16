@@ -34,7 +34,7 @@ public class ResultsSelector {
     Collection<String> functionIds;
     @Schema(description = "ids of the variables to limit to")
     Collection<String> variableIds;
-    @Schema(description = "ids of the contingencied to limit to")
+    @Schema(description = "ids of the contingencies to limit to")
     Collection<String> contingencyIds;
 
     @Schema(description = "maximum number of sensitivities to return, if > 0")
