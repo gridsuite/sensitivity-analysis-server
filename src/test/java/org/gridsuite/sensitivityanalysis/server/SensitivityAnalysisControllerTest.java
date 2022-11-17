@@ -561,9 +561,9 @@ public class SensitivityAnalysisControllerTest {
             .variableIds(VARIABLES.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
             .sortKeysWithWeightAndDirection(Map.of(
                 ResultsSelector.SortKey.SENSITIVITY, -1,
-                ResultsSelector.SortKey.REFERENCE, 1,
-                ResultsSelector.SortKey.VARIABLE, 1,
-                ResultsSelector.SortKey.FUNCTION, 1))
+                ResultsSelector.SortKey.REFERENCE, 2,
+                ResultsSelector.SortKey.VARIABLE, 3,
+                ResultsSelector.SortKey.FUNCTION, 4))
             .build();
         ResultsSelector selectorNK = ResultsSelector.builder()
             .isJustBefore(false)
@@ -573,12 +573,12 @@ public class SensitivityAnalysisControllerTest {
             .variableIds(VARIABLES_VARIANT.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
             .sortKeysWithWeightAndDirection(Map.of(
                 ResultsSelector.SortKey.POST_SENSITIVITY, -1,
-                ResultsSelector.SortKey.POST_REFERENCE, -1,
-                ResultsSelector.SortKey.SENSITIVITY, -1,
-                ResultsSelector.SortKey.VARIABLE, 1,
-                ResultsSelector.SortKey.FUNCTION, 1,
-                ResultsSelector.SortKey.REFERENCE, 1,
-                ResultsSelector.SortKey.CONTINGENCY, 1))
+                ResultsSelector.SortKey.POST_REFERENCE, -2,
+                ResultsSelector.SortKey.SENSITIVITY, -3,
+                ResultsSelector.SortKey.VARIABLE, 4,
+                ResultsSelector.SortKey.FUNCTION, 5,
+                ResultsSelector.SortKey.REFERENCE, 6,
+                ResultsSelector.SortKey.CONTINGENCY, 7))
             .chunkSize(10)
             .build();
 

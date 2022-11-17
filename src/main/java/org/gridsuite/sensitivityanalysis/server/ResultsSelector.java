@@ -26,7 +26,8 @@ public class ResultsSelector {
     @NonNull
     Boolean                 isJustBefore;
 
-    public enum SortKey { FUNCTION, VARIABLE, CONTINGENCY, REFERENCE, SENSITIVITY, POST_REFERENCE, POST_SENSITIVITY };
+    public enum SortKey { FUNCTION, VARIABLE, CONTINGENCY, REFERENCE, SENSITIVITY, POST_REFERENCE, POST_SENSITIVITY }
+
     @Schema(description = "sorting by [{key, rank * (ascending ? 1 : -1) }], with rank > 0 and exclusive")
     Map<SortKey, Integer> sortKeysWithWeightAndDirection;
 
