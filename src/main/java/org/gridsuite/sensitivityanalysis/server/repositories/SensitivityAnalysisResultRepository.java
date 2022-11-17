@@ -347,7 +347,7 @@ public class SensitivityAnalysisResultRepository {
             case POST_SENSITIVITY:
             case CONTINGENCY:
             case POST_REFERENCE:
-                return null; // completing the switch appeases Sonar
+                return null; // completing the switch appeases Sonar in a way but lowers coverage
         }
         return null;
     }
@@ -360,8 +360,8 @@ public class SensitivityAnalysisResultRepository {
         ArrayList<Pair<ResultsSelector.SortKey, Boolean>> sortedKeysToDirection = new ArrayList<>(Collections.nCopies(
             sortKeysWithWeightAndDirection.size(), null));
         sortKeysWithWeightAndDirection.forEach((k, s) -> {
-            Pair<ResultsSelector.SortKey, Boolean> prev = sortedKeysToDirection.get(Math.abs(s) - 1);
-            sortedKeysToDirection.set(Math.abs(s) - 1, Pair.of(k, s > 0));
+            int index = Math.abs(s) - 1;
+            sortedKeysToDirection.set(index, Pair.of(k, s > 0));
         });
 
         Optional<Comparator<SensitivityWithContingency>> ret = sortedKeysToDirection.stream()
@@ -383,8 +383,8 @@ public class SensitivityAnalysisResultRepository {
         ArrayList<Pair<ResultsSelector.SortKey, Boolean>> sortedKeysToDirection = new ArrayList<>(Collections.nCopies(
             sortKeysWithWeightAndDirection.size(), null));
         sortKeysWithWeightAndDirection.forEach((k, s) -> {
-            Pair<ResultsSelector.SortKey, Boolean> prev = sortedKeysToDirection.get(Math.abs(s) - 1);
-            sortedKeysToDirection.set(Math.abs(s) - 1, Pair.of(k, s > 0));
+            int index = Math.abs(s) - 1;
+            sortedKeysToDirection.set(index, Pair.of(k, s > 0));
         });
 
         Optional<Comparator<SensitivityOfTo>> ret = sortedKeysToDirection.stream()

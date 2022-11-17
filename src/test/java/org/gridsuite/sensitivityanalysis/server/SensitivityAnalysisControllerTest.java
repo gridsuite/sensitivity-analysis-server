@@ -216,11 +216,13 @@ public class SensitivityAnalysisControllerTest {
         new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "v1",
             SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN", false, ContingencyContext.all()),
         new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "v2",
-            SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN", false, ContingencyContext.create("l1", ContingencyContextType.SPECIFIC))
+            SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN", false, ContingencyContext.create("l1", ContingencyContextType.SPECIFIC)),
+        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "v3",
+            SensitivityVariableType.INJECTION_ACTIVE_POWER, "LOAD", false, ContingencyContext.create("l3", ContingencyContextType.SPECIFIC))
     );
-    private static final List<SensitivityFactor> SENSITIVITY_FACTORS_VARIANT = List.of(new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l2",
-        SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN2",
-        false, ContingencyContext.none()));
+    private static final List<SensitivityFactor> SENSITIVITY_FACTORS_VARIANT = List.of(
+        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l2",
+            SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN2", false, ContingencyContext.none()));
 
     private static final List<SensitivityValue> SENSITIVITY_VALUES = List.of(
         new SensitivityValue(0, -1, 500.1, 2.9),
@@ -229,7 +231,7 @@ public class SensitivityAnalysisControllerTest {
         new SensitivityValue(0, 1, 500.4, 2.6),
         new SensitivityValue(0, 2, 500.5, 2.5),
         new SensitivityValue(1, 1, 500.6, 2.4),
-        new SensitivityValue(1, 0, 500.7, 2.3),
+        new SensitivityValue(2, 0, 500.7, 2.3),
         new SensitivityValue(1, 2, 500.8, 2.2)
     );
     private static final List<SensitivityValue> SENSITIVITY_VALUES_VARIANT = List.of(new SensitivityValue(0, 0, 3d, 4d));
@@ -557,7 +559,11 @@ public class SensitivityAnalysisControllerTest {
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .functionIds(BRANCHES.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
             .variableIds(VARIABLES.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
-            .sortKeysWithWeightAndDirection(Map.of(ResultsSelector.SortKey.REFERENCE, 1))
+            .sortKeysWithWeightAndDirection(Map.of(
+                ResultsSelector.SortKey.SENSITIVITY, -1,
+                ResultsSelector.SortKey.REFERENCE, 1,
+                ResultsSelector.SortKey.VARIABLE, 1,
+                ResultsSelector.SortKey.FUNCTION, 1))
             .build();
         ResultsSelector selectorNK = ResultsSelector.builder()
             .isJustBefore(false)
@@ -565,8 +571,15 @@ public class SensitivityAnalysisControllerTest {
             .contingencyIds(CONTINGENCIES_VARIANT.stream().map(Contingency::getId).collect(Collectors.toList()))
             .functionIds(BRANCHES_VARIANT.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
             .variableIds(VARIABLES_VARIANT.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
-            .sortKeysWithWeightAndDirection(Map.of(ResultsSelector.SortKey.SENSITIVITY, -1))
-            .chunkSize(2)
+            .sortKeysWithWeightAndDirection(Map.of(
+                ResultsSelector.SortKey.POST_SENSITIVITY, -1,
+                ResultsSelector.SortKey.POST_REFERENCE, -1,
+                ResultsSelector.SortKey.SENSITIVITY, -1,
+                ResultsSelector.SortKey.VARIABLE, 1,
+                ResultsSelector.SortKey.FUNCTION, 1,
+                ResultsSelector.SortKey.REFERENCE, 1,
+                ResultsSelector.SortKey.CONTINGENCY, 1))
+            .chunkSize(10)
             .build();
 
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
@@ -577,9 +590,8 @@ public class SensitivityAnalysisControllerTest {
         SensitivityRunQueryResult resN = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(2, (long) resN.getTotalSensitivitiesCount());
 
-        String selectorText = mapper.writeValueAsString(selectorNK);
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
-                selectorText))
+                mapper.writeValueAsString(selectorNK)))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
@@ -587,6 +599,46 @@ public class SensitivityAnalysisControllerTest {
         SensitivityRunQueryResult resNK = mapper.readValue(bodyText, new TypeReference<>() { });
         assertEquals(6, (long) resNK.getTotalSensitivitiesCount());
         assertEquals(2, resNK.getSensitivities().size());
+
+        ResultsSelector selectorNKz1 = ResultsSelector.builder().isJustBefore(false)
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).contingencyIds(List.of("unfoundable")).build();
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
+                mapper.writeValueAsString(selectorNKz1)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+        SensitivityRunQueryResult resNKz1 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(0, (long) resNKz1.getTotalSensitivitiesCount());
+
+        ResultsSelector selectorNKz2 = ResultsSelector.builder().isJustBefore(false)
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).functionIds(List.of("unfoundable")).build();
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
+                mapper.writeValueAsString(selectorNKz2)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+        SensitivityRunQueryResult resNKz2 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(0, (long) resNKz2.getTotalSensitivitiesCount());
+
+        ResultsSelector selectorNKz3 = ResultsSelector.builder().isJustBefore(false)
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).variableIds(List.of("unfoundable")).build();
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
+                mapper.writeValueAsString(selectorNKz3)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+        SensitivityRunQueryResult resNKz3 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(0, (long) resNKz3.getTotalSensitivitiesCount());
+
+        ResultsSelector selectorNKz4 = ResultsSelector.builder().isJustBefore(false)
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_2).build();
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
+                mapper.writeValueAsString(selectorNKz4)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+        SensitivityRunQueryResult resNKz4 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(0, (long) resNKz4.getTotalSensitivitiesCount());
 
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
                 "bogusJSON"))
