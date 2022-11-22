@@ -41,7 +41,7 @@ public class SensitivityRunQueryResult {
     @NonNull
     List<? extends SensitivityOfTo> sensitivities;
 
-    List<String> allContingenciesUuid;
+    List<String> allContingencyIds;
     List<String> allFunctionIds;
-    List<String> allVariablesUuids;
+    List<String> allVariableIds;
 }

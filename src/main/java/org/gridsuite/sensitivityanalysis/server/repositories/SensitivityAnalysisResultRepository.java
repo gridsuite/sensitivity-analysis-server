@@ -49,7 +49,7 @@ import com.powsybl.sensitivity.SensitivityFunctionType;
 @Repository
 public class SensitivityAnalysisResultRepository {
 
-    public static final double MINIMUM_SENSITIVITY = 0.1;
+    public static final double MINIMUM_SENSITIVITY = 0.01;
     private GlobalStatusRepository globalStatusRepository;
 
     private final ResultRepository resultRepository;
@@ -294,9 +294,9 @@ public class SensitivityAnalysisResultRepository {
 
     ) {
         retBuilder.allFunctionIds(allFunctionIds.stream().sorted().collect(Collectors.toList()));
-        retBuilder.allVariablesUuids(allVariableIds.stream().sorted().collect(Collectors.toList()));
+        retBuilder.allVariableIds(allVariableIds.stream().sorted().collect(Collectors.toList()));
         if (allContingencyIds != null) {
-            retBuilder.allContingenciesUuid(allContingencyIds.stream().sorted().collect(Collectors.toList()));
+            retBuilder.allContingencyIds(allContingencyIds.stream().sorted().collect(Collectors.toList()));
         }
         retBuilder.filteredSensitivitiesCount(filtered.size());
         retBuilder.sensitivities(chunkIt(selector, filtered));
