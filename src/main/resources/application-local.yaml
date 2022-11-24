@@ -9,9 +9,6 @@ powsybl-ws:
   database:
     host: localhost
 
-network-store-server:
-  base-uri: http://localhost:8080
-
 backing-services:
   actions-server:
     base-uri: http://localhost:5022
@@ -19,3 +16,5 @@ backing-services:
     base-uri: http://localhost:5027
   report-server:
     base-uri: http://localhost:5028
+  network-store-server:
+    base-uri: http://localhost:8080
