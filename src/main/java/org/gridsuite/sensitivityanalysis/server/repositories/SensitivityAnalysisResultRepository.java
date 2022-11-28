@@ -49,7 +49,6 @@ import com.powsybl.sensitivity.SensitivityFunctionType;
 @Repository
 public class SensitivityAnalysisResultRepository {
 
-    public static final double MINIMUM_SENSITIVITY = 0.01;
     private GlobalStatusRepository globalStatusRepository;
 
     private final ResultRepository resultRepository;
@@ -79,7 +78,6 @@ public class SensitivityAnalysisResultRepository {
                 new ContingencyEmbeddable(cs.getContingencyId(), cs.getStatus()))
             .collect(Collectors.toList());
         List<SensitivityEmbeddable> sensitivities = result.getValues().stream()
-            .filter(v -> v.getValue() >= SensitivityAnalysisResultRepository.MINIMUM_SENSITIVITY)
             .map(v -> new SensitivityEmbeddable(v.getFactorIndex(), v.getContingencyIndex(),
                 v.getValue(), v.getFunctionReference()))
             .collect(Collectors.toList());
