@@ -73,6 +73,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
@@ -213,11 +214,11 @@ public class SensitivityAnalysisControllerTest {
     );
 
     private static final List<SensitivityFactor> SENSITIVITY_FACTORS = List.of(
-        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "v1",
+        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l1",
             SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN", false, ContingencyContext.all()),
-        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "v2",
+        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l2",
             SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN", false, ContingencyContext.create("l1", ContingencyContextType.SPECIFIC)),
-        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "v3",
+        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l3",
             SensitivityVariableType.INJECTION_ACTIVE_POWER, "LOAD", false, ContingencyContext.create("l3", ContingencyContextType.SPECIFIC))
     );
     private static final List<SensitivityFactor> SENSITIVITY_FACTORS_VARIANT = List.of(
@@ -558,7 +559,8 @@ public class SensitivityAnalysisControllerTest {
             .isJustBefore(true)
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .functionIds(BRANCHES.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
-            .variableIds(VARIABLES.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
+            .variableIds(Stream.concat(GENERATORS.stream(), LOADS.stream())
+                .map(IdentifiableAttributes::getId).collect(Collectors.toList()))
             .sortKeysWithWeightAndDirection(Map.of(
                 ResultsSelector.SortKey.SENSITIVITY, -1,
                 ResultsSelector.SortKey.REFERENCE, 2,
@@ -570,7 +572,7 @@ public class SensitivityAnalysisControllerTest {
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .contingencyIds(CONTINGENCIES_VARIANT.stream().map(Contingency::getId).collect(Collectors.toList()))
             .functionIds(BRANCHES_VARIANT.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
-            .variableIds(VARIABLES_VARIANT.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
+            .variableIds(GENERATORS.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
             .sortKeysWithWeightAndDirection(Map.of(
                 ResultsSelector.SortKey.POST_SENSITIVITY, -1,
                 ResultsSelector.SortKey.POST_REFERENCE, -2,
