@@ -12,7 +12,6 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.computation.local.LocalComputationManager;
-import com.powsybl.contingency.Contingency;
 import com.powsybl.iidm.mergingview.MergingView;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
@@ -21,15 +20,12 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.sensitivity.SensitivityAnalysis;
 import com.powsybl.sensitivity.SensitivityAnalysisParameters;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
-import com.powsybl.sensitivity.SensitivityFactor;
-import com.powsybl.sensitivity.SensitivityVariableSet;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
@@ -37,11 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -61,39 +53,36 @@ public class SensitivityAnalysisWorkerService {
 
     private static final String SENSI_TYPE_REPORT = "SensitivityAnalysis";
 
-    private NetworkStoreService networkStoreService;
+    private final NetworkStoreService networkStoreService;
 
-    private ActionsService actionsService;
+    private final ReportService reportService;
 
-    private FilterService filterService;
+    private final SensitivityAnalysisResultRepository resultRepository;
 
-    private ReportService reportService;
+    private final ObjectMapper objectMapper;
 
-    private SensitivityAnalysisResultRepository resultRepository;
+    private final Map<UUID, CompletableFuture<SensitivityAnalysisResult>> futures = new ConcurrentHashMap<>();
 
-    private ObjectMapper objectMapper;
+    private final Map<UUID, SensitivityAnalysisCancelContext> cancelComputationRequests = new ConcurrentHashMap<>();
 
-    private Map<UUID, CompletableFuture<SensitivityAnalysisResult>> futures = new ConcurrentHashMap<>();
-
-    private Map<UUID, SensitivityAnalysisCancelContext> cancelComputationRequests = new ConcurrentHashMap<>();
-
-    private Set<UUID> runRequests = Sets.newConcurrentHashSet();
+    private final Set<UUID> runRequests = Sets.newConcurrentHashSet();
 
     private final Lock lockRunAndCancelSensitivityAnalysis = new ReentrantLock();
 
-    @Autowired
-    NotificationService notificationService;
+    private final NotificationService notificationService;
+
+    private final SensitivityAnalysisInputBuilderService sensitivityAnalysisInputBuilderService;
 
     private Function<String, SensitivityAnalysis.Runner> sensitivityAnalysisFactorySupplier;
 
-    public SensitivityAnalysisWorkerService(NetworkStoreService networkStoreService, ActionsService actionsService,
-                                            FilterService filterService, ReportService reportService,
+    public SensitivityAnalysisWorkerService(NetworkStoreService networkStoreService, ReportService reportService, NotificationService notificationService,
+                                            SensitivityAnalysisInputBuilderService sensitivityAnalysisInputBuilderService,
                                             SensitivityAnalysisResultRepository resultRepository, ObjectMapper objectMapper,
                                             SensitivityAnalysisRunnerSupplier sensitivityAnalysisRunnerSupplier) {
         this.networkStoreService = Objects.requireNonNull(networkStoreService);
-        this.actionsService = Objects.requireNonNull(actionsService);
-        this.filterService = filterService;
         this.reportService = Objects.requireNonNull(reportService);
+        this.notificationService = notificationService;
+        this.sensitivityAnalysisInputBuilderService = sensitivityAnalysisInputBuilderService;
         this.resultRepository = Objects.requireNonNull(resultRepository);
         this.objectMapper = Objects.requireNonNull(objectMapper);
         sensitivityAnalysisFactorySupplier = sensitivityAnalysisRunnerSupplier::getRunner;
@@ -146,7 +135,6 @@ public class SensitivityAnalysisWorkerService {
         Objects.requireNonNull(context);
 
         LOGGER.info("Run sensitivity analysis");
-        Network network = getNetwork(context.getNetworkUuid(), context.getOtherNetworkUuids(), context.getVariantId());
 
         SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(context.getProvider());
 
@@ -158,16 +146,7 @@ public class SensitivityAnalysisWorkerService {
             reporter = rootReporter.createSubReporter(SENSI_TYPE_REPORT, SENSI_TYPE_REPORT + " (${providerToUse})", "providerToUse", sensitivityAnalysisRunner.getName());
         }
 
-        SensitivityAnalysisInputBuilder sensitivityAnalysisInputBuilder = new SensitivityAnalysisInputBuilder(network, context, actionsService, filterService);
-        sensitivityAnalysisInputBuilder.build(reporter);
-
-        CompletableFuture<SensitivityAnalysisResult> future = runSensitivityAnalysisAsync(context, sensitivityAnalysisRunner,
-            network,
-            sensitivityAnalysisInputBuilder.getFactors(),
-            sensitivityAnalysisInputBuilder.getContingencies(),
-            sensitivityAnalysisInputBuilder.getVariableSets(),
-            reporter,
-            resultUuid);
+        CompletableFuture<SensitivityAnalysisResult> future = runSensitivityAnalysisAsync(context, sensitivityAnalysisRunner, reporter, resultUuid);
 
         SensitivityAnalysisResult result = future == null ? null : future.get();
         if (context.getReportUuid() != null) {
@@ -178,10 +157,6 @@ public class SensitivityAnalysisWorkerService {
 
     private CompletableFuture<SensitivityAnalysisResult> runSensitivityAnalysisAsync(SensitivityAnalysisRunContext context,
                                                                                      SensitivityAnalysis.Runner sensitivityAnalysisRunner,
-                                                                                     Network network,
-                                                                                     List<SensitivityFactor> factors,
-                                                                                     List<Contingency> contingencies,
-                                                                                     List<SensitivityVariableSet> variableSets,
                                                                                      Reporter reporter,
                                                                                      UUID resultUuid) {
         lockRunAndCancelSensitivityAnalysis.lock();
@@ -189,7 +164,6 @@ public class SensitivityAnalysisWorkerService {
             if (resultUuid != null && cancelComputationRequests.get(resultUuid) != null) {
                 return null;
             }
-            String variantId = context.getVariantId() != null ? context.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID;
 
             SensitivityAnalysisParameters sensitivityAnalysisParameters = context.getSensitivityAnalysisInputData().getParameters() != null
                 ? context.getSensitivityAnalysisInputData().getParameters()
@@ -197,12 +171,15 @@ public class SensitivityAnalysisWorkerService {
 
             // TODO : set resultsThreshold in SensitivityAnalysisParameters when it will be available in powsybl-core
 
+            Network network = getNetwork(context.getNetworkUuid(), context.getOtherNetworkUuids(), context.getVariantId());
+            sensitivityAnalysisInputBuilderService.build(context, network, reporter);
+
             CompletableFuture<SensitivityAnalysisResult> future = sensitivityAnalysisRunner.runAsync(
                 network,
-                variantId,
-                factors,
-                contingencies,
-                variableSets,
+                context.getVariantId() != null ? context.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
+                context.getSensitivityAnalysisInputs().getFactors(),
+                new ArrayList<>(context.getSensitivityAnalysisInputs().getContingencies()),
+                context.getSensitivityAnalysisInputs().getVariablesSets(),
                 sensitivityAnalysisParameters,
                 LocalComputationManager.getDefault(),
                 reporter);

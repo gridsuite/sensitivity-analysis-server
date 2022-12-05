@@ -8,14 +8,12 @@ package org.gridsuite.sensitivityanalysis.server.dto;
 
 import com.powsybl.sensitivity.SensitivityAnalysisParameters;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -36,74 +34,6 @@ public class SensitivityAnalysisInputData {
     public enum SensitivityType {
         DELTA_MW,
         DELTA_A
-    }
-
-    @SuperBuilder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Getter
-    @Setter
-    public static class Ident {
-        UUID id;
-        String name;
-    }
-
-    @SuperBuilder
-    @NoArgsConstructor
-    @Getter
-    @Setter
-    @Schema(description = "Sensitivity relatively to injections set")
-    public static class SensitivityInjectionsSet {
-        List<Ident> monitoredBranches;
-        List<Ident> injections;
-        DistributionType distributionType;
-        List<Ident> contingencies;
-    }
-
-    @SuperBuilder
-    @NoArgsConstructor
-    @Getter
-    @Setter
-    @Schema(description = "Sensitivity relatively to each injection")
-    public static class SensitivityInjection {
-        List<Ident> monitoredBranches;
-        List<Ident> injections;
-        List<Ident> contingencies;
-    }
-
-    @SuperBuilder
-    @NoArgsConstructor
-    @Getter
-    @Setter
-    @Schema(description = "Sensitivity relatively to each HVDC")
-    public static class SensitivityHVDC {
-        List<Ident> monitoredBranches;
-        SensitivityType sensitivityType;
-        List<Ident> hvdcs;
-        List<Ident> contingencies;
-    }
-
-    @SuperBuilder
-    @NoArgsConstructor
-    @Getter
-    @Setter
-    @Schema(description = "Sensitivity relatively to each PST")
-    public static class SensitivityPST {
-        List<Ident> monitoredBranches;
-        SensitivityType sensitivityType;
-        List<Ident> psts;
-        List<Ident> contingencies;
-    }
-
-    @SuperBuilder
-    @NoArgsConstructor
-    @Getter
-    @Setter
-    @Schema(description = "Sensitivity relatively to nodes")
-    public static class SensitivityNodes {
-        List<Ident> monitoredVoltageLevels;
-        List<Ident> equipmentsInVoltageRegulation;
-        List<Ident> contingencies;
     }
 
     @Schema(description = "Results threshold")

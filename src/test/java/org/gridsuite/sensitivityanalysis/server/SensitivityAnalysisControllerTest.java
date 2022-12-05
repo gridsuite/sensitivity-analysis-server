@@ -37,9 +37,7 @@ import com.powsybl.sensitivity.SensitivityFunctionType;
 import com.powsybl.sensitivity.SensitivityValue;
 import com.powsybl.sensitivity.SensitivityVariableType;
 import lombok.SneakyThrows;
-import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
+import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.gridsuite.sensitivityanalysis.server.service.ReportService;
@@ -310,29 +308,29 @@ public class SensitivityAnalysisControllerTest {
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData1 = SensitivityAnalysisInputData.builder()
             .resultsThreshold(0.20)
-            .sensitivityInjectionsSets(List.of(SensitivityAnalysisInputData.SensitivityInjectionsSet.builder()
-                .monitoredBranches(List.of(new SensitivityAnalysisInputData.Ident(MONITORED_BRANCHES_FILTERS_INJECTIONS_SET_UUID, "name1")))
-                .injections(List.of(new SensitivityAnalysisInputData.Ident(GENERATORS_FILTERS_INJECTIONS_SET_UUID, "name2"), new SensitivityAnalysisInputData.Ident(LOADS_FILTERS_INJECTIONS_SET_UUID, "name3")))
+            .sensitivityInjectionsSets(List.of(SensitivityInjectionsSet.builder()
+                .monitoredBranches(List.of(new FilterIdent(MONITORED_BRANCHES_FILTERS_INJECTIONS_SET_UUID, "name1")))
+                .injections(List.of(new FilterIdent(GENERATORS_FILTERS_INJECTIONS_SET_UUID, "name2"), new FilterIdent(LOADS_FILTERS_INJECTIONS_SET_UUID, "name3")))
                 .distributionType(SensitivityAnalysisInputData.DistributionType.REGULAR)
-                .contingencies(List.of(new SensitivityAnalysisInputData.Ident(CONTINGENCIES_INJECTIONS_SET_UUID, "name4"))).build()))
-            .sensitivityInjections(List.of(SensitivityAnalysisInputData.SensitivityInjection.builder()
-                .monitoredBranches(List.of(new SensitivityAnalysisInputData.Ident(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, "name5")))
-                .injections(List.of(new SensitivityAnalysisInputData.Ident(GENERATORS_FILTERS_INJECTIONS_UUID, "name6")))
-                .contingencies(List.of(new SensitivityAnalysisInputData.Ident(CONTINGENCIES_INJECTIONS_UUID1, "name7"), new SensitivityAnalysisInputData.Ident(CONTINGENCIES_INJECTIONS_UUID2, "name8"))).build()))
-            .sensitivityHVDCs(List.of(SensitivityAnalysisInputData.SensitivityHVDC.builder()
-                .monitoredBranches(List.of(new SensitivityAnalysisInputData.Ident(MONITORED_BRANCHES_FILTERS_HVDC_UUID, "name9")))
+                .contingencies(List.of(new FilterIdent(CONTINGENCIES_INJECTIONS_SET_UUID, "name4"))).build()))
+            .sensitivityInjections(List.of(SensitivityInjection.builder()
+                .monitoredBranches(List.of(new FilterIdent(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, "name5")))
+                .injections(List.of(new FilterIdent(GENERATORS_FILTERS_INJECTIONS_UUID, "name6")))
+                .contingencies(List.of(new FilterIdent(CONTINGENCIES_INJECTIONS_UUID1, "name7"), new FilterIdent(CONTINGENCIES_INJECTIONS_UUID2, "name8"))).build()))
+            .sensitivityHVDCs(List.of(SensitivityHVDC.builder()
+                .monitoredBranches(List.of(new FilterIdent(MONITORED_BRANCHES_FILTERS_HVDC_UUID, "name9")))
                 .sensitivityType(SensitivityAnalysisInputData.SensitivityType.DELTA_MW)
-                .hvdcs(List.of(new SensitivityAnalysisInputData.Ident(HVDC_FILTERS_UUID, "name10")))
-                .contingencies(List.of(new SensitivityAnalysisInputData.Ident(CONTINGENCIES_HVDCS_UUID, "name11"))).build()))
-            .sensitivityPSTs(List.of(SensitivityAnalysisInputData.SensitivityPST.builder()
-                .monitoredBranches(List.of(new SensitivityAnalysisInputData.Ident(MONITORED_BRANCHES_FILTERS_PST_UUID, "name12")))
+                .hvdcs(List.of(new FilterIdent(HVDC_FILTERS_UUID, "name10")))
+                .contingencies(List.of(new FilterIdent(CONTINGENCIES_HVDCS_UUID, "name11"))).build()))
+            .sensitivityPSTs(List.of(SensitivityPST.builder()
+                .monitoredBranches(List.of(new FilterIdent(MONITORED_BRANCHES_FILTERS_PST_UUID, "name12")))
                 .sensitivityType(SensitivityAnalysisInputData.SensitivityType.DELTA_A)
-                .psts(List.of(new SensitivityAnalysisInputData.Ident(PST_FILTERS_UUID1, "name13"), new SensitivityAnalysisInputData.Ident(PST_FILTERS_UUID2, "name14")))
-                .contingencies(List.of(new SensitivityAnalysisInputData.Ident(CONTINGENCIES_PSTS_UUID, "name15"))).build()))
-            .sensitivityNodes(List.of(SensitivityAnalysisInputData.SensitivityNodes.builder()
-                .monitoredVoltageLevels(List.of(new SensitivityAnalysisInputData.Ident(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID, "name16")))
-                .equipmentsInVoltageRegulation(List.of(new SensitivityAnalysisInputData.Ident(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, "name17")))
-                .contingencies(List.of(new SensitivityAnalysisInputData.Ident(CONTINGENCIES_NODES_UUID, "name18"))).build()))
+                .psts(List.of(new FilterIdent(PST_FILTERS_UUID1, "name13"), new FilterIdent(PST_FILTERS_UUID2, "name14")))
+                .contingencies(List.of(new FilterIdent(CONTINGENCIES_PSTS_UUID, "name15"))).build()))
+            .sensitivityNodes(List.of(SensitivityNodes.builder()
+                .monitoredVoltageLevels(List.of(new FilterIdent(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID, "name16")))
+                .equipmentsInVoltageRegulation(List.of(new FilterIdent(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, "name17")))
+                .contingencies(List.of(new FilterIdent(CONTINGENCIES_NODES_UUID, "name18"))).build()))
             .parameters(SensitivityAnalysisParameters.load())
             .build();
         SENSITIVITY_INPUT_1 = mapper.writeValueAsString(sensitivityAnalysisInputData1);
@@ -342,19 +340,19 @@ public class SensitivityAnalysisControllerTest {
         SENSITIVITY_INPUT_2 = mapper.writeValueAsString(sensitivityAnalysisInputData2);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData3 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
-        sensitivityAnalysisInputData3.getSensitivityInjectionsSets().get(0).getInjections().get(0).setId(HVDC_FILTERS_UUID);
+        sensitivityAnalysisInputData3.getSensitivityInjectionsSets().get(0).getInjections().get(0).setUuid(HVDC_FILTERS_UUID);
         SENSITIVITY_INPUT_3 = mapper.writeValueAsString(sensitivityAnalysisInputData3);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData4 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
-        sensitivityAnalysisInputData4.getSensitivityInjectionsSets().get(0).getMonitoredBranches().get(0).setId(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
+        sensitivityAnalysisInputData4.getSensitivityInjectionsSets().get(0).getMonitoredBranches().get(0).setUuid(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
         SENSITIVITY_INPUT_4 = mapper.writeValueAsString(sensitivityAnalysisInputData4);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData5 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
-        sensitivityAnalysisInputData5.getSensitivityInjections().get(0).getMonitoredBranches().get(0).setId(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
+        sensitivityAnalysisInputData5.getSensitivityInjections().get(0).getMonitoredBranches().get(0).setUuid(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
         SENSITIVITY_INPUT_5 = mapper.writeValueAsString(sensitivityAnalysisInputData5);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData6 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
-        sensitivityAnalysisInputData6.getSensitivityPSTs().get(0).getPsts().get(0).setId(GENERATORS_FILTERS_INJECTIONS_UUID);
+        sensitivityAnalysisInputData6.getSensitivityPSTs().get(0).getPsts().get(0).setUuid(GENERATORS_FILTERS_INJECTIONS_UUID);
         SENSITIVITY_INPUT_6 = mapper.writeValueAsString(sensitivityAnalysisInputData6);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputDataHvdcWithDeltaA = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);

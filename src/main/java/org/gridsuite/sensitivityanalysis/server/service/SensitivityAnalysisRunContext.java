@@ -25,6 +25,8 @@ public class SensitivityAnalysisRunContext {
 
     private final SensitivityAnalysisInputData sensitivityAnalysisInputData;
 
+    private final SensitivityAnalysisInputs sensitivityAnalysisInputs;
+
     private final String receiver;
 
     private final String provider;
@@ -40,6 +42,7 @@ public class SensitivityAnalysisRunContext {
         this.variantId = variantId;
         this.otherNetworkUuids = Objects.requireNonNull(otherNetworkUuids);
         this.sensitivityAnalysisInputData = Objects.requireNonNull(sensitivityAnalysisInputData);
+        this.sensitivityAnalysisInputs = new SensitivityAnalysisInputs();
         this.receiver = receiver;
         this.provider = provider;
         this.reportUuid = reportUuid;
@@ -60,6 +63,10 @@ public class SensitivityAnalysisRunContext {
 
     public SensitivityAnalysisInputData getSensitivityAnalysisInputData() {
         return sensitivityAnalysisInputData;
+    }
+
+    public SensitivityAnalysisInputs getSensitivityAnalysisInputs() {
+        return sensitivityAnalysisInputs;
     }
 
     public String getReceiver() {
