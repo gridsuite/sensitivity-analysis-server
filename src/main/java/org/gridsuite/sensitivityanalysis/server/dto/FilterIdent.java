@@ -23,6 +23,6 @@ import java.util.UUID;
 @Getter
 @Setter
 public class FilterIdent {
-    UUID uuid;
+    UUID id;
     String name;
 }

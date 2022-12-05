@@ -38,7 +38,7 @@ public class SensitivityAnalysisInputBuilderService {
 
     private List<Contingency> buildContingencies(SensitivityAnalysisRunContext context, List<FilterIdent> contingencyListsFilterIdents) {
         return contingencyListsFilterIdents.stream()
-            .flatMap(contingencyListIdent -> actionsService.getContingencyList(contingencyListIdent.getUuid(), context.getNetworkUuid(), context.getVariantId()).stream())
+            .flatMap(contingencyListIdent -> actionsService.getContingencyList(contingencyListIdent.getId(), context.getNetworkUuid(), context.getVariantId()).stream())
             .collect(Collectors.toList());
     }
 
@@ -78,7 +78,7 @@ public class SensitivityAnalysisInputBuilderService {
     }
 
     private Stream<IdentifiableAttributes> getIdentifiablesFromFilter(SensitivityAnalysisRunContext context, FilterIdent filter, List<IdentifiableType> equipmentsTypesAllowed, Reporter reporter) {
-        List<IdentifiableAttributes> listIdentAttributes = filterService.getIdentifiablesFromFilter(filter.getUuid(), context.getNetworkUuid(), context.getVariantId());
+        List<IdentifiableAttributes> listIdentAttributes = filterService.getIdentifiablesFromFilter(filter.getId(), context.getNetworkUuid(), context.getVariantId());
 
         // check that monitored equipments type is allowed
         if (!listIdentAttributes.stream().allMatch(i -> equipmentsTypesAllowed.contains(i.getType()))) {
@@ -96,7 +96,7 @@ public class SensitivityAnalysisInputBuilderService {
     }
 
     private Stream<IdentifiableAttributes> getMonitoredIdentifiablesFromFilter(SensitivityAnalysisRunContext context, Network network, FilterIdent filter, List<IdentifiableType> equipmentsTypesAllowed, Reporter reporter) {
-        List<IdentifiableAttributes> listIdentAttributes = filterService.getIdentifiablesFromFilter(filter.getUuid(), context.getNetworkUuid(), context.getVariantId());
+        List<IdentifiableAttributes> listIdentAttributes = filterService.getIdentifiablesFromFilter(filter.getId(), context.getNetworkUuid(), context.getVariantId());
 
         // check that monitored equipments type is allowed
         if (!listIdentAttributes.stream().allMatch(i -> equipmentsTypesAllowed.contains(i.getType()))) {

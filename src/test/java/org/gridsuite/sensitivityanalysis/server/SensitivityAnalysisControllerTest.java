@@ -340,19 +340,19 @@ public class SensitivityAnalysisControllerTest {
         SENSITIVITY_INPUT_2 = mapper.writeValueAsString(sensitivityAnalysisInputData2);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData3 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
-        sensitivityAnalysisInputData3.getSensitivityInjectionsSets().get(0).getInjections().get(0).setUuid(HVDC_FILTERS_UUID);
+        sensitivityAnalysisInputData3.getSensitivityInjectionsSets().get(0).getInjections().get(0).setId(HVDC_FILTERS_UUID);
         SENSITIVITY_INPUT_3 = mapper.writeValueAsString(sensitivityAnalysisInputData3);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData4 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
-        sensitivityAnalysisInputData4.getSensitivityInjectionsSets().get(0).getMonitoredBranches().get(0).setUuid(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
+        sensitivityAnalysisInputData4.getSensitivityInjectionsSets().get(0).getMonitoredBranches().get(0).setId(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
         SENSITIVITY_INPUT_4 = mapper.writeValueAsString(sensitivityAnalysisInputData4);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData5 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
-        sensitivityAnalysisInputData5.getSensitivityInjections().get(0).getMonitoredBranches().get(0).setUuid(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
+        sensitivityAnalysisInputData5.getSensitivityInjections().get(0).getMonitoredBranches().get(0).setId(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
         SENSITIVITY_INPUT_5 = mapper.writeValueAsString(sensitivityAnalysisInputData5);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData6 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
-        sensitivityAnalysisInputData6.getSensitivityPSTs().get(0).getPsts().get(0).setUuid(GENERATORS_FILTERS_INJECTIONS_UUID);
+        sensitivityAnalysisInputData6.getSensitivityPSTs().get(0).getPsts().get(0).setId(GENERATORS_FILTERS_INJECTIONS_UUID);
         SENSITIVITY_INPUT_6 = mapper.writeValueAsString(sensitivityAnalysisInputData6);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputDataHvdcWithDeltaA = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
