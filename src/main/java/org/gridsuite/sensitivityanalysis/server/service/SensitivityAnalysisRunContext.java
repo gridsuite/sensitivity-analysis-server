@@ -6,7 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
-import com.powsybl.sensitivity.SensitivityAnalysisParameters;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 
 import java.util.List;
 import java.util.Objects;
@@ -23,36 +23,28 @@ public class SensitivityAnalysisRunContext {
 
     private final List<UUID> otherNetworkUuids;
 
-    private final List<UUID> variablesFiltersListUuids;
+    private final SensitivityAnalysisInputData sensitivityAnalysisInputData;
 
-    private final List<UUID> contingencyListUuids;
-
-    private final List<UUID> branchFiltersListUuids;
+    private final SensitivityAnalysisInputs sensitivityAnalysisInputs;
 
     private final String receiver;
 
     private final String provider;
-
-    private final SensitivityAnalysisParameters parameters;
 
     private final UUID reportUuid;
 
     private final String reporterId;
 
     public SensitivityAnalysisRunContext(UUID networkUuid, String variantId, List<UUID> otherNetworkUuids,
-                                         List<UUID> variablesFiltersListUuids, List<UUID> contingencyListUuids,
-                                         List<UUID> branchFiltersListUuids,
-                                         String receiver, String provider, SensitivityAnalysisParameters parameters,
-                                         UUID reportUuid, String reporterId) {
+                                         SensitivityAnalysisInputData sensitivityAnalysisInputData,
+                                         String receiver, String provider, UUID reportUuid, String reporterId) {
         this.networkUuid = Objects.requireNonNull(networkUuid);
         this.variantId = variantId;
         this.otherNetworkUuids = Objects.requireNonNull(otherNetworkUuids);
-        this.variablesFiltersListUuids = Objects.requireNonNull(variablesFiltersListUuids);
-        this.contingencyListUuids = Objects.requireNonNull(contingencyListUuids);
-        this.branchFiltersListUuids = Objects.requireNonNull(branchFiltersListUuids);
+        this.sensitivityAnalysisInputData = Objects.requireNonNull(sensitivityAnalysisInputData);
+        this.sensitivityAnalysisInputs = new SensitivityAnalysisInputs();
         this.receiver = receiver;
         this.provider = provider;
-        this.parameters = Objects.requireNonNull(parameters);
         this.reportUuid = reportUuid;
         this.reporterId = reporterId;
     }
@@ -69,16 +61,12 @@ public class SensitivityAnalysisRunContext {
         return otherNetworkUuids;
     }
 
-    public List<UUID> getVariablesFiltersListUuids() {
-        return variablesFiltersListUuids;
+    public SensitivityAnalysisInputData getSensitivityAnalysisInputData() {
+        return sensitivityAnalysisInputData;
     }
 
-    public List<UUID> getContingencyListUuids() {
-        return contingencyListUuids;
-    }
-
-    public List<UUID> getBranchFiltersListUuids() {
-        return branchFiltersListUuids;
+    public SensitivityAnalysisInputs getSensitivityAnalysisInputs() {
+        return sensitivityAnalysisInputs;
     }
 
     public String getReceiver() {
@@ -87,10 +75,6 @@ public class SensitivityAnalysisRunContext {
 
     public String getProvider() {
         return provider;
-    }
-
-    public SensitivityAnalysisParameters getParameters() {
-        return parameters;
     }
 
     public UUID getReportUuid() {
