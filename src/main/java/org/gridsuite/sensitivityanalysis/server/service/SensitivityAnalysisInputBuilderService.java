@@ -217,7 +217,6 @@ public class SensitivityAnalysisInputBuilderService {
             return List.of();
         }
 
-        // TODO Franck : for voltage levels, get the list of all buses or busbar sections ?
         List<IdentifiableAttributes> monitoredEquipments = monitoredEquipmentsFilters.stream()
             .flatMap(filter -> getMonitoredIdentifiablesFromFilter(context, network, filter, monitoredEquipmentsTypesAllowed, reporter))
             .collect(Collectors.toList());
