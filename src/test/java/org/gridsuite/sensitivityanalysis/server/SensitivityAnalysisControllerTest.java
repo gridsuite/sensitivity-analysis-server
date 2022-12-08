@@ -110,6 +110,7 @@ public class SensitivityAnalysisControllerTest {
     private static final UUID MONITORED_BRANCHES_FILTERS_INJECTIONS_SET_UUID = UUID.randomUUID();
     private static final UUID GENERATORS_FILTERS_INJECTIONS_SET_UUID = UUID.randomUUID();
     private static final UUID LOADS_FILTERS_INJECTIONS_SET_UUID = UUID.randomUUID();
+    private static final UUID LOADS_FILTERS_INJECTIONS_SET_WITH_BAD_DISTRIBUTION_TYPE_UUID = UUID.randomUUID();
     private static final UUID CONTINGENCIES_INJECTIONS_SET_UUID = UUID.randomUUID();
     private static final UUID MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID = UUID.randomUUID();
     private static final UUID GENERATORS_FILTERS_INJECTIONS_UUID = UUID.randomUUID();
@@ -239,6 +240,8 @@ public class SensitivityAnalysisControllerTest {
     private static String SENSITIVITY_INPUT_5;
     private static String SENSITIVITY_INPUT_6;
     private static String SENSITIVITY_INPUT_HVDC_DELTA_A;
+    private static String SENSITIVITY_INPUT_LOAD_PROPORTIONAL_MAXP;
+    private static String SENSITIVITY_INPUT_VENTILATION;
 
     @Autowired
     private OutputDestination output;
@@ -359,6 +362,15 @@ public class SensitivityAnalysisControllerTest {
         sensitivityAnalysisInputDataHvdcWithDeltaA.getSensitivityHVDCs().get(0).setSensitivityType(SensitivityAnalysisInputData.SensitivityType.DELTA_A);
         SENSITIVITY_INPUT_HVDC_DELTA_A = mapper.writeValueAsString(sensitivityAnalysisInputDataHvdcWithDeltaA);
 
+        SensitivityAnalysisInputData sensitivityAnalysisInputDataLoadWithProportionalMaxP = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
+        sensitivityAnalysisInputDataLoadWithProportionalMaxP.getSensitivityInjectionsSets().get(0).setDistributionType(SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP);
+        sensitivityAnalysisInputDataLoadWithProportionalMaxP.getSensitivityInjectionsSets().get(0).getInjections().get(1).setId(LOADS_FILTERS_INJECTIONS_SET_WITH_BAD_DISTRIBUTION_TYPE_UUID);
+        SENSITIVITY_INPUT_LOAD_PROPORTIONAL_MAXP = mapper.writeValueAsString(sensitivityAnalysisInputDataLoadWithProportionalMaxP);
+
+        SensitivityAnalysisInputData sensitivityAnalysisInputDataVentilation = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
+        sensitivityAnalysisInputDataVentilation.getSensitivityInjectionsSets().get(0).setDistributionType(SensitivityAnalysisInputData.DistributionType.VENTILATION);
+        SENSITIVITY_INPUT_VENTILATION = mapper.writeValueAsString(sensitivityAnalysisInputDataVentilation);
+
         // action service mocking
         given(actionsService.getContingencyList(CONTINGENCIES_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(CONTINGENCIES);
         given(actionsService.getContingencyList(CONTINGENCIES_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(CONTINGENCIES_VARIANT);
@@ -394,6 +406,7 @@ public class SensitivityAnalysisControllerTest {
         given(filterService.getIdentifiablesFromFilter(LOADS_FILTERS_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(LOADS_VARIANT);
         given(filterService.getIdentifiablesFromFilter(LOADS_FILTERS_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(LOADS);
         given(filterService.getIdentifiablesFromFilter(LOADS_FILTERS_INJECTIONS_SET_UUID, NETWORK_UUID, null)).willReturn(LOADS);
+        given(filterService.getIdentifiablesFromFilter(LOADS_FILTERS_INJECTIONS_SET_WITH_BAD_DISTRIBUTION_TYPE_UUID, NETWORK_UUID, null)).willReturn(LOADS);
         given(filterService.getIdentifiablesFromFilter(LOADS_FILTERS_INJECTIONS_SET_UUID, NETWORK_STOP_UUID, VARIANT_2_ID)).willReturn(LOADS);
         given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(BRANCHES);
         given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(BRANCHES_VARIANT);
@@ -493,7 +506,7 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(mapper.writeValueAsString(RESULT_VARIANT), result.getResponse().getContentAsString());
 
         // run with implicit initial variant
-        for (String sensitivityInput : List.of(SENSITIVITY_INPUT_1, SENSITIVITY_INPUT_2, SENSITIVITY_INPUT_3, SENSITIVITY_INPUT_4, SENSITIVITY_INPUT_5, SENSITIVITY_INPUT_6)) {
+        for (String sensitivityInput : List.of(SENSITIVITY_INPUT_1, SENSITIVITY_INPUT_2, SENSITIVITY_INPUT_3, SENSITIVITY_INPUT_4, SENSITIVITY_INPUT_5, SENSITIVITY_INPUT_6, SENSITIVITY_INPUT_LOAD_PROPORTIONAL_MAXP, SENSITIVITY_INPUT_VENTILATION)) {
             result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/run", NETWORK_UUID)
                 .contentType(MediaType.APPLICATION_JSON)
