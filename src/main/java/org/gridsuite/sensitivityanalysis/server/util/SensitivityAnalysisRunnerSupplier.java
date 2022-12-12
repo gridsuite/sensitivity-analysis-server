@@ -21,10 +21,6 @@ public class SensitivityAnalysisRunnerSupplier {
 
     public SensitivityAnalysis.Runner getRunner(String provider) {
         String findProvider = provider != null ? provider : defaultProvider;
-        if (findProvider.equals("Hades2")) {
-            // in powsybl-rte-core, SensitivityAnalysisProvider is "Sensi2"
-            findProvider = "Sensi2";
-        }
         return SensitivityAnalysis.find(findProvider);
     }
 }
