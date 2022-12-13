@@ -10,13 +10,13 @@ powsybl-ws:
     host: localhost
 
 network-store-server:
-  base-uri: http://172.17.0.1:8080
+  base-uri: http:localhost:8080
 
 actions-server:
-  base-uri: http://172.17.0.1:5022
+  base-uri: http://localhost:5022
 
 filter-server:
-  base-uri: http://172.17.0.1:5027
+  base-uri: http://localhost:5027
 
 report-server:
-  base-uri: http://172.17.0.1:5028
+  base-uri: http://localhost:5028
