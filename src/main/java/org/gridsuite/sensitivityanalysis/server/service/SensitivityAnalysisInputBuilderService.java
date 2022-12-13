@@ -176,6 +176,24 @@ public class SensitivityAnalysisInputBuilderService {
 
         variablesFiltersLists.forEach(variablesList -> {
             List<WeightedSensitivityVariable> variables = new ArrayList<>();
+            if (variablesList.get(0).getType() == IdentifiableType.LOAD && distributionType == SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP) {
+                reporter.report(Report.builder()
+                    .withKey("distributionTypeNotAllowedForLoadsFilter")
+                    .withDefaultMessage("Distribution type ${distributionType} is not allowed for loads filter : filter is ignored")
+                    .withValue("distributionType", distributionType.name())
+                    .withSeverity(TypedValue.WARN_SEVERITY)
+                    .build());
+                return;
+            }
+            if (variablesList.get(0).getDistributionKey() == null && distributionType == SensitivityAnalysisInputData.DistributionType.VENTILATION) {
+                reporter.report(Report.builder()
+                    .withKey("distributionTypeAllowedOnlyForManualFilter")
+                    .withDefaultMessage("Distribution type ${distributionType} is allowed only for manual filter : filter is ignored")
+                    .withValue("distributionType", distributionType.name())
+                    .withSeverity(TypedValue.WARN_SEVERITY)
+                    .build());
+                return;
+            }
             for (IdentifiableAttributes identifiableAttributes : variablesList) {
                 switch (identifiableAttributes.getType()) {
                     case GENERATOR: {

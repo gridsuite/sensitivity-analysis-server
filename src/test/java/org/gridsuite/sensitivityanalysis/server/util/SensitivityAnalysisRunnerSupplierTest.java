@@ -33,7 +33,7 @@ public class SensitivityAnalysisRunnerSupplierTest {
     public void test() {
         assertEquals("OpenLoadFlow", sensitivityAnalysisRunnerSupplier.getRunner("OpenLoadFlow").getName());
         // in powsybl-rte-core, SensitivityAnalysisProvider is "Sensi2"
-        assertEquals("Sensi2", sensitivityAnalysisRunnerSupplier.getRunner("Hades2").getName());
+        assertEquals("Hades2", sensitivityAnalysisRunnerSupplier.getRunner("Hades2").getName());
         assertEquals("OpenLoadFlow", sensitivityAnalysisRunnerSupplier.getRunner(null).getName());
 
         PowsyblException e = assertThrows(PowsyblException.class, () -> sensitivityAnalysisRunnerSupplier.getRunner("XXX"));
