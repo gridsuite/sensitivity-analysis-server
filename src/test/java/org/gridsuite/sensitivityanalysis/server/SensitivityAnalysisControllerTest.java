@@ -562,12 +562,6 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(RESULT_UUID.toString(), resultMessage.getHeaders().get("resultUuid"));
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
 
-        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", RESULT_UUID))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
-        assertEquals(mapper.writeValueAsString(RESULT), result.getResponse().getContentAsString());
-
         // check results can be retrieved for the without contingencies side
         // and that they can be filtered by function IDs, variable IDs
         // and sorted according to multiple criteria
@@ -679,14 +673,14 @@ public class SensitivityAnalysisControllerTest {
             .andReturn();
 
         // should throw not found if result does not exist
-        mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", OTHER_RESULT_UUID))
+        mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed", OTHER_RESULT_UUID))
             .andExpect(status().isNotFound());
 
         // test one result deletion
         mockMvc.perform(delete("/" + VERSION + "/results/{resultUuid}", RESULT_UUID))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", RESULT_UUID))
+        mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed", RESULT_UUID))
             .andExpect(status().isNotFound());
     }
 
@@ -707,7 +701,7 @@ public class SensitivityAnalysisControllerTest {
         mockMvc.perform(delete("/" + VERSION + "/results"))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", RESULT_UUID))
+        mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed", RESULT_UUID))
             .andExpect(status().isNotFound());
     }
 
@@ -784,7 +778,7 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(FAIL_MESSAGE + " : " + ERROR_MESSAGE, cancelMessage.getHeaders().get("message"));
 
         // No result
-        mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", RESULT_UUID))
+        mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed", RESULT_UUID))
             .andExpect(status().isNotFound());
     }
 

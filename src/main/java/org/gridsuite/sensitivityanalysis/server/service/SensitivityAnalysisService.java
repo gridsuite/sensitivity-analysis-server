@@ -57,10 +57,6 @@ public class SensitivityAnalysisService {
         return resultUuid;
     }
 
-    public String getResult(UUID resultUuid) {
-        return resultRepository.find(resultUuid);
-    }
-
     public SensitivityRunQueryResult getRunResult(UUID resultUuid, ResultsSelector selector) {
         return resultRepository.getRunResult(resultUuid, selector);
     }

@@ -125,13 +125,6 @@ public class SensitivityAnalysisResultRepository {
     }
 
     @Transactional(readOnly = true)
-    public String find(UUID resultUuid) {
-        Objects.requireNonNull(resultUuid);
-        ResultEntity resultEntity = resultRepository.findByResultUuid(resultUuid);
-        return resultEntity != null ? resultEntity.getResult() : null;
-    }
-
-    @Transactional(readOnly = true)
     public String findStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         GlobalStatusEntity globalEntity = globalStatusRepository.findByResultUuid(resultUuid);
