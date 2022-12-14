@@ -568,6 +568,9 @@ public class SensitivityAnalysisControllerTest {
             .andReturn();
         assertEquals(mapper.writeValueAsString(RESULT), result.getResponse().getContentAsString());
 
+        // check results can be retrieved for the without contingencies side
+        // and that they can be filtered by function IDs, variable IDs
+        // and sorted according to multiple criteria
         ResultsSelector selectorN = ResultsSelector.builder()
             .isJustBefore(true)
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
@@ -580,6 +583,16 @@ public class SensitivityAnalysisControllerTest {
                 ResultsSelector.SortKey.VARIABLE, 3,
                 ResultsSelector.SortKey.FUNCTION, 4))
             .build();
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
+                mapper.writeValueAsString(selectorN)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+        SensitivityRunQueryResult resN = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(2, (long) resN.getTotalSensitivitiesCount());
+
+        // check results can be retrieved for the with contingencies side
+        // filtered and sorted by multiple criteria too
         ResultsSelector selectorNK = ResultsSelector.builder()
             .isJustBefore(false)
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
@@ -598,14 +611,6 @@ public class SensitivityAnalysisControllerTest {
             .build();
 
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
-                mapper.writeValueAsString(selectorN)))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
-        SensitivityRunQueryResult resN = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(2, (long) resN.getTotalSensitivitiesCount());
-
-        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
                 mapper.writeValueAsString(selectorNK)))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -615,6 +620,7 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(6, (long) resNK.getTotalSensitivitiesCount());
         assertEquals(2, resNK.getSensitivities().size());
 
+        // check that a request for not present contingency does not crash and just brings nothing
         ResultsSelector selectorNKz1 = ResultsSelector.builder().isJustBefore(false)
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).contingencyIds(List.of("unfoundable")).build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
@@ -625,6 +631,7 @@ public class SensitivityAnalysisControllerTest {
         SensitivityRunQueryResult resNKz1 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(0, (long) resNKz1.getTotalSensitivitiesCount());
 
+        // check that a request for not present function does not crash and just brings nothing
         ResultsSelector selectorNKz2 = ResultsSelector.builder().isJustBefore(false)
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).functionIds(List.of("unfoundable")).build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
@@ -635,6 +642,7 @@ public class SensitivityAnalysisControllerTest {
         SensitivityRunQueryResult resNKz2 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(0, (long) resNKz2.getTotalSensitivitiesCount());
 
+        // check that a request for not present variable does not crash and just brings nothing
         ResultsSelector selectorNKz3 = ResultsSelector.builder().isJustBefore(false)
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).variableIds(List.of("unfoundable")).build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
@@ -645,6 +653,7 @@ public class SensitivityAnalysisControllerTest {
         SensitivityRunQueryResult resNKz3 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(0, (long) resNKz3.getTotalSensitivitiesCount());
 
+        // check that a request for another function type does not crash and just brings nothing
         ResultsSelector selectorNKz4 = ResultsSelector.builder().isJustBefore(false)
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_2).build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
@@ -655,11 +664,13 @@ public class SensitivityAnalysisControllerTest {
         SensitivityRunQueryResult resNKz4 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(0, (long) resNKz4.getTotalSensitivitiesCount());
 
+        // check that a request with a bogus selector json does not crash and raises 4xx status
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", RESULT_UUID,
                 "bogusJSON"))
             .andExpect(status().is4xxClientError())
             .andReturn();
 
+        // check that a request with a bogus uuid does not crash raises and raises 404 status
         //noinspection UnnecessaryLocalVariable
         final UUID bogusUuid = REPORT_UUID;
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/tabbed?selector={selector}", bogusUuid,

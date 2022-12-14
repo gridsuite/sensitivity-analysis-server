@@ -105,7 +105,7 @@ public class SensitivityAnalysisController {
         @ApiResponse(responseCode = "404", description = "Sensitivity analysis result has not been found")})
     public ResponseEntity<SensitivityRunQueryResult> getResultAfter(@Parameter(description = "Result UUID")
         @PathVariable("resultUuid") UUID resultUuid,
-        @RequestParam(value = "selector") String selectorJson) {
+        @RequestParam("selector") String selectorJson) {
 
         ObjectMapper mapper = new ObjectMapper();
         ResultsSelector selector;
