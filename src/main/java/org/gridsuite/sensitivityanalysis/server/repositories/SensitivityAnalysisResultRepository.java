@@ -130,12 +130,8 @@ public class SensitivityAnalysisResultRepository {
             ContingencyEmbeddable c = ci < 0 ? null : cs.get(ci);
             if ((ci < 0) == beforeOverAfter && f.getFunctionType() == funcType) {
                 count += 1;
-                if (allFunctionIds != null) {
-                    allFunctionIds.add(f.getFunctionId());
-                }
-                if (allVariableIds != null) {
-                    allVariableIds.add(f.getVariableId());
-                }
+                allFunctionIds.add(f.getFunctionId());
+                allVariableIds.add(f.getVariableId());
                 if (allContingencyIds != null && c != null) {
                     allContingencyIds.add(c.getId());
                 }
@@ -236,8 +232,6 @@ public class SensitivityAnalysisResultRepository {
                     }
                     SensitivityOfTo b = before.get(Pair.of(f.getFunctionId(), f.getVariableId()));
                     SensitivityWithContingency r = SensitivityWithContingency.toBuilder(b)
-                        .funcId(f.getFunctionId())
-                        .varId(f.getVariableId())
                         .varIsAFilter(f.isVariableSet())
                         .valueAfter(sar.getValue())
                         .functionReferenceAfter(sar.getFunctionReference())
