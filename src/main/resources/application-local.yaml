@@ -10,7 +10,7 @@ powsybl-ws:
     host: localhost
 
 network-store-server:
-  base-uri: http:localhost:8080
+  base-uri: http://localhost:8080
 
 actions-server:
   base-uri: http://localhost:5022
