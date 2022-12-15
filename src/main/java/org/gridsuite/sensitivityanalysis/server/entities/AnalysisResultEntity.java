@@ -40,9 +40,9 @@ public class AnalysisResultEntity {
     private LocalDateTime writeTimeStamp;
 
     @ElementCollection
-    @CollectionTable
+    @CollectionTable (name = "factor")
     @OrderColumn
-    private List<SensitivityFactorP> factors;
+    private List<SensitivityFactorEmbeddable> factors;
 
     @ElementCollection
     @CollectionTable(name = "contingency")

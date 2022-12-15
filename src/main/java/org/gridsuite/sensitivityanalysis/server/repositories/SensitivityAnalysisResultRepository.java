@@ -34,7 +34,7 @@ import org.gridsuite.sensitivityanalysis.server.entities.ContingencyEmbeddable;
 import org.gridsuite.sensitivityanalysis.server.entities.GlobalStatusEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.ResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityEmbeddable;
-import org.gridsuite.sensitivityanalysis.server.entities.SensitivityFactorP;
+import org.gridsuite.sensitivityanalysis.server.entities.SensitivityFactorEmbeddable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,8 +69,8 @@ public class SensitivityAnalysisResultRepository {
     }
 
     private static AnalysisResultEntity toAnalysisResultEntity(UUID resultUuid, SensitivityAnalysisResult result) {
-        List<SensitivityFactorP> factors = result.getFactors().stream().map(f ->
-            new SensitivityFactorP(f.getFunctionType(), f.getFunctionId(),
+        List<SensitivityFactorEmbeddable> factors = result.getFactors().stream().map(f ->
+            new SensitivityFactorEmbeddable(f.getFunctionType(), f.getFunctionId(),
                 f.getVariableType(), f.getVariableId(), f.isVariableSet(),
                 f.getContingencyContext().getContextType(), f.getContingencyContext().getContingencyId()))
             .collect(Collectors.toList());
@@ -136,16 +136,16 @@ public class SensitivityAnalysisResultRepository {
     }
 
     interface SensitivityConsumer {
-        void consume(SensitivityEmbeddable sar, ContingencyEmbeddable c, SensitivityFactorP f);
+        void consume(SensitivityEmbeddable sar, ContingencyEmbeddable c, SensitivityFactorEmbeddable f);
     }
 
     private int apply(AnalysisResultEntity sas, Collection<String> funcIds, Collection<String> varIds, Collection<String> contingencyIds,
-        List<ContingencyEmbeddable> cs, List<SensitivityFactorP> fs, SensitivityFunctionType funcType, boolean beforeOverAfter,
+        List<ContingencyEmbeddable> cs, List<SensitivityFactorEmbeddable> fs, SensitivityFunctionType funcType, boolean beforeOverAfter,
         Set<String> allFunctionIds, Set<String> allVariableIds, Set<String> allContingencyIds, SensitivityConsumer handle) {
         int count = 0;
         for (SensitivityEmbeddable sar : sas.getSensitivities()) {
             int fi = sar.getFactorIndex();
-            SensitivityFactorP f = fs.get(fi);
+            SensitivityFactorEmbeddable f = fs.get(fi);
 
             int ci = sar.getContingencyIndex();
             ContingencyEmbeddable c = ci < 0 ? null : cs.get(ci);
@@ -180,7 +180,7 @@ public class SensitivityAnalysisResultRepository {
 
     private boolean canOnlyReturnEmpty(Collection<String> funcIds, Collection<String> varIds, Collection<String> contingencies,
         SensitivityFunctionType sensitivityFunctionType,
-        List<ContingencyEmbeddable> cs, List<SensitivityFactorP> fs) {
+        List<ContingencyEmbeddable> cs, List<SensitivityFactorEmbeddable> fs) {
 
         if (contingencies != null && cs.stream().noneMatch(c -> contingencies.contains(c.getId()))) {
             return true;
@@ -211,7 +211,7 @@ public class SensitivityAnalysisResultRepository {
             .chunkOffset(selector.getOffset() == null ? 0 : selector.getOffset());
 
         List<ContingencyEmbeddable> cs = sas.getContingencies();
-        List<SensitivityFactorP> fs = sas.getFactors();
+        List<SensitivityFactorEmbeddable> fs = sas.getFactors();
         Collection<String> funcIds = selector.getFunctionIds();
         Collection<String> varIds = selector.getVariableIds();
         Collection<String> contingencyIds = selector.getContingencyIds();

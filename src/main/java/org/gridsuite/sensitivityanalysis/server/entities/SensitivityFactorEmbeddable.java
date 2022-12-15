@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Embeddable
-public class SensitivityFactorP {
+public class SensitivityFactorEmbeddable {
     @Column
     @Enumerated(EnumType.STRING)
     private SensitivityFunctionType functionType;
