@@ -20,11 +20,9 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import java.io.UncheckedIOException;
 import java.time.LocalDateTime;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.gridsuite.sensitivityanalysis.server.RestTemplateConfig;
 import org.gridsuite.sensitivityanalysis.server.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
@@ -32,14 +30,11 @@ import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.ContingencyEmbeddable;
 import org.gridsuite.sensitivityanalysis.server.entities.GlobalStatusEntity;
-import org.gridsuite.sensitivityanalysis.server.entities.ResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityEmbeddable;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityFactorEmbeddable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityFunctionType;
 
@@ -49,23 +44,14 @@ import com.powsybl.sensitivity.SensitivityFunctionType;
 @Repository
 public class SensitivityAnalysisResultRepository {
 
-    private GlobalStatusRepository globalStatusRepository;
+    private final GlobalStatusRepository globalStatusRepository;
 
-    private final ResultRepository resultRepository;
     private final AnalysisResultRepository analysisResultRepository;
 
-    private final ObjectMapper objectMapper = RestTemplateConfig.objectMapper();
-
     public SensitivityAnalysisResultRepository(GlobalStatusRepository globalStatusRepository,
-                                               ResultRepository resultRepository,
                                                AnalysisResultRepository analysisResultRepository) {
         this.globalStatusRepository = globalStatusRepository;
-        this.resultRepository = resultRepository;
         this.analysisResultRepository = analysisResultRepository;
-    }
-
-    private static ResultEntity toResultEntity(UUID resultUuid, String result) {
-        return new ResultEntity(resultUuid, result);
     }
 
     private static AnalysisResultEntity toAnalysisResultEntity(UUID resultUuid, SensitivityAnalysisResult result) {
@@ -99,13 +85,8 @@ public class SensitivityAnalysisResultRepository {
     public void insert(UUID resultUuid, SensitivityAnalysisResult result) {
         Objects.requireNonNull(resultUuid);
 
-        try {
-            resultRepository.save(toResultEntity(resultUuid, result != null ? objectMapper.writeValueAsString(result) : null));
-            if (result != null) {
-                analysisResultRepository.save(toAnalysisResultEntity(resultUuid, result));
-            }
-        } catch (JsonProcessingException e) {
-            throw new UncheckedIOException(e);
+        if (result != null) {
+            analysisResultRepository.save(toAnalysisResultEntity(resultUuid, result));
         }
     }
 
@@ -113,14 +94,12 @@ public class SensitivityAnalysisResultRepository {
     public void delete(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         globalStatusRepository.deleteByResultUuid(resultUuid);
-        resultRepository.deleteByResultUuid(resultUuid);
         analysisResultRepository.deleteByResultUuid(resultUuid);
     }
 
     @Transactional
     public void deleteAll() {
         globalStatusRepository.deleteAll();
-        resultRepository.deleteAll();
         analysisResultRepository.deleteAll();
     }
 
@@ -362,7 +341,7 @@ public class SensitivityAnalysisResultRepository {
                 return kd.getValue() ? direct : direct.reversed();
             }).reduce(Comparator::thenComparing);
 
-        return ret.isEmpty() ? null : ret.get();
+        return ret.orElse(null);
     }
 
     Comparator<SensitivityOfTo> makeComparatorOfTo(
@@ -385,6 +364,6 @@ public class SensitivityAnalysisResultRepository {
                 return kd.getValue() ? direct : direct.reversed();
             }).reduce(Comparator::thenComparing);
 
-        return ret.isEmpty() ? null : ret.get();
+        return ret.orElse(null);
     }
 }

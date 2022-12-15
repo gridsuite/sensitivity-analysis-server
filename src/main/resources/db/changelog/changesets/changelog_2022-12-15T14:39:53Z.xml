@@ -23,4 +23,7 @@
     <changeSet author="garnierlar (generated)" id="1671115204381-4">
         <dropTable tableName="ANALYSIS_RESULT_ENTITY_FACTORS"/>
     </changeSet>
+    <changeSet author="garnierlar (generated)" id="1671117297578-1">
+        <dropTable tableName="RESULT"/>
+    </changeSet>
 </databaseChangeLog>
