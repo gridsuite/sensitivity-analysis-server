@@ -15,6 +15,7 @@ import com.powsybl.contingency.ContingencyContext;
 import com.powsybl.iidm.network.*;
 import com.powsybl.sensitivity.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.springframework.stereotype.Service;
 
@@ -170,13 +171,13 @@ public class SensitivityAnalysisInputBuilderService {
                                                                       SensitivityAnalysisInputData.DistributionType distributionType) {
         List<SensitivityVariableSet> result = new ArrayList<>();
 
-        Stream<List<IdentifiableAttributes>> variablesFiltersLists = filters.stream()
-            .map(filter -> getIdentifiablesFromFilter(context, filter, variablesTypesAllowed, reporter).collect(Collectors.toList()))
-            .filter(list -> !list.isEmpty());
+        Stream<Pair<String, List<IdentifiableAttributes>>> variablesFiltersLists = filters.stream()
+            .map(filter -> Pair.of(filter.getName(), getIdentifiablesFromFilter(context, filter, variablesTypesAllowed, reporter).collect(Collectors.toList())))
+            .filter(list -> !list.getRight().isEmpty());
 
         variablesFiltersLists.forEach(variablesList -> {
             List<WeightedSensitivityVariable> variables = new ArrayList<>();
-            if (variablesList.get(0).getType() == IdentifiableType.LOAD && distributionType == SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP) {
+            if (variablesList.getRight().get(0).getType() == IdentifiableType.LOAD && distributionType == SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP) {
                 reporter.report(Report.builder()
                     .withKey("distributionTypeNotAllowedForLoadsFilter")
                     .withDefaultMessage("Distribution type ${distributionType} is not allowed for loads filter : filter is ignored")
@@ -185,7 +186,7 @@ public class SensitivityAnalysisInputBuilderService {
                     .build());
                 return;
             }
-            if (variablesList.get(0).getDistributionKey() == null && distributionType == SensitivityAnalysisInputData.DistributionType.VENTILATION) {
+            if (variablesList.getRight().get(0).getDistributionKey() == null && distributionType == SensitivityAnalysisInputData.DistributionType.VENTILATION) {
                 reporter.report(Report.builder()
                     .withKey("distributionTypeAllowedOnlyForManualFilter")
                     .withDefaultMessage("Distribution type ${distributionType} is allowed only for manual filter : filter is ignored")
@@ -194,7 +195,7 @@ public class SensitivityAnalysisInputBuilderService {
                     .build());
                 return;
             }
-            for (IdentifiableAttributes identifiableAttributes : variablesList) {
+            for (IdentifiableAttributes identifiableAttributes : variablesList.getRight()) {
                 switch (identifiableAttributes.getType()) {
                     case GENERATOR: {
                         Generator generator = network.getGenerator(identifiableAttributes.getId());
@@ -218,7 +219,7 @@ public class SensitivityAnalysisInputBuilderService {
                         break;
                 }
             }
-            result.add(new SensitivityVariableSet(UUID.randomUUID().toString(), variables));
+            result.add(new SensitivityVariableSet(variablesList.getLeft() + " (" + distributionType.name() + ")", variables));
         });
 
         return result;
