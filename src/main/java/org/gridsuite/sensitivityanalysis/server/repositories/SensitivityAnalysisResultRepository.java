@@ -203,9 +203,6 @@ public class SensitivityAnalysisResultRepository {
         Set<String> allContingencyIds = new TreeSet<>();
         int count = apply(sas, funcIds, varIds, null, cs, fs, selector.getFunctionType(), selector.getIsJustBefore(),
             allFunctionIds, allVariableIds, null, (sar, c, f) -> {
-                if (c != null) {
-                    return;
-                }
                 before.put(Pair.of(f.getFunctionId(), f.getVariableId()), SensitivityOfTo.builder()
                     .funcId(f.getFunctionId())
                     .varId(f.getVariableId())
