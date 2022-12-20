@@ -52,9 +52,9 @@ public class FilterServiceTest {
 
     private static final UUID VERY_LARGE_LIST_UUID = UUID.randomUUID();
 
-    private static final IdentifiableAttributes IDENTIFIABLE = new IdentifiableAttributes("gen1", IdentifiableType.GENERATOR);
+    private static final IdentifiableAttributes IDENTIFIABLE = new IdentifiableAttributes("gen1", IdentifiableType.GENERATOR, null);
 
-    private static final IdentifiableAttributes IDENTIFIABLE_VARIANT = new IdentifiableAttributes("load_variant", IdentifiableType.LOAD);
+    private static final IdentifiableAttributes IDENTIFIABLE_VARIANT = new IdentifiableAttributes("load_variant", IdentifiableType.LOAD, 10.);
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -116,7 +116,7 @@ public class FilterServiceTest {
     }
 
     private List<IdentifiableAttributes> createVeryLargeList() {
-        return IntStream.range(0, DATA_BUFFER_LIMIT).mapToObj(i -> new IdentifiableAttributes("l" + i, IdentifiableType.GENERATOR)).collect(Collectors.toList());
+        return IntStream.range(0, DATA_BUFFER_LIMIT).mapToObj(i -> new IdentifiableAttributes("l" + i, IdentifiableType.GENERATOR, null)).collect(Collectors.toList());
     }
 
     @SneakyThrows

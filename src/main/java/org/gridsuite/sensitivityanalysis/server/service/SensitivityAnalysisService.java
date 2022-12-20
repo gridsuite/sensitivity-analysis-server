@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -28,12 +29,17 @@ public class SensitivityAnalysisService {
     @Autowired
     NotificationService notificationService;
 
-    public SensitivityAnalysisService(SensitivityAnalysisResultRepository resultRepository,
+    private Double defaultResultsThreshold;
+
+    @Autowired
+    public SensitivityAnalysisService(@Value("${sensi.resultsThreshold}") Double defaultResultsThreshold,
+                                      SensitivityAnalysisResultRepository resultRepository,
                                       UuidGeneratorService uuidGeneratorService,
                                       ObjectMapper objectMapper) {
         this.resultRepository = Objects.requireNonNull(resultRepository);
         this.uuidGeneratorService = Objects.requireNonNull(uuidGeneratorService);
         this.objectMapper = Objects.requireNonNull(objectMapper);
+        this.defaultResultsThreshold = defaultResultsThreshold;
     }
 
     public UUID runAndSaveResult(SensitivityAnalysisRunContext runContext) {
@@ -68,5 +74,9 @@ public class SensitivityAnalysisService {
 
     public void stop(UUID resultUuid, String receiver) {
         notificationService.sendCancelMessage(new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
+    }
+
+    public Double getDefaultResultThresholdValue() {
+        return defaultResultsThreshold;
     }
 }

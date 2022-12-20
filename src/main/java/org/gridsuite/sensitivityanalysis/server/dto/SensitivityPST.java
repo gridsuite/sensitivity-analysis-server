@@ -6,28 +6,29 @@
  */
 package org.gridsuite.sensitivityanalysis.server.dto;
 
-import com.powsybl.iidm.network.IdentifiableType;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+import java.util.List;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-
-@Getter
+@SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor
-@Schema(description = "Identifiable attributes")
-public class IdentifiableAttributes {
+@Getter
+@Setter
+@Schema(description = "Sensitivity relatively to each PST")
+public class SensitivityPST {
+    List<FilterIdent> monitoredBranches;
 
-    @Schema(description = "identifiable id")
-    private String id;
+    SensitivityAnalysisInputData.SensitivityType sensitivityType;
 
-    @Schema(description = "identifiable type")
-    private IdentifiableType type;
+    List<FilterIdent> psts;
 
-    @Schema(description = "distribution key")
-    private Double distributionKey;
+    List<FilterIdent> contingencies;
 }
+

@@ -7,9 +7,10 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.sensitivity.SensitivityAnalysisParameters;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
@@ -69,41 +70,34 @@ public class SensitivityAnalysisResultContext {
         UUID networkUuid = UUID.fromString(getNonNullHeader(headers, "networkUuid"));
         String variantId = (String) headers.get("variantId");
         List<UUID> otherNetworkUuids = getHeaderList(headers, "otherNetworkUuids");
-        List<UUID> contingencyListUuids = getHeaderList(headers, "contingencyListUuids");
-        List<UUID> variablesFiltersListUuids = getHeaderList(headers, "variablesFiltersListUuids");
-        List<UUID> branchFiltersListUuids = getHeaderList(headers, "branchFiltersListUuids");
 
         String receiver = (String) headers.get("receiver");
         String provider = (String) headers.get("provider");
-        SensitivityAnalysisParameters parameters;
+        SensitivityAnalysisInputData sensitivityAnalysisInputData;
         try {
-            parameters = objectMapper.readValue(message.getPayload(), SensitivityAnalysisParameters.class);
+            sensitivityAnalysisInputData = objectMapper.readValue(message.getPayload(), new TypeReference<>() { });
         } catch (JsonProcessingException e) {
             throw new UncheckedIOException(e);
         }
         UUID reportUuid = headers.containsKey(REPORT_UUID) ? UUID.fromString((String) headers.get(REPORT_UUID)) : null;
         String reporterId = headers.containsKey(REPORTER_ID_HEADER) ? (String) headers.get(REPORTER_ID_HEADER) : null;
         SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid,
-            variantId, otherNetworkUuids, variablesFiltersListUuids, contingencyListUuids, branchFiltersListUuids,
-            receiver, provider, parameters, reportUuid, reporterId);
+            variantId, otherNetworkUuids, sensitivityAnalysisInputData, receiver, provider, reportUuid, reporterId);
         return new SensitivityAnalysisResultContext(resultUuid, runContext);
     }
 
     public Message<String> toMessage(ObjectMapper objectMapper) {
-        String parametersJson;
+        String sensitivityAnalysisInputDataJson;
         try {
-            parametersJson = objectMapper.writeValueAsString(runContext.getParameters());
+            sensitivityAnalysisInputDataJson = objectMapper.writeValueAsString(runContext.getSensitivityAnalysisInputData());
         } catch (JsonProcessingException e) {
             throw new UncheckedIOException(e);
         }
-        return MessageBuilder.withPayload(parametersJson)
+        return MessageBuilder.withPayload(sensitivityAnalysisInputDataJson)
                 .setHeader("resultUuid", resultUuid.toString())
                 .setHeader("networkUuid", runContext.getNetworkUuid().toString())
                 .setHeader("variantId", runContext.getVariantId())
                 .setHeader("otherNetworkUuids", runContext.getOtherNetworkUuids().stream().map(UUID::toString).collect(Collectors.joining(",")))
-                .setHeader("contingencyListUuids", runContext.getContingencyListUuids().stream().map(UUID::toString).collect(Collectors.joining(",")))
-                .setHeader("variablesFiltersListUuids", runContext.getVariablesFiltersListUuids().stream().map(UUID::toString).collect(Collectors.joining(",")))
-                .setHeader("branchFiltersListUuids", runContext.getBranchFiltersListUuids().stream().map(UUID::toString).collect(Collectors.joining(",")))
                 .setHeader("receiver", runContext.getReceiver())
                 .setHeader("provider", runContext.getProvider())
                 .setHeader(REPORT_UUID, runContext.getReportUuid())
