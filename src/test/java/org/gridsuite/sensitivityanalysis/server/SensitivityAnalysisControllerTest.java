@@ -267,7 +267,7 @@ public class SensitivityAnalysisControllerTest {
     @SpyBean
     private SensitivityAnalysisWorkerService workerService;
 
-    @Value("${loadflow.default-provider}")
+    @Value("${powsybl-ws.loadflow.default-provider}")
     String defaultLoadflowProvider;
 
     private final RestTemplateConfig restTemplateConfig = new RestTemplateConfig();

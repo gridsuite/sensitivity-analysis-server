@@ -16,7 +16,7 @@ import com.powsybl.sensitivity.SensitivityAnalysis;
  */
 @Service
 public class SensitivityAnalysisRunnerSupplier {
-    @Value("${loadflow.default-provider}")
+    @Value("${powsybl-ws.loadflow.default-provider}")
     private String defaultProvider;
 
     public SensitivityAnalysis.Runner getRunner(String provider) {
