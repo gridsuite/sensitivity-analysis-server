@@ -7,6 +7,8 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.powsybl.commons.util.ServiceLoaderCache;
+import com.powsybl.sensitivity.SensitivityAnalysisProvider;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,32 +16,35 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
 public class SensitivityAnalysisService {
-    private SensitivityAnalysisResultRepository resultRepository;
 
-    private UuidGeneratorService uuidGeneratorService;
+    private final Double defaultResultsThreshold;
 
-    private ObjectMapper objectMapper;
+    private final SensitivityAnalysisResultRepository resultRepository;
 
-    @Autowired
-    NotificationService notificationService;
+    private final UuidGeneratorService uuidGeneratorService;
 
-    private Double defaultResultsThreshold;
+    private final NotificationService notificationService;
+
+    private final ObjectMapper objectMapper;
 
     @Autowired
     public SensitivityAnalysisService(@Value("${sensi.resultsThreshold}") Double defaultResultsThreshold,
                                       SensitivityAnalysisResultRepository resultRepository,
                                       UuidGeneratorService uuidGeneratorService,
+                                      NotificationService notificationService,
                                       ObjectMapper objectMapper) {
+        this.defaultResultsThreshold = defaultResultsThreshold;
         this.resultRepository = Objects.requireNonNull(resultRepository);
         this.uuidGeneratorService = Objects.requireNonNull(uuidGeneratorService);
+        this.notificationService = notificationService;
         this.objectMapper = Objects.requireNonNull(objectMapper);
-        this.defaultResultsThreshold = defaultResultsThreshold;
     }
 
     public UUID runAndSaveResult(SensitivityAnalysisRunContext runContext) {
@@ -78,5 +83,11 @@ public class SensitivityAnalysisService {
 
     public Double getDefaultResultThresholdValue() {
         return defaultResultsThreshold;
+    }
+
+    public List<String> getProviders() {
+        return new ServiceLoaderCache<>(SensitivityAnalysisProvider.class).getServices().stream()
+                .map(SensitivityAnalysisProvider::getName)
+                .collect(Collectors.toList());
     }
 }

@@ -144,4 +144,11 @@ public class SensitivityAnalysisController {
         return ResponseEntity.ok().body(service.getDefaultResultThresholdValue());
     }
 
+    @GetMapping(value = "/providers", produces = APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get all sensitivity analysis providers")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200")})
+    public ResponseEntity<List<String>> getProviders() {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+                .body(service.getProviders());
+    }
 }

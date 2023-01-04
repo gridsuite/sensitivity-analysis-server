@@ -683,4 +683,12 @@ public class SensitivityAnalysisControllerTest {
         assertEquals("0.01", result.getResponse().getContentAsString());
     }
 
+    @Test
+    public void getProvidersTest() throws Exception {
+        mockMvc.perform(get("/" + VERSION + "/providers"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().string("[\"OpenLoadFlow\",\"Hades2\"]"))
+                .andReturn();
+    }
 }
