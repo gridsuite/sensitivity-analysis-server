@@ -33,7 +33,7 @@ public class FilterService {
     private static final String QUERY_PARAM_VARIANT_ID = "variantId";
 
     @Autowired
-    public FilterService(@Value("${backing-services.filter-server.base-uri:http://filter-server/}") String filterServerBaseUri) {
+    public FilterService(@Value("${gridsuite.services.filter-server.base-uri:http://filter-server/}") String filterServerBaseUri) {
         this.filterServerBaseUri = filterServerBaseUri;
     }
 

@@ -35,7 +35,7 @@ public class ActionsService {
     private RestTemplate restTemplate;
 
     @Autowired
-    public ActionsService(@Value("${backing-services.actions-server.base-uri:http://actions-server/}") String actionsServerBaseUri) {
+    public ActionsService(@Value("${gridsuite.services.actions-server.base-uri:http://actions-server/}") String actionsServerBaseUri) {
         this.actionsServerBaseUri = actionsServerBaseUri;
     }
 
