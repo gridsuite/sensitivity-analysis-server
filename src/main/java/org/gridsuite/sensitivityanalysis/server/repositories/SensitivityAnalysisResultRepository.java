@@ -32,6 +32,8 @@ import org.gridsuite.sensitivityanalysis.server.entities.ContingencyEmbeddable;
 import org.gridsuite.sensitivityanalysis.server.entities.GlobalStatusEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityEmbeddable;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityFactorEmbeddable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +45,8 @@ import com.powsybl.sensitivity.SensitivityFunctionType;
  */
 @Repository
 public class SensitivityAnalysisResultRepository {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisResultRepository.class);
 
     private final GlobalStatusRepository globalStatusRepository;
 
@@ -270,6 +274,10 @@ public class SensitivityAnalysisResultRepository {
             int offset = selector.getOffset() == null ? 0 : selector.getOffset();
             int start = Math.max(offset, 0);
             int overEnd = Math.min(offset + byRunOf, befores.size());
+            if (start > overEnd) {
+                LOGGER.error("chunkIt start({}) > overEnd({})", start, overEnd);
+                return List.of();
+            }
             return befores.subList(start, overEnd);
         }
         return befores;
