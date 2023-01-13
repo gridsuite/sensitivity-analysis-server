@@ -90,11 +90,11 @@ public class SensitivityAnalysisController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
-    @GetMapping(value = "/results/{resultUuid}/tabbed", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Get a sensitivity analysis result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis result"),
         @ApiResponse(responseCode = "404", description = "Sensitivity analysis result has not been found")})
-    public ResponseEntity<SensitivityRunQueryResult> getResultAfter(@Parameter(description = "Result UUID")
+    public ResponseEntity<SensitivityRunQueryResult> getResult(@Parameter(description = "Result UUID")
         @PathVariable("resultUuid") UUID resultUuid,
         @RequestParam(name = "selector", required = false) String selectorJson) {
 
