@@ -130,9 +130,13 @@ public class SensitivityAnalysisResultRepository {
             int fi = sar.getFactorIndex();
             SensitivityFactorEmbeddable f = fs.get(fi);
 
+            if (f.getFunctionType() != funcType) {
+                continue;
+            }
+
             int ci = sar.getContingencyIndex();
             ContingencyEmbeddable c = ci < 0 ? null : cs.get(ci);
-            if ((ci < 0) == beforeOverAfter && f.getFunctionType() == funcType) {
+            if ((ci < 0) == beforeOverAfter) {
                 count += 1;
                 allFunctionIds.add(f.getFunctionId());
                 allVariableIds.add(f.getVariableId());
