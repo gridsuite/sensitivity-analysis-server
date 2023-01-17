@@ -35,7 +35,7 @@ public class SensitivityAnalysisService {
     private final ObjectMapper objectMapper;
 
     @Autowired
-    public SensitivityAnalysisService(@Value("${sensi.resultsThreshold}") Double defaultResultsThreshold,
+    public SensitivityAnalysisService(@Value("${sensitivity-analysis.results-threshold}") Double defaultResultsThreshold,
                                       SensitivityAnalysisResultRepository resultRepository,
                                       UuidGeneratorService uuidGeneratorService,
                                       NotificationService notificationService,

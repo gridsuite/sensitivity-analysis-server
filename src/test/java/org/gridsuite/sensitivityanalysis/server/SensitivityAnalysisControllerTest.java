@@ -267,8 +267,8 @@ public class SensitivityAnalysisControllerTest {
     @SpyBean
     private SensitivityAnalysisWorkerService workerService;
 
-    @Value("${loadflow.default-provider}")
-    String defaultLoadflowProvider;
+    @Value("${sensitivity-analysis.default-provider}")
+    String defaultSensitivityAnalysisProvider;
 
     private final RestTemplateConfig restTemplateConfig = new RestTemplateConfig();
     private final ObjectMapper mapper = restTemplateConfig.objectMapper();
@@ -462,7 +462,7 @@ public class SensitivityAnalysisControllerTest {
 
         // mock the powsybl sensitivity analysis runner
         SensitivityAnalysis.Runner runner = mock(SensitivityAnalysis.Runner.class);
-        given(runner.getName()).willReturn(defaultLoadflowProvider);
+        given(runner.getName()).willReturn(defaultSensitivityAnalysisProvider);
         given(runner.runAsync(eq(network), eq(VariantManagerConstants.INITIAL_VARIANT_ID), anyList(), anyList(), anyList(), any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class))).willReturn(CompletableFuture.completedFuture(RESULT));
         given(runner.runAsync(eq(network), eq(VARIANT_1_ID), anyList(), anyList(), anyList(), any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class))).willReturn(CompletableFuture.completedFuture(RESULT));
         given(runner.runAsync(eq(network), eq(VARIANT_2_ID), anyList(), anyList(), anyList(), any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class))).willReturn(CompletableFuture.completedFuture(RESULT));
