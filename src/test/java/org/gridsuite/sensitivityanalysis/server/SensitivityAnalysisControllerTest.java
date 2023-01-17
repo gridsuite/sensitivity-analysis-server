@@ -65,6 +65,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -689,6 +690,15 @@ public class SensitivityAnalysisControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().string("[\"OpenLoadFlow\",\"Hades2\"]"))
+                .andReturn();
+    }
+
+    @Test
+    public void getDefaultProviderTest() throws Exception {
+        mockMvc.perform(get("/" + VERSION + "/default-provider"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8)))
+                .andExpect(content().string("OpenLoadFlow"))
                 .andReturn();
     }
 }

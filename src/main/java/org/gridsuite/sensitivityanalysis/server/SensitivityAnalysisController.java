@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -146,9 +147,16 @@ public class SensitivityAnalysisController {
 
     @GetMapping(value = "/providers", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Get all sensitivity analysis providers")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200")})
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Sensitivity analysis providers have not been found")})
     public ResponseEntity<List<String>> getProviders() {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                 .body(service.getProviders());
+    }
+
+    @GetMapping(value = "/default-provider", produces = TEXT_PLAIN_VALUE)
+    @Operation(summary = "Get sensitivity analysis default provider")
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "The sensitivity analysis default provider has not been found"))
+    public ResponseEntity<String> getDefaultProvider() {
+        return ResponseEntity.ok().body(service.getDefaultProvider());
     }
 }

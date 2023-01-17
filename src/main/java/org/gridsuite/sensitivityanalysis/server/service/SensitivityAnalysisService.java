@@ -26,6 +26,8 @@ public class SensitivityAnalysisService {
 
     private final Double defaultResultsThreshold;
 
+    private final String defaultProvider;
+
     private final SensitivityAnalysisResultRepository resultRepository;
 
     private final UuidGeneratorService uuidGeneratorService;
@@ -36,11 +38,13 @@ public class SensitivityAnalysisService {
 
     @Autowired
     public SensitivityAnalysisService(@Value("${sensitivity-analysis.results-threshold}") Double defaultResultsThreshold,
+                                      @Value("${sensitivity-analysis.default-provider}") String defaultProvider,
                                       SensitivityAnalysisResultRepository resultRepository,
                                       UuidGeneratorService uuidGeneratorService,
                                       NotificationService notificationService,
                                       ObjectMapper objectMapper) {
         this.defaultResultsThreshold = defaultResultsThreshold;
+        this.defaultProvider = defaultProvider;
         this.resultRepository = Objects.requireNonNull(resultRepository);
         this.uuidGeneratorService = Objects.requireNonNull(uuidGeneratorService);
         this.notificationService = notificationService;
@@ -89,5 +93,9 @@ public class SensitivityAnalysisService {
         return new ServiceLoaderCache<>(SensitivityAnalysisProvider.class).getServices().stream()
                 .map(SensitivityAnalysisProvider::getName)
                 .collect(Collectors.toList());
+    }
+
+    public String getDefaultProvider() {
+        return defaultProvider;
     }
 }
