@@ -147,7 +147,7 @@ public class SensitivityAnalysisController {
 
     @GetMapping(value = "/providers", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Get all sensitivity analysis providers")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Sensitivity analysis providers have not been found")})
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Sensitivity analysis providers have been found")})
     public ResponseEntity<List<String>> getProviders() {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                 .body(service.getProviders());
@@ -155,7 +155,7 @@ public class SensitivityAnalysisController {
 
     @GetMapping(value = "/default-provider", produces = TEXT_PLAIN_VALUE)
     @Operation(summary = "Get sensitivity analysis default provider")
-    @ApiResponses(@ApiResponse(responseCode = "200", description = "The sensitivity analysis default provider has not been found"))
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "The sensitivity analysis default provider has been found"))
     public ResponseEntity<String> getDefaultProvider() {
         return ResponseEntity.ok().body(service.getDefaultProvider());
     }
