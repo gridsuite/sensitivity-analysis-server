@@ -9,7 +9,10 @@ package org.gridsuite.sensitivityanalysis.server.service;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import com.powsybl.commons.util.ServiceLoaderCache;
+import com.powsybl.sensitivity.SensitivityAnalysisProvider;
 import org.gridsuite.sensitivityanalysis.server.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
