@@ -6,6 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.computation.ComputationManager;
@@ -13,6 +14,7 @@ import com.powsybl.contingency.BranchContingency;
 import com.powsybl.contingency.BusbarSectionContingency;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.contingency.ContingencyContext;
+import com.powsybl.contingency.ContingencyContextType;
 import com.powsybl.contingency.DanglingLineContingency;
 import com.powsybl.contingency.GeneratorContingency;
 import com.powsybl.contingency.HvdcLineContingency;
@@ -38,6 +40,7 @@ import com.powsybl.sensitivity.SensitivityValue;
 import com.powsybl.sensitivity.SensitivityVariableType;
 import lombok.SneakyThrows;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.gridsuite.sensitivityanalysis.server.service.ReportService;
@@ -67,9 +70,11 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
@@ -210,14 +215,28 @@ public class SensitivityAnalysisControllerTest {
         new IdentifiableAttributes("e3", IdentifiableType.GENERATOR, null)
     );
 
-    private static final List<SensitivityFactor> SENSITIVITY_FACTORS = List.of(new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l",
-        SensitivityVariableType.INJECTION_ACTIVE_POWER, "g",
-        false, ContingencyContext.all()));
-    private static final List<SensitivityFactor> SENSITIVITY_FACTORS_VARIANT = List.of(new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l2",
-        SensitivityVariableType.INJECTION_ACTIVE_POWER, "g2",
-        false, ContingencyContext.none()));
+    private static final List<SensitivityFactor> SENSITIVITY_FACTORS = List.of(
+        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l1",
+            SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN", false, ContingencyContext.all()),
+        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l2",
+            SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN", false, ContingencyContext.create("l1", ContingencyContextType.SPECIFIC)),
+        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l3",
+            SensitivityVariableType.INJECTION_ACTIVE_POWER, "LOAD", false, ContingencyContext.create("l3", ContingencyContextType.SPECIFIC))
+    );
+    private static final List<SensitivityFactor> SENSITIVITY_FACTORS_VARIANT = List.of(
+        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l2",
+            SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN2", false, ContingencyContext.none()));
 
-    private static final List<SensitivityValue> SENSITIVITY_VALUES = List.of(new SensitivityValue(0, 0, 1d, 2d));
+    private static final List<SensitivityValue> SENSITIVITY_VALUES = List.of(
+        new SensitivityValue(0, -1, 500.1, 2.9),
+        new SensitivityValue(1, -1, 500.2, 2.8),
+        new SensitivityValue(0, 0, 500.3, 2.7),
+        new SensitivityValue(0, 1, 500.4, 2.6),
+        new SensitivityValue(0, 2, 500.5, 2.5),
+        new SensitivityValue(1, 1, 500.6, 2.4),
+        new SensitivityValue(2, 0, 500.7, 2.3),
+        new SensitivityValue(1, 2, 500.8, 2.2)
+    );
     private static final List<SensitivityValue> SENSITIVITY_VALUES_VARIANT = List.of(new SensitivityValue(0, 0, 3d, 4d));
 
     private static final SensitivityAnalysisResult RESULT = new SensitivityAnalysisResult(SENSITIVITY_FACTORS,
@@ -523,9 +542,9 @@ public class SensitivityAnalysisControllerTest {
                 "/" + VERSION + "/networks/{networkUuid}/run?provider=OpenLoadFlow", NETWORK_UUID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(SENSITIVITY_INPUT_HVDC_DELTA_A))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
         assertEquals(mapper.writeValueAsString(RESULT), result.getResponse().getContentAsString());
     }
 
@@ -544,12 +563,115 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(RESULT_UUID.toString(), resultMessage.getHeaders().get("resultUuid"));
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
 
-        result = mockMvc.perform(get(
-                "/" + VERSION + "/results/{resultUuid}", RESULT_UUID))
+        // check results can be retrieved for the without contingencies side
+        // and that they can be filtered by function IDs, variable IDs
+        // and sorted according to multiple criteria
+        ResultsSelector selectorN = ResultsSelector.builder()
+            .isJustBefore(true)
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+            .functionIds(BRANCHES.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
+            .variableIds(Stream.concat(GENERATORS.stream(), LOADS.stream())
+                .map(IdentifiableAttributes::getId).collect(Collectors.toList()))
+            .sortKeysWithWeightAndDirection(Map.of(
+                ResultsSelector.SortKey.SENSITIVITY, -1,
+                ResultsSelector.SortKey.REFERENCE, 2,
+                ResultsSelector.SortKey.VARIABLE, 3,
+                ResultsSelector.SortKey.FUNCTION, 4))
+            .build();
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
+                mapper.writeValueAsString(selectorN)))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
-        assertEquals(mapper.writeValueAsString(RESULT), result.getResponse().getContentAsString());
+        SensitivityRunQueryResult resN = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(2, (long) resN.getTotalSensitivitiesCount());
+
+        // check results can be retrieved for the with contingencies side
+        // filtered and sorted by multiple criteria too
+        ResultsSelector selectorNK = ResultsSelector.builder()
+            .isJustBefore(false)
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+            .contingencyIds(CONTINGENCIES_VARIANT.stream().map(Contingency::getId).collect(Collectors.toList()))
+            .functionIds(BRANCHES_VARIANT.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
+            .variableIds(GENERATORS.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
+            .sortKeysWithWeightAndDirection(Map.of(
+                ResultsSelector.SortKey.POST_SENSITIVITY, -1,
+                ResultsSelector.SortKey.POST_REFERENCE, -2,
+                ResultsSelector.SortKey.SENSITIVITY, -3,
+                ResultsSelector.SortKey.VARIABLE, 4,
+                ResultsSelector.SortKey.FUNCTION, 5,
+                ResultsSelector.SortKey.REFERENCE, 6,
+                ResultsSelector.SortKey.CONTINGENCY, 7))
+            .chunkSize(10)
+            .build();
+
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
+                mapper.writeValueAsString(selectorNK)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+        String bodyText = result.getResponse().getContentAsString();
+        SensitivityRunQueryResult resNK = mapper.readValue(bodyText, new TypeReference<>() { });
+        assertEquals(6, (long) resNK.getTotalSensitivitiesCount());
+        assertEquals(2, resNK.getSensitivities().size());
+
+        // check that a request for not present contingency does not crash and just brings nothing
+        ResultsSelector selectorNKz1 = ResultsSelector.builder().isJustBefore(false)
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).contingencyIds(List.of("unfoundable")).build();
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
+                mapper.writeValueAsString(selectorNKz1)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+        SensitivityRunQueryResult resNKz1 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(0, (long) resNKz1.getTotalSensitivitiesCount());
+
+        // check that a request for not present function does not crash and just brings nothing
+        ResultsSelector selectorNKz2 = ResultsSelector.builder().isJustBefore(false)
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).functionIds(List.of("unfoundable")).build();
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
+                mapper.writeValueAsString(selectorNKz2)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+        SensitivityRunQueryResult resNKz2 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(0, (long) resNKz2.getTotalSensitivitiesCount());
+
+        // check that a request for not present variable does not crash and just brings nothing
+        ResultsSelector selectorNKz3 = ResultsSelector.builder().isJustBefore(false)
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).variableIds(List.of("unfoundable")).build();
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
+                mapper.writeValueAsString(selectorNKz3)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+        SensitivityRunQueryResult resNKz3 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(0, (long) resNKz3.getTotalSensitivitiesCount());
+
+        // check that a request for another function type does not crash and just brings nothing
+        ResultsSelector selectorNKz4 = ResultsSelector.builder().isJustBefore(false)
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_2).build();
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
+                mapper.writeValueAsString(selectorNKz4)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+        SensitivityRunQueryResult resNKz4 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(0, (long) resNKz4.getTotalSensitivitiesCount());
+
+        // check that a request with a bogus selector json does not crash and raises 4xx status
+        mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
+                "bogusJSON"))
+            .andExpect(status().is4xxClientError())
+            .andReturn();
+
+        // check that a request with a bogus uuid does not crash raises and raises 404 status
+        //noinspection UnnecessaryLocalVariable
+        final UUID bogusUuid = REPORT_UUID;
+        mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", bogusUuid,
+                mapper.writeValueAsString(selectorN)))
+            .andExpect(status().isNotFound())
+            .andReturn();
 
         // should throw not found if result does not exist
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", OTHER_RESULT_UUID))

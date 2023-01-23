@@ -6,30 +6,30 @@
  */
 package org.gridsuite.sensitivityanalysis.server.entities;
 
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+
+import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import java.io.Serializable;
-import java.util.UUID;
-
 /**
- * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
+ * @author Laurent Garnier <laurent.garnier at rte-france.com>
  */
+
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
-@Table(name = "result")
-public class ResultEntity implements Serializable {
+@Embeddable
+public class ContingencyEmbeddable {
 
-    @Id
-    private UUID resultUuid;
+    @Column
+    private String id;
 
-    @Column(name = "result", columnDefinition = "CLOB")
-    private String result;
+    @Column
+    @Enumerated(EnumType.STRING)
+    SensitivityAnalysisResult.Status status;
 }

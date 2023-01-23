@@ -6,17 +6,19 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.commons.util.ServiceLoaderCache;
-import com.powsybl.sensitivity.SensitivityAnalysisProvider;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+
+import org.gridsuite.sensitivityanalysis.server.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -61,8 +63,8 @@ public class SensitivityAnalysisService {
         return resultUuid;
     }
 
-    public String getResult(UUID resultUuid) {
-        return resultRepository.find(resultUuid);
+    public SensitivityRunQueryResult getRunResult(UUID resultUuid, ResultsSelector selector) {
+        return resultRepository.getRunResult(resultUuid, selector);
     }
 
     public void deleteResult(UUID resultUuid) {

@@ -6,18 +6,20 @@
  */
 package org.gridsuite.sensitivityanalysis.server.repositories;
 
-import org.gridsuite.sensitivityanalysis.server.entities.ResultEntity;
+import java.util.UUID;
+
+import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.UUID;
-
 /**
- * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
+ * @author Laurent Garnier <laurent.garnier at rte-france.com>
  */
+
 @Repository
-public interface ResultRepository extends JpaRepository<ResultEntity, UUID> {
-    ResultEntity findByResultUuid(UUID resultUuid);
+public interface AnalysisResultRepository extends JpaRepository<AnalysisResultEntity, UUID> {
+
+    AnalysisResultEntity findByResultUuid(UUID resultUuid);
 
     void deleteByResultUuid(UUID resultUuid);
 }
