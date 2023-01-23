@@ -10,11 +10,11 @@ import com.powsybl.commons.PowsyblException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -22,9 +22,6 @@ import static org.junit.Assert.*;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class SensitivityAnalysisRunnerSupplierTest {
-
-    @Value("${loadflow.default-provider}")
-    String defaultLoadflowProvider;
 
     @Autowired
     SensitivityAnalysisRunnerSupplier sensitivityAnalysisRunnerSupplier;

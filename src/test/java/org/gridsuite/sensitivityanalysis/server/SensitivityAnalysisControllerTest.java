@@ -68,6 +68,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -286,8 +287,8 @@ public class SensitivityAnalysisControllerTest {
     @SpyBean
     private SensitivityAnalysisWorkerService workerService;
 
-    @Value("${loadflow.default-provider}")
-    String defaultLoadflowProvider;
+    @Value("${sensitivity-analysis.default-provider}")
+    String defaultSensitivityAnalysisProvider;
 
     private final RestTemplateConfig restTemplateConfig = new RestTemplateConfig();
     private final ObjectMapper mapper = restTemplateConfig.objectMapper();
@@ -481,7 +482,7 @@ public class SensitivityAnalysisControllerTest {
 
         // mock the powsybl sensitivity analysis runner
         SensitivityAnalysis.Runner runner = mock(SensitivityAnalysis.Runner.class);
-        given(runner.getName()).willReturn(defaultLoadflowProvider);
+        given(runner.getName()).willReturn(defaultSensitivityAnalysisProvider);
         given(runner.runAsync(eq(network), eq(VariantManagerConstants.INITIAL_VARIANT_ID), anyList(), anyList(), anyList(), any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class))).willReturn(CompletableFuture.completedFuture(RESULT));
         given(runner.runAsync(eq(network), eq(VARIANT_1_ID), anyList(), anyList(), anyList(), any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class))).willReturn(CompletableFuture.completedFuture(RESULT));
         given(runner.runAsync(eq(network), eq(VARIANT_2_ID), anyList(), anyList(), anyList(), any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class))).willReturn(CompletableFuture.completedFuture(RESULT));
@@ -805,4 +806,21 @@ public class SensitivityAnalysisControllerTest {
         assertEquals("0.01", result.getResponse().getContentAsString());
     }
 
+    @Test
+    public void getProvidersTest() throws Exception {
+        mockMvc.perform(get("/" + VERSION + "/providers"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().string("[\"OpenLoadFlow\",\"Hades2\"]"))
+                .andReturn();
+    }
+
+    @Test
+    public void getDefaultProviderTest() throws Exception {
+        mockMvc.perform(get("/" + VERSION + "/default-provider"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8)))
+                .andExpect(content().string("OpenLoadFlow"))
+                .andReturn();
+    }
 }
