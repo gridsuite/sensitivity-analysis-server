@@ -135,17 +135,15 @@ public class SensitivityAnalysisInputBuilderService {
                                                                         boolean variableSet) {
         List<SensitivityFactor> result = new ArrayList<>();
 
-        monitoredEquipments.forEach(monitoredEquipment -> {
-            variableIds.forEach(id ->
-                result.add(new SensitivityFactor(
-                    sensitivityFunctionType,
-                    monitoredEquipment.getId(),
-                    sensitivityVariableType,
-                    id,
-                    variableSet,
-                    contingencies.isEmpty() ? ContingencyContext.none() : ContingencyContext.all()))
-            );
-        });
+        monitoredEquipments.forEach(monitoredEquipment -> variableIds.forEach(id ->
+            result.add(new SensitivityFactor(
+                sensitivityFunctionType,
+                monitoredEquipment.getId(),
+                sensitivityVariableType,
+                id,
+                variableSet,
+                contingencies.isEmpty() ? ContingencyContext.none() : ContingencyContext.all()))
+        ));
 
         return result;
     }
