@@ -68,8 +68,10 @@ public class SensitivityAnalysisResultRepository {
         List<ContingencyEmbeddable> contingencies = result.getContingencyStatuses().stream().map(cs ->
                 new ContingencyEmbeddable(cs.getContingencyId(), cs.getStatus()))
             .collect(Collectors.toList());
-        List<SensitivityEmbeddable> sensitivities = result.getValues().stream()
-            .filter(v -> v.getValue() >= SensitivityAnalysisResultRepository.MINIMUM_SENSITIVITY)
+        List<SensitivityEmbeddable> sensitivities = result.getValues().stream().filter(v -> {
+            double vd = v.getValue();
+            return !Double.isNaN(vd) && Math.abs(vd) >= SensitivityAnalysisResultRepository.MINIMUM_SENSITIVITY;
+        })
             .map(v -> new SensitivityEmbeddable(v.getFactorIndex(), v.getContingencyIndex(),
                 v.getValue(), v.getFunctionReference()))
             .collect(Collectors.toList());
