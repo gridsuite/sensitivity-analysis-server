@@ -136,30 +136,15 @@ public class SensitivityAnalysisInputBuilderService {
         List<SensitivityFactor> result = new ArrayList<>();
 
         monitoredEquipments.forEach(monitoredEquipment -> {
-            if (contingencies.isEmpty()) {
-                // if no contingency are given: creation, for each monitored equipment, of one sensitivity factor for each equipment
-                variableIds.forEach(id ->
-                    result.add(new SensitivityFactor(
-                        sensitivityFunctionType,
-                        monitoredEquipment.getId(),
-                        sensitivityVariableType,
-                        id,
-                        variableSet,
-                        ContingencyContext.none()))
-                );
-            } else {
-                // if contingencies are given: creation, for each monitored equipment, of one sensitivity factor for each contingency
-                contingencies.forEach(contingency ->
-                    variableIds.forEach(id ->
-                        result.add(new SensitivityFactor(
-                            sensitivityFunctionType,
-                            monitoredEquipment.getId(),
-                            sensitivityVariableType,
-                            id,
-                            variableSet,
-                            ContingencyContext.specificContingency(contingency.getId())))
-                    ));
-            }
+            variableIds.forEach(id ->
+                result.add(new SensitivityFactor(
+                    sensitivityFunctionType,
+                    monitoredEquipment.getId(),
+                    sensitivityVariableType,
+                    id,
+                    variableSet,
+                    contingencies.isEmpty() ? ContingencyContext.none() : ContingencyContext.all()))
+            );
         });
 
         return result;
