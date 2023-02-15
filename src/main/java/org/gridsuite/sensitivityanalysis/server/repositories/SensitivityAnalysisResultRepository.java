@@ -46,7 +46,6 @@ import com.powsybl.sensitivity.SensitivityFunctionType;
 @Repository
 public class SensitivityAnalysisResultRepository {
 
-    public static final double MINIMUM_SENSITIVITY = 0.01;
     private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisResultRepository.class);
 
     private final GlobalStatusRepository globalStatusRepository;
@@ -137,7 +136,7 @@ public class SensitivityAnalysisResultRepository {
 
             int ci = sar.getContingencyIndex();
             ContingencyEmbeddable c = ci < 0 ? null : cs.get(ci);
-            if ((ci < 0) != (allContingencyIds == null)) {
+            if (ci < 0 != (allContingencyIds == null)) {
                 continue;
             } else {
                 count += 1;
