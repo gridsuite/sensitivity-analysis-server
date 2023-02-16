@@ -14,9 +14,9 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 public class SensitivityWithContingency extends SensitivityOfTo {
 
-    public static SensitivityWithContingencyBuilder<?, ?> toBuilder(SensitivityOfTo base) {
+    public static SensitivityWithContingencyBuilder<?, ?> toBuilder(SensitivityOfTo base, String functionId, String variableId) {
         if (base == null) {
-            return builder();
+            return builder().funcId(functionId).varId(variableId);
         }
 
         return builder().funcId(base.getFuncId()).varId(base.getVarId()).value(base.getValue()).functionReference(
