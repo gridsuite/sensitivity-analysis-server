@@ -123,7 +123,7 @@ public class SensitivityAnalysisResultRepository {
     }
 
     private int apply(AnalysisResultEntity sas, Collection<String> funcIds, Collection<String> varIds, Collection<String> contingencyIds,
-        List<ContingencyEmbeddable> cs, List<SensitivityFactorEmbeddable> fs, SensitivityFunctionType funcType, boolean beforeOverAfter,
+        List<ContingencyEmbeddable> cs, List<SensitivityFactorEmbeddable> fs, SensitivityFunctionType funcType,
         Set<String> allFunctionIds, Set<String> allVariableIds, Set<String> allContingencyIds, SensitivityConsumer handle) {
         int count = 0;
         for (SensitivityEmbeddable sar : sas.getSensitivities()) {
@@ -136,7 +136,9 @@ public class SensitivityAnalysisResultRepository {
 
             int ci = sar.getContingencyIndex();
             ContingencyEmbeddable c = ci < 0 ? null : cs.get(ci);
-            if ((ci < 0) == beforeOverAfter) {
+            if (ci < 0 != (allContingencyIds == null)) {
+                continue;
+            } else {
                 count += 1;
                 allFunctionIds.add(f.getFunctionId());
                 allVariableIds.add(f.getVariableId());
@@ -209,7 +211,7 @@ public class SensitivityAnalysisResultRepository {
         Set<String> allFunctionIds = new TreeSet<>();
         Set<String> allVariableIds = new TreeSet<>();
         Set<String> allContingencyIds = new TreeSet<>();
-        int count = apply(sas, funcIds, varIds, null, cs, fs, selector.getFunctionType(), selector.getIsJustBefore(),
+        int count = apply(sas, funcIds, varIds, null, cs, fs, selector.getFunctionType(),
             allFunctionIds, allVariableIds, null, (sar, c, f) -> {
                 before.put(Pair.of(f.getFunctionId(), f.getVariableId()), SensitivityOfTo.builder()
                     .funcId(f.getFunctionId())
@@ -230,7 +232,7 @@ public class SensitivityAnalysisResultRepository {
             return retBuilder.build();
         } else {
             List<SensitivityWithContingency> after = new ArrayList<>();
-            count = apply(sas, funcIds, varIds, contingencyIds, cs, fs, selector.getFunctionType(), false,
+            count = apply(sas, funcIds, varIds, contingencyIds, cs, fs, selector.getFunctionType(),
                 allFunctionIds, allVariableIds, allContingencyIds, (sar, c, f) -> {
                     if (c == null) {
                         return;

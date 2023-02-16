@@ -135,32 +135,26 @@ public class SensitivityAnalysisInputBuilderService {
                                                                         boolean variableSet) {
         List<SensitivityFactor> result = new ArrayList<>();
 
-        monitoredEquipments.forEach(monitoredEquipment -> {
-            if (contingencies.isEmpty()) {
-                // if no contingency are given: creation, for each monitored equipment, of one sensitivity factor for each equipment
-                variableIds.forEach(id ->
-                    result.add(new SensitivityFactor(
-                        sensitivityFunctionType,
-                        monitoredEquipment.getId(),
-                        sensitivityVariableType,
-                        id,
-                        variableSet,
-                        ContingencyContext.none()))
-                );
-            } else {
-                // if contingencies are given: creation, for each monitored equipment, of one sensitivity factor for each contingency
-                contingencies.forEach(contingency ->
-                    variableIds.forEach(id ->
-                        result.add(new SensitivityFactor(
-                            sensitivityFunctionType,
-                            monitoredEquipment.getId(),
-                            sensitivityVariableType,
-                            id,
-                            variableSet,
-                            ContingencyContext.specificContingency(contingency.getId())))
-                    ));
-            }
-        });
+        monitoredEquipments.forEach(monitoredEquipment -> variableIds.forEach(varId -> {
+            result.add(new SensitivityFactor(
+                sensitivityFunctionType,
+                monitoredEquipment.getId(),
+                sensitivityVariableType,
+                varId,
+                variableSet,
+                ContingencyContext.none()));
+
+            // if contingencies are given: creation, for each monitored equipment, of one sensitivity factor for each contingency
+            contingencies.forEach(contingency ->
+                result.add(new SensitivityFactor(
+                    sensitivityFunctionType,
+                    monitoredEquipment.getId(),
+                    sensitivityVariableType,
+                    varId,
+                    variableSet,
+                    ContingencyContext.specificContingency(contingency.getId())))
+            );
+        }));
 
         return result;
     }
