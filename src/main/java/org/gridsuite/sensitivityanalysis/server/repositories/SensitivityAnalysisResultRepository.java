@@ -183,7 +183,7 @@ public class SensitivityAnalysisResultRepository {
         return false;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public SensitivityRunQueryResult getRunResult(UUID resultUuid, ResultsSelector selector) {
         AnalysisResultEntity sas = analysisResultRepository.findByResultUuid(resultUuid);
         if (sas == null) {
