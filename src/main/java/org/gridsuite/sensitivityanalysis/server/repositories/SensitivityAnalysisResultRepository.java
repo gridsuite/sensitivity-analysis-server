@@ -183,6 +183,7 @@ public class SensitivityAnalysisResultRepository {
         return false;
     }
 
+    @Transactional(readOnly = true)
     public SensitivityRunQueryResult getRunResult(UUID resultUuid, ResultsSelector selector) {
         AnalysisResultEntity sas = analysisResultRepository.findByResultUuid(resultUuid);
         if (sas == null) {
@@ -238,7 +239,8 @@ public class SensitivityAnalysisResultRepository {
                         return;
                     }
                     SensitivityOfTo b = before.get(Pair.of(f.getFunctionId(), f.getVariableId()));
-                    SensitivityWithContingency r = SensitivityWithContingency.toBuilder(b)
+                    SensitivityWithContingency r = SensitivityWithContingency.toBuilder(
+                            b, f.getFunctionId(), f.getVariableId())
                         .varIsAFilter(f.isVariableSet())
                         .valueAfter(sar.getValue())
                         .functionReferenceAfter(sar.getFunctionReference())
