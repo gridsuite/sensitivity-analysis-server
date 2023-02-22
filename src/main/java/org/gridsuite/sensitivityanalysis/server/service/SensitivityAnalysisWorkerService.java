@@ -246,6 +246,7 @@ public class SensitivityAnalysisWorkerService {
                 if (!(e instanceof CancellationException)) {
                     notificationService.publishFail(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver(), e.getMessage());
                     resultRepository.delete(resultContext.getResultUuid());
+                    resultRepository.insertStatus(List.of(resultContext.getResultUuid()), SensitivityAnalysisStatus.FAILED.name());
                 }
             } finally {
                 futures.remove(resultContext.getResultUuid());
