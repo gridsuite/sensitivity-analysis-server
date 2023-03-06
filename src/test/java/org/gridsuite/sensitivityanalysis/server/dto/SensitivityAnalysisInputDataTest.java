@@ -21,6 +21,7 @@ import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisInputBuilderService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisRunContext;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,11 +40,11 @@ import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
@@ -186,23 +187,17 @@ public class SensitivityAnalysisInputDataTest {
         context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID,
             Collections.emptyList(), inputData, null, null, null, null);
         final ReporterModel reporter = new ReporterModel("a", "b");
-        //assertThrows(NullPointerException.class, () -> inputBuilderService.build(context, NETWORK, reporter));
+        var thrown = assertThrows(NullPointerException.class, () -> inputBuilderService.build(context, NETWORK, reporter));
+        assertThat(thrown, Matchers.instanceOf(NullPointerException.class));
 
-        try {
-            inputBuilderService.build(context, NETWORK, reporter);
-            fail("Should have thrown");
-        } catch (NullPointerException ex) {
-            Collection<Report> reports = reporter.getReports();
-            assertThat(reports, not(nullValue()));
-            // subsequent code lines are verified on development machine
-            // but fail on CI (where `reports` seems empty) for reason I could not identify
+        Collection<Report> reports = reporter.getReports();
+        assertThat(reports, not(nullValue()));
+        // subsequent code lines are verified on development machine
+        // but fail on CI (where `reports` seems empty) for reason I could not identify
 
-            //assertThat(reports.size(), is(1));
-            //Set<String> reportKeys = reports.stream().map(Report::getReportKey).collect(Collectors.toSet());
-            //assertThat(reportKeys.size(), is(1));
-            //assertThat(reportKeys, contains("sensitivityInputParametersTranslationFailure"));
-        } catch (Throwable ex) {
-            fail("Should have thrown NPE");
-        }
+        //assertThat(reports.size(), is(1));
+        //Set<String> reportKeys = reports.stream().map(Report::getReportKey).collect(Collectors.toSet());
+        //assertThat(reportKeys.size(), is(1));
+        //assertThat(reportKeys, contains("sensitivityInputParametersTranslationFailure"));
     }
 }
