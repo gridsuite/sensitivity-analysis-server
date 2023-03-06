@@ -46,8 +46,8 @@ public class SensitivityAnalysisInputBuilderService {
         } catch (Exception ex) {
             LOGGER.error("Could not get contingencies from " + contingencyListIdent.getName(), ex);
             reporter.report(Report.builder()
-                .withKey("sensitivityInputParametersTranslationFailure")
-                .withDefaultMessage("Could not get contingencies from contingencyListIdent " + contingencyListIdent.getName()) // as we do not yet show values
+                .withKey("contingencyTranslationFailure")
+                .withDefaultMessage("Could not get contingencies from contingencyListIdent ${name} : ${exception}")
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .withValue("exception", ex.getMessage())
                 .withValue("name", contingencyListIdent.getName())
@@ -103,8 +103,8 @@ public class SensitivityAnalysisInputBuilderService {
         } catch (Exception ex) {
             LOGGER.error("Could not get identifiables from filter " + filter.getName(), ex);
             reporter.report(Report.builder()
-                .withKey("sensitivityInputParametersTranslationFailure")
-                .withDefaultMessage("Could not get identifiables from filter " + filter.getName()) // as we do not yet show values
+                .withKey("filterTranslationFailure")
+                .withDefaultMessage("Could not get identifiables from filter ${name} : ${exception}")
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .withValue("exception", ex.getMessage())
                 .withValue("name", filter.getName())
@@ -440,10 +440,11 @@ public class SensitivityAnalysisInputBuilderService {
         } catch (Exception ex) {
             reporter.report(Report.builder()
                 .withKey("sensitivityInputParametersTranslationFailure")
-                .withDefaultMessage("Failure while building inputs")
+                .withDefaultMessage("Failure while building inputs, exception : ${exception}")
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .withValue("exception", ex.getMessage())
                 .build());
+            LOGGER.error("Could not translate running context, got exception", ex);
             throw ex;
         }
     }
