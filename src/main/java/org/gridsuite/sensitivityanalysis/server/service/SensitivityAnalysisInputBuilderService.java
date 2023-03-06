@@ -438,12 +438,16 @@ public class SensitivityAnalysisInputBuilderService {
             buildSensitivityPSTs(context, network, reporter);
             buildSensitivityNodes(context, network, reporter);
         } catch (Exception ex) {
+            String msg = ex.getMessage();
+            if (msg == null) {
+                msg = ex.getClass().getName();
+            }
             LOGGER.error("Could not translate running context, got exception", ex);
             reporter.report(Report.builder()
                 .withKey("sensitivityInputParametersTranslationFailure")
                 .withDefaultMessage("Failure while building inputs, exception : ${exception}")
                 .withSeverity(TypedValue.ERROR_SEVERITY)
-                .withValue("exception", ex.getMessage())
+                .withValue("exception", msg)
                 .build());
             LOGGER.error("Running context translation failure, report added");
             throw ex;

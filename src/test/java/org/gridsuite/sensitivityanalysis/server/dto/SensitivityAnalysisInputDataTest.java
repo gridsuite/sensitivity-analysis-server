@@ -192,12 +192,9 @@ public class SensitivityAnalysisInputDataTest {
 
         Collection<Report> reports = reporter.getReports();
         assertThat(reports, not(nullValue()));
-        // subsequent code lines are verified on development machine
-        // but fail on CI (where `reports` seems empty) for reason I could not identify
-
-        //assertThat(reports.size(), is(1));
-        //Set<String> reportKeys = reports.stream().map(Report::getReportKey).collect(Collectors.toSet());
-        //assertThat(reportKeys.size(), is(1));
-        //assertThat(reportKeys, contains("sensitivityInputParametersTranslationFailure"));
+        assertThat(reports.size(), is(1));
+        Set<String> reportKeys = reports.stream().map(Report::getReportKey).collect(Collectors.toSet());
+        assertThat(reportKeys.size(), is(1));
+        assertThat(reportKeys, contains("sensitivityInputParametersTranslationFailure"));
     }
 }
