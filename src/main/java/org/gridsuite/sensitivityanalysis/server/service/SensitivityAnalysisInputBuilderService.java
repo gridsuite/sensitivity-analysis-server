@@ -445,6 +445,7 @@ public class SensitivityAnalysisInputBuilderService {
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .withValue("exception", ex.getMessage())
                 .build());
+            LOGGER.error("Running context translation failure, report added");
             throw ex;
         }
     }
