@@ -9,12 +9,15 @@ package org.gridsuite.sensitivityanalysis.server.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.extensions.Extension;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.computation.local.LocalComputationManager;
 import com.powsybl.iidm.mergingview.MergingView;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
+import com.powsybl.loadflow.LoadFlowParameters;
+import com.powsybl.loadflow.LoadFlowProvider;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.sensitivity.SensitivityAnalysis;
@@ -155,6 +158,24 @@ public class SensitivityAnalysisWorkerService {
         return result;
     }
 
+    private static SensitivityAnalysisParameters getParameters(SensitivityAnalysisRunContext context) {
+        if (context.getSensitivityAnalysisInputData().getParameters() == null) {
+            return new SensitivityAnalysisParameters(); // default params
+        }
+        SensitivityAnalysisParameters params = context.getSensitivityAnalysisInputData().getParameters();
+        if (context.getSensitivityAnalysisInputData().getLoadFlowSpecificParameters() == null
+                || context.getSensitivityAnalysisInputData().getLoadFlowSpecificParameters().isEmpty()) {
+            return params; // no specific LF params
+        }
+        LoadFlowProvider lfProvider = LoadFlowProvider.findAll().stream()
+                .filter(p -> p.getName().equals(context.getProvider()))
+                .findFirst().orElseThrow(() -> new PowsyblException("Model not found " + context.getProvider()));
+        Extension<LoadFlowParameters> extension = lfProvider.loadSpecificParameters(context.getSensitivityAnalysisInputData().getLoadFlowSpecificParameters())
+                .orElseThrow(() -> new PowsyblException("Cannot add specific loadflow parameters with model " + context.getProvider()));
+        params.getLoadFlowParameters().addExtension((Class) extension.getClass(), extension);
+        return params;
+    }
+
     private CompletableFuture<SensitivityAnalysisResult> runSensitivityAnalysisAsync(SensitivityAnalysisRunContext context,
                                                                                      SensitivityAnalysis.Runner sensitivityAnalysisRunner,
                                                                                      Reporter reporter,
@@ -165,9 +186,7 @@ public class SensitivityAnalysisWorkerService {
                 return null;
             }
 
-            SensitivityAnalysisParameters sensitivityAnalysisParameters = context.getSensitivityAnalysisInputData().getParameters() != null
-                ? context.getSensitivityAnalysisInputData().getParameters()
-                : new SensitivityAnalysisParameters();
+            SensitivityAnalysisParameters sensitivityAnalysisParameters = getParameters(context);
 
             // TODO : set resultsThreshold in SensitivityAnalysisParameters when it will be available in powsybl-core
 
