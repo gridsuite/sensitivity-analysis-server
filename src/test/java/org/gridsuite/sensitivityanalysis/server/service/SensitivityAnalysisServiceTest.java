@@ -138,11 +138,42 @@ public class SensitivityAnalysisServiceTest {
 
     @Test
     public void test0() {
-        testBasic(true);
-        testBasic(false);
+        SensitivityAnalysisRunContext context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID,
+                Collections.emptyList(), getDummyInputData(), null, null, null, null);
+        testBasic(true, context);
+        testBasic(false, context);
     }
 
-    private void testBasic(boolean specific) {
+    @Test
+    public void testWithLFParams() {
+        SensitivityAnalysisInputData inputData = SensitivityAnalysisInputData.builder()
+                .resultsThreshold(0.10)
+                .sensitivityInjectionsSets(List.of())
+                .sensitivityInjections(List.of())
+                .sensitivityHVDCs(List.of())
+                .sensitivityPSTs(List.of())
+                .sensitivityNodes(List.of())
+                .parameters(null) // null LF params
+                .loadFlowSpecificParameters(null)
+                .build();
+        SensitivityAnalysisRunContext context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID,
+                Collections.emptyList(), inputData, null, "OpenLoadFlow", null, null);
+        testBasic(true, context);
+
+        // with non-null LF params
+        inputData.setParameters(SensitivityAnalysisParameters.load());
+        testBasic(true, context);
+
+        // with empty specific parameters
+        inputData.setLoadFlowSpecificParameters(Map.of());
+        testBasic(true, context);
+
+        // with 2 specific parameters
+        inputData.setLoadFlowSpecificParameters(Map.of("reactiveRangeCheckMode", "TARGET_P", "plausibleActivePowerLimit", "5000.0"));
+        testBasic(true, context);
+    }
+
+    private void testBasic(boolean specific, SensitivityAnalysisRunContext context) {
         List<String> aleaIds = List.of("a1", "a2", "a3");
         final List<SensitivityAnalysisResult.SensitivityContingencyStatus> contingenciesStatuses = aleaIds.stream()
             .map(aleaId -> new SensitivityAnalysisResult.SensitivityContingencyStatus(aleaId, SensitivityAnalysisResult.Status.SUCCESS))
@@ -180,9 +211,7 @@ public class SensitivityAnalysisServiceTest {
             any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class)))
             .willReturn(CompletableFuture.completedFuture(result));
 
-        UUID gottenResultUuid = analysisService.runAndSaveResult(
-            new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID,
-                Collections.emptyList(), getDummyInputData(), null, null, null, null));
+        UUID gottenResultUuid = analysisService.runAndSaveResult(context);
         assertThat(gottenResultUuid, not(nullValue()));
         assertThat(gottenResultUuid, is(resultUuid));
 

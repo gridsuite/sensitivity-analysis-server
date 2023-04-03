@@ -159,10 +159,8 @@ public class SensitivityAnalysisWorkerService {
     }
 
     private static SensitivityAnalysisParameters getParameters(SensitivityAnalysisRunContext context) {
-        if (context.getSensitivityAnalysisInputData().getParameters() == null) {
-            return new SensitivityAnalysisParameters(); // default params
-        }
-        SensitivityAnalysisParameters params = context.getSensitivityAnalysisInputData().getParameters();
+        SensitivityAnalysisParameters params = context.getSensitivityAnalysisInputData().getParameters() == null ?
+            new SensitivityAnalysisParameters() : context.getSensitivityAnalysisInputData().getParameters();
         if (context.getSensitivityAnalysisInputData().getLoadFlowSpecificParameters() == null
                 || context.getSensitivityAnalysisInputData().getLoadFlowSpecificParameters().isEmpty()) {
             return params; // no specific LF params
