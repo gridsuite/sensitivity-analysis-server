@@ -158,7 +158,7 @@ public class SensitivityAnalysisWorkerService {
         return result;
     }
 
-    private static SensitivityAnalysisParameters getParameters(SensitivityAnalysisRunContext context) {
+    private static SensitivityAnalysisParameters buildParameters(SensitivityAnalysisRunContext context) {
         SensitivityAnalysisParameters params = context.getSensitivityAnalysisInputData().getParameters() == null ?
             new SensitivityAnalysisParameters() : context.getSensitivityAnalysisInputData().getParameters();
         if (context.getSensitivityAnalysisInputData().getLoadFlowSpecificParameters() == null
@@ -167,9 +167,9 @@ public class SensitivityAnalysisWorkerService {
         }
         LoadFlowProvider lfProvider = LoadFlowProvider.findAll().stream()
                 .filter(p -> p.getName().equals(context.getProvider()))
-                .findFirst().orElseThrow(() -> new PowsyblException("Model not found " + context.getProvider()));
+                .findFirst().orElseThrow(() -> new PowsyblException("Sensitivity analysis provider not found " + context.getProvider()));
         Extension<LoadFlowParameters> extension = lfProvider.loadSpecificParameters(context.getSensitivityAnalysisInputData().getLoadFlowSpecificParameters())
-                .orElseThrow(() -> new PowsyblException("Cannot add specific loadflow parameters with model " + context.getProvider()));
+                .orElseThrow(() -> new PowsyblException("Cannot add specific loadflow parameters with sensitivity analysis provider " + context.getProvider()));
         params.getLoadFlowParameters().addExtension((Class) extension.getClass(), extension);
         return params;
     }
@@ -184,7 +184,7 @@ public class SensitivityAnalysisWorkerService {
                 return null;
             }
 
-            SensitivityAnalysisParameters sensitivityAnalysisParameters = getParameters(context);
+            SensitivityAnalysisParameters sensitivityAnalysisParameters = buildParameters(context);
 
             // TODO : set resultsThreshold in SensitivityAnalysisParameters when it will be available in powsybl-core
 
