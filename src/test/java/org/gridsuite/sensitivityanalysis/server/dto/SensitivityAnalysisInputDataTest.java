@@ -55,9 +55,9 @@ import static org.mockito.BDDMockito.given;
 @SpringBootTest
 @AutoConfigureMockMvc
 public class SensitivityAnalysisInputDataTest {
-    private static final UUID    NETWORK_UUID = UUID.randomUUID();
-    private static final String  VARIANT_ID   = VariantManagerConstants.INITIAL_VARIANT_ID;
-    private static final Network NETWORK      = new NetworkFactoryImpl().createNetwork("ghost network", "absent format");
+    private static final UUID NETWORK_UUID = UUID.randomUUID();
+    private static final String VARIANT_ID = VariantManagerConstants.INITIAL_VARIANT_ID;
+    private static final Network NETWORK = new NetworkFactoryImpl().createNetwork("ghost network", "absent format");
 
     @MockBean
     private ActionsService actionsService;
