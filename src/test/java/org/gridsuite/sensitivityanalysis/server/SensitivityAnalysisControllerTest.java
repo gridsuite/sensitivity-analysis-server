@@ -134,114 +134,114 @@ public class SensitivityAnalysisControllerTest {
     private static final UUID CONTINGENCIES_NODES_UUID = UUID.randomUUID();
 
     private static final List<Contingency> CONTINGENCIES = List.of(
-            new Contingency("l1", new BranchContingency("l1")),
-            new Contingency("l2", new GeneratorContingency("l2")),
-            new Contingency("l3", new BusbarSectionContingency("l3")),
-            new Contingency("l4", new LineContingency("l4")),
-            new Contingency("l6", new HvdcLineContingency("l6")),
-            new Contingency("l7", new DanglingLineContingency("l7")),
-            new Contingency("l8", new ShuntCompensatorContingency("l8")),
-            new Contingency("l9", new TwoWindingsTransformerContingency("l9")),
-            new Contingency("la", new ThreeWindingsTransformerContingency("l0")), // Contingencies are reordered by id
-            new Contingency("lb", new StaticVarCompensatorContingency("la"))
+        new Contingency("l1", new BranchContingency("l1")),
+        new Contingency("l2", new GeneratorContingency("l2")),
+        new Contingency("l3", new BusbarSectionContingency("l3")),
+        new Contingency("l4", new LineContingency("l4")),
+        new Contingency("l6", new HvdcLineContingency("l6")),
+        new Contingency("l7", new DanglingLineContingency("l7")),
+        new Contingency("l8", new ShuntCompensatorContingency("l8")),
+        new Contingency("l9", new TwoWindingsTransformerContingency("l9")),
+        new Contingency("la", new ThreeWindingsTransformerContingency("l0")), // Contingencies are reordered by id
+        new Contingency("lb", new StaticVarCompensatorContingency("la"))
     );
     private static final List<SensitivityAnalysisResult.SensitivityContingencyStatus> CONTINGENCIES_STATUSES = CONTINGENCIES.stream()
             .map(c -> new SensitivityAnalysisResult.SensitivityContingencyStatus(c.getId(), SensitivityAnalysisResult.Status.SUCCESS))
             .collect(Collectors.toList());
 
     private static final List<Contingency> CONTINGENCIES_VARIANT = List.of(
-            new Contingency("l3", new BusbarSectionContingency("l3")),
-            new Contingency("l4", new LineContingency("l4"))
+        new Contingency("l3", new BusbarSectionContingency("l3")),
+        new Contingency("l4", new LineContingency("l4"))
     );
     private static final List<SensitivityAnalysisResult.SensitivityContingencyStatus> CONTINGENCIES_VARIANT_STATUSES = CONTINGENCIES_VARIANT.stream()
             .map(c -> new SensitivityAnalysisResult.SensitivityContingencyStatus(c.getId(), SensitivityAnalysisResult.Status.SUCCESS))
             .collect(Collectors.toList());
 
     private static final List<IdentifiableAttributes> GENERATORS = List.of(
-            new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR, null),
-            new IdentifiableAttributes("GEN2", IdentifiableType.GENERATOR, null)
+        new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR, null),
+        new IdentifiableAttributes("GEN2", IdentifiableType.GENERATOR, null)
     );
 
     private static final List<IdentifiableAttributes> GENERATORS_VARIANT = List.of(
-            new IdentifiableAttributes("GEN2", IdentifiableType.GENERATOR, null)
+        new IdentifiableAttributes("GEN2", IdentifiableType.GENERATOR, null)
     );
 
     private static final List<IdentifiableAttributes> LOADS = List.of(
-            new IdentifiableAttributes("LOAD", IdentifiableType.LOAD, null)
+        new IdentifiableAttributes("LOAD", IdentifiableType.LOAD, null)
     );
 
     private static final List<IdentifiableAttributes> LOADS_VARIANT = List.of(
-            new IdentifiableAttributes("LOAD", IdentifiableType.LOAD, null)
+        new IdentifiableAttributes("LOAD", IdentifiableType.LOAD, null)
     );
 
     private static final List<IdentifiableAttributes> BRANCHES = List.of(
-            new IdentifiableAttributes("l1", IdentifiableType.LINE, null),
-            new IdentifiableAttributes("l2", IdentifiableType.LINE, null),
-            new IdentifiableAttributes("l3", IdentifiableType.TWO_WINDINGS_TRANSFORMER, null),
-            new IdentifiableAttributes("l4", IdentifiableType.LINE, null)
+        new IdentifiableAttributes("l1", IdentifiableType.LINE, null),
+        new IdentifiableAttributes("l2", IdentifiableType.LINE, null),
+        new IdentifiableAttributes("l3", IdentifiableType.TWO_WINDINGS_TRANSFORMER, null),
+        new IdentifiableAttributes("l4", IdentifiableType.LINE, null)
     );
     private static final List<IdentifiableAttributes> BRANCHES_VARIANT = List.of(
-            new IdentifiableAttributes("l1", IdentifiableType.TWO_WINDINGS_TRANSFORMER, null),
-            new IdentifiableAttributes("l2", IdentifiableType.LINE, null)
+        new IdentifiableAttributes("l1", IdentifiableType.TWO_WINDINGS_TRANSFORMER, null),
+        new IdentifiableAttributes("l2", IdentifiableType.LINE, null)
     );
 
     private static final List<IdentifiableAttributes> HVDCS = List.of(
-            new IdentifiableAttributes("hvdc1", IdentifiableType.HVDC_LINE, null)
+        new IdentifiableAttributes("hvdc1", IdentifiableType.HVDC_LINE, null)
     );
     private static final List<IdentifiableAttributes> HVDCS_VARIANT = List.of(
-            new IdentifiableAttributes("hvdc2", IdentifiableType.HVDC_LINE, null)
+        new IdentifiableAttributes("hvdc2", IdentifiableType.HVDC_LINE, null)
     );
 
     private static final List<IdentifiableAttributes> PSTS = List.of(
-            new IdentifiableAttributes("t1", IdentifiableType.TWO_WINDINGS_TRANSFORMER, null)
+        new IdentifiableAttributes("t1", IdentifiableType.TWO_WINDINGS_TRANSFORMER, null)
     );
     private static final List<IdentifiableAttributes> PSTS_VARIANT = List.of(
-            new IdentifiableAttributes("t2", IdentifiableType.TWO_WINDINGS_TRANSFORMER, null)
+        new IdentifiableAttributes("t2", IdentifiableType.TWO_WINDINGS_TRANSFORMER, null)
     );
 
     private static final List<IdentifiableAttributes> VOLTAGE_LEVELS = List.of(
-            new IdentifiableAttributes("VLGEN", IdentifiableType.VOLTAGE_LEVEL, null)
+        new IdentifiableAttributes("VLGEN", IdentifiableType.VOLTAGE_LEVEL, null)
     );
     private static final List<IdentifiableAttributes> VOLTAGE_LEVELS_VARIANT = List.of(
-            new IdentifiableAttributes("VLHV1", IdentifiableType.VOLTAGE_LEVEL, null),
-            new IdentifiableAttributes("VLHV2", IdentifiableType.VOLTAGE_LEVEL, null)
+        new IdentifiableAttributes("VLHV1", IdentifiableType.VOLTAGE_LEVEL, null),
+        new IdentifiableAttributes("VLHV2", IdentifiableType.VOLTAGE_LEVEL, null)
     );
 
     private static final List<IdentifiableAttributes> EQUIPMENTS_IN_VOLTAGE_REGULATION = List.of(
-            new IdentifiableAttributes("e1", IdentifiableType.GENERATOR, null),
-            new IdentifiableAttributes("e2", IdentifiableType.GENERATOR, null)
+        new IdentifiableAttributes("e1", IdentifiableType.GENERATOR, null),
+        new IdentifiableAttributes("e2", IdentifiableType.GENERATOR, null)
     );
     private static final List<IdentifiableAttributes> EQUIPMENTS_IN_VOLTAGE_REGULATION_VARIANT = List.of(
-            new IdentifiableAttributes("e3", IdentifiableType.GENERATOR, null)
+        new IdentifiableAttributes("e3", IdentifiableType.GENERATOR, null)
     );
 
     private static final List<SensitivityFactor> SENSITIVITY_FACTORS = List.of(
-            new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l1",
-                    SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN", false, ContingencyContext.all()),
-            new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l2",
-                    SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN", false, ContingencyContext.create("l1", ContingencyContextType.SPECIFIC)),
-            new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l3",
-                    SensitivityVariableType.INJECTION_ACTIVE_POWER, "LOAD", false, ContingencyContext.create("l3", ContingencyContextType.SPECIFIC))
+        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l1",
+            SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN", false, ContingencyContext.all()),
+        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l2",
+            SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN", false, ContingencyContext.create("l1", ContingencyContextType.SPECIFIC)),
+        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l3",
+            SensitivityVariableType.INJECTION_ACTIVE_POWER, "LOAD", false, ContingencyContext.create("l3", ContingencyContextType.SPECIFIC))
     );
     private static final List<SensitivityFactor> SENSITIVITY_FACTORS_VARIANT = List.of(
-            new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l2",
-                    SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN2", false, ContingencyContext.none()));
+        new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, "l2",
+            SensitivityVariableType.INJECTION_ACTIVE_POWER, "GEN2", false, ContingencyContext.none()));
 
     private static final List<SensitivityValue> SENSITIVITY_VALUES = List.of(
-            new SensitivityValue(0, -1, 500.1, 2.9),
-            new SensitivityValue(1, -1, 500.2, 2.8),
-            new SensitivityValue(0, 0, 500.3, 2.7),
-            new SensitivityValue(0, 1, 500.4, 2.6),
-            new SensitivityValue(0, 2, 500.5, 2.5),
-            new SensitivityValue(1, 1, 500.6, 2.4),
-            new SensitivityValue(2, 0, 500.7, 2.3),
-            new SensitivityValue(1, 2, 500.8, 2.2)
+        new SensitivityValue(0, -1, 500.1, 2.9),
+        new SensitivityValue(1, -1, 500.2, 2.8),
+        new SensitivityValue(0, 0, 500.3, 2.7),
+        new SensitivityValue(0, 1, 500.4, 2.6),
+        new SensitivityValue(0, 2, 500.5, 2.5),
+        new SensitivityValue(1, 1, 500.6, 2.4),
+        new SensitivityValue(2, 0, 500.7, 2.3),
+        new SensitivityValue(1, 2, 500.8, 2.2)
     );
     private static final List<SensitivityValue> SENSITIVITY_VALUES_VARIANT = List.of(new SensitivityValue(0, 0, 3d, 4d));
 
     private static final SensitivityAnalysisResult RESULT = new SensitivityAnalysisResult(SENSITIVITY_FACTORS,
-            CONTINGENCIES_STATUSES,
-            SENSITIVITY_VALUES);
+        CONTINGENCIES_STATUSES,
+        SENSITIVITY_VALUES);
 
     private static final SensitivityAnalysisResult RESULT_VARIANT = new SensitivityAnalysisResult(SENSITIVITY_FACTORS_VARIANT, CONTINGENCIES_VARIANT_STATUSES, SENSITIVITY_VALUES_VARIANT);
 
@@ -330,32 +330,32 @@ public class SensitivityAnalysisControllerTest {
         });
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData1 = SensitivityAnalysisInputData.builder()
-                .resultsThreshold(0.20)
-                .sensitivityInjectionsSets(List.of(SensitivityInjectionsSet.builder()
-                        .monitoredBranches(List.of(new FilterIdent(MONITORED_BRANCHES_FILTERS_INJECTIONS_SET_UUID, "name1")))
-                        .injections(List.of(new FilterIdent(GENERATORS_FILTERS_INJECTIONS_SET_UUID, "name2"), new FilterIdent(LOADS_FILTERS_INJECTIONS_SET_UUID, "name3")))
-                        .distributionType(SensitivityAnalysisInputData.DistributionType.REGULAR)
-                        .contingencies(List.of(new FilterIdent(CONTINGENCIES_INJECTIONS_SET_UUID, "name4"))).build()))
-                .sensitivityInjections(List.of(SensitivityInjection.builder()
-                        .monitoredBranches(List.of(new FilterIdent(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, "name5")))
-                        .injections(List.of(new FilterIdent(GENERATORS_FILTERS_INJECTIONS_UUID, "name6")))
-                        .contingencies(List.of(new FilterIdent(CONTINGENCIES_INJECTIONS_UUID1, "name7"), new FilterIdent(CONTINGENCIES_INJECTIONS_UUID2, "name8"))).build()))
-                .sensitivityHVDCs(List.of(SensitivityHVDC.builder()
-                        .monitoredBranches(List.of(new FilterIdent(MONITORED_BRANCHES_FILTERS_HVDC_UUID, "name9")))
-                        .sensitivityType(SensitivityAnalysisInputData.SensitivityType.DELTA_MW)
-                        .hvdcs(List.of(new FilterIdent(HVDC_FILTERS_UUID, "name10")))
-                        .contingencies(List.of(new FilterIdent(CONTINGENCIES_HVDCS_UUID, "name11"))).build()))
-                .sensitivityPSTs(List.of(SensitivityPST.builder()
-                        .monitoredBranches(List.of(new FilterIdent(MONITORED_BRANCHES_FILTERS_PST_UUID, "name12")))
-                        .sensitivityType(SensitivityAnalysisInputData.SensitivityType.DELTA_A)
-                        .psts(List.of(new FilterIdent(PST_FILTERS_UUID1, "name13"), new FilterIdent(PST_FILTERS_UUID2, "name14")))
-                        .contingencies(List.of(new FilterIdent(CONTINGENCIES_PSTS_UUID, "name15"))).build()))
-                .sensitivityNodes(List.of(SensitivityNodes.builder()
-                        .monitoredVoltageLevels(List.of(new FilterIdent(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID, "name16")))
-                        .equipmentsInVoltageRegulation(List.of(new FilterIdent(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, "name17")))
-                        .contingencies(List.of(new FilterIdent(CONTINGENCIES_NODES_UUID, "name18"))).build()))
-                .parameters(SensitivityAnalysisParameters.load())
-                .build();
+            .resultsThreshold(0.20)
+            .sensitivityInjectionsSets(List.of(SensitivityInjectionsSet.builder()
+                .monitoredBranches(List.of(new FilterIdent(MONITORED_BRANCHES_FILTERS_INJECTIONS_SET_UUID, "name1")))
+                .injections(List.of(new FilterIdent(GENERATORS_FILTERS_INJECTIONS_SET_UUID, "name2"), new FilterIdent(LOADS_FILTERS_INJECTIONS_SET_UUID, "name3")))
+                .distributionType(SensitivityAnalysisInputData.DistributionType.REGULAR)
+                .contingencies(List.of(new FilterIdent(CONTINGENCIES_INJECTIONS_SET_UUID, "name4"))).build()))
+            .sensitivityInjections(List.of(SensitivityInjection.builder()
+                .monitoredBranches(List.of(new FilterIdent(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, "name5")))
+                .injections(List.of(new FilterIdent(GENERATORS_FILTERS_INJECTIONS_UUID, "name6")))
+                .contingencies(List.of(new FilterIdent(CONTINGENCIES_INJECTIONS_UUID1, "name7"), new FilterIdent(CONTINGENCIES_INJECTIONS_UUID2, "name8"))).build()))
+            .sensitivityHVDCs(List.of(SensitivityHVDC.builder()
+                .monitoredBranches(List.of(new FilterIdent(MONITORED_BRANCHES_FILTERS_HVDC_UUID, "name9")))
+                .sensitivityType(SensitivityAnalysisInputData.SensitivityType.DELTA_MW)
+                .hvdcs(List.of(new FilterIdent(HVDC_FILTERS_UUID, "name10")))
+                .contingencies(List.of(new FilterIdent(CONTINGENCIES_HVDCS_UUID, "name11"))).build()))
+            .sensitivityPSTs(List.of(SensitivityPST.builder()
+                .monitoredBranches(List.of(new FilterIdent(MONITORED_BRANCHES_FILTERS_PST_UUID, "name12")))
+                .sensitivityType(SensitivityAnalysisInputData.SensitivityType.DELTA_A)
+                .psts(List.of(new FilterIdent(PST_FILTERS_UUID1, "name13"), new FilterIdent(PST_FILTERS_UUID2, "name14")))
+                .contingencies(List.of(new FilterIdent(CONTINGENCIES_PSTS_UUID, "name15"))).build()))
+            .sensitivityNodes(List.of(SensitivityNodes.builder()
+                .monitoredVoltageLevels(List.of(new FilterIdent(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID, "name16")))
+                .equipmentsInVoltageRegulation(List.of(new FilterIdent(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, "name17")))
+                .contingencies(List.of(new FilterIdent(CONTINGENCIES_NODES_UUID, "name18"))).build()))
+            .parameters(SensitivityAnalysisParameters.load())
+            .build();
         SENSITIVITY_INPUT_1 = mapper.writeValueAsString(sensitivityAnalysisInputData1);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData2 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
@@ -509,7 +509,7 @@ public class SensitivityAnalysisControllerTest {
     @After
     public void tearDown() {
         mockMvc.perform(delete("/" + VERSION + "/results"))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk());
     }
 
     @Test
@@ -517,46 +517,46 @@ public class SensitivityAnalysisControllerTest {
 
         // run with specific variant
         MvcResult result = mockMvc.perform(post(
-                        "/" + VERSION + "/networks/{networkUuid}/run?variantId=" + VARIANT_3_ID, NETWORK_UUID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(SENSITIVITY_INPUT_1))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+                "/" + VERSION + "/networks/{networkUuid}/run?variantId=" + VARIANT_3_ID, NETWORK_UUID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(SENSITIVITY_INPUT_1))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
         assertEquals(mapper.writeValueAsString(RESULT_VARIANT), result.getResponse().getContentAsString());
 
         // run with implicit initial variant
         for (String sensitivityInput : List.of(SENSITIVITY_INPUT_1, SENSITIVITY_INPUT_2, SENSITIVITY_INPUT_3, SENSITIVITY_INPUT_4, SENSITIVITY_INPUT_5, SENSITIVITY_INPUT_6, SENSITIVITY_INPUT_LOAD_PROPORTIONAL_MAXP, SENSITIVITY_INPUT_VENTILATION)) {
             result = mockMvc.perform(post(
-                            "/" + VERSION + "/networks/{networkUuid}/run", NETWORK_UUID)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(sensitivityInput))
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                    .andReturn();
+                "/" + VERSION + "/networks/{networkUuid}/run", NETWORK_UUID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(sensitivityInput))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
             assertEquals(mapper.writeValueAsString(RESULT), result.getResponse().getContentAsString());
         }
 
         // run with OpenLoadFlow provider and sensitivityType DELTA_A for HVDC
         result = mockMvc.perform(post(
-                        "/" + VERSION + "/networks/{networkUuid}/run?provider=OpenLoadFlow", NETWORK_UUID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(SENSITIVITY_INPUT_HVDC_DELTA_A))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+                "/" + VERSION + "/networks/{networkUuid}/run?provider=OpenLoadFlow", NETWORK_UUID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(SENSITIVITY_INPUT_HVDC_DELTA_A))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
         assertEquals(mapper.writeValueAsString(RESULT), result.getResponse().getContentAsString());
     }
 
     @Test
     public void runAndSaveTest() throws Exception {
         MvcResult result = mockMvc.perform(post(
-                        "/" + VERSION + "/networks/{networkUuid}/run-and-save?receiver=me&variantId=" + VARIANT_2_ID, NETWORK_UUID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(SENSITIVITY_INPUT_1))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+                "/" + VERSION + "/networks/{networkUuid}/run-and-save?receiver=me&variantId=" + VARIANT_2_ID, NETWORK_UUID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(SENSITIVITY_INPUT_1))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
         assertEquals(RESULT_UUID, mapper.readValue(result.getResponse().getContentAsString(), UUID.class));
 
         Message<byte[]> resultMessage = output.receive(TIMEOUT, "sensitivityanalysis.result");
@@ -567,49 +567,49 @@ public class SensitivityAnalysisControllerTest {
         // and that they can be filtered by function IDs, variable IDs
         // and sorted according to multiple criteria
         ResultsSelector selectorN = ResultsSelector.builder()
-                .isJustBefore(true)
-                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
-                .functionIds(BRANCHES.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
-                .variableIds(Stream.concat(GENERATORS.stream(), LOADS.stream())
-                        .map(IdentifiableAttributes::getId).collect(Collectors.toList()))
-                .sortKeysWithWeightAndDirection(Map.of(
-                        ResultsSelector.SortKey.SENSITIVITY, -1,
-                        ResultsSelector.SortKey.REFERENCE, 2,
-                        ResultsSelector.SortKey.VARIABLE, 3,
-                        ResultsSelector.SortKey.FUNCTION, 4))
-                .build();
+            .isJustBefore(true)
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+            .functionIds(BRANCHES.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
+            .variableIds(Stream.concat(GENERATORS.stream(), LOADS.stream())
+                .map(IdentifiableAttributes::getId).collect(Collectors.toList()))
+            .sortKeysWithWeightAndDirection(Map.of(
+                ResultsSelector.SortKey.SENSITIVITY, -1,
+                ResultsSelector.SortKey.REFERENCE, 2,
+                ResultsSelector.SortKey.VARIABLE, 3,
+                ResultsSelector.SortKey.FUNCTION, 4))
+            .build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
-                        mapper.writeValueAsString(selectorN)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+                mapper.writeValueAsString(selectorN)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
         SensitivityRunQueryResult resN = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(2, (long) resN.getTotalSensitivitiesCount());
 
         // check results can be retrieved for the with contingencies side
         // filtered and sorted by multiple criteria too
         ResultsSelector selectorNK = ResultsSelector.builder()
-                .isJustBefore(false)
-                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
-                .contingencyIds(CONTINGENCIES_VARIANT.stream().map(Contingency::getId).collect(Collectors.toList()))
-                .functionIds(BRANCHES_VARIANT.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
-                .variableIds(GENERATORS.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
-                .sortKeysWithWeightAndDirection(Map.of(
-                        ResultsSelector.SortKey.POST_SENSITIVITY, -1,
-                        ResultsSelector.SortKey.POST_REFERENCE, -2,
-                        ResultsSelector.SortKey.SENSITIVITY, -3,
-                        ResultsSelector.SortKey.VARIABLE, 4,
-                        ResultsSelector.SortKey.FUNCTION, 5,
-                        ResultsSelector.SortKey.REFERENCE, 6,
-                        ResultsSelector.SortKey.CONTINGENCY, 7))
-                .chunkSize(10)
-                .build();
+            .isJustBefore(false)
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+            .contingencyIds(CONTINGENCIES_VARIANT.stream().map(Contingency::getId).collect(Collectors.toList()))
+            .functionIds(BRANCHES_VARIANT.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
+            .variableIds(GENERATORS.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
+            .sortKeysWithWeightAndDirection(Map.of(
+                ResultsSelector.SortKey.POST_SENSITIVITY, -1,
+                ResultsSelector.SortKey.POST_REFERENCE, -2,
+                ResultsSelector.SortKey.SENSITIVITY, -3,
+                ResultsSelector.SortKey.VARIABLE, 4,
+                ResultsSelector.SortKey.FUNCTION, 5,
+                ResultsSelector.SortKey.REFERENCE, 6,
+                ResultsSelector.SortKey.CONTINGENCY, 7))
+            .chunkSize(10)
+            .build();
 
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
-                        mapper.writeValueAsString(selectorNK)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+                mapper.writeValueAsString(selectorNK)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
         String bodyText = result.getResponse().getContentAsString();
         SensitivityRunQueryResult resNK = mapper.readValue(bodyText, new TypeReference<>() { });
         assertEquals(6, (long) resNK.getTotalSensitivitiesCount());
@@ -617,105 +617,105 @@ public class SensitivityAnalysisControllerTest {
 
         // check that a request for not present contingency does not crash and just brings nothing
         ResultsSelector selectorNKz1 = ResultsSelector.builder().isJustBefore(false)
-                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).contingencyIds(List.of("unfoundable")).build();
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).contingencyIds(List.of("unfoundable")).build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
-                        mapper.writeValueAsString(selectorNKz1)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+                mapper.writeValueAsString(selectorNKz1)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
         SensitivityRunQueryResult resNKz1 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(0, (long) resNKz1.getTotalSensitivitiesCount());
 
         // check that a request for not present function does not crash and just brings nothing
         ResultsSelector selectorNKz2 = ResultsSelector.builder().isJustBefore(false)
-                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).functionIds(List.of("unfoundable")).build();
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).functionIds(List.of("unfoundable")).build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
-                        mapper.writeValueAsString(selectorNKz2)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+                mapper.writeValueAsString(selectorNKz2)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
         SensitivityRunQueryResult resNKz2 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(0, (long) resNKz2.getTotalSensitivitiesCount());
 
         // check that a request for not present variable does not crash and just brings nothing
         ResultsSelector selectorNKz3 = ResultsSelector.builder().isJustBefore(false)
-                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).variableIds(List.of("unfoundable")).build();
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).variableIds(List.of("unfoundable")).build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
-                        mapper.writeValueAsString(selectorNKz3)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+                mapper.writeValueAsString(selectorNKz3)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
         SensitivityRunQueryResult resNKz3 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(0, (long) resNKz3.getTotalSensitivitiesCount());
 
         // check that a request for another function type does not crash and just brings nothing
         ResultsSelector selectorNKz4 = ResultsSelector.builder().isJustBefore(false)
-                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_2).build();
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_2).build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
-                        mapper.writeValueAsString(selectorNKz4)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+                mapper.writeValueAsString(selectorNKz4)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
         SensitivityRunQueryResult resNKz4 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(0, (long) resNKz4.getTotalSensitivitiesCount());
 
         // check that a request with a bogus selector json does not crash and raises 4xx status
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
-                        "bogusJSON"))
-                .andExpect(status().is4xxClientError())
-                .andReturn();
+                "bogusJSON"))
+            .andExpect(status().is4xxClientError())
+            .andReturn();
 
         // check that a request with a bogus uuid does not crash raises and raises 404 status
         //noinspection UnnecessaryLocalVariable
         final UUID bogusUuid = REPORT_UUID;
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", bogusUuid,
-                        mapper.writeValueAsString(selectorN)))
-                .andExpect(status().isNotFound())
-                .andReturn();
+                mapper.writeValueAsString(selectorN)))
+            .andExpect(status().isNotFound())
+            .andReturn();
 
         // should throw not found if result does not exist
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", OTHER_RESULT_UUID))
-                .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound());
 
         // test one result deletion
         mockMvc.perform(delete("/" + VERSION + "/results/{resultUuid}", RESULT_UUID))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk());
 
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", RESULT_UUID))
-                .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound());
     }
 
     @SneakyThrows
     @Test
     public void deleteResultsTest() {
         MvcResult result = mockMvc.perform(post(
-                        "/" + VERSION + "/networks/{networkUuid}/run-and-save", NETWORK_UUID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(SENSITIVITY_INPUT_1))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+                "/" + VERSION + "/networks/{networkUuid}/run-and-save", NETWORK_UUID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(SENSITIVITY_INPUT_1))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
         assertEquals(RESULT_UUID, mapper.readValue(result.getResponse().getContentAsString(), UUID.class));
 
         output.receive(TIMEOUT, "sensitivityanalysis.result");
 
         mockMvc.perform(delete("/" + VERSION + "/results"))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk());
 
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", RESULT_UUID))
-                .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound());
     }
 
     @SneakyThrows
     @Test
     public void mergingViewTest() {
         MvcResult result = mockMvc.perform(post(
-                        "/" + VERSION + "/networks/{networkUuid}/run-and-save?networkUuid=" + OTHER_NETWORK_FOR_MERGING_VIEW_UUID, NETWORK_FOR_MERGING_VIEW_UUID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(SENSITIVITY_INPUT_1))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+                "/" + VERSION + "/networks/{networkUuid}/run-and-save?networkUuid=" + OTHER_NETWORK_FOR_MERGING_VIEW_UUID, NETWORK_FOR_MERGING_VIEW_UUID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(SENSITIVITY_INPUT_1))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
         assertEquals(RESULT_UUID, mapper.readValue(result.getResponse().getContentAsString(), UUID.class));
     }
 
@@ -723,34 +723,34 @@ public class SensitivityAnalysisControllerTest {
     @Test
     public void testStatus() {
         MvcResult result = mockMvc.perform(get(
-                        "/" + VERSION + "/results/{resultUuid}/status", RESULT_UUID))
-                .andExpect(status().isOk())
-                .andReturn();
+                "/" + VERSION + "/results/{resultUuid}/status", RESULT_UUID))
+            .andExpect(status().isOk())
+            .andReturn();
         assertEquals("", result.getResponse().getContentAsString());
 
         mockMvc.perform(put("/" + VERSION + "/results/invalidate-status?resultUuid=" + RESULT_UUID))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk());
 
         result = mockMvc.perform(get(
-                        "/" + VERSION + "/results/{resultUuid}/status", RESULT_UUID))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+                "/" + VERSION + "/results/{resultUuid}/status", RESULT_UUID))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
         assertEquals(SensitivityAnalysisStatus.NOT_DONE.name(), result.getResponse().getContentAsString());
     }
 
     @Test
     public void stopTest() throws Exception {
         mockMvc.perform(post(
-                        "/" + VERSION + "/networks/{networkUuid}/run-and-save?receiver=me&variantId=" + VARIANT_2_ID, NETWORK_STOP_UUID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(SENSITIVITY_INPUT_1))
-                .andExpect(status().isOk());
+            "/" + VERSION + "/networks/{networkUuid}/run-and-save?receiver=me&variantId=" + VARIANT_2_ID, NETWORK_STOP_UUID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(SENSITIVITY_INPUT_1))
+            .andExpect(status().isOk());
 
         // stop sensitivity analysis
         assertNotNull(output.receive(TIMEOUT, "sensitivityanalysis.run"));
         mockMvc.perform(put("/" + VERSION + "/results/{resultUuid}/stop" + "?receiver=me", RESULT_UUID))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk());
         assertNotNull(output.receive(TIMEOUT, "sensitivityanalysis.cancel"));
 
         Message<byte[]> message = output.receive(TIMEOUT, "sensitivityanalysis.stopped");
@@ -764,12 +764,12 @@ public class SensitivityAnalysisControllerTest {
     @Test
     public void runTestWithError() {
         MvcResult result = mockMvc.perform(post(
-                        "/" + VERSION + "/networks/{networkUuid}/run-and-save?receiver=me&variantId=" + VARIANT_1_ID, NETWORK_ERROR_UUID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(SENSITIVITY_INPUT_1))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+                "/" + VERSION + "/networks/{networkUuid}/run-and-save?receiver=me&variantId=" + VARIANT_1_ID, NETWORK_ERROR_UUID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(SENSITIVITY_INPUT_1))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
         assertEquals(RESULT_UUID, mapper.readValue(result.getResponse().getContentAsString(), UUID.class));
 
         // Message stopped has been sent
@@ -780,19 +780,19 @@ public class SensitivityAnalysisControllerTest {
 
         // No result
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", RESULT_UUID))
-                .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound());
     }
 
     @SneakyThrows
     @Test
     public void runWithReportTest() {
         MvcResult result = mockMvc.perform(post(
-                        "/" + VERSION + "/networks/{networkUuid}/run?reportUuid=" + REPORT_UUID + "&reporterId=" + UUID.randomUUID(), NETWORK_UUID)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(SENSITIVITY_INPUT_1))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+                "/" + VERSION + "/networks/{networkUuid}/run?reportUuid=" + REPORT_UUID + "&reporterId=" + UUID.randomUUID(), NETWORK_UUID)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(SENSITIVITY_INPUT_1))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
         assertEquals(mapper.writeValueAsString(RESULT), result.getResponse().getContentAsString());
     }
 
@@ -800,9 +800,9 @@ public class SensitivityAnalysisControllerTest {
     @Test
     public void testDefaultResultsThreshold() {
         MvcResult result = mockMvc.perform(get(
-                        "/" + VERSION + "/results-threshold-default-value"))
-                .andExpect(status().isOk())
-                .andReturn();
+            "/" + VERSION + "/results-threshold-default-value"))
+            .andExpect(status().isOk())
+            .andReturn();
         assertEquals("0.01", result.getResponse().getContentAsString());
     }
 
