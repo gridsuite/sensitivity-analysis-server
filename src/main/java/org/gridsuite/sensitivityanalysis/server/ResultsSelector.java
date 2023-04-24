@@ -30,7 +30,7 @@ public class ResultsSelector {
     // object Boolean, not type boolean or else json round trip is broken
     // as a "justBefore" property would be added when a "isJustBefore" would be looked after
     @NonNull
-    Boolean                 isJustBefore;
+    Boolean isJustBefore;
 
     public enum SortKey { FUNCTION, VARIABLE, CONTINGENCY, REFERENCE, SENSITIVITY, POST_REFERENCE, POST_SENSITIVITY }
 

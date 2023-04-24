@@ -24,7 +24,7 @@ import lombok.NonNull;
 @Builder
 public class SensitivityRunQueryResult {
     @NonNull
-    Boolean                 isJustBefore;
+    Boolean isJustBefore;
     @NonNull
     SensitivityFunctionType functionType;
 

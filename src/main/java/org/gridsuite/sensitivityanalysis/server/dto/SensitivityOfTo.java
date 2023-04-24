@@ -14,9 +14,9 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 public class SensitivityOfTo {
     @NonNull
-    private String  funcId;
+    private String funcId;
     @NonNull
-    private String  varId;
+    private String varId;
     private boolean varIsAFilter;
 
     private double value;

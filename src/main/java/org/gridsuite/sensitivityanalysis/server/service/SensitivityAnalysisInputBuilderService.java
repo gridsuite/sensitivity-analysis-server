@@ -30,9 +30,9 @@ import java.util.stream.Stream;
  */
 @Service
 public class SensitivityAnalysisInputBuilderService {
-    private static final String         EXPECTED_TYPE = "expectedType";
-    private static final Logger         LOGGER        = LoggerFactory.getLogger(SensitivityAnalysisInputBuilderService.class);
-    private final        ActionsService actionsService;
+    private static final String EXPECTED_TYPE = "expectedType";
+    private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisInputBuilderService.class);
+    private final ActionsService actionsService;
     private final FilterService filterService;
 
     public SensitivityAnalysisInputBuilderService(ActionsService actionsService, FilterService filterService) {

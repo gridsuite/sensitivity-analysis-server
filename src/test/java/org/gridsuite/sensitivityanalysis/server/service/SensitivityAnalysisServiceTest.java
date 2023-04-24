@@ -94,13 +94,12 @@ public class SensitivityAnalysisServiceTest {
     @Value("${sensitivity-analysis.default-provider}")
     String defaultSensitivityAnalysisProvider;
 
-    private static final UUID                       NETWORK_UUID = UUID.randomUUID();
-    private static final String                     VARIANT_ID = VariantManagerConstants.INITIAL_VARIANT_ID;
-    private static final Network                    NETWORK      = new NetworkFactoryImpl().createNetwork("ghost network",
-        "absent format");
-    private static final SensitivityAnalysis.Runner RUNNER       = mock(SensitivityAnalysis.Runner.class);
-    private static final SensitivityFunctionType    MW_FUNC_TYPE = SensitivityFunctionType.BRANCH_ACTIVE_POWER_1;
-    private static final SensitivityVariableType    MW_VAR_TYPE = SensitivityVariableType.INJECTION_ACTIVE_POWER;
+    private static final UUID NETWORK_UUID = UUID.randomUUID();
+    private static final String VARIANT_ID = VariantManagerConstants.INITIAL_VARIANT_ID;
+    private static final Network NETWORK = new NetworkFactoryImpl().createNetwork("ghost network", "absent format");
+    private static final SensitivityAnalysis.Runner RUNNER = mock(SensitivityAnalysis.Runner.class);
+    private static final SensitivityFunctionType MW_FUNC_TYPE = SensitivityFunctionType.BRANCH_ACTIVE_POWER_1;
+    private static final SensitivityVariableType MW_VAR_TYPE = SensitivityVariableType.INJECTION_ACTIVE_POWER;
 
     @Before
     public void setUp() {
