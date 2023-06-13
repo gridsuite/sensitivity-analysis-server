@@ -21,6 +21,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.sensitivityanalysis.server.ResultsSelector;
