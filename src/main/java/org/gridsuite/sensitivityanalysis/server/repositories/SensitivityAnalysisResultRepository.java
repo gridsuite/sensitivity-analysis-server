@@ -21,6 +21,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.sensitivityanalysis.server.ResultsSelector;
@@ -71,7 +72,8 @@ public class SensitivityAnalysisResultRepository {
             .map(v -> new SensitivityEmbeddable(v.getFactorIndex(), v.getContingencyIndex(),
                 v.getValue(), v.getFunctionReference()))
             .collect(Collectors.toList());
-        return new AnalysisResultEntity(resultUuid, LocalDateTime.now(), factors, contingencies, sensitivities);
+        //To avoid consistency issue we truncate the time to microseconds since postgres and h2 can only store a precision of microseconds
+        return new AnalysisResultEntity(resultUuid, LocalDateTime.now().truncatedTo(ChronoUnit.MICROS), factors, contingencies, sensitivities);
     }
 
     private static GlobalStatusEntity toStatusEntity(UUID resultUuid, String status) {
