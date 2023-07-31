@@ -37,9 +37,6 @@ public class SensitivityAnalysisInputData {
         DELTA_A
     }
 
-    @Schema(description = "Results threshold")
-    private double resultsThreshold;
-
     @Schema(description = "Sensitivity relatively to injections set")
     private List<SensitivityInjectionsSet> sensitivityInjectionsSets;
 

@@ -125,7 +125,6 @@ public class SensitivityAnalysisServiceTest {
 
     private static SensitivityAnalysisInputData getDummyInputData() {
         return SensitivityAnalysisInputData.builder()
-            .resultsThreshold(0.10)
             .sensitivityInjectionsSets(List.of())
             .sensitivityInjections(List.of())
             .sensitivityHVDCs(List.of())
@@ -146,7 +145,6 @@ public class SensitivityAnalysisServiceTest {
     @Test
     public void testWithLFParams() {
         SensitivityAnalysisInputData inputData = SensitivityAnalysisInputData.builder()
-                .resultsThreshold(0.10)
                 .sensitivityInjectionsSets(List.of())
                 .sensitivityInjections(List.of())
                 .sensitivityHVDCs(List.of())

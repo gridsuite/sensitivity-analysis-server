@@ -330,7 +330,6 @@ public class SensitivityAnalysisControllerTest {
         });
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData1 = SensitivityAnalysisInputData.builder()
-            .resultsThreshold(0.20)
             .sensitivityInjectionsSets(List.of(SensitivityInjectionsSet.builder()
                 .monitoredBranches(List.of(new FilterIdent(MONITORED_BRANCHES_FILTERS_INJECTIONS_SET_UUID, "name1")))
                 .injections(List.of(new FilterIdent(GENERATORS_FILTERS_INJECTIONS_SET_UUID, "name2"), new FilterIdent(LOADS_FILTERS_INJECTIONS_SET_UUID, "name3")))
