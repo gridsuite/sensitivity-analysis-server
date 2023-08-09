@@ -183,11 +183,7 @@ public class SensitivityAnalysisWorkerService {
             if (resultUuid != null && cancelComputationRequests.get(resultUuid) != null) {
                 return null;
             }
-
             SensitivityAnalysisParameters sensitivityAnalysisParameters = buildParameters(context);
-
-            // TODO : set resultsThreshold in SensitivityAnalysisParameters when it will be available in powsybl-core
-
             Network network = getNetwork(context.getNetworkUuid(), context.getOtherNetworkUuids(), context.getVariantId());
             sensitivityAnalysisInputBuilderService.build(context, network, reporter);
 

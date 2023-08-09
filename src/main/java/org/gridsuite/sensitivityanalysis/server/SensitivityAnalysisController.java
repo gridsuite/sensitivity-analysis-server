@@ -159,13 +159,6 @@ public class SensitivityAnalysisController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping(value = "/results-threshold-default-value")
-    @Operation(summary = "get results threshold default value")
-    @ApiResponses(@ApiResponse(responseCode = "200", description = "the results threshold default value has been found"))
-    public ResponseEntity<Double> getDefaultResultsThreshold() {
-        return ResponseEntity.ok().body(service.getDefaultResultThresholdValue());
-    }
-
     @GetMapping(value = "/providers", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Get all sensitivity analysis providers")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Sensitivity analysis providers have been found")})
