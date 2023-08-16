@@ -6,12 +6,15 @@
  */
 package org.gridsuite.sensitivityanalysis.server.entities;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.UUID;
 
 /**
  * @author Laurent Garnier <laurent.garnier at rte-france.com>
@@ -20,8 +23,13 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@Embeddable
-public class SensitivityEmbeddable {
+@Entity
+@Table(name = "sensitivity")
+public class SensitivityEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @NotNull
+    private UUID id;
 
     @Column
     private int factorIndex;
@@ -35,4 +43,15 @@ public class SensitivityEmbeddable {
     @Column
     private double functionReference;
 
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @Setter
+    private AnalysisResultEntity result;
+
+    public SensitivityEntity(int factorIndex, int contingencyIndex, double value, double functionReference) {
+        this.id = UUID.randomUUID();
+        this.factorIndex = factorIndex;
+        this.contingencyIndex = contingencyIndex;
+        this.value = value;
+        this.functionReference = functionReference;
+    }
 }

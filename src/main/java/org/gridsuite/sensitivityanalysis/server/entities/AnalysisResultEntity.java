@@ -11,15 +11,16 @@ import java.util.UUID;
 
 import java.time.LocalDateTime;
 
+import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -28,7 +29,6 @@ import lombok.NoArgsConstructor;
  */
 
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(name = "analysis_result")
@@ -49,7 +49,22 @@ public class AnalysisResultEntity {
     @OrderColumn
     private List<ContingencyEmbeddable> contingencies = new java.util.ArrayList<>();
 
-    @ElementCollection
-    @CollectionTable(name = "sensitivity")
-    private List<SensitivityEmbeddable> sensitivities;
+    @OneToMany(mappedBy = "result", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SensitivityEntity> sensitivities;
+
+    public AnalysisResultEntity(UUID resultUuid, LocalDateTime writeTimeStamp, List<SensitivityFactorEmbeddable> factors,
+                                List<ContingencyEmbeddable> contingencies, List<SensitivityEntity> sensitivities) {
+        this.resultUuid = resultUuid;
+        this.writeTimeStamp = writeTimeStamp;
+        this.factors = factors;
+        this.contingencies = contingencies;
+        addSensitivities(sensitivities);
+    }
+
+    private void addSensitivities(List<SensitivityEntity> sensitivities) {
+        if (sensitivities != null) {
+            sensitivities.forEach(s -> s.setResult(this));
+            this.sensitivities = sensitivities;
+        }
+    }
 }

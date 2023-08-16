@@ -256,16 +256,30 @@ public class SensitivityAnalysisServiceTest {
         assertThat(sensitivityVals, not(hasItem(500.2)));
         assertThat(sensitivityVals, isOrderedAccordingTo(Comparator.<Double>naturalOrder()));
 
-        ResultsSelector chunkerSelector = builder.chunkSize(3).offset(3).build();
+        ResultsSelector chunkerSelector = builder.pageNumber(0).pageSize(2).build();
         gottenResult = analysisService.getRunResult(resultUuid, chunkerSelector);
         assertThat(gottenResult, not(nullValue()));
         sensitivities = gottenResult.getSensitivities();
         assertThat(sensitivities, not(nullValue()));
         sensitivityVals = sensitivities.stream().map(SensitivityOfTo::getValue).collect(Collectors.toList());
-        assertThat(sensitivities.size(), is(3));
+        assertThat(sensitivities.size(), is(2));
         assertThat(sensitivityVals, Every.everyItem(is(500.9)));
 
-        ResultsSelector bogusChunkerSelector = builder.chunkSize(3).offset(9).build();
+        ResultsSelector pagedSelector = builder.pageNumber(1).pageSize(4).build();
+        gottenResult = analysisService.getRunResult(resultUuid, pagedSelector);
+        assertThat(gottenResult, not(nullValue()));
+        sensitivities = gottenResult.getSensitivities();
+        assertThat(sensitivities, not(nullValue()));
+        assertThat(sensitivities.size(), is(4));
+
+        ResultsSelector pagedSelector2 = builder.pageNumber(10).pageSize(4).build();
+        gottenResult = analysisService.getRunResult(resultUuid, pagedSelector);
+        assertThat(gottenResult, not(nullValue()));
+        sensitivities = gottenResult.getSensitivities();
+        assertThat(sensitivities, not(nullValue()));
+        assertThat(sensitivities.size(), is(0));
+
+        ResultsSelector bogusChunkerSelector = builder.pageSize(3).offset(9).build();
         gottenResult = analysisService.getRunResult(resultUuid, bogusChunkerSelector);
         assertThat(gottenResult, not(nullValue()));
         sensitivities = gottenResult.getSensitivities();
