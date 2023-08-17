@@ -28,5 +28,6 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
     Page<SensitivityEntity> findAllByResultAndFactorIndexInAndContingencyIndexIsGreaterThan(AnalysisResultEntity result, List<Integer> factorIndex, int contingencyIndex, Pageable pageable);
 
     List<SensitivityEntity> findByResult(AnalysisResultEntity result);
-    Optional<SensitivityEntity> findByResultAndFactorIndexInAndContingencyIndexIsLessThan(AnalysisResultEntity result, List<Integer> factorIndex, int contingencyIndex);
+    List<SensitivityEntity> findAllByResultAndContingencyIndexIsLessThan(AnalysisResultEntity result, int contingencyIndex);
+    List<SensitivityEntity> findByResultAndFactorIndexInAndContingencyIndexIsLessThan(AnalysisResultEntity result, List<Integer> factorIndex, int contingencyIndex);
 }

@@ -287,7 +287,9 @@ public class SensitivityAnalysisResultRepository {
                             })
                             .boxed()
                             .collect(Collectors.toList());
-                    var sensi = sensitivityRepository.findByResultAndFactorIndexInAndContingencyIndexIsLessThan(sas, found, 0).orElse(null);
+                    var listTest = sensitivityRepository.findAllByResultAndContingencyIndexIsLessThan(sas, 0);
+                    var sensiList = sensitivityRepository.findByResultAndFactorIndexInAndContingencyIndexIsLessThan(sas, found, 0);
+                    var sensi = sensiList.size() == 0 ? null : sensiList.get(0);
                     SensitivityOfTo sensitivityOfTo = null;
                     if (sensi != null) {
                         SensitivityFactorEmbeddable embeddable = fs.get(sensi.getFactorIndex());
