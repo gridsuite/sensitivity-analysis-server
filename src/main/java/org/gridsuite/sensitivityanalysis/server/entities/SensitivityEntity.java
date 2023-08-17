@@ -29,13 +29,13 @@ public class SensitivityEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @NotNull
-    private UUID id;
+    private UUID sensitivityId;
 
-    @Column
-    private int factorIndex;
+    @Embedded
+    private SensitivityFactorEmbeddable factor;
 
-    @Column
-    private int contingencyIndex;
+    @Embedded
+    private ContingencyEmbeddable contingency;
 
     @Column(name = "value_")
     private double value;
@@ -43,14 +43,20 @@ public class SensitivityEntity {
     @Column
     private double functionReference;
 
+    @Column
+    private double valueAfter;
+
+    @Column
+    private double functionReferenceAfter;
+
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @Setter
     private AnalysisResultEntity result;
 
-    public SensitivityEntity(int factorIndex, int contingencyIndex, double value, double functionReference) {
-        this.id = UUID.randomUUID();
-        this.factorIndex = factorIndex;
-        this.contingencyIndex = contingencyIndex;
+    public SensitivityEntity(SensitivityFactorEmbeddable factor, ContingencyEmbeddable contingency, double value, double functionReference) {
+        this.sensitivityId = UUID.randomUUID();
+        this.factor = factor;
+        this.contingency = contingency;
         this.value = value;
         this.functionReference = functionReference;
     }

@@ -22,10 +22,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -65,8 +65,10 @@ public class SensitivityAnalysisResultRepository {
                 new ContingencyEmbeddable(cs.getContingencyId(), cs.getStatus()))
             .collect(Collectors.toList());
         List<SensitivityEntity> sensitivities = result.getValues().stream()
-            .map(v -> new SensitivityEntity(v.getFactorIndex(), v.getContingencyIndex(),
-                v.getValue(), v.getFunctionReference()))
+            .map(v -> new SensitivityEntity(factors.get(v.getFactorIndex()),
+                    v.getContingencyIndex() < 0 ? null : contingencies.get(v.getContingencyIndex()),
+                    v.getValue(),
+                    v.getFunctionReference()))
             .collect(Collectors.toList());
         //To avoid consistency issue we truncate the time to microseconds since postgres and h2 can only store a precision of microseconds
         return new AnalysisResultEntity(resultUuid, LocalDateTime.now().truncatedTo(ChronoUnit.MICROS), factors, contingencies, sensitivities);
@@ -134,22 +136,22 @@ public class SensitivityAnalysisResultRepository {
                       AnalysisResultEntity sas) {
         AtomicInteger count = new AtomicInteger();
         for (SensitivityEntity sar : sensitivityEntities) {
-            int fi = sar.getFactorIndex();
-            SensitivityFactorEmbeddable f = fs.get(fi);
+            //int fi = sar.getFactorIndex();
+            SensitivityFactorEmbeddable f = sar.getFactor();
 
             if (f.getFunctionType() != funcType) {
                 continue;
             }
 
-            int ci = sar.getContingencyIndex();
-            ContingencyEmbeddable c = ci < 0 ? null : cs.get(ci);
-            if (ci < 0 != (allContingencyIds == null)) {
+            //int ci = sar.getContingency();
+            ContingencyEmbeddable c = sar.getContingency();
+            if (c == null != (allContingencyIds == null)) {
                 continue;
             } else {
                 count.addAndGet(1);
                 allFunctionIds.add(f.getFunctionId());
                 allVariableIds.add(f.getVariableId());
-                if (allContingencyIds != null && c != null) {
+                if (allContingencyIds != null) {
                     allContingencyIds.add(c.getId());
                 }
             }
@@ -216,7 +218,7 @@ public class SensitivityAnalysisResultRepository {
             Pageable pageable = PageRequest.of(selector.getPageNumber(), selector.getPageSize());
             var sensiResults = selector.getIsJustBefore() ?
                     sensitivityRepository.findAllByResultAndFactorIndexInAndContingencyIndexIsLessThan(sas, indexes, 0, pageable) :
-                    sensitivityRepository.findAllByResultAndFactorIndexInAndContingencyIndexIsGreaterThan(sas, indexes, 0, pageable);
+                    sensitivityRepository.findAllByResultAndFactorIndexInAndContingencyIndexIsGreaterThanEqual(sas, indexes, 0, pageable);
             return sensiResults.getContent();
         }
 
@@ -271,6 +273,8 @@ public class SensitivityAnalysisResultRepository {
             }
             complete(retBuilder, allFunctionIds, allVariableIds, null, count, befores);
         } else {
+            var all = sensitivityRepository.findByResult(sas);
+            var listTest = sensitivityRepository.findAllByResultAndContingencyIndexIsGreaterThan(sas, 0);
             List<SensitivityWithContingency> after = new ArrayList<>();
             //var sensiResults2 = sensitivityRepository.findAllByResultAndFactorIndexInAndContingencyIndexIsGreaterThan(sas, indexes, 0, pageable);
             count = apply(funcIds, varIds, contingencyIds, cs, fs, selector.getFunctionType(),
@@ -287,12 +291,11 @@ public class SensitivityAnalysisResultRepository {
                             })
                             .boxed()
                             .collect(Collectors.toList());
-                    var listTest = sensitivityRepository.findAllByResultAndContingencyIndexIsLessThan(sas, 0);
                     var sensiList = sensitivityRepository.findByResultAndFactorIndexInAndContingencyIndexIsLessThan(sas, found, 0);
                     var sensi = sensiList.size() == 0 ? null : sensiList.get(0);
                     SensitivityOfTo sensitivityOfTo = null;
                     if (sensi != null) {
-                        SensitivityFactorEmbeddable embeddable = fs.get(sensi.getFactorIndex());
+                        SensitivityFactorEmbeddable embeddable = sensi.getFactor();
                         sensitivityOfTo = SensitivityOfTo.builder()
                                 .funcId(embeddable.getFunctionId())
                                 .varId(embeddable.getVariableId())
@@ -339,6 +342,8 @@ public class SensitivityAnalysisResultRepository {
         retBuilder.totalSensitivitiesCount(count);
     }
 
+
+
     Comparator<SensitivityWithContingency> makeComparatorWith(ResultsSelector.SortKey key) {
         switch (key) {
             case FUNCTION:
@@ -375,6 +380,16 @@ public class SensitivityAnalysisResultRepository {
                 return null; // completing the switch appeases Sonar in a way but lowers coverage
         }
         return null;
+    }
+
+    private String getSort(ResultsSelector.SortKey sortKey) {
+        return switch (sortKey) {
+            case FUNCTION -> "factor.functionId";
+            case SENSITIVITY, POST_SENSITIVITY -> "value";
+            case REFERENCE, POST_REFERENCE -> "functionReference";
+            case VARIABLE -> "factor.variableId";
+            case CONTINGENCY -> "contingency.id";
+        };
     }
 
     Comparator<SensitivityWithContingency> makeComparatorWith(

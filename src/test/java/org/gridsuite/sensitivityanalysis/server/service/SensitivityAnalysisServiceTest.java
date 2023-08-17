@@ -256,7 +256,7 @@ public class SensitivityAnalysisServiceTest {
         assertThat(sensitivityVals, not(hasItem(500.2)));
         assertThat(sensitivityVals, isOrderedAccordingTo(Comparator.<Double>naturalOrder()));
 
-        ResultsSelector chunkerSelector = builder.pageNumber(0).pageSize(3).build();
+        ResultsSelector chunkerSelector = builder.pageNumber(1).pageSize(3).build();
         gottenResult = analysisService.getRunResult(resultUuid, chunkerSelector);
         assertThat(gottenResult, not(nullValue()));
         sensitivities = gottenResult.getSensitivities();
