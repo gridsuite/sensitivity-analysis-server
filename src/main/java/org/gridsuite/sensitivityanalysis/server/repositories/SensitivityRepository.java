@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -27,4 +28,5 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
     Page<SensitivityEntity> findAllByResultAndFactorIndexInAndContingencyIndexIsGreaterThan(AnalysisResultEntity result, List<Integer> factorIndex, int contingencyIndex, Pageable pageable);
 
     List<SensitivityEntity> findByResult(AnalysisResultEntity result);
+    Optional<SensitivityEntity> findByResultAndFactorIndexAndContingencyIndexIsLessThan(AnalysisResultEntity result, Integer factorIndex, int contingencyIndex);
 }

@@ -25,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -119,9 +120,18 @@ public class SensitivityAnalysisResultRepository {
         void consume(SensitivityEntity sar, ContingencyEmbeddable c, SensitivityFactorEmbeddable f);
     }
 
-    private int apply(Collection<String> funcIds, Collection<String> varIds, Collection<String> contingencyIds,
-        List<ContingencyEmbeddable> cs, List<SensitivityFactorEmbeddable> fs, SensitivityFunctionType funcType,
-        Set<String> allFunctionIds, Set<String> allVariableIds, Set<String> allContingencyIds, SensitivityConsumer handle, List<SensitivityEntity> sensitivityEntities, AnalysisResultEntity sas) {
+    private int apply(Collection<String> funcIds,
+                      Collection<String> varIds,
+                      Collection<String> contingencyIds,
+                      List<ContingencyEmbeddable> cs,
+                      List<SensitivityFactorEmbeddable> fs,
+                      SensitivityFunctionType funcType,
+                      Set<String> allFunctionIds,
+                      Set<String> allVariableIds,
+                      Set<String> allContingencyIds,
+                      SensitivityConsumer handle,
+                      List<SensitivityEntity> sensitivityEntities,
+                      AnalysisResultEntity sas) {
         AtomicInteger count = new AtomicInteger();
         for (SensitivityEntity sar : sensitivityEntities) {
             int fi = sar.getFactorIndex();
@@ -241,26 +251,25 @@ public class SensitivityAnalysisResultRepository {
         Set<String> allVariableIds = new TreeSet<>();
         Set<String> allContingencyIds = new TreeSet<>();
 
-        //var sensiResults = sensitivityRepository.findAllByResultAndFactorIndexInAndContingencyIndexIsLessThan(sas, indexes, 0, pageable);
-        int count = apply(funcIds, varIds, null, cs, fs, selector.getFunctionType(),
-            allFunctionIds, allVariableIds, null, (sar, c, f) -> {
-                before.put(Pair.of(f.getFunctionId(), f.getVariableId()), SensitivityOfTo.builder()
-                    .funcId(f.getFunctionId())
-                    .varId(f.getVariableId())
-                    .varIsAFilter(f.isVariableSet())
-                    .value(sar.getValue())
-                    .functionReference(sar.getFunctionReference())
-                    .build());
-            }, sensitivityEntities, sas);
-
+        int count;
         if (selector.getIsJustBefore()) {
+            //var sensiResults = sensitivityRepository.findAllByResultAndFactorIndexInAndContingencyIndexIsLessThan(sas, indexes, 0, pageable);
+            count = apply(funcIds, varIds, null, cs, fs, selector.getFunctionType(),
+                    allFunctionIds, allVariableIds, null, (sar, c, f) -> {
+                        before.put(Pair.of(f.getFunctionId(), f.getVariableId()), SensitivityOfTo.builder()
+                                .funcId(f.getFunctionId())
+                                .varId(f.getVariableId())
+                                .varIsAFilter(f.isVariableSet())
+                                .value(sar.getValue())
+                                .functionReference(sar.getFunctionReference())
+                                .build());
+                    }, sensitivityEntities, sas);
             Comparator<SensitivityOfTo> cmp = makeComparatorOfTo(selector.getSortKeysWithWeightAndDirection());
             List<SensitivityOfTo> befores = new ArrayList<>(before.values());
             if (cmp != null) {
                 befores.sort(cmp);
             }
             complete(retBuilder, allFunctionIds, allVariableIds, null, count, befores);
-            return retBuilder.build();
         } else {
             List<SensitivityWithContingency> after = new ArrayList<>();
             //var sensiResults2 = sensitivityRepository.findAllByResultAndFactorIndexInAndContingencyIndexIsGreaterThan(sas, indexes, 0, pageable);
@@ -269,9 +278,29 @@ public class SensitivityAnalysisResultRepository {
                     if (c == null) {
                         return;
                     }
-                    SensitivityOfTo b = before.get(Pair.of(f.getFunctionId(), f.getVariableId()));
+                    var found = IntStream.range(0, fs.size())
+                            .filter(i -> {
+                                var factorEmbeddable = fs.get(i);
+                                return Objects.equals(factorEmbeddable.getFunctionId(), f.getFunctionId()) &&
+                                        Objects.equals(factorEmbeddable.getVariableId(), f.getVariableId());
+                            })
+                            .findFirst()
+                            .orElse(-1);
+                    var sensi = sensitivityRepository.findByResultAndFactorIndexAndContingencyIndexIsLessThan(sas, found, 0).orElse(null);
+                    SensitivityOfTo sensitivityOfTo = null;
+                    if (sensi != null) {
+                        SensitivityFactorEmbeddable embeddable = fs.get(found);
+                        sensitivityOfTo = SensitivityOfTo.builder()
+                                .funcId(embeddable.getFunctionId())
+                                .varId(embeddable.getVariableId())
+                                .varIsAFilter(embeddable.isVariableSet())
+                                .value(sensi.getValue())
+                                .functionReference(sensi.getFunctionReference())
+                                .build();
+                    }
+                    //SensitivityOfTo b = before.get(Pair.of(f.getFunctionId(), f.getVariableId()));
                     SensitivityWithContingency r = SensitivityWithContingency.toBuilder(
-                            b, f.getFunctionId(), f.getVariableId())
+                            sensitivityOfTo, f.getFunctionId(), f.getVariableId())
                         .varIsAFilter(f.isVariableSet())
                         .valueAfter(sar.getValue())
                         .functionReferenceAfter(sar.getFunctionReference())
@@ -285,8 +314,8 @@ public class SensitivityAnalysisResultRepository {
             }
 
             complete(retBuilder, allFunctionIds, allVariableIds, allContingencyIds, count, after);
-            return retBuilder.build();
         }
+        return retBuilder.build();
     }
 
     private void complete(SensitivityRunQueryResult.SensitivityRunQueryResultBuilder retBuilder,
