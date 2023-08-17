@@ -282,14 +282,15 @@ public class SensitivityAnalysisResultRepository {
                             .filter(i -> {
                                 var factorEmbeddable = fs.get(i);
                                 return Objects.equals(factorEmbeddable.getFunctionId(), f.getFunctionId()) &&
-                                        Objects.equals(factorEmbeddable.getVariableId(), f.getVariableId());
+                                        Objects.equals(factorEmbeddable.getVariableId(), f.getVariableId()) &&
+                                        Objects.equals(factorEmbeddable.getFunctionType(), selector.getFunctionType());
                             })
-                            .findFirst()
-                            .orElse(-1);
-                    var sensi = sensitivityRepository.findByResultAndFactorIndexAndContingencyIndexIsLessThan(sas, found, 0).orElse(null);
+                            .boxed()
+                            .collect(Collectors.toList());
+                    var sensi = sensitivityRepository.findByResultAndFactorIndexInAndContingencyIndexIsLessThan(sas, found, 0).orElse(null);
                     SensitivityOfTo sensitivityOfTo = null;
                     if (sensi != null) {
-                        SensitivityFactorEmbeddable embeddable = fs.get(found);
+                        SensitivityFactorEmbeddable embeddable = fs.get(sensi.getFactorIndex());
                         sensitivityOfTo = SensitivityOfTo.builder()
                                 .funcId(embeddable.getFunctionId())
                                 .varId(embeddable.getVariableId())
