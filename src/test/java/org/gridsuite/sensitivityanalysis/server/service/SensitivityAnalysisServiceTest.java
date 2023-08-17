@@ -256,13 +256,13 @@ public class SensitivityAnalysisServiceTest {
         assertThat(sensitivityVals, not(hasItem(500.2)));
         assertThat(sensitivityVals, isOrderedAccordingTo(Comparator.<Double>naturalOrder()));
 
-        ResultsSelector chunkerSelector = builder.pageNumber(0).pageSize(2).build();
+        ResultsSelector chunkerSelector = builder.isJustBefore(false).pageNumber(0).pageSize(3).build();
         gottenResult = analysisService.getRunResult(resultUuid, chunkerSelector);
         assertThat(gottenResult, not(nullValue()));
         sensitivities = gottenResult.getSensitivities();
         assertThat(sensitivities, not(nullValue()));
         sensitivityVals = sensitivities.stream().map(SensitivityOfTo::getValue).collect(Collectors.toList());
-        assertThat(sensitivities.size(), is(2));
+        assertThat(sensitivities.size(), is(3));
         assertThat(sensitivityVals, Every.everyItem(is(500.9)));
 
         ResultsSelector pagedSelector = builder.pageNumber(1).pageSize(4).build();

@@ -30,6 +30,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -120,7 +121,7 @@ public class SensitivityAnalysisResultRepository {
 
     private int apply(Collection<String> funcIds, Collection<String> varIds, Collection<String> contingencyIds,
         List<ContingencyEmbeddable> cs, List<SensitivityFactorEmbeddable> fs, SensitivityFunctionType funcType,
-        Set<String> allFunctionIds, Set<String> allVariableIds, Set<String> allContingencyIds, SensitivityConsumer handle, List<SensitivityEntity> sensitivityEntities) {
+        Set<String> allFunctionIds, Set<String> allVariableIds, Set<String> allContingencyIds, SensitivityConsumer handle, List<SensitivityEntity> sensitivityEntities, AnalysisResultEntity sas) {
         AtomicInteger count = new AtomicInteger();
         for (SensitivityEntity sar : sensitivityEntities) {
             int fi = sar.getFactorIndex();
@@ -183,19 +184,36 @@ public class SensitivityAnalysisResultRepository {
     public SensitivityRunQueryResult getRunResult(UUID resultUuid, ResultsSelector selector) {
         AnalysisResultEntity sas = analysisResultRepository.findByResultUuid(resultUuid);
         List<SensitivityEntity> sensitivityEntities = getSensitivityEntities(sas, selector);
-        return getSensitivityRunQueryResult(selector, sas, sensitivityEntities);
+        return getSensitivityRunQueryResult(selector, sas, sensitivityEntities, null);
     }
 
     private List<SensitivityEntity> getSensitivityEntities(AnalysisResultEntity sas, ResultsSelector selector) {
         if (selector.getPageSize() != null && selector.getPageNumber() != null) {
+            List<ContingencyEmbeddable> cs = sas.getContingencies();
+            List<SensitivityFactorEmbeddable> fs = sas.getFactors();
+            Collection<String> funcIds = selector.getFunctionIds();
+            Collection<String> varIds = selector.getVariableIds();
+            var indexes = IntStream.range(0, fs.size())
+                    .filter(idx -> {
+                        var factor = fs.get(idx);
+                        return factor.getFunctionType() == selector.getFunctionType() &&
+                                (funcIds == null || funcIds.contains(factor.getFunctionId())) &&
+                                (varIds == null || varIds.contains(factor.getVariableId()));
+                    })
+                    .boxed()
+                    .toList();
+
             Pageable pageable = PageRequest.of(selector.getPageNumber(), selector.getPageSize());
-            return sensitivityRepository.findByResult(sas, pageable).getContent();
+            var sensiResults = selector.getIsJustBefore() ?
+                    sensitivityRepository.findAllByResultAndFactorIndexInAndContingencyIndexIsLessThan(sas, indexes, 0, pageable) :
+                    sensitivityRepository.findAllByResultAndFactorIndexInAndContingencyIndexIsGreaterThan(sas, indexes, 0, pageable);
+            return sensiResults.getContent();
         }
 
         return sensitivityRepository.findByResult(sas);
     }
 
-    private SensitivityRunQueryResult getSensitivityRunQueryResult(ResultsSelector selector, AnalysisResultEntity sas, List<SensitivityEntity> sensitivityEntities) {
+    private SensitivityRunQueryResult getSensitivityRunQueryResult(ResultsSelector selector, AnalysisResultEntity sas, List<SensitivityEntity> sensitivityEntities, Pageable pageable) {
         if (sas == null) {
             return null;
         }
@@ -222,6 +240,8 @@ public class SensitivityAnalysisResultRepository {
         Set<String> allFunctionIds = new TreeSet<>();
         Set<String> allVariableIds = new TreeSet<>();
         Set<String> allContingencyIds = new TreeSet<>();
+
+        //var sensiResults = sensitivityRepository.findAllByResultAndFactorIndexInAndContingencyIndexIsLessThan(sas, indexes, 0, pageable);
         int count = apply(funcIds, varIds, null, cs, fs, selector.getFunctionType(),
             allFunctionIds, allVariableIds, null, (sar, c, f) -> {
                 before.put(Pair.of(f.getFunctionId(), f.getVariableId()), SensitivityOfTo.builder()
@@ -231,7 +251,7 @@ public class SensitivityAnalysisResultRepository {
                     .value(sar.getValue())
                     .functionReference(sar.getFunctionReference())
                     .build());
-            }, sensitivityEntities);
+            }, sensitivityEntities, sas);
 
         if (selector.getIsJustBefore()) {
             Comparator<SensitivityOfTo> cmp = makeComparatorOfTo(selector.getSortKeysWithWeightAndDirection());
@@ -243,6 +263,7 @@ public class SensitivityAnalysisResultRepository {
             return retBuilder.build();
         } else {
             List<SensitivityWithContingency> after = new ArrayList<>();
+            //var sensiResults2 = sensitivityRepository.findAllByResultAndFactorIndexInAndContingencyIndexIsGreaterThan(sas, indexes, 0, pageable);
             count = apply(funcIds, varIds, contingencyIds, cs, fs, selector.getFunctionType(),
                 allFunctionIds, allVariableIds, allContingencyIds, (sar, c, f) -> {
                     if (c == null) {
@@ -257,7 +278,7 @@ public class SensitivityAnalysisResultRepository {
                         .contingencyId(c.getId())
                         .build();
                     after.add(r);
-                }, sensitivityEntities);
+                }, sensitivityEntities, sas);
             Comparator<SensitivityWithContingency> cmp = makeComparatorWith(selector.getSortKeysWithWeightAndDirection());
             if (cmp != null) {
                 after.sort(cmp);

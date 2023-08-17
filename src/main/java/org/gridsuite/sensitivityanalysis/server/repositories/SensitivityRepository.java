@@ -23,5 +23,8 @@ import java.util.UUID;
 public interface SensitivityRepository extends JpaRepository<SensitivityEntity, UUID> {
     Page<SensitivityEntity> findByResult(AnalysisResultEntity result, Pageable pageable);
 
+    Page<SensitivityEntity> findAllByResultAndFactorIndexInAndContingencyIndexIsLessThan(AnalysisResultEntity result, List<Integer> factorIndex, int contingencyIndex, Pageable pageable);
+    Page<SensitivityEntity> findAllByResultAndFactorIndexInAndContingencyIndexIsGreaterThan(AnalysisResultEntity result, List<Integer> factorIndex, int contingencyIndex, Pageable pageable);
+
     List<SensitivityEntity> findByResult(AnalysisResultEntity result);
 }
