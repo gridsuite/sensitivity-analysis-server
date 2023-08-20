@@ -38,26 +38,28 @@ public class SensitivityEntity {
     private ContingencyEmbeddable contingency;
 
     @Column(name = "value_")
-    private double value;
+    private Double value;
 
     @Column
-    private double functionReference;
+    private Double functionReference;
 
     @Column
-    private double valueAfter;
+    private Double valueAfter;
 
     @Column
-    private double functionReferenceAfter;
+    private Double functionReferenceAfter;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @Setter
     private AnalysisResultEntity result;
 
-    public SensitivityEntity(SensitivityFactorEmbeddable factor, ContingencyEmbeddable contingency, double value, double functionReference) {
+    public SensitivityEntity(SensitivityFactorEmbeddable factor, ContingencyEmbeddable contingency, Double value, Double functionReference, Double valueAfter, Double functionReferenceAfter) {
         this.sensitivityId = UUID.randomUUID();
         this.factor = factor;
         this.contingency = contingency;
         this.value = value;
         this.functionReference = functionReference;
+        this.valueAfter = valueAfter;
+        this.functionReferenceAfter = functionReferenceAfter;
     }
 }
