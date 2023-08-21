@@ -6,23 +6,18 @@
  */
 package org.gridsuite.sensitivityanalysis.server.entities;
 
-import java.util.List;
-import java.util.UUID;
-
-import java.time.LocalDateTime;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.CascadeType;
-import javax.persistence.CollectionTable;
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import javax.persistence.OrderColumn;
 import javax.persistence.Table;
-
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Laurent Garnier <laurent.garnier at rte-france.com>
@@ -39,25 +34,12 @@ public class AnalysisResultEntity {
     @Column
     private LocalDateTime writeTimeStamp;
 
-    @ElementCollection
-    @CollectionTable (name = "factor")
-    @OrderColumn
-    private List<SensitivityFactorEmbeddable> factors;
-
-    @ElementCollection
-    @CollectionTable(name = "contingency")
-    @OrderColumn
-    private List<ContingencyEmbeddable> contingencies = new java.util.ArrayList<>();
-
     @OneToMany(mappedBy = "result", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SensitivityEntity> sensitivities;
 
-    public AnalysisResultEntity(UUID resultUuid, LocalDateTime writeTimeStamp, List<SensitivityFactorEmbeddable> factors,
-                                List<ContingencyEmbeddable> contingencies, List<SensitivityEntity> sensitivities) {
+    public AnalysisResultEntity(UUID resultUuid, LocalDateTime writeTimeStamp, List<SensitivityEntity> sensitivities) {
         this.resultUuid = resultUuid;
         this.writeTimeStamp = writeTimeStamp;
-        this.factors = factors;
-        this.contingencies = contingencies;
         addSensitivities(sensitivities);
     }
 

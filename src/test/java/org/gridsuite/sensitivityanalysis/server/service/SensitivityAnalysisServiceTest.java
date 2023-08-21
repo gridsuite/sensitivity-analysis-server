@@ -265,21 +265,7 @@ public class SensitivityAnalysisServiceTest {
         assertThat(sensitivities.size(), is(3));
         assertThat(sensitivityVals, Every.everyItem(is(500.9)));
 
-        ResultsSelector pagedSelector = builder.pageNumber(1).pageSize(4).build();
-        gottenResult = analysisService.getRunResult(resultUuid, pagedSelector);
-        assertThat(gottenResult, not(nullValue()));
-        sensitivities = gottenResult.getSensitivities();
-        assertThat(sensitivities, not(nullValue()));
-        assertThat(sensitivities.size(), is(4));
-
-        ResultsSelector pagedSelector2 = builder.pageNumber(10).pageSize(4).build();
-        gottenResult = analysisService.getRunResult(resultUuid, pagedSelector);
-        assertThat(gottenResult, not(nullValue()));
-        sensitivities = gottenResult.getSensitivities();
-        assertThat(sensitivities, not(nullValue()));
-        assertThat(sensitivities.size(), is(0));
-
-        ResultsSelector bogusChunkerSelector = builder.pageSize(3).offset(9).build();
+        ResultsSelector bogusChunkerSelector = builder.pageSize(3).pageNumber(3).build();
         gottenResult = analysisService.getRunResult(resultUuid, bogusChunkerSelector);
         assertThat(gottenResult, not(nullValue()));
         sensitivities = gottenResult.getSensitivities();

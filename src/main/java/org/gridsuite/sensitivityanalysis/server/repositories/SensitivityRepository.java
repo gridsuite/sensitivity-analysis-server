@@ -26,21 +26,11 @@ import java.util.UUID;
  */
 
 public interface SensitivityRepository extends JpaRepository<SensitivityEntity, UUID> {
-    Page<SensitivityEntity> findByResult(AnalysisResultEntity result, Pageable pageable);
 
-    //Page<SensitivityEntity> findAllByResultAndFactorIndexInAndContingencyIndexIsLessThan(AnalysisResultEntity result, List<Integer> factorIndex, int contingencyIndex, Pageable pageable);
-    //Page<SensitivityEntity> findAllByResultAndFactorIndexInAndContingencyIndexIsGreaterThanEqual(AnalysisResultEntity result, List<Integer> factorIndex, int contingencyIndex, Pageable pageable);
+    int countByResultAndFactorFunctionTypeAndContingencyIsNull(AnalysisResultEntity result, SensitivityFunctionType functionType);
 
-    List<SensitivityEntity> findByResult(AnalysisResultEntity result);
-    //List<SensitivityEntity> findAllByResultAndContingencyIndexIsGreaterThan(AnalysisResultEntity result, int contingencyIndex);
-    //List<SensitivityEntity> findByResultAndFactorIndexInAndContingencyIndexIsLessThan(AnalysisResultEntity result, List<Integer> factorIndex, int contingencyIndex);
+    int countByResultAndFactorFunctionTypeAndContingencyIsNotNull(AnalysisResultEntity result, SensitivityFunctionType functionType);
 
-    Page<SensitivityEntity> findAllByResultAndFactor_FunctionTypeAndContingencyIsNull(AnalysisResultEntity result, SensitivityFunctionType functionType, Pageable pageable);
-    Page<SensitivityEntity> findAllByResultAndFactor_FunctionTypeAndContingencyIsNotNull(AnalysisResultEntity result, SensitivityFunctionType functionType, Pageable pageable);
-    int countByResultAndFactor_FunctionTypeAndContingencyIsNull(AnalysisResultEntity result, SensitivityFunctionType functionType);
-    int countByResultAndFactor_FunctionTypeAndContingencyIsNotNull(AnalysisResultEntity result, SensitivityFunctionType functionType);
-
-    List<SensitivityEntity> findAll(Specification<SensitivityEntity> specification);
     Page<SensitivityEntity> findAll(Specification<SensitivityEntity> specification, Pageable pageable);
 
     static Specification<SensitivityEntity> getSpecification(AnalysisResultEntity sas,
@@ -48,7 +38,7 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
                                                              Collection<String> functionIds,
                                                              Collection<String> variableIds,
                                                              boolean withContingency) {
-        return ((root, query, criteriaBuilder) -> {
+        return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             predicates.add(criteriaBuilder.equal(root.get("result").get("resultUuid"), sas.getResultUuid()));
@@ -69,6 +59,6 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
                 predicates.add(criteriaBuilder.or(varIdPredicates));
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-        });
+        };
     }
 }
