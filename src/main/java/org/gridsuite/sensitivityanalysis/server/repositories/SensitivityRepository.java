@@ -15,7 +15,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -37,6 +40,7 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
                                                              SensitivityFunctionType functionType,
                                                              Collection<String> functionIds,
                                                              Collection<String> variableIds,
+                                                             Collection<String> contingencyIds,
                                                              boolean withContingency) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -45,20 +49,26 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
             predicates.add(withContingency ? criteriaBuilder.isNull(root.get("contingency")) : criteriaBuilder.isNotNull(root.get("contingency")));
             predicates.add(criteriaBuilder.equal(root.get("factor").get("functionType"), functionType));
 
-            if (functionIds != null && !functionIds.isEmpty()) {
-                var funcIdPredicates = functionIds.stream()
-                        .map(funcId -> criteriaBuilder.equal(root.get("factor").get("functionId"), funcId))
-                        .toArray(Predicate[]::new);
-                predicates.add(criteriaBuilder.or(funcIdPredicates));
-            }
+            addPredicate(criteriaBuilder, root, predicates, functionIds, "factor", "functionId");
+            addPredicate(criteriaBuilder, root, predicates, variableIds, "factor", "variableId");
+            addPredicate(criteriaBuilder, root, predicates, contingencyIds, "contingency", "id");
 
-            if (variableIds != null && !variableIds.isEmpty()) {
-                var varIdPredicates = variableIds.stream()
-                        .map(varId -> criteriaBuilder.equal(root.get("factor").get("variableId"), varId))
-                        .toArray(Predicate[]::new);
-                predicates.add(criteriaBuilder.or(varIdPredicates));
-            }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    private static void addPredicate(CriteriaBuilder criteriaBuilder,
+                                     Root<SensitivityEntity> root,
+                                     List<Predicate> predicates,
+                                     Collection<String> ids,
+                                     String fieldName,
+                                     String subFieldName) {
+        if (ids != null && !ids.isEmpty()) {
+            Expression<?> expression = subFieldName == null ? root.get(fieldName) : root.get(fieldName).get(subFieldName);
+            var predicate = ids.stream()
+                    .map(id -> criteriaBuilder.equal(expression, id))
+                    .toArray(Predicate[]::new);
+            predicates.add(criteriaBuilder.or(predicate));
+        }
     }
 }

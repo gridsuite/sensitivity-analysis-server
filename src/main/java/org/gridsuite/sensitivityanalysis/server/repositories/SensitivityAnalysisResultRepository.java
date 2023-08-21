@@ -7,7 +7,6 @@
 package org.gridsuite.sensitivityanalysis.server.repositories;
 
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
-import com.powsybl.sensitivity.SensitivityFunctionType;
 import com.powsybl.sensitivity.SensitivityValue;
 import org.gridsuite.sensitivityanalysis.server.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
@@ -67,43 +66,43 @@ public class SensitivityAnalysisResultRepository {
 
     private static AnalysisResultEntity toAnalysisResultEntity(UUID resultUuid, SensitivityAnalysisResult result) {
         List<SensitivityFactorEmbeddable> factors = result.getFactors().stream().map(f ->
-            new SensitivityFactorEmbeddable(f.getFunctionType(), f.getFunctionId(),
-                f.getVariableType(), f.getVariableId(), f.isVariableSet(),
-                f.getContingencyContext().getContextType(), f.getContingencyContext().getContingencyId()))
-            .collect(Collectors.toList());
+                new SensitivityFactorEmbeddable(f.getFunctionType(), f.getFunctionId(),
+                        f.getVariableType(), f.getVariableId(), f.isVariableSet(),
+                        f.getContingencyContext().getContextType(), f.getContingencyContext().getContingencyId())).toList();
         List<ContingencyEmbeddable> contingencies = result.getContingencyStatuses().stream().map(cs ->
-                new ContingencyEmbeddable(cs.getContingencyId(), cs.getStatus()))
-            .collect(Collectors.toList());
+                new ContingencyEmbeddable(cs.getContingencyId(), cs.getStatus())).toList();
         Supplier<Stream<SensitivityValue>> sensitivityWithoutContingency = () -> result.getValues().stream().filter(s -> s.getContingencyIndex() < 0);
         List<SensitivityEntity> sensitivities = result.getValues().stream()
-            .map(v -> {
-                Double value = v.getValue();
-                Double functionReference = v.getFunctionReference();
-                Double valueAfter = null;
-                Double functionReferenceAfter = null;
-                if (v.getContingencyIndex() >= 0) {
-                    var factor = factors.get(v.getFactorIndex());
-                    var other = sensitivityWithoutContingency.get().filter(s -> {
-                        var funcId = factors.get(s.getFactorIndex()).getFunctionId();
-                        var varId = factors.get(s.getFactorIndex()).getVariableId();
-
-                        return Objects.equals(factor.getFunctionId(), funcId) && Objects.equals(factor.getVariableId(), varId);
-                    }).findFirst().orElse(null);
-                    value = other == null ? null : other.getValue();
-                    functionReference = other == null ? null : other.getFunctionReference();
-                    valueAfter = v.getValue();
-                    functionReferenceAfter = v.getFunctionReference();
-                }
-                return new SensitivityEntity(factors.get(v.getFactorIndex()),
-                        v.getContingencyIndex() < 0 ? null : contingencies.get(v.getContingencyIndex()),
-                        value,
-                        functionReference,
-                        valueAfter,
-                        functionReferenceAfter);
-            })
+            .map(v -> getSensitivityEntity(factors, contingencies, sensitivityWithoutContingency, v))
             .collect(Collectors.toList());
         //To avoid consistency issue we truncate the time to microseconds since postgres and h2 can only store a precision of microseconds
         return new AnalysisResultEntity(resultUuid, LocalDateTime.now().truncatedTo(ChronoUnit.MICROS), sensitivities);
+    }
+
+    private static SensitivityEntity getSensitivityEntity(List<SensitivityFactorEmbeddable> factors, List<ContingencyEmbeddable> contingencies, Supplier<Stream<SensitivityValue>> sensitivityWithoutContingency, SensitivityValue v) {
+        Double value = v.getValue();
+        Double functionReference = v.getFunctionReference();
+        Double valueAfter = null;
+        Double functionReferenceAfter = null;
+        if (v.getContingencyIndex() >= 0) {
+            var factor = factors.get(v.getFactorIndex());
+            var other = sensitivityWithoutContingency.get().filter(s -> {
+                var funcId = factors.get(s.getFactorIndex()).getFunctionId();
+                var varId = factors.get(s.getFactorIndex()).getVariableId();
+
+                return Objects.equals(factor.getFunctionId(), funcId) && Objects.equals(factor.getVariableId(), varId);
+            }).findFirst().orElse(null);
+            value = other == null ? null : other.getValue();
+            functionReference = other == null ? null : other.getFunctionReference();
+            valueAfter = v.getValue();
+            functionReferenceAfter = v.getFunctionReference();
+        }
+        return new SensitivityEntity(factors.get(v.getFactorIndex()),
+                v.getContingencyIndex() < 0 ? null : contingencies.get(v.getContingencyIndex()),
+                value,
+                functionReference,
+                valueAfter,
+                functionReferenceAfter);
     }
 
     private static GlobalStatusEntity toStatusEntity(UUID resultUuid, String status) {
@@ -166,6 +165,7 @@ public class SensitivityAnalysisResultRepository {
                 selector.getFunctionType(),
                 selector.getFunctionIds(),
                 selector.getVariableIds(),
+                selector.getContingencyIds(),
                 selector.getIsJustBefore());
 
         int pageNumber = 0;

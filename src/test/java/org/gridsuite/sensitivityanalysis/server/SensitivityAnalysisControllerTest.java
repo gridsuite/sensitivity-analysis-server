@@ -603,6 +603,7 @@ public class SensitivityAnalysisControllerTest {
                 ResultsSelector.SortKey.REFERENCE, 6,
                 ResultsSelector.SortKey.CONTINGENCY, 7))
             .pageSize(10)
+            .pageNumber(0)
             .build();
 
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
