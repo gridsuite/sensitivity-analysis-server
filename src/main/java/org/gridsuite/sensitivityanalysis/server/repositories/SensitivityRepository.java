@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.util.CollectionUtils;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Expression;
@@ -45,9 +46,10 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            predicates.add(criteriaBuilder.equal(root.get("result").get("resultUuid"), sas.getResultUuid()));
-            predicates.add(withContingency ? criteriaBuilder.isNull(root.get("contingency")) : criteriaBuilder.isNotNull(root.get("contingency")));
-            predicates.add(criteriaBuilder.equal(root.get("factor").get("functionType"), functionType));
+            addPredicate(criteriaBuilder, root, predicates, List.of(functionType.name()), "result", "resultUuid");
+            addPredicate(criteriaBuilder, root, predicates, List.of(sas.getResultUuid().toString()), "factor", "functionType");
+
+            predicates.add(withContingency ? criteriaBuilder.isNotNull(root.get("contingency")) : criteriaBuilder.isNull(root.get("contingency")));
 
             addPredicate(criteriaBuilder, root, predicates, functionIds, "factor", "functionId");
             addPredicate(criteriaBuilder, root, predicates, variableIds, "factor", "variableId");
@@ -60,12 +62,12 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
     private static void addPredicate(CriteriaBuilder criteriaBuilder,
                                      Root<SensitivityEntity> root,
                                      List<Predicate> predicates,
-                                     Collection<String> ids,
+                                     Collection<String> collection,
                                      String fieldName,
                                      String subFieldName) {
-        if (ids != null && !ids.isEmpty()) {
+        if (CollectionUtils.isEmpty(collection)) {
             Expression<?> expression = subFieldName == null ? root.get(fieldName) : root.get(fieldName).get(subFieldName);
-            var predicate = ids.stream()
+            var predicate = collection.stream()
                     .map(id -> criteriaBuilder.equal(expression, id))
                     .toArray(Predicate[]::new);
             predicates.add(criteriaBuilder.or(predicate));

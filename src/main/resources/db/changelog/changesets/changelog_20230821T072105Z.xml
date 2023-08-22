@@ -37,7 +37,7 @@
     </changeSet>
     <changeSet author="yenguised (generated)" id="1692602478163-8">
         <addColumn tableName="sensitivity">
-            <column name="sensitivity_id" type="uuid">
+            <column name="sensitivity_id" type="uuid" defaultValueComputed="(gen_random_uuid())">
                 <constraints nullable="false"/>
             </column>
         </addColumn>
