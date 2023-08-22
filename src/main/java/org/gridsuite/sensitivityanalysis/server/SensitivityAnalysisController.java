@@ -124,28 +124,6 @@ public class SensitivityAnalysisController {
             : ResponseEntity.notFound().build();
     }
 
-    /*@GetMapping(value = "/results/{resultUuid}/paged", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get a paged sensitivity analysis result from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Paged sensitivity analysis result"),
-            @ApiResponse(responseCode = "404", description = "Sensitivity analysis result has not been found")})
-    public ResponseEntity<SensitivityRunQueryResult> getPagedResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
-                                                                    @RequestParam(name = "selector", required = false) String selectorJson) {
-        ObjectMapper mapper = new ObjectMapper();
-        ResultsSelector selector;
-        if (selectorJson == null) {
-            selector = ResultsSelector.builder().functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).isJustBefore(false).build();
-        } else {
-            try {
-                selector = mapper.readValue(selectorJson, ResultsSelector.class);
-            } catch (JsonProcessingException e) {
-                return ResponseEntity.badRequest().build();
-            }
-        }
-        SensitivityRunQueryResult pagedResult = service.getPageableResults(resultUuid, selector);
-        return pagedResult != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(pagedResult)
-                : ResponseEntity.notFound().build();
-    }*/
-
     @DeleteMapping(value = "/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Delete a sensitivity analysis result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis result has been deleted")})

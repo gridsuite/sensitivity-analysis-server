@@ -48,6 +48,6 @@ public class ResultsSelector {
     Integer pageNumber;
     @Schema(description = "maximum number of sensitivities to return, if > 0")
     Integer pageSize;
-    @Schema(description = "in case chunkSize is > 0, the offset in total sensitivities")
+    @Schema(description = "in case pageSize is > 0, the offset in total sensitivities")
     Integer offset;
 }
