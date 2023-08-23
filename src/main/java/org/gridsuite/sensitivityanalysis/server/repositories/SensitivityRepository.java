@@ -31,8 +31,6 @@ import java.util.UUID;
 
 public interface SensitivityRepository extends JpaRepository<SensitivityEntity, UUID> {
 
-    List<SensitivityEntity> findAllByResult(AnalysisResultEntity result);
-
     int countByResultAndFactorFunctionTypeAndContingencyIsNull(AnalysisResultEntity result, SensitivityFunctionType functionType);
 
     int countByResultAndFactorFunctionTypeAndContingencyIsNotNull(AnalysisResultEntity result, SensitivityFunctionType functionType);
@@ -47,9 +45,8 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
                                                              boolean withContingency) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
-            predicates.add(criteriaBuilder.equal(root.get("result").get("resultUuid"), sas.getResultUuid()));
-            //predicates.add(withContingency ? criteriaBuilder.isNull(root.get("contingency")) : criteriaBuilder.isNotNull(root.get("contingency")));
-            predicates.add(criteriaBuilder.equal(root.get("factor").get("functionType"), functionType));
+            addPredicate(criteriaBuilder, root, predicates, List.of(sas.getResultUuid()), "result", "resultUuid");
+            addPredicate(criteriaBuilder, root, predicates, List.of(functionType), "factor", "functionType");
 
             predicates.add(withContingency ? criteriaBuilder.isNotNull(root.get("contingency")) : criteriaBuilder.isNull(root.get("contingency")));
 
@@ -64,7 +61,7 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
     private static void addPredicate(CriteriaBuilder criteriaBuilder,
                                      Root<SensitivityEntity> root,
                                      List<Predicate> predicates,
-                                     Collection<String> collection,
+                                     Collection<?> collection,
                                      String fieldName,
                                      String subFieldName) {
         if (!CollectionUtils.isEmpty(collection)) {

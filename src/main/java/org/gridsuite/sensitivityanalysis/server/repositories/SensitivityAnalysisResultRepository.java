@@ -170,7 +170,9 @@ public class SensitivityAnalysisResultRepository {
 
         int pageNumber = 0;
         int pageSize = Integer.MAX_VALUE;
-        if (selector.getPageSize() != null && selector.getPageNumber() != null) {
+        if (selector.getPageSize() != null &&
+                selector.getPageSize() > 0 &&
+                selector.getPageNumber() != null) {
             pageNumber = selector.getPageNumber();
             pageSize = selector.getPageSize();
         }
@@ -190,7 +192,6 @@ public class SensitivityAnalysisResultRepository {
         Pageable pageable = sortListFiltered.isEmpty() ? PageRequest.of(pageNumber, pageSize) :
                 PageRequest.of(pageNumber, pageSize, Sort.by(sortListFiltered));
 
-        List<SensitivityEntity> test = sensitivityRepository.findAllByResult(sas);
         Page<SensitivityEntity> sensiResults = sensitivityRepository.findAll(specification, pageable);
         return sensiResults.getContent();
     }
@@ -240,8 +241,8 @@ public class SensitivityAnalysisResultRepository {
                 SensitivityFactorEmbeddable factorEmbeddable = sensitivityEntity.getFactor();
                 allFunctionIds.add(factorEmbeddable.getFunctionId());
                 allVariableIds.add(factorEmbeddable.getVariableId());
-                if (factorEmbeddable.getContingencyId() != null) {
-                    allContingencyIds.add(factorEmbeddable.getContingencyId());
+                if (factorEmbeddable.getContingencyContextId() != null) {
+                    allContingencyIds.add(factorEmbeddable.getContingencyContextId());
                 }
                 SensitivityWithContingency.SensitivityWithContingencyBuilder<?, ?> r = SensitivityWithContingency.builder()
                         .funcId(factorEmbeddable.getFunctionId())
@@ -296,7 +297,7 @@ public class SensitivityAnalysisResultRepository {
             case SENSITIVITY : return "value";
             case REFERENCE : return "functionReference";
             case VARIABLE : return "factor.variableId";
-            case CONTINGENCY : return "contingency.id";
+            case CONTINGENCY : return "contingency.contingencyId";
             case POST_REFERENCE : return "functionReferenceAfter";
             case POST_SENSITIVITY : return "valueAfter";
             default: return null;
