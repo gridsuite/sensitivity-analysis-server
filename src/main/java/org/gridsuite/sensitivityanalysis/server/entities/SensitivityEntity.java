@@ -7,7 +7,6 @@
 package org.gridsuite.sensitivityanalysis.server.entities;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -28,7 +27,6 @@ import java.util.UUID;
 public class SensitivityEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @NotNull
     private UUID sensitivityId;
 
     @Embedded

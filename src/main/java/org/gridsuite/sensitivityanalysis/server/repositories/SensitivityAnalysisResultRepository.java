@@ -166,7 +166,7 @@ public class SensitivityAnalysisResultRepository {
                 selector.getFunctionIds(),
                 selector.getVariableIds(),
                 selector.getContingencyIds(),
-                selector.getIsJustBefore());
+                !selector.getIsJustBefore());
 
         int pageNumber = 0;
         int pageSize = Integer.MAX_VALUE;
@@ -190,6 +190,7 @@ public class SensitivityAnalysisResultRepository {
         Pageable pageable = sortListFiltered.isEmpty() ? PageRequest.of(pageNumber, pageSize) :
                 PageRequest.of(pageNumber, pageSize, Sort.by(sortListFiltered));
 
+        List<SensitivityEntity> test = sensitivityRepository.findAllByResult(sas);
         Page<SensitivityEntity> sensiResults = sensitivityRepository.findAll(specification, pageable);
         return sensiResults.getContent();
     }
@@ -246,7 +247,7 @@ public class SensitivityAnalysisResultRepository {
                         .funcId(factorEmbeddable.getFunctionId())
                         .varId(factorEmbeddable.getVariableId())
                         .varIsAFilter(factorEmbeddable.isVariableSet())
-                        .contingencyId(sensitivityEntity.getContingency().getId());
+                        .contingencyId(sensitivityEntity.getContingency().getContingencyId());
 
                 if (sensitivityEntity.getValue() != null) {
                     r.value(sensitivityEntity.getValue());

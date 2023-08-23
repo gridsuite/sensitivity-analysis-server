@@ -31,6 +31,8 @@ import java.util.UUID;
 
 public interface SensitivityRepository extends JpaRepository<SensitivityEntity, UUID> {
 
+    List<SensitivityEntity> findAllByResult(AnalysisResultEntity result);
+
     int countByResultAndFactorFunctionTypeAndContingencyIsNull(AnalysisResultEntity result, SensitivityFunctionType functionType);
 
     int countByResultAndFactorFunctionTypeAndContingencyIsNotNull(AnalysisResultEntity result, SensitivityFunctionType functionType);
@@ -45,15 +47,15 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
                                                              boolean withContingency) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
-
-            addPredicate(criteriaBuilder, root, predicates, List.of(functionType.name()), "result", "resultUuid");
-            addPredicate(criteriaBuilder, root, predicates, List.of(sas.getResultUuid().toString()), "factor", "functionType");
+            predicates.add(criteriaBuilder.equal(root.get("result").get("resultUuid"), sas.getResultUuid()));
+            //predicates.add(withContingency ? criteriaBuilder.isNull(root.get("contingency")) : criteriaBuilder.isNotNull(root.get("contingency")));
+            predicates.add(criteriaBuilder.equal(root.get("factor").get("functionType"), functionType));
 
             predicates.add(withContingency ? criteriaBuilder.isNotNull(root.get("contingency")) : criteriaBuilder.isNull(root.get("contingency")));
 
             addPredicate(criteriaBuilder, root, predicates, functionIds, "factor", "functionId");
             addPredicate(criteriaBuilder, root, predicates, variableIds, "factor", "variableId");
-            addPredicate(criteriaBuilder, root, predicates, contingencyIds, "contingency", "id");
+            addPredicate(criteriaBuilder, root, predicates, contingencyIds, "contingency", "contingencyId");
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
@@ -65,7 +67,7 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
                                      Collection<String> collection,
                                      String fieldName,
                                      String subFieldName) {
-        if (CollectionUtils.isEmpty(collection)) {
+        if (!CollectionUtils.isEmpty(collection)) {
             Expression<?> expression = subFieldName == null ? root.get(fieldName) : root.get(fieldName).get(subFieldName);
             var predicate = collection.stream()
                     .map(id -> criteriaBuilder.equal(expression, id))
