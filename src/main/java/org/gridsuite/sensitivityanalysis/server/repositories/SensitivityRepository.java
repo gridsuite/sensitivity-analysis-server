@@ -31,6 +31,9 @@ import java.util.UUID;
 
 public interface SensitivityRepository extends JpaRepository<SensitivityEntity, UUID> {
 
+    String FACTOR = "factor";
+    String CONTINGENCY = "contingency";
+
     int countByResultAndFactorFunctionTypeAndContingencyIsNull(AnalysisResultEntity result, SensitivityFunctionType functionType);
 
     int countByResultAndFactorFunctionTypeAndContingencyIsNotNull(AnalysisResultEntity result, SensitivityFunctionType functionType);
@@ -46,13 +49,13 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             addPredicate(criteriaBuilder, root, predicates, List.of(sas.getResultUuid()), "result", "resultUuid");
-            addPredicate(criteriaBuilder, root, predicates, List.of(functionType), "factor", "functionType");
+            addPredicate(criteriaBuilder, root, predicates, List.of(functionType), FACTOR, "functionType");
 
-            predicates.add(withContingency ? criteriaBuilder.isNotNull(root.get("contingency")) : criteriaBuilder.isNull(root.get("contingency")));
+            predicates.add(withContingency ? criteriaBuilder.isNotNull(root.get(CONTINGENCY)) : criteriaBuilder.isNull(root.get(CONTINGENCY)));
 
-            addPredicate(criteriaBuilder, root, predicates, functionIds, "factor", "functionId");
-            addPredicate(criteriaBuilder, root, predicates, variableIds, "factor", "variableId");
-            addPredicate(criteriaBuilder, root, predicates, contingencyIds, "contingency", "contingencyId");
+            addPredicate(criteriaBuilder, root, predicates, functionIds, FACTOR, "functionId");
+            addPredicate(criteriaBuilder, root, predicates, variableIds, FACTOR, "variableId");
+            addPredicate(criteriaBuilder, root, predicates, contingencyIds, CONTINGENCY, "contingencyId");
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
