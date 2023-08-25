@@ -75,30 +75,29 @@ public class SensitivityAnalysisResultRepository {
         return new AnalysisResultEntity(resultUuid, LocalDateTime.now().truncatedTo(ChronoUnit.MICROS), sensitivities);
     }
 
-    private static SensitivityEntity getSensitivityEntity(List<SensitivityFactorEmbeddable> factors, List<ContingencyEmbeddable> contingencies, Supplier<Stream<SensitivityValue>> sensitivityWithoutContingency, SensitivityValue v) {
-        Double value = v.getValue();
-        Double functionReference = v.getFunctionReference();
-        Double valueAfter = null;
-        Double functionReferenceAfter = null;
-        if (v.getContingencyIndex() >= 0) {
-            var factor = factors.get(v.getFactorIndex());
-            var other = sensitivityWithoutContingency.get().filter(s -> {
+    private static SensitivityEntity getSensitivityEntity(List<SensitivityFactorEmbeddable> factors,
+                                                          List<ContingencyEmbeddable> contingencies,
+                                                          Supplier<Stream<SensitivityValue>> sensitivityWithoutContingency,
+                                                          SensitivityValue sensitivityValue) {
+        if (sensitivityValue.getContingencyIndex() >= 0) {
+            var factor = factors.get(sensitivityValue.getFactorIndex());
+            var base = sensitivityWithoutContingency.get().filter(s -> {
                 var funcId = factors.get(s.getFactorIndex()).getFunctionId();
                 var varId = factors.get(s.getFactorIndex()).getVariableId();
 
                 return Objects.equals(factor.getFunctionId(), funcId) && Objects.equals(factor.getVariableId(), varId);
             }).findFirst().orElse(null);
-            value = other == null ? null : other.getValue();
-            functionReference = other == null ? null : other.getFunctionReference();
-            valueAfter = v.getValue();
-            functionReferenceAfter = v.getFunctionReference();
+            return new SensitivityEntity(factors.get(sensitivityValue.getFactorIndex()),
+                                                     sensitivityValue.getContingencyIndex() < 0 ? null : contingencies.get(sensitivityValue.getContingencyIndex()),
+                                                     base == null ? 0 : base.getValue(),
+                                                     base == null ? 0 : base.getFunctionReference(),
+                                                     sensitivityValue.getValue(),
+                                                     sensitivityValue.getFunctionReference());
         }
-        return new SensitivityEntity(factors.get(v.getFactorIndex()),
-                v.getContingencyIndex() < 0 ? null : contingencies.get(v.getContingencyIndex()),
-                value,
-                functionReference,
-                valueAfter,
-                functionReferenceAfter);
+        return new SensitivityEntity(factors.get(sensitivityValue.getFactorIndex()),
+                                     sensitivityValue.getContingencyIndex() < 0 ? null : contingencies.get(sensitivityValue.getContingencyIndex()),
+                                     sensitivityValue.getValue(),
+                                     sensitivityValue.getFunctionReference());
     }
 
     private static GlobalStatusEntity toStatusEntity(UUID resultUuid, String status) {

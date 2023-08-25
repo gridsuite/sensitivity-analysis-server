@@ -26,8 +26,8 @@ public class SensitivityWithContingency extends SensitivityOfTo {
     @NonNull
     private String contingencyId;
 
-    private Double valueAfter;
-    private Double functionReferenceAfter;
+    private double valueAfter;
+    private double functionReferenceAfter;
 
     // ObjectMapper.readValue to deserialize a list of, for tests
     @SuppressWarnings("unused") protected SensitivityWithContingency() {
