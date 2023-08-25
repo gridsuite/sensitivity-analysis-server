@@ -19,8 +19,8 @@ public class SensitivityOfTo {
     private String varId;
     private boolean varIsAFilter;
 
-    private double value;
-    private double functionReference;
+    private Double value;
+    private Double functionReference;
 
     // ObjectMapper.readValue to deserialize a list of, for tests
     @SuppressWarnings("unused") protected SensitivityOfTo() {

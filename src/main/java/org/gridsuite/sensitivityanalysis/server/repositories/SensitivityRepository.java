@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -29,14 +30,10 @@ import java.util.UUID;
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
  */
 
-public interface SensitivityRepository extends JpaRepository<SensitivityEntity, UUID> {
+public interface SensitivityRepository extends JpaRepository<SensitivityEntity, UUID>, JpaSpecificationExecutor<SensitivityEntity> {
 
     String FACTOR = "factor";
     String CONTINGENCY = "contingency";
-
-    int countByResultAndFactorFunctionTypeAndContingencyIsNull(AnalysisResultEntity result, SensitivityFunctionType functionType);
-
-    int countByResultAndFactorFunctionTypeAndContingencyIsNotNull(AnalysisResultEntity result, SensitivityFunctionType functionType);
 
     Page<SensitivityEntity> findAll(Specification<SensitivityEntity> specification, Pageable pageable);
 
