@@ -33,4 +33,14 @@
     <changeSet author="yenguised (generated)" id="1693380231594-8">
         <addForeignKeyConstraint baseColumnNames="result_result_uuid" baseTableName="sensitivity" constraintName="FK19pdo1xu6pt1luc2kj41f8fwc" deferrable="false" initiallyDeferred="false" referencedColumnNames="result_uuid" referencedTableName="analysis_result" validate="true"/>
     </changeSet>
+    <changeSet author="yenguised (generated)" id="1693380231594-9">
+        <createIndex indexName="sensitivity_result_uuid_function_variable_contingency_idx" tableName="sensitivity">
+            <column name="sensitivity_id"/>
+            <column name="result_result_uuid"/>
+            <column name="function_id"/>
+            <column name="function_type"/>
+            <column name="variable_id"/>
+            <column name="contingency_id"/>
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>

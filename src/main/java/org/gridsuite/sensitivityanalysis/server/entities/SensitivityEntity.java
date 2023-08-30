@@ -23,7 +23,9 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "sensitivity", indexes = @Index(columnList = "sensitivityId"))
+@Table(name = "sensitivity", indexes = @Index(
+        name = "sensitivity_result_uuid_function_variable_contingency_idx",
+        columnList = "sensitivityId, result_result_uuid, functionId, functionType, variableId, contingencyId"))
 public class SensitivityEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
