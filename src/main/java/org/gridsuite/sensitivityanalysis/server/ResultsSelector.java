@@ -44,8 +44,10 @@ public class ResultsSelector {
     @Schema(description = "ids of the contingencies to limit to")
     Collection<String> contingencyIds;
 
+    @Schema(description = "page number")
+    Integer pageNumber;
     @Schema(description = "maximum number of sensitivities to return, if > 0")
-    Integer chunkSize;
-    @Schema(description = "in case chunkSize is > 0, the offset in total sensitivities")
+    Integer pageSize;
+    @Schema(description = "in case pageSize is > 0, the offset in total sensitivities")
     Integer offset;
 }
