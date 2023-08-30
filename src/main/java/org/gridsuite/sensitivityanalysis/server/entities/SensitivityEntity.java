@@ -23,7 +23,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "sensitivities", indexes = @Index(columnList = "sensitivityId"))
+@Table(name = "sensitivity", indexes = @Index(columnList = "sensitivityId"))
 public class SensitivityEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
