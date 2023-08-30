@@ -4,6 +4,12 @@ server:
 spring:
   rabbitmq:
     addresses: localhost
+  liquibase:
+    parameters:
+      uuid-generator:
+        postgres: "gen_random_uuid()"
+        h2: "RANDOM_UUID()"
+
 
 powsybl-ws:
   database:
