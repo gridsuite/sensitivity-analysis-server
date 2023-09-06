@@ -1,0 +1,46 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="yenguised (generated)" id="1693380231594-1">
+        <dropTable tableName="CONTINGENCY"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1693380231594-2">
+        <dropTable tableName="FACTOR"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1693380231594-6">
+        <dropTable tableName="SENSITIVITY"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1693380231594-7">
+        <createTable tableName="sensitivity">
+            <column name="sensitivity_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="sensitivitiesPK"/>
+            </column>
+            <column name="contingency_id" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(255)"/>
+            <column name="contingency_context_id" type="VARCHAR(255)"/>
+            <column name="contingency_type" type="VARCHAR(255)"/>
+            <column name="function_id" type="VARCHAR(255)"/>
+            <column name="function_type" type="VARCHAR(255)"/>
+            <column name="variable_id" type="VARCHAR(255)"/>
+            <column name="variable_set" type="BOOLEAN"/>
+            <column name="variable_type" type="VARCHAR(255)"/>
+            <column name="function_reference" type="FLOAT8"/>
+            <column name="function_reference_after" type="FLOAT8"/>
+            <column name="value_" type="FLOAT8"/>
+            <column name="value_after" type="FLOAT8"/>
+            <column name="result_result_uuid" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1693380231594-8">
+        <addForeignKeyConstraint baseColumnNames="result_result_uuid" baseTableName="sensitivity" constraintName="FK19pdo1xu6pt1luc2kj41f8fwc" deferrable="false" initiallyDeferred="false" referencedColumnNames="result_uuid" referencedTableName="analysis_result" validate="true"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1693380231594-9">
+        <createIndex indexName="sensitivity_result_uuid_function_variable_contingency_idx" tableName="sensitivity">
+            <column name="sensitivity_id"/>
+            <column name="result_result_uuid"/>
+            <column name="function_id"/>
+            <column name="function_type"/>
+            <column name="variable_id"/>
+            <column name="contingency_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

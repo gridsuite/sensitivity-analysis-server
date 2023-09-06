@@ -34,9 +34,9 @@ public class SensitivityRunQueryResult {
     Integer chunkOffset;
 
     @NonNull
-    Integer totalSensitivitiesCount;
+    Long totalSensitivitiesCount;
     @NonNull
-    Integer filteredSensitivitiesCount;
+    Long filteredSensitivitiesCount;
 
     @NonNull
     List<? extends SensitivityOfTo> sensitivities;
