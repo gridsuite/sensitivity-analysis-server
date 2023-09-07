@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 public class ContingencyEmbeddable {
 
     @Column
-    private String id;
+    private String contingencyId;
 
     @Column
     @Enumerated(EnumType.STRING)

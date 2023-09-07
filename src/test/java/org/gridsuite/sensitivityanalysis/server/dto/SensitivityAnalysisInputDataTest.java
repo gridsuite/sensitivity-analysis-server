@@ -79,7 +79,6 @@ public class SensitivityAnalysisInputDataTest {
     @SneakyThrows
     public void test() {
         SensitivityAnalysisInputData sensitivityAnalysisInputData1 = SensitivityAnalysisInputData.builder()
-            .resultsThreshold(0.20)
             .sensitivityInjectionsSets(List.of(SensitivityInjectionsSet.builder()
                 .monitoredBranches(List.of(new FilterIdent(UUID.randomUUID(), "u1"), new FilterIdent(UUID.randomUUID(), "u2")))
                 .injections(List.of(new FilterIdent(UUID.randomUUID(), "u3"), new FilterIdent(UUID.randomUUID(), "u4")))
@@ -120,7 +119,6 @@ public class SensitivityAnalysisInputDataTest {
         inputBuilderService = new SensitivityAnalysisInputBuilderService(actionsService, filterService);
         SensitivityAnalysisInputData.SensitivityAnalysisInputDataBuilder<?, ?> inputBuilder = SensitivityAnalysisInputData.builder();
         SensitivityAnalysisInputData inputData = inputBuilder
-            .resultsThreshold(0.10)
             .sensitivityInjectionsSets(List.of())
             .sensitivityInjections(List.of())
             .sensitivityHVDCs(List.of())
@@ -150,7 +148,6 @@ public class SensitivityAnalysisInputDataTest {
         SensitivityAnalysisRunContext context;
 
         SensitivityAnalysisInputData inputData = inputBuilder
-            .resultsThreshold(0.10)
             .sensitivityInjectionsSets(List.of())
             .sensitivityHVDCs(List.of())
             .sensitivityPSTs(List.of())
@@ -182,7 +179,6 @@ public class SensitivityAnalysisInputDataTest {
         SensitivityAnalysisRunContext context;
 
         SensitivityAnalysisInputData inputData = inputBuilder
-            .resultsThreshold(0.10)
             .build();
         context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID,
             Collections.emptyList(), inputData, null, null, null, null);

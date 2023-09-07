@@ -47,5 +47,5 @@ public class SensitivityFactorEmbeddable {
     private ContingencyContextType contingencyType;
 
     @Column
-    private String contingencyId;
+    private String contingencyContextId;
 }

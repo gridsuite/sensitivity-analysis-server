@@ -26,9 +26,6 @@ import java.util.stream.Collectors;
  */
 @Service
 public class SensitivityAnalysisService {
-
-    private final Double defaultResultsThreshold;
-
     private final String defaultProvider;
 
     private final SensitivityAnalysisResultRepository resultRepository;
@@ -40,13 +37,11 @@ public class SensitivityAnalysisService {
     private final ObjectMapper objectMapper;
 
     @Autowired
-    public SensitivityAnalysisService(@Value("${sensitivity-analysis.results-threshold}") Double defaultResultsThreshold,
-                                      @Value("${sensitivity-analysis.default-provider}") String defaultProvider,
+    public SensitivityAnalysisService(@Value("${sensitivity-analysis.default-provider}") String defaultProvider,
                                       SensitivityAnalysisResultRepository resultRepository,
                                       UuidGeneratorService uuidGeneratorService,
                                       NotificationService notificationService,
                                       ObjectMapper objectMapper) {
-        this.defaultResultsThreshold = defaultResultsThreshold;
         this.defaultProvider = defaultProvider;
         this.resultRepository = Objects.requireNonNull(resultRepository);
         this.uuidGeneratorService = Objects.requireNonNull(uuidGeneratorService);
@@ -86,10 +81,6 @@ public class SensitivityAnalysisService {
 
     public void stop(UUID resultUuid, String receiver) {
         notificationService.sendCancelMessage(new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
-    }
-
-    public Double getDefaultResultThresholdValue() {
-        return defaultResultsThreshold;
     }
 
     public List<String> getProviders() {

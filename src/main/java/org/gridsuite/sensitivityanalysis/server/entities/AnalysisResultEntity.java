@@ -6,29 +6,24 @@
  */
 package org.gridsuite.sensitivityanalysis.server.entities;
 
-import java.util.List;
-import java.util.UUID;
-
-import java.time.LocalDateTime;
-
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OrderColumn;
-import jakarta.persistence.Table;
-
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Laurent Garnier <laurent.garnier at rte-france.com>
  */
 
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(name = "analysis_result")
@@ -39,17 +34,19 @@ public class AnalysisResultEntity {
     @Column
     private LocalDateTime writeTimeStamp;
 
-    @ElementCollection
-    @CollectionTable (name = "factor")
-    @OrderColumn
-    private List<SensitivityFactorEmbeddable> factors;
+    @OneToMany(mappedBy = "result", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SensitivityEntity> sensitivities;
 
-    @ElementCollection
-    @CollectionTable(name = "contingency")
-    @OrderColumn
-    private List<ContingencyEmbeddable> contingencies = new java.util.ArrayList<>();
+    public AnalysisResultEntity(UUID resultUuid, LocalDateTime writeTimeStamp, List<SensitivityEntity> sensitivities) {
+        this.resultUuid = resultUuid;
+        this.writeTimeStamp = writeTimeStamp;
+        addSensitivities(sensitivities);
+    }
 
-    @ElementCollection
-    @CollectionTable(name = "sensitivity")
-    private List<SensitivityEmbeddable> sensitivities;
+    private void addSensitivities(List<SensitivityEntity> sensitivities) {
+        if (sensitivities != null) {
+            sensitivities.forEach(s -> s.setResult(this));
+            this.sensitivities = sensitivities;
+        }
+    }
 }
