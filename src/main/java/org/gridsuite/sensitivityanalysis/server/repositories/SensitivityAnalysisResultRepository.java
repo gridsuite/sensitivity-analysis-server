@@ -180,8 +180,11 @@ public class SensitivityAnalysisResultRepository {
                     sortKeysWithWeightAndDirection.size(), null));
             sortKeysWithWeightAndDirection.keySet().forEach(sortKey -> {
                 int index = Math.abs(sortKeysWithWeightAndDirection.get(sortKey)) - 1;
-                sortList.add(index, sortKeysWithWeightAndDirection.get(sortKey) > 0 ? Sort.Order.asc(Objects.requireNonNull(getSort(sortKey))) :
-                        Sort.Order.desc(Objects.requireNonNull(getSort(sortKey))));
+                String sort = getSort(sortKey);
+                if (sort != null) {
+                    sortList.add(index, sortKeysWithWeightAndDirection.get(sortKey) > 0 ? Sort.Order.asc(sort) :
+                            Sort.Order.desc(sort));
+                }
             });
             sortListFiltered = sortList.stream().filter(Objects::nonNull).toList();
         }
