@@ -362,19 +362,19 @@ public class SensitivityAnalysisControllerTest {
         SENSITIVITY_INPUT_2 = mapper.writeValueAsString(sensitivityAnalysisInputData2);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData3 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
-        sensitivityAnalysisInputData3.getSensitivityInjectionsSets().get(0).getInjections().get(0).setId(HVDC_FILTERS_UUID);
+        sensitivityAnalysisInputData3.getSensitivityInjectionsSets().get(0).getInjections().get(0).setFilterId(HVDC_FILTERS_UUID);
         SENSITIVITY_INPUT_3 = mapper.writeValueAsString(sensitivityAnalysisInputData3);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData4 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
-        sensitivityAnalysisInputData4.getSensitivityInjectionsSets().get(0).getMonitoredBranches().get(0).setId(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
+        sensitivityAnalysisInputData4.getSensitivityInjectionsSets().get(0).getMonitoredBranches().get(0).setFilterId(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
         SENSITIVITY_INPUT_4 = mapper.writeValueAsString(sensitivityAnalysisInputData4);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData5 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
-        sensitivityAnalysisInputData5.getSensitivityInjections().get(0).getMonitoredBranches().get(0).setId(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
+        sensitivityAnalysisInputData5.getSensitivityInjections().get(0).getMonitoredBranches().get(0).setFilterId(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
         SENSITIVITY_INPUT_5 = mapper.writeValueAsString(sensitivityAnalysisInputData5);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData6 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
-        sensitivityAnalysisInputData6.getSensitivityPSTs().get(0).getPsts().get(0).setId(GENERATORS_FILTERS_INJECTIONS_UUID);
+        sensitivityAnalysisInputData6.getSensitivityPSTs().get(0).getPsts().get(0).setFilterId(GENERATORS_FILTERS_INJECTIONS_UUID);
         SENSITIVITY_INPUT_6 = mapper.writeValueAsString(sensitivityAnalysisInputData6);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputDataHvdcWithDeltaA = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
@@ -383,7 +383,7 @@ public class SensitivityAnalysisControllerTest {
 
         SensitivityAnalysisInputData sensitivityAnalysisInputDataLoadWithProportionalMaxP = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
         sensitivityAnalysisInputDataLoadWithProportionalMaxP.getSensitivityInjectionsSets().get(0).setDistributionType(SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP);
-        sensitivityAnalysisInputDataLoadWithProportionalMaxP.getSensitivityInjectionsSets().get(0).getInjections().get(1).setId(LOADS_FILTERS_INJECTIONS_SET_WITH_BAD_DISTRIBUTION_TYPE_UUID);
+        sensitivityAnalysisInputDataLoadWithProportionalMaxP.getSensitivityInjectionsSets().get(0).getInjections().get(1).setFilterId(LOADS_FILTERS_INJECTIONS_SET_WITH_BAD_DISTRIBUTION_TYPE_UUID);
         SENSITIVITY_INPUT_LOAD_PROPORTIONAL_MAXP = mapper.writeValueAsString(sensitivityAnalysisInputDataLoadWithProportionalMaxP);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputDataVentilation = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
