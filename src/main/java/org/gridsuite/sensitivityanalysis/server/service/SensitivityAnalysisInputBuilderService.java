@@ -42,15 +42,15 @@ public class SensitivityAnalysisInputBuilderService {
 
     private List<Contingency> goGetContingencies(FilterIdent contingencyListIdent, UUID networkUuid, String variantId, Reporter reporter) {
         try {
-            return actionsService.getContingencyList(contingencyListIdent.getId(), networkUuid, variantId);
+            return actionsService.getContingencyList(contingencyListIdent.getFilterId(), networkUuid, variantId);
         } catch (Exception ex) {
-            LOGGER.error("Could not get contingencies from " + contingencyListIdent.getName(), ex);
+            LOGGER.error("Could not get contingencies from " + contingencyListIdent.getFilterName(), ex);
             reporter.report(Report.builder()
                 .withKey("contingencyTranslationFailure")
                 .withDefaultMessage("Could not get contingencies from contingencyListIdent ${name} : ${exception}")
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .withValue("exception", ex.getMessage())
-                .withValue("name", contingencyListIdent.getName())
+                .withValue("name", contingencyListIdent.getFilterName())
                 .build());
             return List.of();
         }
@@ -99,15 +99,15 @@ public class SensitivityAnalysisInputBuilderService {
 
     private List<IdentifiableAttributes> goGetIdentifiables(FilterIdent filter, UUID networkUuid, String variantId, Reporter reporter) {
         try {
-            return filterService.getIdentifiablesFromFilter(filter.getId(), networkUuid, variantId);
+            return filterService.getIdentifiablesFromFilter(filter.getFilterId(), networkUuid, variantId);
         } catch (Exception ex) {
-            LOGGER.error("Could not get identifiables from filter " + filter.getName(), ex);
+            LOGGER.error("Could not get identifiables from filter " + filter.getFilterName(), ex);
             reporter.report(Report.builder()
                 .withKey("filterTranslationFailure")
                 .withDefaultMessage("Could not get identifiables from filter ${name} : ${exception}")
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .withValue("exception", ex.getMessage())
-                .withValue("name", filter.getName())
+                .withValue("name", filter.getFilterName())
                 .build());
             return List.of();
         }
@@ -123,7 +123,7 @@ public class SensitivityAnalysisInputBuilderService {
             reporter.report(Report.builder()
                 .withKey("badEquipmentType")
                 .withDefaultMessage("Equipments type in filter with name=${name} should be ${expectedType} : filter is ignored")
-                .withValue("name", filter.getName())
+                .withValue("name", filter.getFilterName())
                 .withValue(EXPECTED_TYPE, equipmentsTypesAllowed.toString())
                 .withSeverity(TypedValue.WARN_SEVERITY)
                 .build());
@@ -142,7 +142,7 @@ public class SensitivityAnalysisInputBuilderService {
             reporter.report(Report.builder()
                 .withKey("badMonitoredEquipmentType")
                 .withDefaultMessage("Monitored equipments type in filter with name=${name} should be ${expectedType} : filter is ignored")
-                .withValue("name", filter.getName())
+                .withValue("name", filter.getFilterName())
                 .withValue(EXPECTED_TYPE, equipmentsTypesAllowed.toString())
                 .withSeverity(TypedValue.WARN_SEVERITY)
                 .build());
@@ -204,7 +204,7 @@ public class SensitivityAnalysisInputBuilderService {
         List<SensitivityVariableSet> result = new ArrayList<>();
 
         Stream<Pair<String, List<IdentifiableAttributes>>> variablesFiltersLists = filters.stream()
-            .map(filter -> Pair.of(filter.getName(), getIdentifiablesFromFilter(context, filter, variablesTypesAllowed, reporter).collect(Collectors.toList())))
+            .map(filter -> Pair.of(filter.getFilterName(), getIdentifiablesFromFilter(context, filter, variablesTypesAllowed, reporter).collect(Collectors.toList())))
             .filter(list -> !list.getRight().isEmpty());
 
         variablesFiltersLists.forEach(variablesList -> {

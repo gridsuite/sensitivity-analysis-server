@@ -21,6 +21,6 @@ import java.util.UUID;
 @Getter
 @Setter
 public class FilterIdent {
-    UUID id;
-    String name;
+    UUID filterId;
+    String filterName;
 }
