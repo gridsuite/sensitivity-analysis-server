@@ -42,7 +42,7 @@ public class SupervisionControllerTest {
             .andReturn();
 
         String resultCount = mvcResult.getResponse().getContentAsString();
-        assertEquals("0", resultCount);
+        assertEquals(resultCount, "0");
 
     }
 }
