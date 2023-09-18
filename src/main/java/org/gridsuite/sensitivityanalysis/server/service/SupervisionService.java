@@ -6,7 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
-import org.gridsuite.sensitivityanalysis.server.repositories.AnalysisResultRepository;
+import org.gridsuite.sensitivityanalysis.server.repositories.GlobalStatusRepository;
 import org.springframework.stereotype.Service;
 
 /**
@@ -14,13 +14,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class SupervisionService {
-    private final AnalysisResultRepository analysisResultRepository;
+    private final GlobalStatusRepository globalStatusRepository;
 
-    public SupervisionService(AnalysisResultRepository analysisResultRepository) {
-        this.analysisResultRepository = analysisResultRepository;
+    public SupervisionService(GlobalStatusRepository globalStatusRepository) {
+        this.globalStatusRepository = globalStatusRepository;
     }
 
     public Integer getResultsCount() {
-        return (int) analysisResultRepository.count();
+        return (int) globalStatusRepository.count();
     }
 }
