@@ -7,7 +7,6 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import org.gridsuite.sensitivityanalysis.server.repositories.AnalysisResultRepository;
-import org.gridsuite.sensitivityanalysis.server.repositories.GlobalStatusRepository;
 import org.springframework.stereotype.Service;
 
 /**
