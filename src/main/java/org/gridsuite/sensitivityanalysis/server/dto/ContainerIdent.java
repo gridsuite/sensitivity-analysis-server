@@ -20,7 +20,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-public class FilterIdent {
-    UUID filterId;
-    String filterName;
+public class ContainerIdent {
+    UUID containerId;
+    String containerName;
 }
