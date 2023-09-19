@@ -6,8 +6,6 @@
  */
 package org.gridsuite.sensitivityanalysis.server;
 
-import lombok.SneakyThrows;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +16,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -35,13 +32,6 @@ public class SupervisionControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @SneakyThrows
-    @Before
-    public void setup() {
-        mockMvc.perform(delete("/" + VERSION + "/results"))
-            .andExpect(status().isOk());
-    }
 
     @Test
     public void testResultCount() throws Exception {
