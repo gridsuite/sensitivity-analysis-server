@@ -16,7 +16,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import lombok.SneakyThrows;
 import org.gridsuite.sensitivityanalysis.server.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.SensitivityAnalysisApplication;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
@@ -26,7 +25,6 @@ import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
 import org.hamcrest.Matchers;
 import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.hamcrest.core.Every;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -408,12 +406,5 @@ public class SensitivityAnalysisServiceTest {
         sensitivityVals = sensitivities.stream().map(SensitivityOfTo::getValue).collect(Collectors.toList());
         assertThat(sensitivityVals, not(hasItem(500.2)));
         assertThat(sensitivityVals, isOrderedAccordingTo(Comparator.<Double>naturalOrder()));
-    }
-
-    // added for testStatus can return null, after runTest
-    @SneakyThrows
-    @After
-    public void tearDown() {
-        analysisService.deleteResults();
     }
 }
