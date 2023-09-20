@@ -408,8 +408,7 @@ public class SensitivityAnalysisServiceTest {
         assertThat(sensitivityVals, not(hasItem(500.2)));
         assertThat(sensitivityVals, isOrderedAccordingTo(Comparator.<Double>naturalOrder()));
     }
-    
-    // added for testStatus can return null, after runTest
+
     @SneakyThrows
     @After
     public void tearDown() {
