@@ -23,11 +23,11 @@ import java.util.List;
 @Setter
 @Schema(description = "Sensitivity relatively to injections set")
 public class SensitivityInjectionsSet {
-    List<ContainerIdent> monitoredBranches;
+    List<EquipmentsContainer> monitoredBranches;
 
-    List<ContainerIdent> injections;
+    List<EquipmentsContainer> injections;
 
     SensitivityAnalysisInputData.DistributionType distributionType;
 
-    List<ContainerIdent> contingencies;
+    List<EquipmentsContainer> contingencies;
 }

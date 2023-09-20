@@ -23,10 +23,10 @@ import java.util.List;
 @Setter
 @Schema(description = "Sensitivity relatively to nodes")
 public class SensitivityNodes {
-    List<ContainerIdent> monitoredVoltageLevels;
+    List<EquipmentsContainer> monitoredVoltageLevels;
 
-    List<ContainerIdent> equipmentsInVoltageRegulation;
+    List<EquipmentsContainer> equipmentsInVoltageRegulation;
 
-    List<ContainerIdent> contingencies;
+    List<EquipmentsContainer> contingencies;
 }
 

@@ -40,7 +40,7 @@ public class SensitivityAnalysisInputBuilderService {
         this.filterService = filterService;
     }
 
-    private List<Contingency> goGetContingencies(ContainerIdent contingencyListIdent, UUID networkUuid, String variantId, Reporter reporter) {
+    private List<Contingency> goGetContingencies(EquipmentsContainer contingencyListIdent, UUID networkUuid, String variantId, Reporter reporter) {
         try {
             return actionsService.getContingencyList(contingencyListIdent.getContainerId(), networkUuid, variantId);
         } catch (Exception ex) {
@@ -56,7 +56,7 @@ public class SensitivityAnalysisInputBuilderService {
         }
     }
 
-    private List<Contingency> buildContingencies(SensitivityAnalysisRunContext context, List<ContainerIdent> contingencyListsContainerIdents, Reporter reporter) {
+    private List<Contingency> buildContingencies(SensitivityAnalysisRunContext context, List<EquipmentsContainer> contingencyListsContainerIdents, Reporter reporter) {
         return contingencyListsContainerIdents.stream()
             .flatMap(contingencyListIdent -> goGetContingencies(contingencyListIdent, context.getNetworkUuid(), context.getVariantId(), reporter).stream())
             .collect(Collectors.toList());
@@ -97,7 +97,7 @@ public class SensitivityAnalysisInputBuilderService {
         }
     }
 
-    private List<IdentifiableAttributes> goGetIdentifiables(ContainerIdent filter, UUID networkUuid, String variantId, Reporter reporter) {
+    private List<IdentifiableAttributes> goGetIdentifiables(EquipmentsContainer filter, UUID networkUuid, String variantId, Reporter reporter) {
         try {
             return filterService.getIdentifiablesFromFilter(filter.getContainerId(), networkUuid, variantId);
         } catch (Exception ex) {
@@ -113,7 +113,7 @@ public class SensitivityAnalysisInputBuilderService {
         }
     }
 
-    private Stream<IdentifiableAttributes> getIdentifiablesFromContainer(SensitivityAnalysisRunContext context, ContainerIdent filter,
+    private Stream<IdentifiableAttributes> getIdentifiablesFromContainer(SensitivityAnalysisRunContext context, EquipmentsContainer filter,
         List<IdentifiableType> equipmentsTypesAllowed, Reporter reporter) {
 
         List<IdentifiableAttributes> listIdentAttributes = goGetIdentifiables(filter, context.getNetworkUuid(), context.getVariantId(), reporter);
@@ -133,7 +133,7 @@ public class SensitivityAnalysisInputBuilderService {
         return listIdentAttributes.stream();
     }
 
-    private Stream<IdentifiableAttributes> getMonitoredIdentifiablesFromContainer(SensitivityAnalysisRunContext context, Network network, ContainerIdent filter, List<IdentifiableType> equipmentsTypesAllowed, Reporter reporter) {
+    private Stream<IdentifiableAttributes> getMonitoredIdentifiablesFromContainer(SensitivityAnalysisRunContext context, Network network, EquipmentsContainer filter, List<IdentifiableType> equipmentsTypesAllowed, Reporter reporter) {
 
         List<IdentifiableAttributes> listIdentAttributes = goGetIdentifiables(filter, context.getNetworkUuid(), context.getVariantId(), reporter);
 
@@ -199,7 +199,7 @@ public class SensitivityAnalysisInputBuilderService {
 
     private List<SensitivityVariableSet> buildSensitivityVariableSets(SensitivityAnalysisRunContext context, Network network, Reporter reporter,
                                                                       List<IdentifiableType> variablesTypesAllowed,
-                                                                      List<ContainerIdent> filters,
+                                                                      List<EquipmentsContainer> filters,
                                                                       SensitivityAnalysisInputData.DistributionType distributionType) {
         List<SensitivityVariableSet> result = new ArrayList<>();
 
@@ -259,7 +259,7 @@ public class SensitivityAnalysisInputBuilderService {
 
     private List<SensitivityFactor> buildSensitivityFactorsFromVariablesSets(SensitivityAnalysisRunContext context, Network network, Reporter reporter,
                                                                              List<IdentifiableType> monitoredEquipmentsTypesAllowed,
-                                                                             List<ContainerIdent> monitoredEquipmentsContainers,
+                                                                             List<EquipmentsContainer> monitoredEquipmentsContainers,
                                                                              List<SensitivityVariableSet> variablesSets,
                                                                              List<Contingency> contingencies,
                                                                              SensitivityFunctionType sensitivityFunctionType,
@@ -278,9 +278,9 @@ public class SensitivityAnalysisInputBuilderService {
 
     private List<SensitivityFactor> buildSensitivityFactorsFromEquipments(SensitivityAnalysisRunContext context, Network network, Reporter reporter,
                                                                           List<IdentifiableType> monitoredEquipmentsTypesAllowed,
-                                                                          List<ContainerIdent> monitoredEquipmentsContainers,
+                                                                          List<EquipmentsContainer> monitoredEquipmentsContainers,
                                                                           List<IdentifiableType> equipmentsTypesAllowed,
-                                                                          List<ContainerIdent> filters,
+                                                                          List<EquipmentsContainer> filters,
                                                                           List<Contingency> contingencies,
                                                                           SensitivityFunctionType sensitivityFunctionType,
                                                                           SensitivityVariableType sensitivityVariableType) {

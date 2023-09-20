@@ -23,12 +23,12 @@ import java.util.List;
 @Setter
 @Schema(description = "Sensitivity relatively to each PST")
 public class SensitivityPST {
-    List<ContainerIdent> monitoredBranches;
+    List<EquipmentsContainer> monitoredBranches;
 
     SensitivityAnalysisInputData.SensitivityType sensitivityType;
 
-    List<ContainerIdent> psts;
+    List<EquipmentsContainer> psts;
 
-    List<ContainerIdent> contingencies;
+    List<EquipmentsContainer> contingencies;
 }
 
