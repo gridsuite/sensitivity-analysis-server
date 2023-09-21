@@ -116,8 +116,8 @@ public class SensitivityAnalysisResultRepository {
         Objects.requireNonNull(resultUuid);
         if (result != null) {
             analysisResultRepository.save(toAnalysisResultEntity(resultUuid, result));
-            globalStatusRepository.save(toStatusEntity(resultUuid, status));
         }
+        globalStatusRepository.save(toStatusEntity(resultUuid, status));
     }
 
     @Transactional
