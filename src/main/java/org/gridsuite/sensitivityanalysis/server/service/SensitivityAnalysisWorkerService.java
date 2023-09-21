@@ -210,7 +210,7 @@ public class SensitivityAnalysisWorkerService {
         try {
             cancelComputationRequests.put(cancelContext.getResultUuid(), cancelContext);
 
-            // find the completableFuture associated with result uuid
+            // find the completableFuture associated with the result uuid
             CompletableFuture<SensitivityAnalysisResult> future = futures.get(cancelContext.getResultUuid());
             if (future != null) {
                 future.cancel(true);  // cancel computation in progress
