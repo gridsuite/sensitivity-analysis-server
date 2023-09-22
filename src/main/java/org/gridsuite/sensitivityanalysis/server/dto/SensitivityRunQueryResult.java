@@ -40,8 +40,4 @@ public class SensitivityRunQueryResult {
 
     @NonNull
     List<? extends SensitivityOfTo> sensitivities;
-
-    List<String> allContingencyIds;
-    List<String> allFunctionIds;
-    List<String> allVariableIds;
 }
