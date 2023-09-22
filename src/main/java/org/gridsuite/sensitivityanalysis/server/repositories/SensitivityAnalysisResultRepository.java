@@ -10,7 +10,7 @@ import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityValue;
 import org.gridsuite.sensitivityanalysis.server.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultOptions;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
@@ -143,13 +143,13 @@ public class SensitivityAnalysisResultRepository {
     }
 
     @Transactional(readOnly = true)
-    public SensitivityResultOptions getSensitivityResultFilterOptions(UUID resultUuid, ResultsSelector selector) {
+    public SensitivityResultFilterOptions getSensitivityResultFilterOptions(UUID resultUuid, ResultsSelector selector) {
         AnalysisResultEntity sas = analysisResultRepository.findByResultUuid(resultUuid);
         if (sas == null) {
             return null;
         }
 
-        SensitivityResultOptions.SensitivityResultOptionsBuilder sensitivityResultOptionsBuilder =  SensitivityResultOptions.builder()
+        SensitivityResultFilterOptions.SensitivityResultFilterOptionsBuilder sensitivityResultOptionsBuilder =  SensitivityResultFilterOptions.builder()
                 .allFunctionIds(sensitivityRepository.findFunctionByResultResultUuidAndFactorFunctionType(sas.getResultUuid(), selector.getFunctionType()))
                 .allVariableIds(sensitivityRepository.findVariableByResultResultUuidAndFactorFunctionType(sas.getResultUuid(), selector.getFunctionType()));
 

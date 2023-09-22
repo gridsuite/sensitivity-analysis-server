@@ -19,7 +19,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultOptions;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisRunContext;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisService;
@@ -121,8 +121,8 @@ public class SensitivityAnalysisController {
     @Operation(summary = "Get all filter options of sensitivity analysis results")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis result filter options"),
             @ApiResponse(responseCode = "404", description = "Sensitivity analysis result has not been found")})
-    public ResponseEntity<SensitivityResultOptions> getResultFilerOptions(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
-                                                                          @RequestParam(name = "selector", required = false) String selectorJson) {
+    public ResponseEntity<SensitivityResultFilterOptions> getResultFilerOptions(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
+                                                                                @RequestParam(name = "selector", required = false) String selectorJson) {
         ObjectMapper mapper = new ObjectMapper();
         ResultsSelector selector;
         if (selectorJson == null) {
@@ -135,14 +135,14 @@ public class SensitivityAnalysisController {
             }
         }
 
-        SensitivityResultOptions resultOptions = service.getSensitivityResultOptions(resultUuid, selector);
+        SensitivityResultFilterOptions resultOptions = service.getSensitivityResultOptions(resultUuid, selector);
         return resultOptions != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultOptions)
                 : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping(value = "/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Delete a sensitivity analysis result from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis result has been deleted"), })
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis result has been deleted")})
     public ResponseEntity<Void> deleteResult(
         @Parameter(description = "Result UUID")
         @PathVariable("resultUuid") UUID resultUuid) {

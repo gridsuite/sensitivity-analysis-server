@@ -73,7 +73,7 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
     }
 
     private static void addPredicate(CriteriaBuilder criteriaBuilder,
-                                     Root<?> root,
+                                     Root<SensitivityEntity> root,
                                      List<Predicate> predicates,
                                      Collection<?> collection,
                                      String fieldName,
