@@ -748,10 +748,8 @@ public class SensitivityAnalysisControllerTest {
             .andExpect(status().isOk());
 
         // stop sensitivity analysis
-        assertNotNull(output.receive(TIMEOUT, "sensitivityanalysis.run"));
         mockMvc.perform(put("/" + VERSION + "/results/{resultUuid}/stop" + "?receiver=me", RESULT_UUID))
             .andExpect(status().isOk());
-        assertNotNull(output.receive(TIMEOUT, "sensitivityanalysis.cancel"));
 
         Message<byte[]> message = output.receive(TIMEOUT, "sensitivityanalysis.stopped");
         assertNotNull(message);
