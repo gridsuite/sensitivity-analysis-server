@@ -15,12 +15,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Selection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -36,6 +39,17 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
     String CONTINGENCY = "contingency";
 
     Page<SensitivityEntity> findAll(Specification<SensitivityEntity> specification, Pageable pageable);
+
+    @Query(value = "SELECT distinct s.factor.functionId from SensitivityEntity as s")
+    List<String> findFunctionByResultResultUuidAndFactorFunctionType(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
+
+    @Query(value = "SELECT distinct s.factor.variableId from SensitivityEntity as s")
+    List<String> findVariableByResultResultUuidAndFactorFunctionType(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
+
+    @Query(value = "SELECT distinct s.contingency.contingencyId from SensitivityEntity as s")
+    List<String> findContingencyByResultResultUuidAndFactorFunctionType(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
+
+
 
     static Specification<SensitivityEntity> getSpecification(AnalysisResultEntity sas,
                                                              SensitivityFunctionType functionType,
@@ -59,7 +73,7 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
     }
 
     private static void addPredicate(CriteriaBuilder criteriaBuilder,
-                                     Root<SensitivityEntity> root,
+                                     Root<?> root,
                                      List<Predicate> predicates,
                                      Collection<?> collection,
                                      String fieldName,
