@@ -19,11 +19,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -48,8 +46,6 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
 
     @Query(value = "SELECT distinct s.contingency.contingencyId from SensitivityEntity as s")
     List<String> findContingencyByResultResultUuidAndFactorFunctionType(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
-
-
 
     static Specification<SensitivityEntity> getSpecification(AnalysisResultEntity sas,
                                                              SensitivityFunctionType functionType,
