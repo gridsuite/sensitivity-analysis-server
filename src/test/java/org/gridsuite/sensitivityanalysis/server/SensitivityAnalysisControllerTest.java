@@ -81,6 +81,7 @@ import static org.gridsuite.sensitivityanalysis.server.service.NotificationServi
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -614,6 +615,30 @@ public class SensitivityAnalysisControllerTest {
         SensitivityRunQueryResult resNK = mapper.readValue(bodyText, new TypeReference<>() { });
         assertEquals(6, (long) resNK.getTotalSensitivitiesCount());
         assertEquals(2, resNK.getSensitivities().size());
+
+        ResultsSelector filterOptionsSelector = ResultsSelector.builder().isJustBefore(false)
+                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).build();
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/filter_options?selector={selector}", RESULT_UUID,
+                        mapper.writeValueAsString(filterOptionsSelector)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        SensitivityResultFilterOptions filterOptions = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(3, filterOptions.getAllContingencyIds().size());
+        assertEquals(3, filterOptions.getAllFunctionIds().size());
+        assertEquals(2, filterOptions.getAllVariableIds().size());
+
+        ResultsSelector filterOptionsSelector2 = ResultsSelector.builder().isJustBefore(true)
+                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_2).build();
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/filter_options?selector={selector}", RESULT_UUID,
+                        mapper.writeValueAsString(filterOptionsSelector2)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        SensitivityResultFilterOptions filterOptions2 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNull(filterOptions2.getAllContingencyIds());
+        assertEquals(3, filterOptions2.getAllFunctionIds().size());
+        assertEquals(2, filterOptions2.getAllVariableIds().size());
 
         // check that a request for not present contingency does not crash and just brings nothing
         ResultsSelector selectorNKz1 = ResultsSelector.builder().isJustBefore(false)
