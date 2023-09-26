@@ -117,7 +117,7 @@ public class SensitivityAnalysisController {
         }
     }
 
-    @GetMapping(value = "/results/{resultUuid}/filter_options", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/results/{resultUuid}/filter-options", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Get all filter options of sensitivity analysis results")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis result filter options"),
         @ApiResponse(responseCode = "404", description = "Sensitivity analysis result has not been found")})

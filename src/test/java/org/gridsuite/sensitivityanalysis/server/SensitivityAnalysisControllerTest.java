@@ -618,7 +618,7 @@ public class SensitivityAnalysisControllerTest {
 
         ResultsSelector filterOptionsSelector = ResultsSelector.builder().isJustBefore(false)
                 .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).build();
-        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/filter_options?selector={selector}", RESULT_UUID,
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/filter-options?selector={selector}", RESULT_UUID,
                         mapper.writeValueAsString(filterOptionsSelector)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -630,7 +630,7 @@ public class SensitivityAnalysisControllerTest {
 
         ResultsSelector filterOptionsSelector2 = ResultsSelector.builder().isJustBefore(true)
                 .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_2).build();
-        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/filter_options?selector={selector}", RESULT_UUID,
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/filter-options?selector={selector}", RESULT_UUID,
                         mapper.writeValueAsString(filterOptionsSelector2)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))

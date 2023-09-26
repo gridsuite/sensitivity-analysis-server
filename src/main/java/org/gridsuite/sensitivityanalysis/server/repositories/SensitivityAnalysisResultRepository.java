@@ -153,12 +153,15 @@ public class SensitivityAnalysisResultRepository {
                 .allFunctionIds(sensitivityRepository.findFunctionByResultResultUuidAndFactorFunctionType(sas.getResultUuid(), selector.getFunctionType()))
                 .allVariableIds(sensitivityRepository.findVariableByResultResultUuidAndFactorFunctionType(sas.getResultUuid(), selector.getFunctionType()));
 
-        return selector.getIsJustBefore() ? sensitivityResultOptionsBuilder.build() :
-                sensitivityResultOptionsBuilder.allContingencyIds(sensitivityRepository.findContingencyByResultResultUuidAndFactorFunctionType(sas.getResultUuid(), selector.getFunctionType())
-                                .stream()
-                                .filter(Objects::nonNull)
-                                .collect(Collectors.toList()))
-                                               .build();
+        if (!selector.getIsJustBefore()) {
+            sensitivityResultOptionsBuilder.allContingencyIds(sensitivityRepository.findContingencyByResultResultUuidAndFactorFunctionType(sas.getResultUuid(), selector.getFunctionType())
+                            .stream()
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList()))
+                    .build();
+        }
+
+        return sensitivityResultOptionsBuilder.build();
     }
 
     @Transactional(readOnly = true)
