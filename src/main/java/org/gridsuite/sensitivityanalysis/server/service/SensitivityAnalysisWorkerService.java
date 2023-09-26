@@ -12,7 +12,6 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.extensions.Extension;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.computation.local.LocalComputationManager;
 import com.powsybl.iidm.mergingview.MergingView;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
@@ -74,17 +73,21 @@ public class SensitivityAnalysisWorkerService {
 
     private final NotificationService notificationService;
 
+    private final SensitivityAnalysisExecutionService sensitivityAnalysisExecutionService;
+
     private final SensitivityAnalysisInputBuilderService sensitivityAnalysisInputBuilderService;
 
     private Function<String, SensitivityAnalysis.Runner> sensitivityAnalysisFactorySupplier;
 
     public SensitivityAnalysisWorkerService(NetworkStoreService networkStoreService, ReportService reportService, NotificationService notificationService,
                                             SensitivityAnalysisInputBuilderService sensitivityAnalysisInputBuilderService,
+                                            SensitivityAnalysisExecutionService sensitivityAnalysisExecutionService,
                                             SensitivityAnalysisResultRepository resultRepository, ObjectMapper objectMapper,
                                             SensitivityAnalysisRunnerSupplier sensitivityAnalysisRunnerSupplier) {
         this.networkStoreService = Objects.requireNonNull(networkStoreService);
         this.reportService = Objects.requireNonNull(reportService);
         this.notificationService = notificationService;
+        this.sensitivityAnalysisExecutionService = Objects.requireNonNull(sensitivityAnalysisExecutionService);
         this.sensitivityAnalysisInputBuilderService = sensitivityAnalysisInputBuilderService;
         this.resultRepository = Objects.requireNonNull(resultRepository);
         this.objectMapper = Objects.requireNonNull(objectMapper);
@@ -194,7 +197,7 @@ public class SensitivityAnalysisWorkerService {
                 new ArrayList<>(context.getSensitivityAnalysisInputs().getContingencies()),
                 context.getSensitivityAnalysisInputs().getVariablesSets(),
                 sensitivityAnalysisParameters,
-                LocalComputationManager.getDefault(),
+                sensitivityAnalysisExecutionService.getLocalComputationManager(),
                 reporter);
             if (resultUuid != null) {
                 futures.put(resultUuid, future);
