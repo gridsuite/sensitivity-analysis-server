@@ -6,7 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.entities;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -67,6 +67,7 @@ public class SensitivityAnalysisResultRepository {
                 new ContingencyEmbeddable(cs.getContingencyId(), cs.getStatus())).toList();
         Supplier<Stream<SensitivityValue>> sensitivityWithoutContingency = () -> result.getValues().stream().filter(s -> s.getContingencyIndex() < 0);
         List<SensitivityEntity> sensitivities = result.getValues().stream()
+            .filter(v -> !Double.isNaN(v.getValue()))
             .map(v -> getSensitivityEntity(factors, contingencies, sensitivityWithoutContingency, v))
             .collect(Collectors.toList());
         //To avoid consistency issue we truncate the time to microseconds since postgres and h2 can only store a precision of microseconds
