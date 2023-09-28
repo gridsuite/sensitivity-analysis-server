@@ -111,12 +111,12 @@ public class SensitivityAnalysisResultRepository {
     }
 
     @Transactional
-    public void insert(UUID resultUuid, SensitivityAnalysisResult result) {
+    public void insert(UUID resultUuid, SensitivityAnalysisResult result, String status) {
         Objects.requireNonNull(resultUuid);
-
         if (result != null) {
             analysisResultRepository.save(toAnalysisResultEntity(resultUuid, result));
         }
+        globalStatusRepository.save(toStatusEntity(resultUuid, status));
     }
 
     @Transactional
