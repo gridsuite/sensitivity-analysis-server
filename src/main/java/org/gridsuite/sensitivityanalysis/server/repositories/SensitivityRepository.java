@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.util.CollectionUtils;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -36,6 +37,15 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
     String CONTINGENCY = "contingency";
 
     Page<SensitivityEntity> findAll(Specification<SensitivityEntity> specification, Pageable pageable);
+
+    @Query(value = "SELECT distinct s.factor.functionId from SensitivityEntity as s")
+    List<String> findFunctionByResultResultUuidAndFactorFunctionType(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
+
+    @Query(value = "SELECT distinct s.factor.variableId from SensitivityEntity as s")
+    List<String> findVariableByResultResultUuidAndFactorFunctionType(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
+
+    @Query(value = "SELECT distinct s.contingency.contingencyId from SensitivityEntity as s")
+    List<String> findContingencyByResultResultUuidAndFactorFunctionType(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
 
     static Specification<SensitivityEntity> getSpecification(AnalysisResultEntity sas,
                                                              SensitivityFunctionType functionType,
