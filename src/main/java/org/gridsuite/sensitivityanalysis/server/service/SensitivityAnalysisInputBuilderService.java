@@ -40,24 +40,24 @@ public class SensitivityAnalysisInputBuilderService {
         this.filterService = filterService;
     }
 
-    private List<Contingency> goGetContingencies(FilterIdent contingencyListIdent, UUID networkUuid, String variantId, Reporter reporter) {
+    private List<Contingency> goGetContingencies(EquipmentsContainer contingencyListIdent, UUID networkUuid, String variantId, Reporter reporter) {
         try {
-            return actionsService.getContingencyList(contingencyListIdent.getId(), networkUuid, variantId);
+            return actionsService.getContingencyList(contingencyListIdent.getContainerId(), networkUuid, variantId);
         } catch (Exception ex) {
-            LOGGER.error("Could not get contingencies from " + contingencyListIdent.getName(), ex);
+            LOGGER.error("Could not get contingencies from " + contingencyListIdent.getContainerName(), ex);
             reporter.report(Report.builder()
                 .withKey("contingencyTranslationFailure")
                 .withDefaultMessage("Could not get contingencies from contingencyListIdent ${name} : ${exception}")
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .withValue("exception", ex.getMessage())
-                .withValue("name", contingencyListIdent.getName())
+                .withValue("name", contingencyListIdent.getContainerName())
                 .build());
             return List.of();
         }
     }
 
-    private List<Contingency> buildContingencies(SensitivityAnalysisRunContext context, List<FilterIdent> contingencyListsFilterIdents, Reporter reporter) {
-        return contingencyListsFilterIdents.stream()
+    private List<Contingency> buildContingencies(SensitivityAnalysisRunContext context, List<EquipmentsContainer> contingencyListsContainerIdents, Reporter reporter) {
+        return contingencyListsContainerIdents.stream()
             .flatMap(contingencyListIdent -> goGetContingencies(contingencyListIdent, context.getNetworkUuid(), context.getVariantId(), reporter).stream())
             .collect(Collectors.toList());
     }
@@ -97,23 +97,23 @@ public class SensitivityAnalysisInputBuilderService {
         }
     }
 
-    private List<IdentifiableAttributes> goGetIdentifiables(FilterIdent filter, UUID networkUuid, String variantId, Reporter reporter) {
+    private List<IdentifiableAttributes> goGetIdentifiables(EquipmentsContainer filter, UUID networkUuid, String variantId, Reporter reporter) {
         try {
-            return filterService.getIdentifiablesFromFilter(filter.getId(), networkUuid, variantId);
+            return filterService.getIdentifiablesFromFilter(filter.getContainerId(), networkUuid, variantId);
         } catch (Exception ex) {
-            LOGGER.error("Could not get identifiables from filter " + filter.getName(), ex);
+            LOGGER.error("Could not get identifiables from filter " + filter.getContainerName(), ex);
             reporter.report(Report.builder()
                 .withKey("filterTranslationFailure")
                 .withDefaultMessage("Could not get identifiables from filter ${name} : ${exception}")
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .withValue("exception", ex.getMessage())
-                .withValue("name", filter.getName())
+                .withValue("name", filter.getContainerName())
                 .build());
             return List.of();
         }
     }
 
-    private Stream<IdentifiableAttributes> getIdentifiablesFromFilter(SensitivityAnalysisRunContext context, FilterIdent filter,
+    private Stream<IdentifiableAttributes> getIdentifiablesFromContainer(SensitivityAnalysisRunContext context, EquipmentsContainer filter,
         List<IdentifiableType> equipmentsTypesAllowed, Reporter reporter) {
 
         List<IdentifiableAttributes> listIdentAttributes = goGetIdentifiables(filter, context.getNetworkUuid(), context.getVariantId(), reporter);
@@ -123,7 +123,7 @@ public class SensitivityAnalysisInputBuilderService {
             reporter.report(Report.builder()
                 .withKey("badEquipmentType")
                 .withDefaultMessage("Equipments type in filter with name=${name} should be ${expectedType} : filter is ignored")
-                .withValue("name", filter.getName())
+                .withValue("name", filter.getContainerName())
                 .withValue(EXPECTED_TYPE, equipmentsTypesAllowed.toString())
                 .withSeverity(TypedValue.WARN_SEVERITY)
                 .build());
@@ -133,7 +133,7 @@ public class SensitivityAnalysisInputBuilderService {
         return listIdentAttributes.stream();
     }
 
-    private Stream<IdentifiableAttributes> getMonitoredIdentifiablesFromFilter(SensitivityAnalysisRunContext context, Network network, FilterIdent filter, List<IdentifiableType> equipmentsTypesAllowed, Reporter reporter) {
+    private Stream<IdentifiableAttributes> getMonitoredIdentifiablesFromContainer(SensitivityAnalysisRunContext context, Network network, EquipmentsContainer filter, List<IdentifiableType> equipmentsTypesAllowed, Reporter reporter) {
 
         List<IdentifiableAttributes> listIdentAttributes = goGetIdentifiables(filter, context.getNetworkUuid(), context.getVariantId(), reporter);
 
@@ -142,7 +142,7 @@ public class SensitivityAnalysisInputBuilderService {
             reporter.report(Report.builder()
                 .withKey("badMonitoredEquipmentType")
                 .withDefaultMessage("Monitored equipments type in filter with name=${name} should be ${expectedType} : filter is ignored")
-                .withValue("name", filter.getName())
+                .withValue("name", filter.getContainerName())
                 .withValue(EXPECTED_TYPE, equipmentsTypesAllowed.toString())
                 .withSeverity(TypedValue.WARN_SEVERITY)
                 .build());
@@ -199,19 +199,19 @@ public class SensitivityAnalysisInputBuilderService {
 
     private List<SensitivityVariableSet> buildSensitivityVariableSets(SensitivityAnalysisRunContext context, Network network, Reporter reporter,
                                                                       List<IdentifiableType> variablesTypesAllowed,
-                                                                      List<FilterIdent> filters,
+                                                                      List<EquipmentsContainer> filters,
                                                                       SensitivityAnalysisInputData.DistributionType distributionType) {
         List<SensitivityVariableSet> result = new ArrayList<>();
 
-        Stream<Pair<String, List<IdentifiableAttributes>>> variablesFiltersLists = filters.stream()
-            .map(filter -> Pair.of(filter.getName(), getIdentifiablesFromFilter(context, filter, variablesTypesAllowed, reporter).collect(Collectors.toList())))
+        Stream<Pair<String, List<IdentifiableAttributes>>> variablesContainersLists = filters.stream()
+            .map(filter -> Pair.of(filter.getContainerName(), getIdentifiablesFromContainer(context, filter, variablesTypesAllowed, reporter).collect(Collectors.toList())))
             .filter(list -> !list.getRight().isEmpty());
 
-        variablesFiltersLists.forEach(variablesList -> {
+        variablesContainersLists.forEach(variablesList -> {
             List<WeightedSensitivityVariable> variables = new ArrayList<>();
             if (variablesList.getRight().get(0).getType() == IdentifiableType.LOAD && distributionType == SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP) {
                 reporter.report(Report.builder()
-                    .withKey("distributionTypeNotAllowedForLoadsFilter")
+                    .withKey("distributionTypeNotAllowedForLoadsContainer")
                     .withDefaultMessage("Distribution type ${distributionType} is not allowed for loads filter : filter is ignored")
                     .withValue("distributionType", distributionType.name())
                     .withSeverity(TypedValue.WARN_SEVERITY)
@@ -220,7 +220,7 @@ public class SensitivityAnalysisInputBuilderService {
             }
             if (variablesList.getRight().get(0).getDistributionKey() == null && distributionType == SensitivityAnalysisInputData.DistributionType.VENTILATION) {
                 reporter.report(Report.builder()
-                    .withKey("distributionTypeAllowedOnlyForManualFilter")
+                    .withKey("distributionTypeAllowedOnlyForManualContainer")
                     .withDefaultMessage("Distribution type ${distributionType} is allowed only for manual filter : filter is ignored")
                     .withValue("distributionType", distributionType.name())
                     .withSeverity(TypedValue.WARN_SEVERITY)
@@ -259,7 +259,7 @@ public class SensitivityAnalysisInputBuilderService {
 
     private List<SensitivityFactor> buildSensitivityFactorsFromVariablesSets(SensitivityAnalysisRunContext context, Network network, Reporter reporter,
                                                                              List<IdentifiableType> monitoredEquipmentsTypesAllowed,
-                                                                             List<FilterIdent> monitoredEquipmentsFilters,
+                                                                             List<EquipmentsContainer> monitoredEquipmentsContainers,
                                                                              List<SensitivityVariableSet> variablesSets,
                                                                              List<Contingency> contingencies,
                                                                              SensitivityFunctionType sensitivityFunctionType,
@@ -268,8 +268,8 @@ public class SensitivityAnalysisInputBuilderService {
             return List.of();
         }
 
-        List<IdentifiableAttributes> monitoredEquipments = monitoredEquipmentsFilters.stream()
-            .flatMap(filter -> getMonitoredIdentifiablesFromFilter(context, network, filter, monitoredEquipmentsTypesAllowed, reporter))
+        List<IdentifiableAttributes> monitoredEquipments = monitoredEquipmentsContainers.stream()
+            .flatMap(filter -> getMonitoredIdentifiablesFromContainer(context, network, filter, monitoredEquipmentsTypesAllowed, reporter))
             .collect(Collectors.toList());
 
         return getSensitivityFactorsFromEquipments(variablesSets.stream().map(SensitivityVariableSet::getId).collect(Collectors.toList()),
@@ -278,22 +278,22 @@ public class SensitivityAnalysisInputBuilderService {
 
     private List<SensitivityFactor> buildSensitivityFactorsFromEquipments(SensitivityAnalysisRunContext context, Network network, Reporter reporter,
                                                                           List<IdentifiableType> monitoredEquipmentsTypesAllowed,
-                                                                          List<FilterIdent> monitoredEquipmentsFilters,
+                                                                          List<EquipmentsContainer> monitoredEquipmentsContainers,
                                                                           List<IdentifiableType> equipmentsTypesAllowed,
-                                                                          List<FilterIdent> filters,
+                                                                          List<EquipmentsContainer> filters,
                                                                           List<Contingency> contingencies,
                                                                           SensitivityFunctionType sensitivityFunctionType,
                                                                           SensitivityVariableType sensitivityVariableType) {
         List<IdentifiableAttributes> equipments = filters.stream()
-            .flatMap(filter -> getIdentifiablesFromFilter(context, filter, equipmentsTypesAllowed, reporter))
+            .flatMap(filter -> getIdentifiablesFromContainer(context, filter, equipmentsTypesAllowed, reporter))
             .collect(Collectors.toList());
 
         if (equipments.isEmpty()) {
             return List.of();
         }
 
-        List<IdentifiableAttributes> monitoredEquipments = monitoredEquipmentsFilters.stream()
-            .flatMap(filter -> getMonitoredIdentifiablesFromFilter(context, network, filter, monitoredEquipmentsTypesAllowed, reporter))
+        List<IdentifiableAttributes> monitoredEquipments = monitoredEquipmentsContainers.stream()
+            .flatMap(filter -> getMonitoredIdentifiablesFromContainer(context, network, filter, monitoredEquipmentsTypesAllowed, reporter))
             .collect(Collectors.toList());
 
         return getSensitivityFactorsFromEquipments(equipments.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()),
