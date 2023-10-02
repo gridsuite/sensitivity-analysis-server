@@ -158,8 +158,7 @@ public class SensitivityAnalysisResultRepository {
             sensitivityResultOptionsBuilder.allContingencyIds(sensitivityRepository.getDistinctContingencyIds(sas.getResultUuid(), selector.getFunctionType())
                             .stream()
                             .filter(Objects::nonNull)
-                            .collect(Collectors.toList()))
-                    .build();
+                            .collect(Collectors.toList()));
         }
 
         return sensitivityResultOptionsBuilder.build();
