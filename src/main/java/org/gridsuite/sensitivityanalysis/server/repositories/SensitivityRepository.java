@@ -38,14 +38,14 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
 
     Page<SensitivityEntity> findAll(Specification<SensitivityEntity> specification, Pageable pageable);
 
-    @Query(value = "SELECT distinct s.factor.functionId from SensitivityEntity as s")
-    List<String> findFunctionByResultResultUuidAndFactorFunctionType(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
+    @Query(value = "SELECT distinct s.factor.functionId from SensitivityEntity as s where s.result.resultUuid = :resultUuid and s.factor.functionType = :sensitivityFunctionType")
+    List<String> getDistinctFunctionIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
 
-    @Query(value = "SELECT distinct s.factor.variableId from SensitivityEntity as s")
-    List<String> findVariableByResultResultUuidAndFactorFunctionType(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
+    @Query(value = "SELECT distinct s.factor.variableId from SensitivityEntity as s where s.result.resultUuid = :resultUuid and s.factor.functionType = :sensitivityFunctionType")
+    List<String> getDistinctVariableIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
 
-    @Query(value = "SELECT distinct s.contingency.contingencyId from SensitivityEntity as s")
-    List<String> findContingencyByResultResultUuidAndFactorFunctionType(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
+    @Query(value = "SELECT distinct s.contingency.contingencyId from SensitivityEntity as s where s.result.resultUuid = :resultUuid and s.factor.functionType = :sensitivityFunctionType")
+    List<String> getDistinctContingencyIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
 
     static Specification<SensitivityEntity> getSpecification(AnalysisResultEntity sas,
                                                              SensitivityFunctionType functionType,
