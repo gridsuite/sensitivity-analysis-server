@@ -38,13 +38,19 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
 
     Page<SensitivityEntity> findAll(Specification<SensitivityEntity> specification, Pageable pageable);
 
-    @Query(value = "SELECT distinct s.factor.functionId from SensitivityEntity as s where s.result.resultUuid = :resultUuid and s.factor.functionType = :sensitivityFunctionType")
-    List<String> getDistinctFunctionIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
+    @Query(value = "SELECT distinct s.factor.functionId from SensitivityEntity as s " +
+            "where s.result.resultUuid = :resultUuid " +
+            "and s.factor.functionType = :sensitivityFunctionType " +
+            "and ((:withContingency = true and s.contingency is not null ) or (:withContingency = false and s.contingency is null ))")
+    List<String> getDistinctFunctionIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType, boolean withContingency);
 
-    @Query(value = "SELECT distinct s.factor.variableId from SensitivityEntity as s where s.result.resultUuid = :resultUuid and s.factor.functionType = :sensitivityFunctionType")
-    List<String> getDistinctVariableIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
+    @Query(value = "SELECT distinct s.factor.variableId from SensitivityEntity as s " +
+            "where s.result.resultUuid = :resultUuid " +
+            "and s.factor.functionType = :sensitivityFunctionType " +
+            "and ((:withContingency = true and s.contingency is not null ) or (:withContingency = false and s.contingency is null ))")
+    List<String> getDistinctVariableIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType, boolean withContingency);
 
-    @Query(value = "SELECT distinct s.contingency.contingencyId from SensitivityEntity as s where s.result.resultUuid = :resultUuid and s.factor.functionType = :sensitivityFunctionType")
+    @Query(value = "SELECT distinct s.contingency.contingencyId from SensitivityEntity as s where s.result.resultUuid = :resultUuid and s.factor.functionType = :sensitivityFunctionType ")
     List<String> getDistinctContingencyIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
 
     static Specification<SensitivityEntity> getSpecification(AnalysisResultEntity sas,

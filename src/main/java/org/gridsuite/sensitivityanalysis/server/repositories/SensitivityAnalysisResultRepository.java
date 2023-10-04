@@ -151,8 +151,8 @@ public class SensitivityAnalysisResultRepository {
         }
 
         SensitivityResultFilterOptions.SensitivityResultFilterOptionsBuilder sensitivityResultOptionsBuilder = SensitivityResultFilterOptions.builder()
-                .allFunctionIds(sensitivityRepository.getDistinctFunctionIds(sas.getResultUuid(), selector.getFunctionType()))
-                .allVariableIds(sensitivityRepository.getDistinctVariableIds(sas.getResultUuid(), selector.getFunctionType()));
+                .allFunctionIds(sensitivityRepository.getDistinctFunctionIds(sas.getResultUuid(), selector.getFunctionType(), !selector.getIsJustBefore()))
+                .allVariableIds(sensitivityRepository.getDistinctVariableIds(sas.getResultUuid(), selector.getFunctionType(), !selector.getIsJustBefore()));
 
         if (!selector.getIsJustBefore()) {
             sensitivityResultOptionsBuilder.allContingencyIds(sensitivityRepository.getDistinctContingencyIds(sas.getResultUuid(), selector.getFunctionType())
