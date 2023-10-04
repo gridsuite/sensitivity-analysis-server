@@ -151,15 +151,14 @@ public class SensitivityAnalysisResultRepository {
         }
 
         SensitivityResultFilterOptions.SensitivityResultFilterOptionsBuilder sensitivityResultOptionsBuilder = SensitivityResultFilterOptions.builder()
-                .allFunctionIds(sensitivityRepository.findFunctionByResultResultUuidAndFactorFunctionType(sas.getResultUuid(), selector.getFunctionType()))
-                .allVariableIds(sensitivityRepository.findVariableByResultResultUuidAndFactorFunctionType(sas.getResultUuid(), selector.getFunctionType()));
+                .allFunctionIds(sensitivityRepository.getDistinctFunctionIds(sas.getResultUuid(), selector.getFunctionType(), !selector.getIsJustBefore()))
+                .allVariableIds(sensitivityRepository.getDistinctVariableIds(sas.getResultUuid(), selector.getFunctionType(), !selector.getIsJustBefore()));
 
         if (!selector.getIsJustBefore()) {
-            sensitivityResultOptionsBuilder.allContingencyIds(sensitivityRepository.findContingencyByResultResultUuidAndFactorFunctionType(sas.getResultUuid(), selector.getFunctionType())
+            sensitivityResultOptionsBuilder.allContingencyIds(sensitivityRepository.getDistinctContingencyIds(sas.getResultUuid(), selector.getFunctionType())
                             .stream()
                             .filter(Objects::nonNull)
-                            .collect(Collectors.toList()))
-                    .build();
+                            .collect(Collectors.toList()));
         }
 
         return sensitivityResultOptionsBuilder.build();

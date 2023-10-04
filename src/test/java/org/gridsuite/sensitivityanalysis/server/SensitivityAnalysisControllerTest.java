@@ -629,7 +629,7 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(2, filterOptions.getAllVariableIds().size());
 
         ResultsSelector filterOptionsSelector2 = ResultsSelector.builder().isJustBefore(true)
-                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_2).build();
+                .functionType(SensitivityFunctionType.BRANCH_CURRENT_1).build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/filter-options?selector={selector}", RESULT_UUID,
                         mapper.writeValueAsString(filterOptionsSelector2)))
                 .andExpect(status().isOk())
@@ -637,8 +637,8 @@ public class SensitivityAnalysisControllerTest {
                 .andReturn();
         SensitivityResultFilterOptions filterOptions2 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
         assertNull(filterOptions2.getAllContingencyIds());
-        assertEquals(3, filterOptions2.getAllFunctionIds().size());
-        assertEquals(2, filterOptions2.getAllVariableIds().size());
+        assertEquals(0, filterOptions2.getAllFunctionIds().size());
+        assertEquals(0, filterOptions2.getAllVariableIds().size());
 
         // check that a request for not present contingency does not crash and just brings nothing
         ResultsSelector selectorNKz1 = ResultsSelector.builder().isJustBefore(false)
