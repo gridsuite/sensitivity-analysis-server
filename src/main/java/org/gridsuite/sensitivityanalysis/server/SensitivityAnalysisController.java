@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.gridsuite.sensitivityanalysis.server.dto.ResultSelector.ResultTab;
+import org.gridsuite.sensitivityanalysis.server.dto.ResultSelector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
@@ -58,7 +60,10 @@ public class SensitivityAnalysisController {
     private static ResultsSelector getSelector(String selectorJson) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         return selectorJson == null ?
-                ResultsSelector.builder().functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).isJustBefore(false).build() :
+                ResultsSelector.builder()
+                        .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+                        .tabSelection(ResultTab.N_K)
+                        .build() :
                 mapper.readValue(selectorJson, ResultsSelector.class);
     }
 

@@ -17,8 +17,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.SneakyThrows;
-import org.gridsuite.sensitivityanalysis.server.ResultsSelector;
+import org.gridsuite.sensitivityanalysis.server.dto.ResultSelector.ResultTab;
+import org.gridsuite.sensitivityanalysis.server.dto.ResultSelector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.SensitivityAnalysisApplication;
+import org.gridsuite.sensitivityanalysis.server.dto.ResultSelector.SortKey;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
@@ -216,15 +218,15 @@ public class SensitivityAnalysisServiceTest {
 
         ResultsSelector.ResultsSelectorBuilder builder = ResultsSelector.builder();
         ResultsSelector selectorN = builder
-            .isJustBefore(true)
+            .tabSelection(ResultTab.N)
             .functionType(MW_FUNC_TYPE)
             .functionIds(Set.of("l1", "l2", "l3"))
             .variableIds(Set.of("GEN", "LOAD"))
             .sortKeysWithWeightAndDirection(Map.of(
-                ResultsSelector.SortKey.SENSITIVITY, -1,
-                ResultsSelector.SortKey.REFERENCE, 2,
-                ResultsSelector.SortKey.VARIABLE, 3,
-                ResultsSelector.SortKey.FUNCTION, 4))
+                SortKey.SENSITIVITY, -1,
+                SortKey.REFERENCE, 2,
+                SortKey.VARIABLE, 3,
+                SortKey.FUNCTION, 4))
             .build();
 
         SensitivityRunQueryResult gottenResult;
@@ -238,14 +240,14 @@ public class SensitivityAnalysisServiceTest {
         assertThat(sensitivityVals, isOrderedAccordingTo(Comparator.<Double>reverseOrder()));
         assertThat(sensitivityVals, IsIterableContainingInOrder.contains(500.9, 500.2, 500.1));
 
-        selectorN = builder.sortKeysWithWeightAndDirection(Map.of(ResultsSelector.SortKey.SENSITIVITY, 1)).build();
+        selectorN = builder.sortKeysWithWeightAndDirection(Map.of(SortKey.SENSITIVITY, 1)).build();
         gottenResult = analysisService.getRunResult(resultUuid, selectorN);
         sensitivities = gottenResult.getSensitivities();
         assertThat(sensitivities.size(), is(3));
         assertThat(sensitivities.stream().map(SensitivityOfTo::getValue).collect(Collectors.toList()),
             isOrderedAccordingTo(Comparator.<Double>naturalOrder()));
 
-        ResultsSelector selectorNK = builder.isJustBefore(false).build();
+        ResultsSelector selectorNK = builder.tabSelection(ResultTab.N_K).build();
         gottenResult = analysisService.getRunResult(resultUuid, selectorNK);
         assertThat(gottenResult, not(nullValue()));
         sensitivities = gottenResult.getSensitivities();
@@ -310,11 +312,11 @@ public class SensitivityAnalysisServiceTest {
 
         ResultsSelector.ResultsSelectorBuilder builder = ResultsSelector.builder();
         ResultsSelector selectorN = builder
-            .isJustBefore(true)
+            .tabSelection(ResultTab.N)
             .functionType(MW_FUNC_TYPE)
             .functionIds(Set.of("l1", "l2", "l3"))
             .variableIds(Set.of("GEN", "LOAD"))
-            .sortKeysWithWeightAndDirection(Map.of(ResultsSelector.SortKey.SENSITIVITY, -1))
+            .sortKeysWithWeightAndDirection(Map.of(SortKey.SENSITIVITY, -1))
             .build();
 
         SensitivityRunQueryResult gottenResult;
@@ -328,7 +330,7 @@ public class SensitivityAnalysisServiceTest {
         assertThat(sensitivityVals, isOrderedAccordingTo(Comparator.<Double>reverseOrder()));
         assertThat(sensitivityVals, IsIterableContainingInOrder.contains(500.9, 500.2, 500.1));
 
-        ResultsSelector selectorNK = builder.isJustBefore(false).build();
+        ResultsSelector selectorNK = builder.tabSelection(ResultTab.N_K).build();
         gottenResult = analysisService.getRunResult(resultUuid, selectorNK);
         assertThat(gottenResult, not(nullValue()));
         sensitivities = gottenResult.getSensitivities();
@@ -382,11 +384,11 @@ public class SensitivityAnalysisServiceTest {
 
         ResultsSelector.ResultsSelectorBuilder builder = ResultsSelector.builder();
         ResultsSelector selectorN = builder
-            .isJustBefore(true)
+            .tabSelection(ResultTab.N)
             .functionType(MW_FUNC_TYPE)
             .functionIds(Set.of("l1", "l2", "l3"))
             .variableIds(Set.of("GEN", "LOAD"))
-            .sortKeysWithWeightAndDirection(Map.of(ResultsSelector.SortKey.SENSITIVITY, -1))
+            .sortKeysWithWeightAndDirection(Map.of(SortKey.SENSITIVITY, -1))
             .build();
 
         SensitivityRunQueryResult gottenResult;
@@ -397,7 +399,7 @@ public class SensitivityAnalysisServiceTest {
         assertThat(sensitivities.size(), is(0));
         List<Double> sensitivityVals;
 
-        ResultsSelector selectorNK = builder.isJustBefore(false).build();
+        ResultsSelector selectorNK = builder.tabSelection(ResultTab.N_K).build();
         gottenResult = analysisService.getRunResult(resultUuid, selectorNK);
         assertThat(gottenResult, not(nullValue()));
         sensitivities = gottenResult.getSensitivities();

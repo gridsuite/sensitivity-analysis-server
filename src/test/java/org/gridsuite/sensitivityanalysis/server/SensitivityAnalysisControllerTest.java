@@ -40,6 +40,9 @@ import com.powsybl.sensitivity.SensitivityValue;
 import com.powsybl.sensitivity.SensitivityVariableType;
 import lombok.SneakyThrows;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
+import org.gridsuite.sensitivityanalysis.server.dto.ResultSelector.ResultTab;
+import org.gridsuite.sensitivityanalysis.server.dto.ResultSelector.ResultsSelector;
+import org.gridsuite.sensitivityanalysis.server.dto.ResultSelector.SortKey;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
@@ -567,16 +570,16 @@ public class SensitivityAnalysisControllerTest {
         // and that they can be filtered by function IDs, variable IDs
         // and sorted according to multiple criteria
         ResultsSelector selectorN = ResultsSelector.builder()
-            .isJustBefore(true)
+            .tabSelection(ResultTab.N)
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .functionIds(BRANCHES.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
             .variableIds(Stream.concat(GENERATORS.stream(), LOADS.stream())
                 .map(IdentifiableAttributes::getId).collect(Collectors.toList()))
             .sortKeysWithWeightAndDirection(Map.of(
-                ResultsSelector.SortKey.SENSITIVITY, -1,
-                ResultsSelector.SortKey.REFERENCE, 2,
-                ResultsSelector.SortKey.VARIABLE, 3,
-                ResultsSelector.SortKey.FUNCTION, 4))
+                SortKey.SENSITIVITY, -1,
+                SortKey.REFERENCE, 2,
+                SortKey.VARIABLE, 3,
+                SortKey.FUNCTION, 4))
             .build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
                 mapper.writeValueAsString(selectorN)))
@@ -589,19 +592,19 @@ public class SensitivityAnalysisControllerTest {
         // check results can be retrieved for the with contingencies side
         // filtered and sorted by multiple criteria too
         ResultsSelector selectorNK = ResultsSelector.builder()
-            .isJustBefore(false)
+            .tabSelection(ResultTab.N_K)
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .contingencyIds(CONTINGENCIES_VARIANT.stream().map(Contingency::getId).collect(Collectors.toList()))
             .functionIds(BRANCHES_VARIANT.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
             .variableIds(GENERATORS.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()))
             .sortKeysWithWeightAndDirection(Map.of(
-                ResultsSelector.SortKey.POST_SENSITIVITY, -1,
-                ResultsSelector.SortKey.POST_REFERENCE, -2,
-                ResultsSelector.SortKey.SENSITIVITY, -3,
-                ResultsSelector.SortKey.VARIABLE, 4,
-                ResultsSelector.SortKey.FUNCTION, 5,
-                ResultsSelector.SortKey.REFERENCE, 6,
-                ResultsSelector.SortKey.CONTINGENCY, 7))
+                SortKey.POST_SENSITIVITY, -1,
+                SortKey.POST_REFERENCE, -2,
+                SortKey.SENSITIVITY, -3,
+                SortKey.VARIABLE, 4,
+                SortKey.FUNCTION, 5,
+                SortKey.REFERENCE, 6,
+                SortKey.CONTINGENCY, 7))
             .pageSize(10)
             .pageNumber(0)
             .build();
@@ -616,7 +619,7 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(6, (long) resNK.getTotalSensitivitiesCount());
         assertEquals(2, resNK.getSensitivities().size());
 
-        ResultsSelector filterOptionsSelector = ResultsSelector.builder().isJustBefore(false)
+        ResultsSelector filterOptionsSelector = ResultsSelector.builder().tabSelection(ResultTab.N_K)
                 .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/filter-options?selector={selector}", RESULT_UUID,
                         mapper.writeValueAsString(filterOptionsSelector)))
@@ -628,7 +631,7 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(3, filterOptions.getAllFunctionIds().size());
         assertEquals(2, filterOptions.getAllVariableIds().size());
 
-        ResultsSelector filterOptionsSelector2 = ResultsSelector.builder().isJustBefore(true)
+        ResultsSelector filterOptionsSelector2 = ResultsSelector.builder().tabSelection(ResultTab.N)
                 .functionType(SensitivityFunctionType.BRANCH_CURRENT_1).build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/filter-options?selector={selector}", RESULT_UUID,
                         mapper.writeValueAsString(filterOptionsSelector2)))
@@ -641,7 +644,7 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(0, filterOptions2.getAllVariableIds().size());
 
         // check that a request for not present contingency does not crash and just brings nothing
-        ResultsSelector selectorNKz1 = ResultsSelector.builder().isJustBefore(false)
+        ResultsSelector selectorNKz1 = ResultsSelector.builder().tabSelection(ResultTab.N_K)
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).contingencyIds(List.of("unfoundable")).build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
                 mapper.writeValueAsString(selectorNKz1)))
@@ -652,7 +655,7 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(0, (long) resNKz1.getTotalSensitivitiesCount());
 
         // check that a request for not present function does not crash and just brings nothing
-        ResultsSelector selectorNKz2 = ResultsSelector.builder().isJustBefore(false)
+        ResultsSelector selectorNKz2 = ResultsSelector.builder().tabSelection(ResultTab.N_K)
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).functionIds(List.of("unfoundable")).build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
                 mapper.writeValueAsString(selectorNKz2)))
@@ -663,7 +666,7 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(0, (long) resNKz2.getTotalSensitivitiesCount());
 
         // check that a request for not present variable does not crash and just brings nothing
-        ResultsSelector selectorNKz3 = ResultsSelector.builder().isJustBefore(false)
+        ResultsSelector selectorNKz3 = ResultsSelector.builder().tabSelection(ResultTab.N_K)
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).variableIds(List.of("unfoundable")).build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
                 mapper.writeValueAsString(selectorNKz3)))
@@ -674,7 +677,7 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(0, (long) resNKz3.getTotalSensitivitiesCount());
 
         // check that a request for another function type does not crash and just brings nothing
-        ResultsSelector selectorNKz4 = ResultsSelector.builder().isJustBefore(false)
+        ResultsSelector selectorNKz4 = ResultsSelector.builder().tabSelection(ResultTab.N_K)
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_2).build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID,
                 mapper.writeValueAsString(selectorNKz4)))
