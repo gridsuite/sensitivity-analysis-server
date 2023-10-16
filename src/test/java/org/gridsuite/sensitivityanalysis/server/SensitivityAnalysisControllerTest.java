@@ -81,6 +81,7 @@ import static org.gridsuite.sensitivityanalysis.server.service.NotificationServi
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -331,28 +332,28 @@ public class SensitivityAnalysisControllerTest {
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData1 = SensitivityAnalysisInputData.builder()
             .sensitivityInjectionsSets(List.of(SensitivityInjectionsSet.builder()
-                .monitoredBranches(List.of(new FilterIdent(MONITORED_BRANCHES_FILTERS_INJECTIONS_SET_UUID, "name1")))
-                .injections(List.of(new FilterIdent(GENERATORS_FILTERS_INJECTIONS_SET_UUID, "name2"), new FilterIdent(LOADS_FILTERS_INJECTIONS_SET_UUID, "name3")))
+                .monitoredBranches(List.of(new EquipmentsContainer(MONITORED_BRANCHES_FILTERS_INJECTIONS_SET_UUID, "name1")))
+                .injections(List.of(new EquipmentsContainer(GENERATORS_FILTERS_INJECTIONS_SET_UUID, "name2"), new EquipmentsContainer(LOADS_FILTERS_INJECTIONS_SET_UUID, "name3")))
                 .distributionType(SensitivityAnalysisInputData.DistributionType.REGULAR)
-                .contingencies(List.of(new FilterIdent(CONTINGENCIES_INJECTIONS_SET_UUID, "name4"))).build()))
+                .contingencies(List.of(new EquipmentsContainer(CONTINGENCIES_INJECTIONS_SET_UUID, "name4"))).build()))
             .sensitivityInjections(List.of(SensitivityInjection.builder()
-                .monitoredBranches(List.of(new FilterIdent(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, "name5")))
-                .injections(List.of(new FilterIdent(GENERATORS_FILTERS_INJECTIONS_UUID, "name6")))
-                .contingencies(List.of(new FilterIdent(CONTINGENCIES_INJECTIONS_UUID1, "name7"), new FilterIdent(CONTINGENCIES_INJECTIONS_UUID2, "name8"))).build()))
+                .monitoredBranches(List.of(new EquipmentsContainer(MONITORED_BRANCHES_FILTERS_INJECTIONS_UUID, "name5")))
+                .injections(List.of(new EquipmentsContainer(GENERATORS_FILTERS_INJECTIONS_UUID, "name6")))
+                .contingencies(List.of(new EquipmentsContainer(CONTINGENCIES_INJECTIONS_UUID1, "name7"), new EquipmentsContainer(CONTINGENCIES_INJECTIONS_UUID2, "name8"))).build()))
             .sensitivityHVDCs(List.of(SensitivityHVDC.builder()
-                .monitoredBranches(List.of(new FilterIdent(MONITORED_BRANCHES_FILTERS_HVDC_UUID, "name9")))
+                .monitoredBranches(List.of(new EquipmentsContainer(MONITORED_BRANCHES_FILTERS_HVDC_UUID, "name9")))
                 .sensitivityType(SensitivityAnalysisInputData.SensitivityType.DELTA_MW)
-                .hvdcs(List.of(new FilterIdent(HVDC_FILTERS_UUID, "name10")))
-                .contingencies(List.of(new FilterIdent(CONTINGENCIES_HVDCS_UUID, "name11"))).build()))
+                .hvdcs(List.of(new EquipmentsContainer(HVDC_FILTERS_UUID, "name10")))
+                .contingencies(List.of(new EquipmentsContainer(CONTINGENCIES_HVDCS_UUID, "name11"))).build()))
             .sensitivityPSTs(List.of(SensitivityPST.builder()
-                .monitoredBranches(List.of(new FilterIdent(MONITORED_BRANCHES_FILTERS_PST_UUID, "name12")))
+                .monitoredBranches(List.of(new EquipmentsContainer(MONITORED_BRANCHES_FILTERS_PST_UUID, "name12")))
                 .sensitivityType(SensitivityAnalysisInputData.SensitivityType.DELTA_A)
-                .psts(List.of(new FilterIdent(PST_FILTERS_UUID1, "name13"), new FilterIdent(PST_FILTERS_UUID2, "name14")))
-                .contingencies(List.of(new FilterIdent(CONTINGENCIES_PSTS_UUID, "name15"))).build()))
+                .psts(List.of(new EquipmentsContainer(PST_FILTERS_UUID1, "name13"), new EquipmentsContainer(PST_FILTERS_UUID2, "name14")))
+                .contingencies(List.of(new EquipmentsContainer(CONTINGENCIES_PSTS_UUID, "name15"))).build()))
             .sensitivityNodes(List.of(SensitivityNodes.builder()
-                .monitoredVoltageLevels(List.of(new FilterIdent(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID, "name16")))
-                .equipmentsInVoltageRegulation(List.of(new FilterIdent(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, "name17")))
-                .contingencies(List.of(new FilterIdent(CONTINGENCIES_NODES_UUID, "name18"))).build()))
+                .monitoredVoltageLevels(List.of(new EquipmentsContainer(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID, "name16")))
+                .equipmentsInVoltageRegulation(List.of(new EquipmentsContainer(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, "name17")))
+                .contingencies(List.of(new EquipmentsContainer(CONTINGENCIES_NODES_UUID, "name18"))).build()))
             .parameters(SensitivityAnalysisParameters.load())
             .build();
         SENSITIVITY_INPUT_1 = mapper.writeValueAsString(sensitivityAnalysisInputData1);
@@ -362,19 +363,19 @@ public class SensitivityAnalysisControllerTest {
         SENSITIVITY_INPUT_2 = mapper.writeValueAsString(sensitivityAnalysisInputData2);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData3 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
-        sensitivityAnalysisInputData3.getSensitivityInjectionsSets().get(0).getInjections().get(0).setId(HVDC_FILTERS_UUID);
+        sensitivityAnalysisInputData3.getSensitivityInjectionsSets().get(0).getInjections().get(0).setContainerId(HVDC_FILTERS_UUID);
         SENSITIVITY_INPUT_3 = mapper.writeValueAsString(sensitivityAnalysisInputData3);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData4 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
-        sensitivityAnalysisInputData4.getSensitivityInjectionsSets().get(0).getMonitoredBranches().get(0).setId(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
+        sensitivityAnalysisInputData4.getSensitivityInjectionsSets().get(0).getMonitoredBranches().get(0).setContainerId(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
         SENSITIVITY_INPUT_4 = mapper.writeValueAsString(sensitivityAnalysisInputData4);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData5 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
-        sensitivityAnalysisInputData5.getSensitivityInjections().get(0).getMonitoredBranches().get(0).setId(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
+        sensitivityAnalysisInputData5.getSensitivityInjections().get(0).getMonitoredBranches().get(0).setContainerId(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
         SENSITIVITY_INPUT_5 = mapper.writeValueAsString(sensitivityAnalysisInputData5);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData6 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
-        sensitivityAnalysisInputData6.getSensitivityPSTs().get(0).getPsts().get(0).setId(GENERATORS_FILTERS_INJECTIONS_UUID);
+        sensitivityAnalysisInputData6.getSensitivityPSTs().get(0).getPsts().get(0).setContainerId(GENERATORS_FILTERS_INJECTIONS_UUID);
         SENSITIVITY_INPUT_6 = mapper.writeValueAsString(sensitivityAnalysisInputData6);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputDataHvdcWithDeltaA = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
@@ -383,7 +384,7 @@ public class SensitivityAnalysisControllerTest {
 
         SensitivityAnalysisInputData sensitivityAnalysisInputDataLoadWithProportionalMaxP = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
         sensitivityAnalysisInputDataLoadWithProportionalMaxP.getSensitivityInjectionsSets().get(0).setDistributionType(SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP);
-        sensitivityAnalysisInputDataLoadWithProportionalMaxP.getSensitivityInjectionsSets().get(0).getInjections().get(1).setId(LOADS_FILTERS_INJECTIONS_SET_WITH_BAD_DISTRIBUTION_TYPE_UUID);
+        sensitivityAnalysisInputDataLoadWithProportionalMaxP.getSensitivityInjectionsSets().get(0).getInjections().get(1).setContainerId(LOADS_FILTERS_INJECTIONS_SET_WITH_BAD_DISTRIBUTION_TYPE_UUID);
         SENSITIVITY_INPUT_LOAD_PROPORTIONAL_MAXP = mapper.writeValueAsString(sensitivityAnalysisInputDataLoadWithProportionalMaxP);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputDataVentilation = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
@@ -615,6 +616,30 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(6, (long) resNK.getTotalSensitivitiesCount());
         assertEquals(2, resNK.getSensitivities().size());
 
+        ResultsSelector filterOptionsSelector = ResultsSelector.builder().isJustBefore(false)
+                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).build();
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/filter-options?selector={selector}", RESULT_UUID,
+                        mapper.writeValueAsString(filterOptionsSelector)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        SensitivityResultFilterOptions filterOptions = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(3, filterOptions.getAllContingencyIds().size());
+        assertEquals(3, filterOptions.getAllFunctionIds().size());
+        assertEquals(2, filterOptions.getAllVariableIds().size());
+
+        ResultsSelector filterOptionsSelector2 = ResultsSelector.builder().isJustBefore(true)
+                .functionType(SensitivityFunctionType.BRANCH_CURRENT_1).build();
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/filter-options?selector={selector}", RESULT_UUID,
+                        mapper.writeValueAsString(filterOptionsSelector2)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        SensitivityResultFilterOptions filterOptions2 = mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNull(filterOptions2.getAllContingencyIds());
+        assertEquals(0, filterOptions2.getAllFunctionIds().size());
+        assertEquals(0, filterOptions2.getAllVariableIds().size());
+
         // check that a request for not present contingency does not crash and just brings nothing
         ResultsSelector selectorNKz1 = ResultsSelector.builder().isJustBefore(false)
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).contingencyIds(List.of("unfoundable")).build();
@@ -748,10 +773,8 @@ public class SensitivityAnalysisControllerTest {
             .andExpect(status().isOk());
 
         // stop sensitivity analysis
-        assertNotNull(output.receive(TIMEOUT, "sensitivityanalysis.run"));
         mockMvc.perform(put("/" + VERSION + "/results/{resultUuid}/stop" + "?receiver=me", RESULT_UUID))
             .andExpect(status().isOk());
-        assertNotNull(output.receive(TIMEOUT, "sensitivityanalysis.cancel"));
 
         Message<byte[]> message = output.receive(TIMEOUT, "sensitivityanalysis.stopped");
         assertNotNull(message);

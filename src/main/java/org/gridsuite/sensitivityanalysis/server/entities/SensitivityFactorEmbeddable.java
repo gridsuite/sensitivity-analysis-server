@@ -4,10 +4,10 @@
  */
 package org.gridsuite.sensitivityanalysis.server.entities;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
 import com.powsybl.contingency.ContingencyContextType;
 import com.powsybl.sensitivity.SensitivityFunctionType;

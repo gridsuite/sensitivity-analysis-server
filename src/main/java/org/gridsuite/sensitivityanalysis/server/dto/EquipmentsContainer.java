@@ -6,27 +6,21 @@
  */
 package org.gridsuite.sensitivityanalysis.server.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.experimental.SuperBuilder;
 
-import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-@SuperBuilder
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
-@Schema(description = "Sensitivity relatively to nodes")
-public class SensitivityNodes {
-    List<EquipmentsContainer> monitoredVoltageLevels;
-
-    List<EquipmentsContainer> equipmentsInVoltageRegulation;
-
-    List<EquipmentsContainer> contingencies;
+public class EquipmentsContainer {
+    UUID containerId;
+    String containerName;
 }
-

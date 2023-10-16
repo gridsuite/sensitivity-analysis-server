@@ -23,11 +23,11 @@ import java.util.List;
 @Setter
 @Schema(description = "Sensitivity relatively to each HVDC")
 public class SensitivityHVDC {
-    List<FilterIdent> monitoredBranches;
+    List<EquipmentsContainer> monitoredBranches;
 
     SensitivityAnalysisInputData.SensitivityType sensitivityType;
 
-    List<FilterIdent> hvdcs;
+    List<EquipmentsContainer> hvdcs;
 
-    List<FilterIdent> contingencies;
+    List<EquipmentsContainer> contingencies;
 }

@@ -15,12 +15,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.util.CollectionUtils;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -36,6 +37,25 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
     String CONTINGENCY = "contingency";
 
     Page<SensitivityEntity> findAll(Specification<SensitivityEntity> specification, Pageable pageable);
+
+    @Query(value = "SELECT distinct s.factor.functionId from SensitivityEntity as s " +
+            "where s.result.resultUuid = :resultUuid " +
+            "and s.factor.functionType = :sensitivityFunctionType " +
+            "and ((:withContingency = true and s.contingency is not null ) or (:withContingency = false and s.contingency is null )) " +
+            "order by s.factor.functionId")
+    List<String> getDistinctFunctionIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType, boolean withContingency);
+
+    @Query(value = "SELECT distinct s.factor.variableId from SensitivityEntity as s " +
+            "where s.result.resultUuid = :resultUuid " +
+            "and s.factor.functionType = :sensitivityFunctionType " +
+            "and ((:withContingency = true and s.contingency is not null ) or (:withContingency = false and s.contingency is null )) " +
+            "order by s.factor.variableId")
+    List<String> getDistinctVariableIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType, boolean withContingency);
+
+    @Query(value = "SELECT distinct s.contingency.contingencyId from SensitivityEntity as s " +
+            "where s.result.resultUuid = :resultUuid and s.factor.functionType = :sensitivityFunctionType " +
+            "order by s.contingency.contingencyId")
+    List<String> getDistinctContingencyIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
 
     static Specification<SensitivityEntity> getSpecification(AnalysisResultEntity sas,
                                                              SensitivityFunctionType functionType,
