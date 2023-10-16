@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.SneakyThrows;
-import org.gridsuite.sensitivityanalysis.server.dto.ResultSelector.ResultTab;
-import org.gridsuite.sensitivityanalysis.server.dto.ResultSelector.ResultsSelector;
+import org.gridsuite.sensitivityanalysis.server.dto.resultSelector.ResultTab;
+import org.gridsuite.sensitivityanalysis.server.dto.resultSelector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.SensitivityAnalysisApplication;
-import org.gridsuite.sensitivityanalysis.server.dto.ResultSelector.SortKey;
+import org.gridsuite.sensitivityanalysis.server.dto.resultSelector.SortKey;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;

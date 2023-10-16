@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.sensitivityanalysis.server.dto.ResultSelector;
+package org.gridsuite.sensitivityanalysis.server.dto.resultSelector;
 
 import java.util.Collection;
 import java.util.Map;

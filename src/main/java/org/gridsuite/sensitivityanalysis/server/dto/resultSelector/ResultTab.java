@@ -5,18 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.sensitivityanalysis.server.dto.ResultSelector;
+package org.gridsuite.sensitivityanalysis.server.dto.resultSelector;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
  */
 
-public enum SortKey {
-    FUNCTION,
-    VARIABLE,
-    CONTINGENCY,
-    REFERENCE,
-    SENSITIVITY,
-    POST_REFERENCE,
-    POST_SENSITIVITY
+public enum ResultTab {
+    N,
+    N_K
 }

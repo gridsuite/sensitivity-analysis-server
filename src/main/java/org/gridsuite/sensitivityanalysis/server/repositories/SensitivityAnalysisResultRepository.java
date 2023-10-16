@@ -8,9 +8,9 @@ package org.gridsuite.sensitivityanalysis.server.repositories;
 
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityValue;
-import org.gridsuite.sensitivityanalysis.server.dto.ResultSelector.ResultTab;
-import org.gridsuite.sensitivityanalysis.server.dto.ResultSelector.ResultsSelector;
-import org.gridsuite.sensitivityanalysis.server.dto.ResultSelector.SortKey;
+import org.gridsuite.sensitivityanalysis.server.dto.resultSelector.ResultTab;
+import org.gridsuite.sensitivityanalysis.server.dto.resultSelector.ResultsSelector;
+import org.gridsuite.sensitivityanalysis.server.dto.resultSelector.SortKey;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
@@ -224,7 +224,7 @@ public class SensitivityAnalysisResultRepository {
 
         boolean withContingency = selector.getTabSelection() == ResultTab.N_K;
         SensitivityRunQueryResult.SensitivityRunQueryResultBuilder retBuilder = SensitivityRunQueryResult.builder()
-            .isJustBefore(withContingency)
+            .resultTab(selector.getTabSelection())
             .functionType(selector.getFunctionType())
             .requestedChunkSize(selector.getPageSize() == null ? 0 : selector.getPageSize())
             .chunkOffset(selector.getOffset() == null ? 0 : selector.getOffset());
