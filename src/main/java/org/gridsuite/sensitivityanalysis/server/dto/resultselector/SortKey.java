@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.sensitivityanalysis.server.dto.resultSelector;
+package org.gridsuite.sensitivityanalysis.server.dto.resultselector;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>

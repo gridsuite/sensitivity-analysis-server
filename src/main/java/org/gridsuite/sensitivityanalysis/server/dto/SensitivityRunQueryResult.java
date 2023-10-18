@@ -14,7 +14,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.sensitivityanalysis.server.dto.resultSelector.ResultTab;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 
 /**
  * @author Laurent Garnier <laurent.garnier at rte-france.com>
