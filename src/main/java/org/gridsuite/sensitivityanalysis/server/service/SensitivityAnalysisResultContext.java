@@ -69,7 +69,6 @@ public class SensitivityAnalysisResultContext {
         UUID resultUuid = UUID.fromString(getNonNullHeader(headers, "resultUuid"));
         UUID networkUuid = UUID.fromString(getNonNullHeader(headers, "networkUuid"));
         String variantId = (String) headers.get("variantId");
-        List<UUID> otherNetworkUuids = getHeaderList(headers, "otherNetworkUuids");
 
         String receiver = (String) headers.get("receiver");
         String provider = (String) headers.get("provider");
@@ -82,7 +81,7 @@ public class SensitivityAnalysisResultContext {
         UUID reportUuid = headers.containsKey(REPORT_UUID) ? UUID.fromString((String) headers.get(REPORT_UUID)) : null;
         String reporterId = headers.containsKey(REPORTER_ID_HEADER) ? (String) headers.get(REPORTER_ID_HEADER) : null;
         SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid,
-            variantId, otherNetworkUuids, sensitivityAnalysisInputData, receiver, provider, reportUuid, reporterId);
+            variantId, sensitivityAnalysisInputData, receiver, provider, reportUuid, reporterId);
         return new SensitivityAnalysisResultContext(resultUuid, runContext);
     }
 
@@ -97,7 +96,6 @@ public class SensitivityAnalysisResultContext {
                 .setHeader("resultUuid", resultUuid.toString())
                 .setHeader("networkUuid", runContext.getNetworkUuid().toString())
                 .setHeader("variantId", runContext.getVariantId())
-                .setHeader("otherNetworkUuids", runContext.getOtherNetworkUuids().stream().map(UUID::toString).collect(Collectors.joining(",")))
                 .setHeader("receiver", runContext.getReceiver())
                 .setHeader("provider", runContext.getProvider())
                 .setHeader(REPORT_UUID, runContext.getReportUuid())

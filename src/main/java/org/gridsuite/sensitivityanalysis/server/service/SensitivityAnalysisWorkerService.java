@@ -12,7 +12,6 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.extensions.Extension;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.iidm.mergingview.MergingView;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.loadflow.LoadFlowParameters;
@@ -41,7 +40,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
 
@@ -110,21 +108,6 @@ public class SensitivityAnalysisWorkerService {
         return network;
     }
 
-    private Network getNetwork(UUID networkUuid, List<UUID> otherNetworkUuids, String variantId) {
-        Network network = getNetwork(networkUuid, variantId);
-        if (otherNetworkUuids.isEmpty()) {
-            return network;
-        } else {
-            List<Network> otherNetworks = otherNetworkUuids.stream().map(uuid -> getNetwork(uuid, variantId)).collect(Collectors.toList());
-            List<Network> networks = new ArrayList<>();
-            networks.add(network);
-            networks.addAll(otherNetworks);
-            MergingView mergingView = MergingView.create("merge", "iidm");
-            mergingView.merge(networks.toArray(new Network[0]));
-            return mergingView;
-        }
-    }
-
     public SensitivityAnalysisResult run(SensitivityAnalysisRunContext context) {
         try {
             return run(context, null);
@@ -187,7 +170,7 @@ public class SensitivityAnalysisWorkerService {
                 return null;
             }
             SensitivityAnalysisParameters sensitivityAnalysisParameters = buildParameters(context);
-            Network network = getNetwork(context.getNetworkUuid(), context.getOtherNetworkUuids(), context.getVariantId());
+            Network network = getNetwork(context.getNetworkUuid(), context.getVariantId());
             sensitivityAnalysisInputBuilderService.build(context, network, reporter);
 
             CompletableFuture<SensitivityAnalysisResult> future = sensitivityAnalysisRunner.runAsync(

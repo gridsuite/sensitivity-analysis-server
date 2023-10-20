@@ -139,7 +139,7 @@ public class SensitivityAnalysisServiceTest {
     @Test
     public void test0() {
         SensitivityAnalysisRunContext context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID,
-                Collections.emptyList(), getDummyInputData(), null, null, null, null);
+                getDummyInputData(), null, null, null, null);
         testBasic(true, context);
         testBasic(false, context);
     }
@@ -156,7 +156,7 @@ public class SensitivityAnalysisServiceTest {
                 .loadFlowSpecificParameters(null)
                 .build();
         SensitivityAnalysisRunContext context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID,
-                Collections.emptyList(), inputData, null, "OpenLoadFlow", null, null);
+                inputData, null, "OpenLoadFlow", null, null);
         testBasic(true, context);
 
         // with non-null LF params
@@ -304,7 +304,7 @@ public class SensitivityAnalysisServiceTest {
 
         UUID gottenResultUuid = analysisService.runAndSaveResult(
             new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID,
-                Collections.emptyList(), getDummyInputData(), null, null, null, null));
+                getDummyInputData(), null, null, null, null));
         assertThat(gottenResultUuid, not(nullValue()));
         assertThat(gottenResultUuid, is(resultUuid));
 
@@ -376,7 +376,7 @@ public class SensitivityAnalysisServiceTest {
 
         UUID gottenResultUuid = analysisService.runAndSaveResult(
             new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID,
-                Collections.emptyList(), getDummyInputData(), null, null, null, null));
+                getDummyInputData(), null, null, null, null));
         assertThat(gottenResultUuid, not(nullValue()));
         assertThat(gottenResultUuid, is(resultUuid));
 

@@ -8,7 +8,6 @@ package org.gridsuite.sensitivityanalysis.server.service;
 
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -20,8 +19,6 @@ public class SensitivityAnalysisRunContext {
     private final UUID networkUuid;
 
     private final String variantId;
-
-    private final List<UUID> otherNetworkUuids;
 
     private final SensitivityAnalysisInputData sensitivityAnalysisInputData;
 
@@ -35,12 +32,11 @@ public class SensitivityAnalysisRunContext {
 
     private final String reporterId;
 
-    public SensitivityAnalysisRunContext(UUID networkUuid, String variantId, List<UUID> otherNetworkUuids,
+    public SensitivityAnalysisRunContext(UUID networkUuid, String variantId,
                                          SensitivityAnalysisInputData sensitivityAnalysisInputData,
                                          String receiver, String provider, UUID reportUuid, String reporterId) {
         this.networkUuid = Objects.requireNonNull(networkUuid);
         this.variantId = variantId;
-        this.otherNetworkUuids = Objects.requireNonNull(otherNetworkUuids);
         this.sensitivityAnalysisInputData = Objects.requireNonNull(sensitivityAnalysisInputData);
         this.sensitivityAnalysisInputs = new SensitivityAnalysisInputs();
         this.receiver = receiver;
@@ -55,10 +51,6 @@ public class SensitivityAnalysisRunContext {
 
     public String getVariantId() {
         return variantId;
-    }
-
-    public List<UUID> getOtherNetworkUuids() {
-        return otherNetworkUuids;
     }
 
     public SensitivityAnalysisInputData getSensitivityAnalysisInputData() {

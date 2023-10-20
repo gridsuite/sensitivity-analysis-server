@@ -28,7 +28,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,10 +50,6 @@ public class SensitivityAnalysisController {
         this.workerService = workerService;
     }
 
-    private static List<UUID> getNonNullOtherNetworkUuids(List<UUID> otherNetworkUuids) {
-        return otherNetworkUuids != null ? otherNetworkUuids : Collections.emptyList();
-    }
-
     private static ResultsSelector getSelector(String selectorJson) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         return selectorJson == null ?
@@ -70,13 +65,11 @@ public class SensitivityAnalysisController {
                                                             schema = @Schema(implementation = SensitivityAnalysisResult.class))})})
     public ResponseEntity<SensitivityAnalysisResult> run(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                          @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
-                                                         @Parameter(description = "Other networks UUID (to merge with main one))") @RequestParam(name = "networkUuid", required = false) List<UUID> otherNetworkUuids,
                                                          @Parameter(description = "Provider") @RequestParam(name = "provider", required = false) String provider,
                                                          @Parameter(description = "reportUuid") @RequestParam(name = "reportUuid", required = false) UUID reportUuid,
                                                          @Parameter(description = "reporterId") @RequestParam(name = "reporterId", required = false) String reporterId,
                                                          @RequestBody SensitivityAnalysisInputData sensitivityAnalysisInputData) {
-        List<UUID> nonNullOtherNetworkUuids = getNonNullOtherNetworkUuids(otherNetworkUuids);
-        SensitivityAnalysisResult result = workerService.run(new SensitivityAnalysisRunContext(networkUuid, variantId, nonNullOtherNetworkUuids, sensitivityAnalysisInputData, null, provider, reportUuid, reporterId));
+        SensitivityAnalysisResult result = workerService.run(new SensitivityAnalysisRunContext(networkUuid, variantId, sensitivityAnalysisInputData, null, provider, reportUuid, reporterId));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result);
     }
 
@@ -88,14 +81,12 @@ public class SensitivityAnalysisController {
                                                             schema = @Schema(implementation = SensitivityAnalysisResult.class))})})
     public ResponseEntity<UUID> runAndSave(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                            @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
-                                           @Parameter(description = "Other networks UUID (to merge with main one))") @RequestParam(name = "networkUuid", required = false) List<UUID> otherNetworkUuids,
                                            @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver,
                                            @Parameter(description = "Provider") @RequestParam(name = "provider", required = false) String provider,
                                            @Parameter(description = "reportUuid") @RequestParam(name = "reportUuid", required = false) UUID reportUuid,
                                            @Parameter(description = "reporterId") @RequestParam(name = "reporterId", required = false) String reporterId,
                                            @RequestBody SensitivityAnalysisInputData sensitivityAnalysisInputData) {
-        List<UUID> nonNullOtherNetworkUuids = getNonNullOtherNetworkUuids(otherNetworkUuids);
-        UUID resultUuid = service.runAndSaveResult(new SensitivityAnalysisRunContext(networkUuid, variantId, nonNullOtherNetworkUuids, sensitivityAnalysisInputData, receiver, provider, reportUuid, reporterId));
+        UUID resultUuid = service.runAndSaveResult(new SensitivityAnalysisRunContext(networkUuid, variantId, sensitivityAnalysisInputData, receiver, provider, reportUuid, reporterId));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 

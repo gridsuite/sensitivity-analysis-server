@@ -111,9 +111,6 @@ public class SensitivityAnalysisControllerTest {
     private static final UUID RESULT_UUID = UUID.randomUUID();
     private static final UUID REPORT_UUID = UUID.randomUUID();
     private static final UUID OTHER_RESULT_UUID = UUID.randomUUID();
-    private static final UUID NETWORK_FOR_MERGING_VIEW_UUID = UUID.randomUUID();
-    private static final UUID OTHER_NETWORK_FOR_MERGING_VIEW_UUID = UUID.randomUUID();
-
     private static final UUID MONITORED_BRANCHES_FILTERS_INJECTIONS_SET_UUID = UUID.randomUUID();
     private static final UUID GENERATORS_FILTERS_INJECTIONS_SET_UUID = UUID.randomUUID();
     private static final UUID LOADS_FILTERS_INJECTIONS_SET_UUID = UUID.randomUUID();
@@ -296,8 +293,6 @@ public class SensitivityAnalysisControllerTest {
 
     private Network network;
     private Network network1;
-    private Network networkForMergingView;
-    private Network otherNetworkForMergingView;
 
     @Before
     @SneakyThrows
@@ -315,12 +310,6 @@ public class SensitivityAnalysisControllerTest {
 
         given(networkStoreService.getNetwork(NETWORK_UUID, PreloadingStrategy.COLLECTION)).willReturn(network);
         given(networkStoreService.getNetwork(NETWORK_ERROR_UUID, PreloadingStrategy.COLLECTION)).willThrow(new RuntimeException(ERROR_MESSAGE));
-
-        networkForMergingView = new NetworkFactoryImpl().createNetwork("mergingView", "test");
-        given(networkStoreService.getNetwork(NETWORK_FOR_MERGING_VIEW_UUID, PreloadingStrategy.COLLECTION)).willReturn(networkForMergingView);
-
-        otherNetworkForMergingView = new NetworkFactoryImpl().createNetwork("other", "test 2");
-        given(networkStoreService.getNetwork(OTHER_NETWORK_FOR_MERGING_VIEW_UUID, PreloadingStrategy.COLLECTION)).willReturn(otherNetworkForMergingView);
 
         network1 = EurostagTutorialExample1Factory.createWithMoreGenerators(new NetworkFactoryImpl());
         network1.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_2_ID);
@@ -729,19 +718,6 @@ public class SensitivityAnalysisControllerTest {
 
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", RESULT_UUID))
             .andExpect(status().isNotFound());
-    }
-
-    @SneakyThrows
-    @Test
-    public void mergingViewTest() {
-        MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run-and-save?networkUuid=" + OTHER_NETWORK_FOR_MERGING_VIEW_UUID, NETWORK_FOR_MERGING_VIEW_UUID)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(SENSITIVITY_INPUT_1))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
-        assertEquals(RESULT_UUID, mapper.readValue(result.getResponse().getContentAsString(), UUID.class));
     }
 
     @SneakyThrows
