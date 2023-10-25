@@ -8,7 +8,9 @@ package org.gridsuite.sensitivityanalysis.server.repositories;
 
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityValue;
-import org.gridsuite.sensitivityanalysis.server.ResultsSelector;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
@@ -150,11 +152,12 @@ public class SensitivityAnalysisResultRepository {
             return null;
         }
 
+        boolean withContingency = selector.getTabSelection() == ResultTab.N_K;
         SensitivityResultFilterOptions.SensitivityResultFilterOptionsBuilder sensitivityResultOptionsBuilder = SensitivityResultFilterOptions.builder()
-                .allFunctionIds(sensitivityRepository.getDistinctFunctionIds(sas.getResultUuid(), selector.getFunctionType(), !selector.getIsJustBefore()))
-                .allVariableIds(sensitivityRepository.getDistinctVariableIds(sas.getResultUuid(), selector.getFunctionType(), !selector.getIsJustBefore()));
+                .allFunctionIds(sensitivityRepository.getDistinctFunctionIds(sas.getResultUuid(), selector.getFunctionType(), withContingency))
+                .allVariableIds(sensitivityRepository.getDistinctVariableIds(sas.getResultUuid(), selector.getFunctionType(), withContingency));
 
-        if (!selector.getIsJustBefore()) {
+        if (withContingency) {
             sensitivityResultOptionsBuilder.allContingencyIds(sensitivityRepository.getDistinctContingencyIds(sas.getResultUuid(), selector.getFunctionType())
                             .stream()
                             .filter(Objects::nonNull)
@@ -176,7 +179,7 @@ public class SensitivityAnalysisResultRepository {
                 selector.getFunctionIds(),
                 selector.getVariableIds(),
                 selector.getContingencyIds(),
-                !selector.getIsJustBefore());
+                selector.getTabSelection() == ResultTab.N_K);
 
         List<SensitivityEntity> sensitivityEntities = getSensitivityEntities(selector, specification);
         long filteredSensitivitiesCount = sensitivityRepository.count(specification);
@@ -193,7 +196,7 @@ public class SensitivityAnalysisResultRepository {
             pageSize = selector.getPageSize();
         }
 
-        Map<ResultsSelector.SortKey, Integer> sortKeysWithWeightAndDirection = selector.getSortKeysWithWeightAndDirection();
+        Map<SortKey, Integer> sortKeysWithWeightAndDirection = selector.getSortKeysWithWeightAndDirection();
         List<Sort.Order> sortListFiltered = new ArrayList<>();
         if (sortKeysWithWeightAndDirection != null && !sortKeysWithWeightAndDirection.isEmpty()) {
             List<Sort.Order> sortList = new ArrayList<>(Collections.nCopies(
@@ -219,8 +222,9 @@ public class SensitivityAnalysisResultRepository {
             return null;
         }
 
+        boolean withContingency = selector.getTabSelection() == ResultTab.N_K;
         SensitivityRunQueryResult.SensitivityRunQueryResultBuilder retBuilder = SensitivityRunQueryResult.builder()
-            .isJustBefore(selector.getIsJustBefore())
+            .resultTab(selector.getTabSelection())
             .functionType(selector.getFunctionType())
             .requestedChunkSize(selector.getPageSize() == null ? 0 : selector.getPageSize())
             .chunkOffset(selector.getOffset() == null ? 0 : selector.getOffset());
@@ -237,10 +241,10 @@ public class SensitivityAnalysisResultRepository {
                 null,
                 null,
                 null,
-                !selector.getIsJustBefore());
+                withContingency);
 
         long count = sensitivityRepository.count(totalSensitivitiesCountSpec);
-        if (selector.getIsJustBefore()) {
+        if (!withContingency) {
             List<SensitivityOfTo> befores = new ArrayList<>();
             sensitivityEntities.forEach(sensitivityEntity -> {
                 SensitivityFactorEmbeddable factorEmbeddable = sensitivityEntity.getFactor();
@@ -286,7 +290,7 @@ public class SensitivityAnalysisResultRepository {
         retBuilder.totalSensitivitiesCount(count);
     }
 
-    private String getSort(ResultsSelector.SortKey sortKey) {
+    private String getSort(SortKey sortKey) {
         switch (sortKey) {
             case FUNCTION : return "factor.functionId";
             case SENSITIVITY : return "value";

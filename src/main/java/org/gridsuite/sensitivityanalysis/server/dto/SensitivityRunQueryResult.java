@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 
 /**
  * @author Laurent Garnier <laurent.garnier at rte-france.com>
@@ -24,7 +25,8 @@ import lombok.NonNull;
 @Builder
 public class SensitivityRunQueryResult {
     @NonNull
-    Boolean isJustBefore;
+    ResultTab resultTab;
+
     @NonNull
     SensitivityFunctionType functionType;
 
