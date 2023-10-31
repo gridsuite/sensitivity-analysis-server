@@ -17,7 +17,6 @@ import org.springframework.messaging.support.MessageBuilder;
 
 import java.io.UncheckedIOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -43,16 +42,6 @@ public class SensitivityAnalysisResultContext {
 
     public SensitivityAnalysisRunContext getRunContext() {
         return runContext;
-    }
-
-    private static List<UUID> getHeaderList(MessageHeaders headers, String name) {
-        String header = (String) headers.get(name);
-        if (header == null || header.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return Arrays.asList(header.split(",")).stream()
-            .map(UUID::fromString)
-            .collect(Collectors.toList());
     }
 
     private static String getNonNullHeader(MessageHeaders headers, String name) {
