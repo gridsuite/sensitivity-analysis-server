@@ -1,0 +1,12 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="lecuyerfra (generated)" id="1699006549760-1">
+        <createTable tableName="non_evacuated_energy_result">
+            <column name="result_uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="non_evacuated_energy_resultPK"/>
+            </column>
+            <column name="result" type="CLOB"/>
+            <column name="write_time_stamp" type="TIMESTAMP(6)"/>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

@@ -44,29 +44,29 @@ public class NotificationService {
     @Autowired
     private StreamBridge publisher;
 
-    public void sendRunMessage(Message<String> message) {
+    public void sendRunMessage(String bindingName, Message<String> message) {
         RUN_MESSAGE_LOGGER.debug("Sending message : {}", message);
-        publisher.send("publishRun-out-0", message);
+        publisher.send(bindingName, message);
     }
 
-    public void sendCancelMessage(Message<String> message) {
+    public void sendCancelMessage(String bindingName, Message<String> message) {
         CANCEL_MESSAGE_LOGGER.debug("Sending message : {}", message);
-        publisher.send("publishCancel-out-0", message);
+        publisher.send(bindingName, message);
     }
 
     @PostCompletion
-    public void sendResultMessage(UUID resultUuid, String receiver) {
+    public void sendResultMessage(String bindingName, UUID resultUuid, String receiver) {
         Message<String> message = MessageBuilder
             .withPayload("")
             .setHeader(HEADER_RESULT_UUID, resultUuid.toString())
             .setHeader(HEADER_RECEIVER, receiver)
             .build();
         RESULT_MESSAGE_LOGGER.debug("Sending message : {}", message);
-        publisher.send("publishResult-out-0", message);
+        publisher.send(bindingName, message);
     }
 
     @PostCompletion
-    public void publishStop(UUID resultUuid, String receiver) {
+    public void publishStop(String bindingName, UUID resultUuid, String receiver) {
         Message<String> message = MessageBuilder
             .withPayload("")
             .setHeader(HEADER_RESULT_UUID, resultUuid.toString())
@@ -74,11 +74,11 @@ public class NotificationService {
             .setHeader(HEADER_MESSAGE, CANCEL_MESSAGE)
             .build();
         STOP_MESSAGE_LOGGER.debug("Sending message : {}", message);
-        publisher.send("publishStopped-out-0", message);
+        publisher.send(bindingName, message);
     }
 
     @PostCompletion
-    public void publishFail(UUID resultUuid, String receiver, String causeMessage) {
+    public void publishFail(String bindingName, UUID resultUuid, String receiver, String causeMessage) {
         Message<String> message = MessageBuilder
             .withPayload("")
             .setHeader(HEADER_RESULT_UUID, resultUuid.toString())
@@ -86,6 +86,6 @@ public class NotificationService {
             .setHeader(HEADER_MESSAGE, FAIL_MESSAGE + " : " + causeMessage)
             .build();
         FAILED_MESSAGE_LOGGER.debug("Sending message : {}", message);
-        publisher.send("publishFailed-out-0", message);
+        publisher.send(bindingName, message);
     }
 }

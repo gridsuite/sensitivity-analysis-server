@@ -4,7 +4,7 @@ spring:
 
   cloud:
     function:
-      definition: consumeRun;consumeCancel
+      definition: consumeRun;consumeCancel;consumeNonEvacuatedEnergyRun;consumeNonEvacuatedEnergyCancel
     stream:
       bindings:
         consumeRun-in-0:
@@ -24,7 +24,24 @@ spring:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}sensitivityanalysis.stopped
         publishFailed-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}sensitivityanalysis.failed
-      output-bindings: publishRun-out-0;publishResult-out-0;publishCancel-out-0;publishStopped-out-0;publishFailed-out-0
+
+        consumeNonEvacuatedEnergyRun-in-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.run
+          group: sensitivityanalysisGroup
+        publishNonEvacuatedEnergyRun-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.run
+        publishNonEvacuatedEnergyResult-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.result
+        consumeNonEvacuatedEnergyCancel-in-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.cancel
+        publishNonEvacuatedEnergyCancel-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.cancel
+        publishNonEvacuatedEnergyStopped-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.stopped
+        publishNonEvacuatedEnergyFailed-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.failed
+
+      output-bindings: publishRun-out-0;publishResult-out-0;publishCancel-out-0;publishStopped-out-0;publishFailed-out-0;publishNonEvacuatedEnergyRun-out-0;publishNonEvacuatedEnergyResult-out-0;publishNonEvacuatedEnergyCancel-out-0;publishNonEvacuatedEnergyStopped-out-0;publishNonEvacuatedEnergyFailed-out-0
 
 powsybl-ws:
   database:

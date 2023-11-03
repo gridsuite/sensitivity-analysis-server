@@ -56,7 +56,7 @@ public class SensitivityAnalysisService {
 
         // update status to running status
         setStatus(List.of(resultUuid), SensitivityAnalysisStatus.RUNNING.name());
-        notificationService.sendRunMessage(new SensitivityAnalysisResultContext(resultUuid, runContext).toMessage(objectMapper));
+        notificationService.sendRunMessage("publishRun-out-0", new SensitivityAnalysisResultContext(resultUuid, runContext).toMessage(objectMapper));
         return resultUuid;
     }
 
@@ -85,7 +85,7 @@ public class SensitivityAnalysisService {
     }
 
     public void stop(UUID resultUuid, String receiver) {
-        notificationService.sendCancelMessage(new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
+        notificationService.sendCancelMessage("publishCancel-out-0", new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
     }
 
     public List<String> getProviders() {
