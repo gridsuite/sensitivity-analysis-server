@@ -133,6 +133,8 @@ public class SensitivityAnalysisWorkerService {
             String rootReporterId = context.getReporterId() == null ? SENSI_TYPE_REPORT : context.getReporterId() + "@" + SENSI_TYPE_REPORT;
             rootReporter = new ReporterModel(rootReporterId, rootReporterId);
             reporter = rootReporter.createSubReporter(SENSI_TYPE_REPORT, SENSI_TYPE_REPORT + " (${providerToUse})", "providerToUse", sensitivityAnalysisRunner.getName());
+            // Delete any previous sensi computation logs
+            reportService.deleteReport(context.getReportUuid(), SENSI_TYPE_REPORT);
         }
 
         CompletableFuture<SensitivityAnalysisResult> future = runSensitivityAnalysisAsync(context, sensitivityAnalysisRunner, reporter, resultUuid);
