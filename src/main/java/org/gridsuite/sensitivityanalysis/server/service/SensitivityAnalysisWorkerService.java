@@ -51,8 +51,6 @@ public class SensitivityAnalysisWorkerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisWorkerService.class);
 
-    private static final String SENSI_TYPE_REPORT = "SensitivityAnalysis";
-
     private final NetworkStoreService networkStoreService;
 
     private final ReportService reportService;
@@ -130,11 +128,12 @@ public class SensitivityAnalysisWorkerService {
         Reporter rootReporter = Reporter.NO_OP;
         Reporter reporter = Reporter.NO_OP;
         if (context.getReportUuid() != null) {
-            String rootReporterId = context.getReporterId() == null ? SENSI_TYPE_REPORT : context.getReporterId() + "@" + SENSI_TYPE_REPORT;
+            final String reportType = context.getReportType();
+            String rootReporterId = context.getReporterId() == null ? reportType : context.getReporterId() + "@" + reportType;
             rootReporter = new ReporterModel(rootReporterId, rootReporterId);
-            reporter = rootReporter.createSubReporter(SENSI_TYPE_REPORT, SENSI_TYPE_REPORT + " (${providerToUse})", "providerToUse", sensitivityAnalysisRunner.getName());
+            reporter = rootReporter.createSubReporter(reportType, reportType + " (${providerToUse})", "providerToUse", sensitivityAnalysisRunner.getName());
             // Delete any previous sensi computation logs
-            reportService.deleteReport(context.getReportUuid(), SENSI_TYPE_REPORT);
+            reportService.deleteReport(context.getReportUuid(), reportType);
         }
 
         CompletableFuture<SensitivityAnalysisResult> future = runSensitivityAnalysisAsync(context, sensitivityAnalysisRunner, reporter, resultUuid);

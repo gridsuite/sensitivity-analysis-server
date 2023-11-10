@@ -509,7 +509,7 @@ public class SensitivityAnalysisControllerTest {
 
         // run with specific variant
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run?variantId=" + VARIANT_3_ID, NETWORK_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/run?reportType=SensitivityAnalysis&variantId=" + VARIANT_3_ID, NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(SENSITIVITY_INPUT_1))
             .andExpect(status().isOk())
@@ -520,7 +520,7 @@ public class SensitivityAnalysisControllerTest {
         // run with implicit initial variant
         for (String sensitivityInput : List.of(SENSITIVITY_INPUT_1, SENSITIVITY_INPUT_2, SENSITIVITY_INPUT_3, SENSITIVITY_INPUT_4, SENSITIVITY_INPUT_5, SENSITIVITY_INPUT_6, SENSITIVITY_INPUT_LOAD_PROPORTIONAL_MAXP, SENSITIVITY_INPUT_VENTILATION)) {
             result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run", NETWORK_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/run?reportType=SensitivityAnalysis", NETWORK_UUID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(sensitivityInput))
                 .andExpect(status().isOk())
@@ -531,7 +531,7 @@ public class SensitivityAnalysisControllerTest {
 
         // run with OpenLoadFlow provider and sensitivityType DELTA_A for HVDC
         result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run?provider=OpenLoadFlow", NETWORK_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/run?reportType=SensitivityAnalysis&provider=OpenLoadFlow", NETWORK_UUID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(SENSITIVITY_INPUT_HVDC_DELTA_A))
             .andExpect(status().isOk())
@@ -543,7 +543,7 @@ public class SensitivityAnalysisControllerTest {
     @Test
     public void runAndSaveTest() throws Exception {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run-and-save?receiver=me&variantId=" + VARIANT_2_ID, NETWORK_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(SENSITIVITY_INPUT_1))
             .andExpect(status().isOk())
@@ -706,7 +706,7 @@ public class SensitivityAnalysisControllerTest {
     @Test
     public void deleteResultsTest() {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run-and-save", NETWORK_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis", NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(SENSITIVITY_INPUT_1))
             .andExpect(status().isOk())
@@ -746,7 +746,7 @@ public class SensitivityAnalysisControllerTest {
     @Test
     public void stopTest() throws Exception {
         mockMvc.perform(post(
-            "/" + VERSION + "/networks/{networkUuid}/run-and-save?receiver=me&variantId=" + VARIANT_2_ID, NETWORK_STOP_UUID)
+            "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_STOP_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(SENSITIVITY_INPUT_1))
             .andExpect(status().isOk());
@@ -766,7 +766,7 @@ public class SensitivityAnalysisControllerTest {
     @Test
     public void runTestWithError() {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run-and-save?receiver=me&variantId=" + VARIANT_1_ID, NETWORK_ERROR_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_1_ID, NETWORK_ERROR_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(SENSITIVITY_INPUT_1))
             .andExpect(status().isOk())
@@ -789,7 +789,7 @@ public class SensitivityAnalysisControllerTest {
     @Test
     public void runWithReportTest() {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run?reportUuid=" + REPORT_UUID + "&reporterId=" + UUID.randomUUID(), NETWORK_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/run?reportType=SensitivityAnalysis&reportUuid=" + REPORT_UUID + "&reporterId=" + UUID.randomUUID(), NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(SENSITIVITY_INPUT_1))
             .andExpect(status().isOk())
