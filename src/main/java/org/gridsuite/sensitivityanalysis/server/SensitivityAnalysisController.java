@@ -23,7 +23,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.InputData;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisRunContext;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService;
@@ -200,11 +200,10 @@ public class SensitivityAnalysisController {
     public ResponseEntity<UUID> runNonEvacuatedEnergy(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                            @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                            @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver,
-                                           @Parameter(description = "Provider") @RequestParam(name = "provider", required = false) String provider,
                                            @Parameter(description = "reportUuid") @RequestParam(name = "reportUuid", required = false) UUID reportUuid,
                                            @Parameter(description = "reporterId") @RequestParam(name = "reporterId", required = false) String reporterId,
-                                           @RequestBody InputData inputData) {
-        UUID resultUuid = nonEvacuatedEnergyService.runAndSaveResult(new RunContext(networkUuid, variantId, inputData, receiver, provider, reportUuid, reporterId));
+                                           @RequestBody NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData) {
+        UUID resultUuid = nonEvacuatedEnergyService.runAndSaveResult(new RunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, reportUuid, reporterId));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 

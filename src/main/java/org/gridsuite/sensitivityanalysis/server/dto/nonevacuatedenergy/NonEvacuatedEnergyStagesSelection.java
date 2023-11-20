@@ -7,11 +7,14 @@
 package org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,11 +22,18 @@ import java.util.List;
  */
 @SuperBuilder
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
-@Schema(description = "Sensitivity analysis non evacuated energy generators limit")
-public class GeneratorsLimit {
-    Double sensitivityThreshold;
+@Schema(description = "Sensitivity analysis non evacuated energy stages selection")
+public class NonEvacuatedEnergyStagesSelection {
+    String name;
 
-    List<GeneratorLimitByType> generators;
+    @Builder.Default
+    List<Integer> stagesDefinitonIndex = new ArrayList<>();
+
+    @Builder.Default
+    List<Integer> pMaxPercentsIndex = new ArrayList<>();
+
+    boolean activated;
 }

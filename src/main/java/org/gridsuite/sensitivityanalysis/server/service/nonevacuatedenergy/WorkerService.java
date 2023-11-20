@@ -42,8 +42,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.sensitivityanalysis.server.dto.EquipmentsContainer;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.GeneratorsStageByEnergySource;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.Stages;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStageDefinition;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStagesSelection;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.ContingencyStageDetailResult;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.GeneratorCapping;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.MonitoredBranchDetailResult;
@@ -185,7 +185,7 @@ public class WorkerService {
 
         LOGGER.info("Run non evacuated energy sensitivity analysis");
 
-        SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(context.getProvider());
+        SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(context.getInputData().getProvider());
 
         Reporter rootReporter = Reporter.NO_OP;
         Reporter reporter = Reporter.NO_OP;
@@ -209,17 +209,17 @@ public class WorkerService {
             new SensitivityAnalysisParameters() : context.getInputData().getParameters();
 
         // set the flowFlowThreshold value
-        params.setFlowFlowSensitivityValueThreshold(context.getInputData().getGeneratorsLimit().getSensitivityThreshold());
+        params.setFlowFlowSensitivityValueThreshold(context.getInputData().getNonEvacuatedEnergyGeneratorsLimit().getSensitivityThreshold());
 
         if (context.getInputData().getLoadFlowSpecificParameters() == null
                 || context.getInputData().getLoadFlowSpecificParameters().isEmpty()) {
             return params; // no specific LF params
         }
         LoadFlowProvider lfProvider = LoadFlowProvider.findAll().stream()
-                .filter(p -> p.getName().equals(context.getProvider()))
-                .findFirst().orElseThrow(() -> new PowsyblException("Load flow provider not found " + context.getProvider()));
+                .filter(p -> p.getName().equals(context.getInputData().getProvider()))
+                .findFirst().orElseThrow(() -> new PowsyblException("Load flow provider not found " + context.getInputData().getProvider()));
         Extension<LoadFlowParameters> extension = lfProvider.loadSpecificParameters(context.getInputData().getLoadFlowSpecificParameters())
-                .orElseThrow(() -> new PowsyblException("Cannot add specific loadflow parameters with sensitivity analysis provider " + context.getProvider()));
+                .orElseThrow(() -> new PowsyblException("Cannot add specific loadflow parameters with sensitivity analysis provider " + context.getInputData().getProvider()));
         params.getLoadFlowParameters().addExtension((Class) extension.getClass(), extension);
         return params;
     }
@@ -235,15 +235,17 @@ public class WorkerService {
     }
 
     private void applyStage(Network network,
-                            Stages stageList,
+                            NonEvacuatedEnergyStagesSelection stageSelection,
                             RunContext context,
                             StageDetailResult stageDetailResult,
                             Reporter reporter) {
         // loop on each energy source in the stage input data
-        for (GeneratorsStageByEnergySource generatorsStageByEnergySource : stageList.getGeneratorsStageByEnergySources()) {
-            EnergySource energySource = generatorsStageByEnergySource.getEnergySource();
-            float pMaxPercent = generatorsStageByEnergySource.getPMaxPercent();
-            List<EquipmentsContainer> generatorsFilters = generatorsStageByEnergySource.getGenerators();
+        for (int i = 0; i < stageSelection.getStagesDefinitonIndex().size(); ++i) {
+            int stageDefinitionIndex = stageSelection.getStagesDefinitonIndex().get(i);
+            NonEvacuatedEnergyStageDefinition stageDefinition = context.getInputData().getNonEvacuatedEnergyStagesDefinition().get(stageDefinitionIndex);
+            EnergySource energySource = stageDefinition.getEnergySource();
+            float pMaxPercent = stageDefinition.getPMaxPercents().get(stageSelection.getPMaxPercentsIndex().get(i));
+            List<EquipmentsContainer> generatorsFilters = stageDefinition.getGenerators();
 
             // get the generators id from the filters
             List<IdentifiableAttributes> generators = new ArrayList<>();
@@ -698,7 +700,7 @@ public class WorkerService {
         // build the contingencies, variable sets and sensitivity factors used as input of the sensitivity analysis computation
         inputBuilderService.build(context, network, reporter);
 
-        List<Stages> stages = context.getInputData().getStages();
+        List<NonEvacuatedEnergyStagesSelection> stages = context.getInputData().getNonEvacuatedEnergyStagesSelection();
         int stageIndex = 0;
 
         // create global result
@@ -706,10 +708,10 @@ public class WorkerService {
 
         // Loop on all generation stages
         int iStage = 1;
-        for (Stages stageList : stages) {
-            Reporter subReporter = reporter.createSubReporter("Stage" + iStage, "Handling stage " + " (${stageName})", "stageName", stageList.getName());
+        for (NonEvacuatedEnergyStagesSelection stageSelection : stages) {
+            Reporter subReporter = reporter.createSubReporter("Stage" + iStage, "Handling stage " + " (${stageName})", "stageName", stageSelection.getName());
 
-            if (!stageList.isActivated()) {  // stage is not activated : we ignore it
+            if (!stageSelection.isActivated()) {  // stage is not activated : we ignore it
                 continue;
             }
 
@@ -720,10 +722,10 @@ public class WorkerService {
             try {
                 // create stage detail result
                 StageDetailResult stageDetailResult = new StageDetailResult();
-                results.getStagesDetail().put(stageList.getName(), stageDetailResult);
+                results.getStagesDetail().put(stageSelection.getName(), stageDetailResult);
 
                 // apply the stage before launching the sensitivity analysis
-                applyStage(network, stageList, context, stageDetailResult, subReporter);
+                applyStage(network, stageSelection, context, stageDetailResult, subReporter);
 
                 int iterationCount = 1;
                 boolean noMoreLimitViolation = true;
@@ -748,7 +750,7 @@ public class WorkerService {
 
                     if (sensiResult != null) {
                         // analyze sensi results and generate the generators cappings
-                        noMoreLimitViolation = analyzeSensiResults(network, context.getInputs(), sensiResult, generatorsCappings, stageList.getName(), subReporter, stageDetailResult);
+                        noMoreLimitViolation = analyzeSensiResults(network, context.getInputs(), sensiResult, generatorsCappings, stageSelection.getName(), subReporter, stageDetailResult);
                     }
                     if (!noMoreLimitViolation) {  // there is a limit violation on a monitored branch
                         // apply the generators cappings calculated just above to eliminate this limit violation

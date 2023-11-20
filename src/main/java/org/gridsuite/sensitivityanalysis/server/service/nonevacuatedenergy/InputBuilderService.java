@@ -27,9 +27,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.sensitivityanalysis.server.dto.EquipmentsContainer;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.ContingenciesContainer;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.GeneratorLimitByType;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.MonitoredBranches;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyContingencies;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyGeneratorLimitByType;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyMonitoredBranches;
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.slf4j.Logger;
@@ -186,7 +186,7 @@ public class InputBuilderService {
                                                                              Network network,
                                                                              Reporter reporter,
                                                                              List<IdentifiableType> monitoredEquipmentsTypesAllowed,
-                                                                             MonitoredBranches branches,
+                                                                             NonEvacuatedEnergyMonitoredBranches branches,
                                                                              List<SensitivityVariableSet> variablesSets,
                                                                              List<Contingency> contingencies,
                                                                              SensitivityVariableType sensitivityVariableType) {
@@ -206,7 +206,7 @@ public class InputBuilderService {
                                                             Network network,
                                                             Reporter reporter,
                                                             List<IdentifiableType> monitoredEquipmentsTypesAllowed,
-                                                            MonitoredBranches branches,
+                                                            NonEvacuatedEnergyMonitoredBranches branches,
                                                             List<EquipmentsContainer> injectionsFilters,
                                                             List<Contingency> contingencies,
                                                             SensitivityVariableType sensitivityVariableType) {
@@ -251,7 +251,7 @@ public class InputBuilderService {
                                                                         Network network,
                                                                         List<String> variableIds,
                                                                         List<IdentifiableAttributes> monitoredEquipments,
-                                                                        MonitoredBranches branches,
+                                                                        NonEvacuatedEnergyMonitoredBranches branches,
                                                                         List<Contingency> contingencies,
                                                                         SensitivityVariableType sensitivityVariableType,
                                                                         Reporter reporter,
@@ -291,13 +291,13 @@ public class InputBuilderService {
                     if (branches.isIstN()) {  // just one SensitivityFactor per variable id
                         genSensitivityFactorPerVariableId(variableIds, variableSet ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1 : SensitivityFunctionType.BRANCH_CURRENT_1, monitoredEquipment.getId(), sensitivityVariableType, variableSet, result);
                         monitoredBranchThreshold.setIstN(true);
-                        monitoredBranchThreshold.setNCoeff(branches.getNCoeff());
+                        monitoredBranchThreshold.setNCoeff(branches.getNCoefficient());
                         sensitivityFactorGenerated = true;
                     }
                     if (branches.isIstNm1()) {  // one SensitivityFactor per variable id and per contingency id
                         genSensitivityFactorPerVariableIdsAndContingencyIds(variableIds, contingencies, variableSet ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1 : SensitivityFunctionType.BRANCH_CURRENT_1, monitoredEquipment.getId(), sensitivityVariableType, variableSet, result);
                         monitoredBranchThreshold.setIstNm1(true);
-                        monitoredBranchThreshold.setNm1Coeff(branches.getNm1Coeff());
+                        monitoredBranchThreshold.setNm1Coeff(branches.getNm1Coefficient());
                         sensitivityFactorGenerated = true;
                     }
                 }
@@ -307,61 +307,61 @@ public class InputBuilderService {
                     if (branches.isIstN()) {  // just one SensitivityFactor per variable id
                         genSensitivityFactorPerVariableId(variableIds, variableSet ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_2 : SensitivityFunctionType.BRANCH_CURRENT_2, monitoredEquipment.getId(), sensitivityVariableType, variableSet, result);
                         monitoredBranchThreshold.setIstN(true);
-                        monitoredBranchThreshold.setNCoeff(branches.getNCoeff());
+                        monitoredBranchThreshold.setNCoeff(branches.getNCoefficient());
                         sensitivityFactorGenerated = true;
                     }
                     if (branches.isIstNm1()) {  // one SensitivityFactor per variable id and per contingency id
                         genSensitivityFactorPerVariableIdsAndContingencyIds(variableIds, contingencies, variableSet ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_2 : SensitivityFunctionType.BRANCH_CURRENT_2, monitoredEquipment.getId(), sensitivityVariableType, variableSet, result);
                         monitoredBranchThreshold.setIstNm1(true);
-                        monitoredBranchThreshold.setNm1Coeff(branches.getNm1Coeff());
+                        monitoredBranchThreshold.setNm1Coeff(branches.getNm1Coefficient());
                         sensitivityFactorGenerated = true;
                     }
                 }
             }
 
-            if (StringUtils.isNotEmpty(branches.getNLimitName())) {  // here we consider the temporary limit
+            if (StringUtils.isNotEmpty(branches.getLimitNameN())) {  // here we consider the temporary limit
                 // We must check if limit name provided appears in the branch temporary limits on side 1
                 if (currentLimits1.isPresent() &&
                     !CollectionUtils.isEmpty(currentLimits1.get().getTemporaryLimits()) &&
-                    currentLimits1.get().getTemporaryLimits().stream().anyMatch(l -> l.getName().equals(branches.getNLimitName()))) {
+                    currentLimits1.get().getTemporaryLimits().stream().anyMatch(l -> l.getName().equals(branches.getLimitNameN()))) {
                     genSensitivityFactorPerVariableId(variableIds, variableSet ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1 : SensitivityFunctionType.BRANCH_CURRENT_1, monitoredEquipment.getId(), sensitivityVariableType, variableSet, result);
                     monitoredBranchThreshold.setIstN(true);
-                    monitoredBranchThreshold.setNLimitName(branches.getNLimitName());
-                    monitoredBranchThreshold.setNCoeff(branches.getNCoeff());
+                    monitoredBranchThreshold.setNLimitName(branches.getLimitNameN());
+                    monitoredBranchThreshold.setNCoeff(branches.getNCoefficient());
                     sensitivityFactorGenerated = true;
                 }
 
                 // We must check if limit name provided appears in the branch temporary limits on side 2
                 if (currentLimits2.isPresent() &&
                     !CollectionUtils.isEmpty(currentLimits2.get().getTemporaryLimits()) &&
-                    currentLimits2.get().getTemporaryLimits().stream().anyMatch(l -> l.getName().equals(branches.getNLimitName()))) {
+                    currentLimits2.get().getTemporaryLimits().stream().anyMatch(l -> l.getName().equals(branches.getLimitNameN()))) {
                     genSensitivityFactorPerVariableId(variableIds, variableSet ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_2 : SensitivityFunctionType.BRANCH_CURRENT_2, monitoredEquipment.getId(), sensitivityVariableType, variableSet, result);
                     monitoredBranchThreshold.setIstN(true);
-                    monitoredBranchThreshold.setNLimitName(branches.getNLimitName());
-                    monitoredBranchThreshold.setNCoeff(branches.getNCoeff());
+                    monitoredBranchThreshold.setNLimitName(branches.getLimitNameN());
+                    monitoredBranchThreshold.setNCoeff(branches.getNCoefficient());
                     sensitivityFactorGenerated = true;
                 }
             }
 
-            if (StringUtils.isNotEmpty(branches.getNm1LimitName())) {  // here we consider the temporary limit
+            if (StringUtils.isNotEmpty(branches.getLimitNameNm1())) {  // here we consider the temporary limit
                 // We must check if limit name provided appears in the branch temporary limits on side 1
                 if (currentLimits1.isPresent() &&
                     !CollectionUtils.isEmpty(currentLimits1.get().getTemporaryLimits()) &&
-                    currentLimits1.get().getTemporaryLimits().stream().anyMatch(l -> l.getName().equals(branches.getNm1LimitName()))) {
+                    currentLimits1.get().getTemporaryLimits().stream().anyMatch(l -> l.getName().equals(branches.getLimitNameNm1()))) {
                     genSensitivityFactorPerVariableIdsAndContingencyIds(variableIds, contingencies, variableSet ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1 : SensitivityFunctionType.BRANCH_CURRENT_1, monitoredEquipment.getId(), sensitivityVariableType, variableSet, result);
                     monitoredBranchThreshold.setIstNm1(true);
-                    monitoredBranchThreshold.setNm1LimitName(branches.getNm1LimitName());
-                    monitoredBranchThreshold.setNm1Coeff(branches.getNm1Coeff());
+                    monitoredBranchThreshold.setNm1LimitName(branches.getLimitNameNm1());
+                    monitoredBranchThreshold.setNm1Coeff(branches.getNm1Coefficient());
                     sensitivityFactorGenerated = true;
                 }
                 // We must check if limit name provided appears in the branch temporary limits on side 2
                 if (currentLimits2.isPresent() &&
                     !CollectionUtils.isEmpty(currentLimits2.get().getTemporaryLimits()) &&
-                    currentLimits2.get().getTemporaryLimits().stream().anyMatch(l -> l.getName().equals(branches.getNm1LimitName()))) {
+                    currentLimits2.get().getTemporaryLimits().stream().anyMatch(l -> l.getName().equals(branches.getLimitNameNm1()))) {
                     genSensitivityFactorPerVariableIdsAndContingencyIds(variableIds, contingencies, variableSet ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_2 : SensitivityFunctionType.BRANCH_CURRENT_2, monitoredEquipment.getId(), sensitivityVariableType, variableSet, result);
                     monitoredBranchThreshold.setIstNm1(true);
-                    monitoredBranchThreshold.setNm1LimitName(branches.getNm1LimitName());
-                    monitoredBranchThreshold.setNm1Coeff(branches.getNm1Coeff());
+                    monitoredBranchThreshold.setNm1LimitName(branches.getLimitNameNm1());
+                    monitoredBranchThreshold.setNm1Coeff(branches.getNm1Coefficient());
                     sensitivityFactorGenerated = true;
                 }
             }
@@ -377,12 +377,12 @@ public class InputBuilderService {
     private void buildSensitivityFactorsAndVariableSets(RunContext context,
                                                         Network network,
                                                         Reporter reporter) {
-        List<MonitoredBranches> monitoredBranches = context.getInputData().getMonitoredBranches();
-        List<GeneratorLimitByType> generatorsLimitByType = context.getInputData().getGeneratorsLimit().getGenerators();
+        List<NonEvacuatedEnergyMonitoredBranches> monitoredBranches = context.getInputData().getNonEvacuatedEnergyMonitoredBranches();
+        List<NonEvacuatedEnergyGeneratorLimitByType> generatorsLimitByType = context.getInputData().getNonEvacuatedEnergyGeneratorsLimit().getGenerators();
 
         // build inputs for the sensitivities in MW per generation kind (similar to sensitivity analysis computation with injections set)
         generatorsLimitByType.stream()
-            .filter(GeneratorLimitByType::isActivated) // we keep only activated generators limits
+            .filter(NonEvacuatedEnergyGeneratorLimitByType::isActivated) // we keep only activated generators limits
             .forEach(generatorLimitByType -> {
                 // build sensitivity variable sets from generators limits in input data
                 List<SensitivityVariableSet> vInjectionsSets = buildSensitivityVariableSets(
@@ -394,7 +394,7 @@ public class InputBuilderService {
 
                 // build sensitivity factors from the variable sets (=set of generators), the contingencies and the monitored branches sets
                 monitoredBranches.stream()
-                    .filter(MonitoredBranches::isActivated)  // we keep only activated monitored branches set
+                    .filter(NonEvacuatedEnergyMonitoredBranches::isActivated)  // we keep only activated monitored branches set
                     .forEach(branches -> {
                         List<SensitivityFactor> fInjectionsSet = buildSensitivityFactorsFromVariablesSets(
                             context, network, reporter,
@@ -409,11 +409,11 @@ public class InputBuilderService {
 
         // build inputs for the sensitivities in A for each generator (similar to sensitivity analysis computation with injections)
         generatorsLimitByType.stream()
-            .filter(GeneratorLimitByType::isActivated)  // we keep only activated generators limits
+            .filter(NonEvacuatedEnergyGeneratorLimitByType::isActivated)  // we keep only activated generators limits
             .forEach(generatorLimitByType -> {
                 // build sensitivity factors from the variables (=generators), the contingencies and the monitored branches sets
                 monitoredBranches.stream()
-                    .filter(MonitoredBranches::isActivated) // we keep only activated monitored branches set
+                    .filter(NonEvacuatedEnergyMonitoredBranches::isActivated) // we keep only activated monitored branches set
                     .forEach(branches -> {
                         // build the sensitivity factors for each monitored branch
                         List<SensitivityFactor> fInjectionsSet = buildSensitivityFactors(
@@ -442,9 +442,9 @@ public class InputBuilderService {
             // build all contingencies from the input data
             context.getInputs().addContingencies(buildContingencies(context.getNetworkUuid(),
                     context.getVariantId(),
-                    context.getInputData().getContingencies().stream()
-                        .filter(ContingenciesContainer::isActivated)  // we keep only the activated contingencies
-                        .map(ContingenciesContainer::getContingencies)
+                    context.getInputData().getNonEvacuatedEnergyContingencies().stream()
+                        .filter(NonEvacuatedEnergyContingencies::isActivated)  // we keep only the activated contingencies
+                        .map(NonEvacuatedEnergyContingencies::getContingencies)
                         .flatMap(List::stream)
                         .toList(),
                     reporter));

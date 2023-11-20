@@ -6,7 +6,9 @@
  */
 package org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy;
 
+import com.powsybl.iidm.network.EnergySource;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -20,23 +22,14 @@ import java.util.List;
  */
 @SuperBuilder
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
-@Schema(description = "Sensitivity analysis non evacuated energy monitored branches")
-public class MonitoredBranches {
-    List<EquipmentsContainer> branches;
+@Schema(description = "Sensitivity analysis non evacuated energy generators limit by type")
+public class NonEvacuatedEnergyGeneratorLimitByType {
+    List<EquipmentsContainer> generators;
+
+    EnergySource energySource;
 
     boolean activated;
-
-    boolean istN;
-
-    String nLimitName;   // null if istN = true
-
-    float nCoeff;
-
-    boolean istNm1;
-
-    String nm1LimitName;  // null if istNm1 = true
-
-    float nm1Coeff;
 }

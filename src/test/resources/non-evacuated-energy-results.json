@@ -1,6 +1,6 @@
 {
   "stagesSummary": {
-    "EOL_100-PV_70-HYDRO-50": {
+    "EOL_100-PV_70-HYDRO_50": {
       "percentOverload": 54.6875,
       "contingencyId": "c1",
       "resultsByContingency": {
@@ -39,7 +39,7 @@
       "plimN": 131.00000000000003,
       "plimNm1": 0.0
     },
-    "EOL_70-PV_50-HYDRO-30": {
+    "EOL_70-PV_50-HYDRO_30": {
       "percentOverload": 54.6875,
       "contingencyId": "c2",
       "resultsByContingency": {
@@ -80,7 +80,7 @@
     }
   },
   "stagesDetail": {
-    "EOL_100-PV_70-HYDRO-50": {
+    "EOL_100-PV_70-HYDRO_50": {
       "resultsbyContingency": {
         "": {
           "resultsbyMonitoredBranch": {
@@ -353,7 +353,7 @@
         "SOLAR": 175.0
       }
     },
-    "EOL_70-PV_50-HYDRO-30": {
+    "EOL_70-PV_50-HYDRO_30": {
       "resultsbyContingency": {
         "": {
           "resultsbyMonitoredBranch": {

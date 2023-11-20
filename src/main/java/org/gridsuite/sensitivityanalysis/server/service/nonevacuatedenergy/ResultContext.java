@@ -10,7 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.InputData;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
@@ -61,16 +61,15 @@ public class ResultContext {
         String variantId = (String) headers.get("variantId");
 
         String receiver = (String) headers.get("receiver");
-        String provider = (String) headers.get("provider");
-        InputData inputData;
+        NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData;
         try {
-            inputData = objectMapper.readValue(message.getPayload(), new TypeReference<>() { });
+            nonEvacuatedEnergyInputData = objectMapper.readValue(message.getPayload(), new TypeReference<>() { });
         } catch (JsonProcessingException e) {
             throw new UncheckedIOException(e);
         }
         UUID reportUuid = headers.containsKey(REPORT_UUID) ? UUID.fromString((String) Objects.requireNonNull(headers.get(REPORT_UUID))) : null;
         String reporterId = headers.containsKey(REPORTER_ID_HEADER) ? (String) headers.get(REPORTER_ID_HEADER) : null;
-        RunContext runContext = new RunContext(networkUuid, variantId, inputData, receiver, provider, reportUuid, reporterId);
+        RunContext runContext = new RunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, reportUuid, reporterId);
         return new ResultContext(resultUuid, runContext);
     }
 
@@ -86,7 +85,6 @@ public class ResultContext {
                 .setHeader("networkUuid", runContext.getNetworkUuid().toString())
                 .setHeader("variantId", runContext.getVariantId())
                 .setHeader("receiver", runContext.getReceiver())
-                .setHeader("provider", runContext.getProvider())
                 .setHeader(REPORT_UUID, runContext.getReportUuid())
                 .setHeader(REPORTER_ID_HEADER, runContext.getReporterId())
                 .build();

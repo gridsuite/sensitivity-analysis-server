@@ -32,13 +32,13 @@ import lombok.SneakyThrows;
 import org.gridsuite.sensitivityanalysis.server.dto.EquipmentsContainer;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.ContingenciesContainer;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.GeneratorLimitByType;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.GeneratorsLimit;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.GeneratorsStageByEnergySource;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.InputData;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.MonitoredBranches;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.Stages;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyContingencies;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyGeneratorLimitByType;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyGeneratorsLimit;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyMonitoredBranches;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStageDefinition;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStagesSelection;
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.gridsuite.sensitivityanalysis.server.service.ReportService;
@@ -204,63 +204,50 @@ public class NonEvacuatedEnergyTest {
 
     private final ObjectMapper mapper = RestTemplateConfig.objectMapper();
 
-    private List<Stages> buildStages() {
-        return List.of(Stages.builder()
-                .name("EOL_100-PV_70-HYDRO-50")
+    private List<NonEvacuatedEnergyStageDefinition> buildStagesDefinition() {
+        return List.of(NonEvacuatedEnergyStageDefinition.builder()
+                .generators(List.of(new EquipmentsContainer(GENERATORS_WIND_FILTER_UUID, "generators_wind")))
+                .energySource(EnergySource.WIND)
+                .pMaxPercents(List.of(100F, 70F)).build(),
+            NonEvacuatedEnergyStageDefinition.builder()
+                .generators(List.of(new EquipmentsContainer(GENERATORS_SOLAR_FILTER_UUID, "generators_solar")))
+                .energySource(EnergySource.SOLAR)
+                .pMaxPercents(List.of(70F, 50F)).build(),
+            NonEvacuatedEnergyStageDefinition.builder()
+                .generators(List.of(new EquipmentsContainer(GENERATORS_HYDRO_FILTER_UUID, "generators_hydro")))
+                .energySource(EnergySource.HYDRO)
+                .pMaxPercents(List.of(50F, 30F)).build());
+    }
+
+    private List<NonEvacuatedEnergyStagesSelection> buildStagesSelection() {
+        return List.of(NonEvacuatedEnergyStagesSelection.builder()
+                .name("EOL_100-PV_70-HYDRO_50")
                 .activated(true)
-                .generatorsStageByEnergySources(List.of(
-                    GeneratorsStageByEnergySource.builder()
-                        .energySource(EnergySource.WIND)
-                        .pMaxPercent(100)
-                        .generators(List.of(new EquipmentsContainer(GENERATORS_WIND_FILTER_UUID, "generators_wind")))
-                        .build(),
-                    GeneratorsStageByEnergySource.builder()
-                        .energySource(EnergySource.SOLAR)
-                        .pMaxPercent(70)
-                        .generators(List.of(new EquipmentsContainer(GENERATORS_SOLAR_FILTER_UUID, "generators_solar")))
-                        .build(),
-                    GeneratorsStageByEnergySource.builder()
-                        .energySource(EnergySource.HYDRO)
-                        .pMaxPercent(50)
-                        .generators(List.of(new EquipmentsContainer(GENERATORS_HYDRO_FILTER_UUID, "generators_hydro")))
-                        .build()))
+                .stagesDefinitonIndex(List.of(0, 1, 2))
+                .pMaxPercentsIndex(List.of(0, 0, 0))
                 .build(),
-            Stages.builder()
-                .name("EOL_70-PV_50-HYDRO-30")
+            NonEvacuatedEnergyStagesSelection.builder()
+                .name("EOL_70-PV_50-HYDRO_30")
                 .activated(true)
-                .generatorsStageByEnergySources(List.of(
-                    GeneratorsStageByEnergySource.builder()
-                        .energySource(EnergySource.WIND)
-                        .pMaxPercent(70)
-                        .generators(List.of(new EquipmentsContainer(GENERATORS_WIND_FILTER_UUID, "generators_wind")))
-                        .build(),
-                    GeneratorsStageByEnergySource.builder()
-                        .energySource(EnergySource.SOLAR)
-                        .pMaxPercent(50)
-                        .generators(List.of(new EquipmentsContainer(GENERATORS_SOLAR_FILTER_UUID, "generators_solar")))
-                        .build(),
-                    GeneratorsStageByEnergySource.builder()
-                        .energySource(EnergySource.HYDRO)
-                        .pMaxPercent(30)
-                        .generators(List.of(new EquipmentsContainer(GENERATORS_HYDRO_FILTER_UUID, "generators_hydro")))
-                        .build()))
+                .stagesDefinitonIndex(List.of(0, 1, 2))
+                .pMaxPercentsIndex(List.of(1, 1, 1))
                 .build());
     }
 
-    private GeneratorsLimit buildGeneratorsLimit() {
-        return GeneratorsLimit.builder()
+    private NonEvacuatedEnergyGeneratorsLimit buildGeneratorsLimit() {
+        return NonEvacuatedEnergyGeneratorsLimit.builder()
             .sensitivityThreshold(0.01)
-            .generators(List.of(GeneratorLimitByType.builder()
+            .generators(List.of(NonEvacuatedEnergyGeneratorLimitByType.builder()
                     .energySource(EnergySource.WIND)
                     .activated(true)
                     .generators(List.of(new EquipmentsContainer(CAPPING_GENERATORS_WIND_FILTER_UUID, "capping_generators_wind")))
                     .build(),
-                GeneratorLimitByType.builder()
+                NonEvacuatedEnergyGeneratorLimitByType.builder()
                     .energySource(EnergySource.SOLAR)
                     .activated(true)
                     .generators(List.of(new EquipmentsContainer(CAPPING_GENERATORS_SOLAR_FILTER_UUID, "capping_generators_solar")))
                     .build(),
-                GeneratorLimitByType.builder()
+                NonEvacuatedEnergyGeneratorLimitByType.builder()
                     .energySource(EnergySource.HYDRO)
                     .activated(true)
                     .generators(List.of(new EquipmentsContainer(CAPPING_GENERATORS_HYDRO_FILTER_UUID, "capping_generators_hydro")))
@@ -268,46 +255,46 @@ public class NonEvacuatedEnergyTest {
             .build();
     }
 
-    private List<MonitoredBranches> buildMonitoredBranches() {
-        return List.of(MonitoredBranches.builder()
+    private List<NonEvacuatedEnergyMonitoredBranches> buildMonitoredBranches() {
+        return List.of(NonEvacuatedEnergyMonitoredBranches.builder()
                 .branches(List.of(new EquipmentsContainer(MONITORED_BRANCHES_1_FILTER_UUID, "branches_1")))
                 .activated(true)
                 .istN(true)
-                .nLimitName(null)
-                .nCoeff(100)
+                .limitNameN(null)
+                .nCoefficient(100)
                 .istNm1(false)
-                .nm1LimitName("IT10")
-                .nm1Coeff(90)
+                .limitNameNm1("IT10")
+                .nm1Coefficient(90)
                 .build(),
-            MonitoredBranches.builder()
+            NonEvacuatedEnergyMonitoredBranches.builder()
                 .branches(List.of(new EquipmentsContainer(MONITORED_BRANCHES_2_FILTER_UUID, "branches_2")))
                 .activated(true)
                 .istN(false)
-                .nLimitName("IT5")
-                .nCoeff(90)
+                .limitNameN("IT5")
+                .nCoefficient(90)
                 .istNm1(true)
-                .nm1LimitName(null)
-                .nm1Coeff(70)
+                .limitNameNm1(null)
+                .nm1Coefficient(70)
                 .build(),
-            MonitoredBranches.builder()
+            NonEvacuatedEnergyMonitoredBranches.builder()
                 .branches(List.of(new EquipmentsContainer(MONITORED_BRANCHES_2_FILTER_UUID, "branches_2")))
                 .activated(true)
                 .istN(false)
-                .nLimitName("IT20")
-                .nCoeff(70)
+                .limitNameN("IT20")
+                .nCoefficient(70)
                 .istNm1(true)
-                .nm1LimitName(null)
-                .nm1Coeff(80)
+                .limitNameNm1(null)
+                .nm1Coefficient(80)
                 .build()
         );
     }
 
-    private List<ContingenciesContainer> buildContingencies() {
-        return List.of(ContingenciesContainer.builder()
+    private List<NonEvacuatedEnergyContingencies> buildContingencies() {
+        return List.of(NonEvacuatedEnergyContingencies.builder()
                 .activated(true)
                 .contingencies(List.of(new EquipmentsContainer(CONTINGENCIES_1_UUID, "contingency_1")))
                 .build(),
-            ContingenciesContainer.builder()
+            NonEvacuatedEnergyContingencies.builder()
                 .activated(true)
                 .contingencies(List.of(new EquipmentsContainer(CONTINGENCIES_2_UUID, "contingency_2")))
                 .build());
@@ -670,19 +657,22 @@ public class NonEvacuatedEnergyTest {
         given(networkStoreService.getNetwork(NETWORK_ERROR_UUID, PreloadingStrategy.COLLECTION)).willThrow(new RuntimeException(ERROR_MESSAGE));
 
         // build non evacuated energy input data
-        List<Stages> stages = buildStages();
-        GeneratorsLimit generatorsLimit = buildGeneratorsLimit();
-        List<MonitoredBranches> monitoredBranches = buildMonitoredBranches();
-        List<ContingenciesContainer> contingencies = buildContingencies();
+        List<NonEvacuatedEnergyStageDefinition> stagesDefinition = buildStagesDefinition();
+        List<NonEvacuatedEnergyStagesSelection> stagesSelection = buildStagesSelection();
+        NonEvacuatedEnergyGeneratorsLimit generatorsLimit = buildGeneratorsLimit();
+        List<NonEvacuatedEnergyMonitoredBranches> monitoredBranches = buildMonitoredBranches();
+        List<NonEvacuatedEnergyContingencies> contingencies = buildContingencies();
 
-        InputData inputData = InputData.builder()
-            .stages(stages)
-            .generatorsLimit(generatorsLimit)
-            .monitoredBranches(monitoredBranches)
-            .contingencies(contingencies)
+        NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData = NonEvacuatedEnergyInputData.builder()
+            .provider("OpenLoadFlow")
+            .nonEvacuatedEnergyStagesDefinition(stagesDefinition)
+            .nonEvacuatedEnergyStagesSelection(stagesSelection)
+            .nonEvacuatedEnergyGeneratorsLimit(generatorsLimit)
+            .nonEvacuatedEnergyMonitoredBranches(monitoredBranches)
+            .nonEvacuatedEnergyContingencies(contingencies)
             .parameters(SensitivityAnalysisParameters.load())
             .build();
-        INPUT = mapper.writeValueAsString(inputData);
+        INPUT = mapper.writeValueAsString(nonEvacuatedEnergyInputData);
 
         // build the successive security analysis results
         // (only some sensitivity factors in results for line3 and line2)

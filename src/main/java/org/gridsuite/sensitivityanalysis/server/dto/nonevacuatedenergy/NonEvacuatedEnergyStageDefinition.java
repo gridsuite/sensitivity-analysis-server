@@ -6,7 +6,10 @@
  */
 package org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy;
 
+import com.powsybl.iidm.network.EnergySource;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -20,11 +23,15 @@ import java.util.List;
  */
 @SuperBuilder
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
-@Schema(description = "Sensitivity analysis non evacuated energy contingencies")
-public class ContingenciesContainer {
-    List<EquipmentsContainer> contingencies;
+@EqualsAndHashCode
+@Schema(description = "Sensitivity analysis non evacuated energy stage definition")
+public class NonEvacuatedEnergyStageDefinition {
+    List<EquipmentsContainer> generators;
 
-    boolean activated;
+    EnergySource energySource;
+
+    List<Float> pMaxPercents;
 }
