@@ -73,7 +73,7 @@ public class SensitivityAnalysisController {
                                                          @Parameter(description = "Provider") @RequestParam(name = "provider", required = false) String provider,
                                                          @Parameter(description = "reportUuid") @RequestParam(name = "reportUuid", required = false) UUID reportUuid,
                                                          @Parameter(description = "reporterId") @RequestParam(name = "reporterId", required = false) String reporterId,
-                                                         @Parameter(description = "The type of report for short-circuit") @RequestParam(name = "reportType") String reportType,
+                                                         @Parameter(description = "The type name for the report") @RequestParam(name = "reportType", required = false, defaultValue = "SensitivityAnalysis") String reportType,
                                                          @RequestBody SensitivityAnalysisInputData sensitivityAnalysisInputData) {
         SensitivityAnalysisResult result = workerService.run(new SensitivityAnalysisRunContext(networkUuid, variantId, sensitivityAnalysisInputData, null, provider, reportUuid, reporterId, reportType));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result);
