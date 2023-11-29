@@ -132,8 +132,8 @@ public class SensitivityAnalysisResultRepository {
         Objects.requireNonNull(resultUuid);
         AtomicReference<Long> startTime = new AtomicReference<>();
         startTime.set(System.nanoTime());
-        sensitivityRepository.deleteSensitivityBySensitivityAnalysisResultUUid(resultUuid);
         globalStatusRepository.deleteByResultUuid(resultUuid);
+        sensitivityRepository.deleteSensitivityBySensitivityAnalysisResultUUid(resultUuid);
         analysisResultRepository.deleteByResultUuid(resultUuid);
         LOGGER.info("Sensitivity analysis result '{}' has been deleted in {}ms", resultUuid, TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime.get()));
     }
