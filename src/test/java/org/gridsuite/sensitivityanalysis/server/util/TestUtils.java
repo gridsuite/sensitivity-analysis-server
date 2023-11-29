@@ -13,6 +13,9 @@ import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
  * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
  */
 public final class TestUtils {
+
+    private TestUtils() { }
+
     public static void assertRequestsCount(long select, long insert, long update, long delete) {
         assertSelectCount(select);
         assertInsertCount(insert);

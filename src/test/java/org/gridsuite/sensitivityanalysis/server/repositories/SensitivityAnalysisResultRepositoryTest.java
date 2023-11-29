@@ -82,7 +82,7 @@ public class SensitivityAnalysisResultRepositoryTest {
             new SensitivityValue(2, -1, 500.9, 2.1),
             new SensitivityValue(3, 1, 500.6, 2.4),
             new SensitivityValue(4, 0, 500.7, 2.3),
-            new SensitivityValue( 5, 2, 500.8, 2.2)
+            new SensitivityValue(5, 2, 500.8, 2.2)
         ));
         Collections.shuffle(sensitivityValues);
 
