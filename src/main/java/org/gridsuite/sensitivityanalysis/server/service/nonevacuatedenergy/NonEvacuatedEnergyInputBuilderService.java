@@ -35,7 +35,6 @@ import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,13 +47,13 @@ import java.util.stream.Stream;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
-public class InputBuilderService {
+public class NonEvacuatedEnergyInputBuilderService {
     private static final String EXPECTED_TYPE = "expectedType";
-    private static final Logger LOGGER = LoggerFactory.getLogger(InputBuilderService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NonEvacuatedEnergyInputBuilderService.class);
     private final ActionsService actionsService;
     private final FilterService filterService;
 
-    public InputBuilderService(ActionsService actionsService, FilterService filterService) {
+    public NonEvacuatedEnergyInputBuilderService(ActionsService actionsService, FilterService filterService) {
         this.actionsService = actionsService;
         this.filterService = filterService;
     }
@@ -173,7 +172,6 @@ public class InputBuilderService {
                     }
                     double weight = getGeneratorWeight(generator, distributionType, identifiableAttributes.getDistributionKey());
                     variables.add(new WeightedSensitivityVariable(identifiableAttributes.getId(), weight));
-                    break;
                 }
             }
             result.add(new SensitivityVariableSet(variablesList.getLeft() + " (" + distributionType.name() + ")", variables));
@@ -182,7 +180,7 @@ public class InputBuilderService {
         return result;
     }
 
-    private List<SensitivityFactor> buildSensitivityFactorsFromVariablesSets(RunContext context,
+    private List<SensitivityFactor> buildSensitivityFactorsFromVariablesSets(NonEvacuatedEnergyRunContext context,
                                                                              Network network,
                                                                              Reporter reporter,
                                                                              List<IdentifiableType> monitoredEquipmentsTypesAllowed,
@@ -202,7 +200,7 @@ public class InputBuilderService {
             monitoredEquipments, branches, contingencies, sensitivityVariableType, reporter, true);
     }
 
-    private List<SensitivityFactor> buildSensitivityFactors(RunContext context,
+    private List<SensitivityFactor> buildSensitivityFactors(NonEvacuatedEnergyRunContext context,
                                                             Network network,
                                                             Reporter reporter,
                                                             List<IdentifiableType> monitoredEquipmentsTypesAllowed,
@@ -247,7 +245,88 @@ public class InputBuilderService {
             ));
     }
 
-    private List<SensitivityFactor> getSensitivityFactorsFromEquipments(RunContext context,
+    private void genFactorForPermanentLimit(Branch branch,
+                                            Branch.Side side,
+                                            Optional<CurrentLimits> currentLimits,
+                                            List<String> variableIds,
+                                            boolean variableSet,
+                                            SensitivityVariableType sensitivityVariableType,
+                                            NonEvacuatedEnergyMonitoredBranches branches,
+                                            MonitoredBranchThreshold monitoredBranchThreshold,
+                                            List<Contingency> contingencies,
+                                            List<SensitivityFactor> result,
+                                            Reporter reporter) {
+        if (currentLimits.isEmpty() || Double.isNaN(currentLimits.get().getPermanentLimit())) {
+            // no current limits on side found : report and throw exception
+            reporter.report(Report.builder()
+                .withKey("monitoredBranchNoCurrentOrPermanentLimitsOnSide")
+                .withDefaultMessage("No current or permanent limits for the monitored branch ${id} on side ${side}")
+                .withSeverity(TypedValue.ERROR_SEVERITY)
+                .withValue("id", branch.getId())
+                .withValue("side", side.name())
+                .build());
+            throw new PowsyblException("Branch '" + branch.getId() + "' has no current or permanent limits on side '" + side.name() + "' !!");
+        }
+
+        SensitivityFunctionType functionTypeActivePower = side == Branch.Side.ONE ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1 : SensitivityFunctionType.BRANCH_ACTIVE_POWER_2;
+        SensitivityFunctionType functionTypeCurrent = side == Branch.Side.ONE ? SensitivityFunctionType.BRANCH_CURRENT_1 : SensitivityFunctionType.BRANCH_CURRENT_2;
+
+        if (branches.isIstN()) {  // just one SensitivityFactor per variable id
+            genSensitivityFactorPerVariableId(variableIds, variableSet ? functionTypeActivePower : functionTypeCurrent, branch.getId(), sensitivityVariableType, variableSet, result);
+            monitoredBranchThreshold.setIstN(true);
+            monitoredBranchThreshold.setNCoeff(branches.getNCoefficient());
+        }
+        if (branches.isIstNm1()) {  // one SensitivityFactor per variable id and per contingency id
+            genSensitivityFactorPerVariableIdsAndContingencyIds(variableIds, contingencies, variableSet ? functionTypeActivePower : functionTypeCurrent, branch.getId(), sensitivityVariableType, variableSet, result);
+            monitoredBranchThreshold.setIstNm1(true);
+            monitoredBranchThreshold.setNm1Coeff(branches.getNm1Coefficient());
+        }
+    }
+
+    private void genFactorForTemporaryLimit(Branch branch,
+                                            Branch.Side side,
+                                            Optional<CurrentLimits> currentLimits,
+                                            String limitName,
+                                            boolean inN,
+                                            List<String> variableIds,
+                                            boolean variableSet,
+                                            SensitivityVariableType sensitivityVariableType,
+                                            NonEvacuatedEnergyMonitoredBranches branches,
+                                            MonitoredBranchThreshold monitoredBranchThreshold,
+                                            List<Contingency> contingencies,
+                                            List<SensitivityFactor> result,
+                                            Reporter reporter) {
+        // We must check if limit name provided appears in the branch temporary limits on side
+        if (currentLimits.isEmpty() ||
+            currentLimits.get().getTemporaryLimits().stream().noneMatch(l -> l.getName().equals(limitName))) {
+            // temporary limit name not found on side : report and throw exception
+            reporter.report(Report.builder()
+                .withKey("monitoredBranchTemporaryLimitNotFoundOnSide")
+                .withDefaultMessage("Temporary limit ${limitName} not found for the monitored branch ${id} on side ${side}")
+                .withSeverity(TypedValue.ERROR_SEVERITY)
+                .withValue("limitName", limitName)
+                .withValue("id", branch.getId())
+                .withValue("side", side.name())
+                .build());
+            throw new PowsyblException("Temporary limit '" + limitName + "' not found for branch '" + branch.getId() + "' on side '" + side.name() + "' !!");
+        }
+        SensitivityFunctionType functionTypeActivePower = side == Branch.Side.ONE ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1 : SensitivityFunctionType.BRANCH_ACTIVE_POWER_2;
+        SensitivityFunctionType functionTypeCurrent = side == Branch.Side.ONE ? SensitivityFunctionType.BRANCH_CURRENT_1 : SensitivityFunctionType.BRANCH_CURRENT_2;
+
+        if (inN) {
+            genSensitivityFactorPerVariableId(variableIds, variableSet ? functionTypeActivePower : functionTypeCurrent, branch.getId(), sensitivityVariableType, variableSet, result);
+            monitoredBranchThreshold.setIstN(false);
+            monitoredBranchThreshold.setNLimitName(limitName);
+            monitoredBranchThreshold.setNCoeff(branches.getNCoefficient());
+        } else {
+            genSensitivityFactorPerVariableIdsAndContingencyIds(variableIds, contingencies, variableSet ? functionTypeActivePower : functionTypeCurrent, branch.getId(), sensitivityVariableType, variableSet, result);
+            monitoredBranchThreshold.setIstNm1(false);
+            monitoredBranchThreshold.setNm1LimitName(limitName);
+            monitoredBranchThreshold.setNm1Coeff(branches.getNm1Coefficient());
+        }
+    }
+
+    private List<SensitivityFactor> getSensitivityFactorsFromEquipments(NonEvacuatedEnergyRunContext context,
                                                                         Network network,
                                                                         List<String> variableIds,
                                                                         List<IdentifiableAttributes> monitoredEquipments,
@@ -261,7 +340,7 @@ public class InputBuilderService {
         monitoredEquipments.forEach(monitoredEquipment -> {
             // get branch from network
             Branch branch = network.getBranch(monitoredEquipment.getId());
-            if (branch == null) {
+            if (branch == null) {  // branch not found : just report and ignore the branch
                 reporter.report(Report.builder()
                     .withKey("monitoredBranchNotFound")
                     .withDefaultMessage("Could not find the monitored branch ${id}")
@@ -272,101 +351,44 @@ public class InputBuilderService {
             }
             Optional<CurrentLimits> currentLimits1 = branch.getCurrentLimits1();
             Optional<CurrentLimits> currentLimits2 = branch.getCurrentLimits2();
-            if (currentLimits1.isEmpty() && currentLimits2.isEmpty()) {  // no limits
+            if (currentLimits1.isEmpty() && currentLimits2.isEmpty()) {
+                // no current limits on both sides found : report and throw exception
                 reporter.report(Report.builder()
                     .withKey("monitoredBranchNoCurrentLimits")
-                    .withDefaultMessage("No current lilits for the monitored branch ${id}")
+                    .withDefaultMessage("No current limits for the monitored branch ${id}")
                     .withSeverity(TypedValue.ERROR_SEVERITY)
                     .withValue("id", monitoredEquipment.getId())
                     .build());
-                return;
+                throw new PowsyblException("Branch '" + branch.getId() + "' has no current limits !!");
             }
 
             MonitoredBranchThreshold monitoredBranchThreshold = new MonitoredBranchThreshold(branch);
-            boolean sensitivityFactorGenerated = false;
 
-            if (branches.isIstN() || branches.isIstNm1()) {  // ist activated : we consider the permanent limit
-                // limits on side 1
-                if (currentLimits1.isPresent() && !Double.isNaN(currentLimits1.get().getPermanentLimit())) {
-                    if (branches.isIstN()) {  // just one SensitivityFactor per variable id
-                        genSensitivityFactorPerVariableId(variableIds, variableSet ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1 : SensitivityFunctionType.BRANCH_CURRENT_1, monitoredEquipment.getId(), sensitivityVariableType, variableSet, result);
-                        monitoredBranchThreshold.setIstN(true);
-                        monitoredBranchThreshold.setNCoeff(branches.getNCoefficient());
-                        sensitivityFactorGenerated = true;
-                    }
-                    if (branches.isIstNm1()) {  // one SensitivityFactor per variable id and per contingency id
-                        genSensitivityFactorPerVariableIdsAndContingencyIds(variableIds, contingencies, variableSet ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1 : SensitivityFunctionType.BRANCH_CURRENT_1, monitoredEquipment.getId(), sensitivityVariableType, variableSet, result);
-                        monitoredBranchThreshold.setIstNm1(true);
-                        monitoredBranchThreshold.setNm1Coeff(branches.getNm1Coefficient());
-                        sensitivityFactorGenerated = true;
-                    }
-                }
+            if (branches.isIstN() || branches.isIstNm1()) {  // Ist activated : we consider the permanent limit
+                // permanent limit on side 1
+                genFactorForPermanentLimit(branch, Branch.Side.ONE, currentLimits1, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
 
-                // limits on side 2
-                if (currentLimits2.isPresent() && !Double.isNaN(currentLimits2.get().getPermanentLimit())) {
-                    if (branches.isIstN()) {  // just one SensitivityFactor per variable id
-                        genSensitivityFactorPerVariableId(variableIds, variableSet ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_2 : SensitivityFunctionType.BRANCH_CURRENT_2, monitoredEquipment.getId(), sensitivityVariableType, variableSet, result);
-                        monitoredBranchThreshold.setIstN(true);
-                        monitoredBranchThreshold.setNCoeff(branches.getNCoefficient());
-                        sensitivityFactorGenerated = true;
-                    }
-                    if (branches.isIstNm1()) {  // one SensitivityFactor per variable id and per contingency id
-                        genSensitivityFactorPerVariableIdsAndContingencyIds(variableIds, contingencies, variableSet ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_2 : SensitivityFunctionType.BRANCH_CURRENT_2, monitoredEquipment.getId(), sensitivityVariableType, variableSet, result);
-                        monitoredBranchThreshold.setIstNm1(true);
-                        monitoredBranchThreshold.setNm1Coeff(branches.getNm1Coefficient());
-                        sensitivityFactorGenerated = true;
-                    }
-                }
+                // permanent limit on side 2
+                genFactorForPermanentLimit(branch, Branch.Side.TWO, currentLimits2, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
             }
 
-            if (StringUtils.isNotEmpty(branches.getLimitNameN())) {  // here we consider the temporary limit
-                // We must check if limit name provided appears in the branch temporary limits on side 1
-                if (currentLimits1.isPresent() &&
-                    !CollectionUtils.isEmpty(currentLimits1.get().getTemporaryLimits()) &&
-                    currentLimits1.get().getTemporaryLimits().stream().anyMatch(l -> l.getName().equals(branches.getLimitNameN()))) {
-                    genSensitivityFactorPerVariableId(variableIds, variableSet ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1 : SensitivityFunctionType.BRANCH_CURRENT_1, monitoredEquipment.getId(), sensitivityVariableType, variableSet, result);
-                    monitoredBranchThreshold.setIstN(true);
-                    monitoredBranchThreshold.setNLimitName(branches.getLimitNameN());
-                    monitoredBranchThreshold.setNCoeff(branches.getNCoefficient());
-                    sensitivityFactorGenerated = true;
-                }
+            if (StringUtils.isNotEmpty(branches.getLimitNameN())) {  // here we consider the temporary limits
+                // temporary limits on side 1
+                genFactorForTemporaryLimit(branch, Branch.Side.ONE, currentLimits1, branches.getLimitNameN(), true, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
 
-                // We must check if limit name provided appears in the branch temporary limits on side 2
-                if (currentLimits2.isPresent() &&
-                    !CollectionUtils.isEmpty(currentLimits2.get().getTemporaryLimits()) &&
-                    currentLimits2.get().getTemporaryLimits().stream().anyMatch(l -> l.getName().equals(branches.getLimitNameN()))) {
-                    genSensitivityFactorPerVariableId(variableIds, variableSet ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_2 : SensitivityFunctionType.BRANCH_CURRENT_2, monitoredEquipment.getId(), sensitivityVariableType, variableSet, result);
-                    monitoredBranchThreshold.setIstN(true);
-                    monitoredBranchThreshold.setNLimitName(branches.getLimitNameN());
-                    monitoredBranchThreshold.setNCoeff(branches.getNCoefficient());
-                    sensitivityFactorGenerated = true;
-                }
+                // temporary limits on side 2
+                genFactorForTemporaryLimit(branch, Branch.Side.TWO, currentLimits2, branches.getLimitNameN(), true, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
             }
 
             if (StringUtils.isNotEmpty(branches.getLimitNameNm1())) {  // here we consider the temporary limit
-                // We must check if limit name provided appears in the branch temporary limits on side 1
-                if (currentLimits1.isPresent() &&
-                    !CollectionUtils.isEmpty(currentLimits1.get().getTemporaryLimits()) &&
-                    currentLimits1.get().getTemporaryLimits().stream().anyMatch(l -> l.getName().equals(branches.getLimitNameNm1()))) {
-                    genSensitivityFactorPerVariableIdsAndContingencyIds(variableIds, contingencies, variableSet ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1 : SensitivityFunctionType.BRANCH_CURRENT_1, monitoredEquipment.getId(), sensitivityVariableType, variableSet, result);
-                    monitoredBranchThreshold.setIstNm1(true);
-                    monitoredBranchThreshold.setNm1LimitName(branches.getLimitNameNm1());
-                    monitoredBranchThreshold.setNm1Coeff(branches.getNm1Coefficient());
-                    sensitivityFactorGenerated = true;
-                }
-                // We must check if limit name provided appears in the branch temporary limits on side 2
-                if (currentLimits2.isPresent() &&
-                    !CollectionUtils.isEmpty(currentLimits2.get().getTemporaryLimits()) &&
-                    currentLimits2.get().getTemporaryLimits().stream().anyMatch(l -> l.getName().equals(branches.getLimitNameNm1()))) {
-                    genSensitivityFactorPerVariableIdsAndContingencyIds(variableIds, contingencies, variableSet ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_2 : SensitivityFunctionType.BRANCH_CURRENT_2, monitoredEquipment.getId(), sensitivityVariableType, variableSet, result);
-                    monitoredBranchThreshold.setIstNm1(true);
-                    monitoredBranchThreshold.setNm1LimitName(branches.getLimitNameNm1());
-                    monitoredBranchThreshold.setNm1Coeff(branches.getNm1Coefficient());
-                    sensitivityFactorGenerated = true;
-                }
+                // temporary limits on side 1
+                genFactorForTemporaryLimit(branch, Branch.Side.ONE, currentLimits1, branches.getLimitNameNm1(), false, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
+
+                // temporary limits on side 2
+                genFactorForTemporaryLimit(branch, Branch.Side.TWO, currentLimits2, branches.getLimitNameNm1(), false, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
             }
 
-            if (sensitivityFactorGenerated) {
+            if (!result.isEmpty()) {
                 context.getInputs().getBranchesThresholds().put(monitoredEquipment.getId(), monitoredBranchThreshold);
             }
         });
@@ -374,7 +396,7 @@ public class InputBuilderService {
         return result;
     }
 
-    private void buildSensitivityFactorsAndVariableSets(RunContext context,
+    private void buildSensitivityFactorsAndVariableSets(NonEvacuatedEnergyRunContext context,
                                                         Network network,
                                                         Reporter reporter) {
         List<NonEvacuatedEnergyMonitoredBranches> monitoredBranches = context.getInputData().getNonEvacuatedEnergyMonitoredBranches();
@@ -391,6 +413,10 @@ public class InputBuilderService {
                     generatorLimitByType.getGenerators(),
                     SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP);
                 context.getInputs().addSensitivityVariableSets(vInjectionsSets);
+
+                // we store the cappings generators by energy source
+                context.getInputs().getCappingsGenerators().put(generatorLimitByType.getEnergySource(),
+                    vInjectionsSets.stream().flatMap(v -> v.getVariablesById().keySet().stream()).toList());
 
                 // build sensitivity factors from the variable sets (=set of generators), the contingencies and the monitored branches sets
                 monitoredBranches.stream()
@@ -424,20 +450,11 @@ public class InputBuilderService {
                             context.getInputs().getContingencies(),
                             SensitivityVariableType.INJECTION_ACTIVE_POWER);
                         context.getInputs().addSensitivityFactors(fInjectionsSet);
-
-                        // memorize initial targetP for the capping generators
-                        // (used later to init the generator capping info when computing the injection variation from sensitivities results)
-                        fInjectionsSet.forEach(f -> {
-                            Generator generator = network.getGenerator(f.getVariableId());
-                            if (generator != null) {
-                                context.getInputs().getGeneratorsPInit().put(f.getVariableId(), generator.getTargetP());
-                            }
-                        });
                     });
             });
     }
 
-    public void build(RunContext context, Network network, Reporter reporter) {
+    public void build(NonEvacuatedEnergyRunContext context, Network network, Reporter reporter) {
         try {
             // build all contingencies from the input data
             context.getInputs().addContingencies(buildContingencies(context.getNetworkUuid(),

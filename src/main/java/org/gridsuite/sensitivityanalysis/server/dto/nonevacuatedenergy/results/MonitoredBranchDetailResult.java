@@ -6,6 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.powsybl.iidm.network.EnergySource;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -35,12 +36,12 @@ public class MonitoredBranchDetailResult {
 
     private Double percentOverload;
 
+    @JsonProperty("p")
     private Double p;
-
-    private Double maxP;
 
     @Builder.Default
     Map<EnergySource, Double> cappingByEnergySource = new EnumMap<>(EnergySource.class);
+
     private Double overallCapping;
 
     @Builder.Default

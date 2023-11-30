@@ -6,6 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,6 +34,7 @@ public class NonEvacuatedEnergyStagesSelection {
     List<Integer> stagesDefinitonIndex = new ArrayList<>();
 
     @Builder.Default
+    @JsonProperty("pMaxPercentsIndex")
     List<Integer> pMaxPercentsIndex = new ArrayList<>();
 
     boolean activated;

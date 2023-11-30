@@ -43,13 +43,13 @@ public class NonEvacuatedEnergyService {
         this.objectMapper = Objects.requireNonNull(objectMapper);
     }
 
-    public UUID runAndSaveResult(RunContext runContext) {
-        Objects.requireNonNull(runContext);
+    public UUID runAndSaveResult(NonEvacuatedEnergyRunContext nonEvacuatedEnergyRunContext) {
+        Objects.requireNonNull(nonEvacuatedEnergyRunContext);
         var resultUuid = uuidGeneratorService.generate();
 
         // update status to running status
         setStatus(List.of(resultUuid), SensitivityAnalysisStatus.RUNNING.name());
-        notificationService.sendRunMessage("publishNonEvacuatedEnergyRun-out-0", new ResultContext(resultUuid, runContext).toMessage(objectMapper));
+        notificationService.sendRunMessage("publishNonEvacuatedEnergyRun-out-0", new NonEvacuatedEnergyResultContext(resultUuid, nonEvacuatedEnergyRunContext).toMessage(objectMapper));
         return resultUuid;
     }
 

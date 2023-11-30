@@ -22,7 +22,7 @@ import java.util.UUID;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-public class ResultContext {
+public class NonEvacuatedEnergyResultContext {
 
     private static final String REPORT_UUID = "reportUuid";
 
@@ -30,19 +30,19 @@ public class ResultContext {
 
     private final UUID resultUuid;
 
-    private final RunContext runContext;
+    private final NonEvacuatedEnergyRunContext nonEvacuatedEnergyRunContext;
 
-    public ResultContext(UUID resultUuid, RunContext runContext) {
+    public NonEvacuatedEnergyResultContext(UUID resultUuid, NonEvacuatedEnergyRunContext nonEvacuatedEnergyRunContext) {
         this.resultUuid = Objects.requireNonNull(resultUuid);
-        this.runContext = Objects.requireNonNull(runContext);
+        this.nonEvacuatedEnergyRunContext = Objects.requireNonNull(nonEvacuatedEnergyRunContext);
     }
 
     public UUID getResultUuid() {
         return resultUuid;
     }
 
-    public RunContext getRunContext() {
-        return runContext;
+    public NonEvacuatedEnergyRunContext getRunContext() {
+        return nonEvacuatedEnergyRunContext;
     }
 
     private static String getNonNullHeader(MessageHeaders headers, String name) {
@@ -53,7 +53,7 @@ public class ResultContext {
         return header;
     }
 
-    public static ResultContext fromMessage(Message<String> message, ObjectMapper objectMapper) {
+    public static NonEvacuatedEnergyResultContext fromMessage(Message<String> message, ObjectMapper objectMapper) {
         Objects.requireNonNull(message);
         MessageHeaders headers = message.getHeaders();
         UUID resultUuid = UUID.fromString(getNonNullHeader(headers, "resultUuid"));
@@ -69,24 +69,24 @@ public class ResultContext {
         }
         UUID reportUuid = headers.containsKey(REPORT_UUID) ? UUID.fromString((String) Objects.requireNonNull(headers.get(REPORT_UUID))) : null;
         String reporterId = headers.containsKey(REPORTER_ID_HEADER) ? (String) headers.get(REPORTER_ID_HEADER) : null;
-        RunContext runContext = new RunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, reportUuid, reporterId);
-        return new ResultContext(resultUuid, runContext);
+        NonEvacuatedEnergyRunContext nonEvacuatedEnergyRunContext = new NonEvacuatedEnergyRunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, reportUuid, reporterId);
+        return new NonEvacuatedEnergyResultContext(resultUuid, nonEvacuatedEnergyRunContext);
     }
 
     public Message<String> toMessage(ObjectMapper objectMapper) {
         String nonEvacuatedEnergyInputDataJson;
         try {
-            nonEvacuatedEnergyInputDataJson = objectMapper.writeValueAsString(runContext.getInputData());
+            nonEvacuatedEnergyInputDataJson = objectMapper.writeValueAsString(nonEvacuatedEnergyRunContext.getInputData());
         } catch (JsonProcessingException e) {
             throw new UncheckedIOException(e);
         }
         return MessageBuilder.withPayload(nonEvacuatedEnergyInputDataJson)
                 .setHeader("resultUuid", resultUuid.toString())
-                .setHeader("networkUuid", runContext.getNetworkUuid().toString())
-                .setHeader("variantId", runContext.getVariantId())
-                .setHeader("receiver", runContext.getReceiver())
-                .setHeader(REPORT_UUID, runContext.getReportUuid())
-                .setHeader(REPORTER_ID_HEADER, runContext.getReporterId())
+                .setHeader("networkUuid", nonEvacuatedEnergyRunContext.getNetworkUuid().toString())
+                .setHeader("variantId", nonEvacuatedEnergyRunContext.getVariantId())
+                .setHeader("receiver", nonEvacuatedEnergyRunContext.getReceiver())
+                .setHeader(REPORT_UUID, nonEvacuatedEnergyRunContext.getReportUuid())
+                .setHeader(REPORTER_ID_HEADER, nonEvacuatedEnergyRunContext.getReporterId())
                 .build();
     }
 }

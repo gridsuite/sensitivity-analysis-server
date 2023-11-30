@@ -14,7 +14,7 @@ import java.util.UUID;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-public class RunContext {
+public class NonEvacuatedEnergyRunContext {
 
     private final UUID networkUuid;
 
@@ -22,7 +22,7 @@ public class RunContext {
 
     private final NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData;
 
-    private final Inputs inputs;
+    private final NonEvacuatedEnergyInputs nonEvacuatedEnergyInputs;
 
     private final String receiver;
 
@@ -30,11 +30,11 @@ public class RunContext {
 
     private final String reporterId;
 
-    public RunContext(UUID networkUuid, String variantId, NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData, String receiver, UUID reportUuid, String reporterId) {
+    public NonEvacuatedEnergyRunContext(UUID networkUuid, String variantId, NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData, String receiver, UUID reportUuid, String reporterId) {
         this.networkUuid = Objects.requireNonNull(networkUuid);
         this.variantId = variantId;
         this.nonEvacuatedEnergyInputData = Objects.requireNonNull(nonEvacuatedEnergyInputData);
-        this.inputs = new Inputs();
+        this.nonEvacuatedEnergyInputs = new NonEvacuatedEnergyInputs();
         this.receiver = receiver;
         this.reportUuid = reportUuid;
         this.reporterId = reporterId;
@@ -52,8 +52,8 @@ public class RunContext {
         return nonEvacuatedEnergyInputData;
     }
 
-    public Inputs getInputs() {
-        return inputs;
+    public NonEvacuatedEnergyInputs getInputs() {
+        return nonEvacuatedEnergyInputs;
     }
 
     public String getReceiver() {

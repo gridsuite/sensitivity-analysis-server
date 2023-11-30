@@ -6,7 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy;
 
-import org.gridsuite.sensitivityanalysis.server.entities.nonevacuatedenergy.ResultEntity;
+import org.gridsuite.sensitivityanalysis.server.entities.nonevacuatedenergy.NonEvacuatedEnergyResultEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,8 +16,8 @@ import java.util.UUID;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Repository
-public interface NonEvacuatedEnergyResultRepository extends JpaRepository<ResultEntity, UUID> {
-    ResultEntity findByResultUuid(UUID resultUuid);
+public interface NonEvacuatedEnergyResultRepository extends JpaRepository<NonEvacuatedEnergyResultEntity, UUID> {
+    NonEvacuatedEnergyResultEntity findByResultUuid(UUID resultUuid);
 
     void deleteByResultUuid(UUID resultUuid);
 }

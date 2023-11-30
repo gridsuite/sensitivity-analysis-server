@@ -27,7 +27,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacua
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisRunContext;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService;
-import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.RunContext;
+import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.NonEvacuatedEnergyRunContext;
 import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.NonEvacuatedEnergyService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -203,7 +203,7 @@ public class SensitivityAnalysisController {
                                            @Parameter(description = "reportUuid") @RequestParam(name = "reportUuid", required = false) UUID reportUuid,
                                            @Parameter(description = "reporterId") @RequestParam(name = "reporterId", required = false) String reporterId,
                                            @RequestBody NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData) {
-        UUID resultUuid = nonEvacuatedEnergyService.runAndSaveResult(new RunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, reportUuid, reporterId));
+        UUID resultUuid = nonEvacuatedEnergyService.runAndSaveResult(new NonEvacuatedEnergyRunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, reportUuid, reporterId));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 

@@ -6,6 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,5 +32,6 @@ public class StageSummaryContingencyResult {
 
     private Double capping;
 
+    @JsonProperty("pLim")
     private Double pLim;
 }

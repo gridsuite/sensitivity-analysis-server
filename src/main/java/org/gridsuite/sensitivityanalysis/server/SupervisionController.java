@@ -31,9 +31,16 @@ public class SupervisionController {
     }
 
     @GetMapping(value = "/results-count")
-    @Operation(summary = "Get results count")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The count of all results")})
+    @Operation(summary = "Get sensitivity analysis results count")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The count of all sensitivity analysis results")})
     public ResponseEntity<Integer> getResultsCount() {
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(supervisionService.getResultsCount());
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(supervisionService.getAnalysisResultsCount());
+    }
+
+    @GetMapping(value = "/non-evacuated-energy-results-count")
+    @Operation(summary = "Get non evacuated energy results count")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The count of all non evacuated energy results")})
+    public ResponseEntity<Integer> getNonEvacuatedEnergyResultsCount() {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(supervisionService.getNonEvacuatedEnergyResultsCount());
     }
 }

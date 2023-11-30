@@ -6,8 +6,8 @@
  */
 package org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy;
 
-import org.gridsuite.sensitivityanalysis.server.entities.GlobalStatusEntity;
-import org.gridsuite.sensitivityanalysis.server.entities.nonevacuatedenergy.ResultEntity;
+import org.gridsuite.sensitivityanalysis.server.entities.nonevacuatedenergy.NonEvacuatedEnergyGlobalStatusEntity;
+import org.gridsuite.sensitivityanalysis.server.entities.nonevacuatedenergy.NonEvacuatedEnergyResultEntity;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -33,8 +33,8 @@ public class NonEvacuatedEnergyRepository {
         this.nonEvacuatedEnergyResultRepository = nonEvacuatedEnergyResultRepository;
     }
 
-    private static GlobalStatusEntity toStatusEntity(UUID resultUuid, String status) {
-        return new GlobalStatusEntity(resultUuid, status);
+    private static NonEvacuatedEnergyGlobalStatusEntity toStatusEntity(UUID resultUuid, String status) {
+        return new NonEvacuatedEnergyGlobalStatusEntity(resultUuid, status);
     }
 
     @Transactional
@@ -48,7 +48,7 @@ public class NonEvacuatedEnergyRepository {
     public void insert(UUID resultUuid, String result, String status) {
         Objects.requireNonNull(resultUuid);
         if (result != null) {
-            nonEvacuatedEnergyResultRepository.save(new ResultEntity(resultUuid,
+            nonEvacuatedEnergyResultRepository.save(new NonEvacuatedEnergyResultEntity(resultUuid,
                 LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 result));
         }
@@ -71,7 +71,7 @@ public class NonEvacuatedEnergyRepository {
     @Transactional(readOnly = true)
     public String findStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        GlobalStatusEntity globalEntity = globalStatusRepository.findByResultUuid(resultUuid);
+        NonEvacuatedEnergyGlobalStatusEntity globalEntity = globalStatusRepository.findByResultUuid(resultUuid);
         if (globalEntity != null) {
             return globalEntity.getStatus();
         } else {
@@ -81,7 +81,7 @@ public class NonEvacuatedEnergyRepository {
 
     @Transactional(readOnly = true)
     public String getRunResult(UUID resultUuid) {
-        ResultEntity resultEntity = nonEvacuatedEnergyResultRepository.findByResultUuid(resultUuid);
+        NonEvacuatedEnergyResultEntity resultEntity = nonEvacuatedEnergyResultRepository.findByResultUuid(resultUuid);
         if (resultEntity == null) {
             return null;
         }

@@ -24,7 +24,7 @@ import java.util.Map;
 @Getter
 @Setter
 @Schema(description = "Sensitivity analysis non evacuated energy result")
-public class Results {
+public class NonEvacuatedEnergyResults {
     @Builder.Default
     private Map<String, StageSummaryResult> stagesSummary = new HashMap<>();
 

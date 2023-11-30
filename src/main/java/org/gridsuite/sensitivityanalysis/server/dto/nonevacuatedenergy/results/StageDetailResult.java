@@ -6,6 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.powsybl.iidm.network.EnergySource;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -28,6 +29,7 @@ import java.util.Map;
 @Schema(description = "Sensitivity analysis non evacuated energy stage detail result")
 public class StageDetailResult {
     @Builder.Default
+    @JsonProperty("pInitByEnergySource")
     private Map<EnergySource, Double> pInitByEnergySource = new EnumMap<>(EnergySource.class);
 
     @Builder.Default

@@ -10,15 +10,15 @@
           "monitoredEquipmentPower": 160.0,
           "percentOverload": 83.33333333333334,
           "capping": 147.66666666666666,
-          "plim": 327.33333333333337
+          "pLim": 138.33333333333334
         },
         "c1": {
           "limitViolated": true,
           "monitoredEquipmentWithMaxLimit": "line3",
           "monitoredEquipmentPower": 210.0,
-          "percentOverload": 74.07407407407408,
+          "percentOverload": 78.43137254901961,
           "capping": 131.0,
-          "plim": 344.0
+          "pLim": 155.0
         },
         "c2": {
           "limitViolated": false,
@@ -26,18 +26,18 @@
           "monitoredEquipmentPower": null,
           "percentOverload": null,
           "capping": null,
-          "plim": 0.0
+          "pLim": 0.0
         }
       },
-      "plimMonitoredEquipment": "line2",
-      "plimLimit": "IST",
-      "pinitByEnergySource": {
-        "HYDRO": 100.0,
-        "WIND": 200.0,
-        "SOLAR": 175.0
+      "pLimN": 131.00000000000003,
+      "pLimNm1": 0.0,
+      "pInitByEnergySource": {
+        "HYDRO": 150.0,
+        "WIND": 107.0,
+        "SOLAR": 29.0
       },
-      "plimN": 131.00000000000003,
-      "plimNm1": 0.0
+      "pLimMonitoredEquipment": "line2",
+      "pLimLimit": "IST"
     },
     "EOL_70-PV_50-HYDRO_30": {
       "percentOverload": 54.6875,
@@ -49,15 +49,15 @@
           "monitoredEquipmentPower": 160.0,
           "percentOverload": 83.33333333333334,
           "capping": 131.0,
-          "plim": 194.0
+          "pLim": 155.0
         },
         "c1": {
           "limitViolated": true,
           "monitoredEquipmentWithMaxLimit": "line3",
           "monitoredEquipmentPower": 210.0,
-          "percentOverload": 61.111111111111114,
+          "percentOverload": 50.92592592592593,
           "capping": 131.0,
-          "plim": 194.0
+          "pLim": 155.0
         },
         "c2": {
           "limitViolated": true,
@@ -65,18 +65,18 @@
           "monitoredEquipmentPower": 60.0,
           "percentOverload": 54.6875,
           "capping": 61.66666666666666,
-          "plim": 263.33333333333337
+          "pLim": 224.33333333333334
         }
       },
-      "plimMonitoredEquipment": "line2",
-      "plimLimit": "IST",
-      "pinitByEnergySource": {
-        "HYDRO": 60.0,
-        "WIND": 140.0,
-        "SOLAR": 125.0
+      "pLimN": 61.66666666666666,
+      "pLimNm1": 0.0,
+      "pInitByEnergySource": {
+        "HYDRO": 150.0,
+        "WIND": 107.0,
+        "SOLAR": 29.0
       },
-      "plimN": 61.66666666666666,
-      "plimNm1": 0.0
+      "pLimMonitoredEquipment": "line2",
+      "pLimLimit": "IST"
     }
   },
   "stagesDetail": {
@@ -89,8 +89,6 @@
               "limitName": "IST",
               "limitValue": 180.0,
               "percentOverload": 83.33333333333334,
-              "p": 160.0,
-              "maxP": 1499.9999999999998,
               "cappingByEnergySource": {
                 "HYDRO": 99.99999999999999,
                 "WIND": 23.66666666666667,
@@ -107,47 +105,46 @@
                   "generatorId": "GH2",
                   "energySource": "HYDRO",
                   "capping": 50.0,
-                  "pinit": 50.0
+                  "pInit": 50.0
                 },
                 "GH3": {
                   "generatorId": "GH3",
                   "energySource": "HYDRO",
                   "capping": 100.0,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "GROUP3": {
                   "generatorId": "GROUP3",
                   "energySource": "WIND",
                   "capping": 100.0,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "newGroup1": {
                   "generatorId": "newGroup1",
                   "energySource": "SOLAR",
                   "capping": 5.0,
-                  "pinit": 5.0
+                  "pInit": 5.0
                 },
                 "newGroup2": {
                   "generatorId": "newGroup2",
                   "energySource": "WIND",
                   "capping": 7.0,
-                  "pinit": 7.0
+                  "pInit": 7.0
                 },
                 "TEST1": {
                   "generatorId": "TEST1",
                   "energySource": "SOLAR",
                   "capping": 24.0,
-                  "pinit": 24.0
+                  "pInit": 24.0
                 }
-              }
+              },
+              "p": 160.0
             },
             "line2": {
               "intensity": 105.0,
-              "limitName": "IST",
-              "limitValue": 112.0,
-              "percentOverload": 93.75,
-              "p": 160.0,
-              "maxP": 6399.999999999998,
+              "limitName": "IT20",
+              "limitValue": 105.0,
+              "percentOverload": 100.0,
               "cappingByEnergySource": {
                 "HYDRO": 100.0,
                 "WIND": 7.0,
@@ -164,39 +161,40 @@
                   "generatorId": "GH2",
                   "energySource": "HYDRO",
                   "capping": 50.0,
-                  "pinit": 50.0
+                  "pInit": 50.0
                 },
                 "GH3": {
                   "generatorId": "GH3",
                   "energySource": "HYDRO",
                   "capping": 100.0,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "GROUP3": {
                   "generatorId": "GROUP3",
                   "energySource": "WIND",
                   "capping": 100.0,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "newGroup1": {
                   "generatorId": "newGroup1",
                   "energySource": "SOLAR",
                   "capping": 5.0,
-                  "pinit": 5.0
+                  "pInit": 5.0
                 },
                 "newGroup2": {
                   "generatorId": "newGroup2",
                   "energySource": "WIND",
                   "capping": 7.0,
-                  "pinit": 7.0
+                  "pInit": 7.0
                 },
                 "TEST1": {
                   "generatorId": "TEST1",
                   "energySource": "SOLAR",
                   "capping": 24.0,
-                  "pinit": 24.0
+                  "pInit": 24.0
                 }
-              }
+              },
+              "p": 160.0
             }
           }
         },
@@ -204,11 +202,9 @@
           "resultsbyMonitoredBranch": {
             "line3": {
               "intensity": 120.0,
-              "limitName": "IST",
-              "limitValue": 162.0,
-              "percentOverload": 74.07407407407408,
-              "p": 210.0,
-              "maxP": 3999.9999999999995,
+              "limitName": "IT10",
+              "limitValue": 153.0,
+              "percentOverload": 78.43137254901961,
               "cappingByEnergySource": {
                 "HYDRO": 100.0,
                 "WIND": 7.0,
@@ -225,47 +221,46 @@
                   "generatorId": "GH2",
                   "energySource": "HYDRO",
                   "capping": 50.0,
-                  "pinit": 50.0
+                  "pInit": 50.0
                 },
                 "GH3": {
                   "generatorId": "GH3",
                   "energySource": "HYDRO",
                   "capping": 100.0,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "GROUP3": {
                   "generatorId": "GROUP3",
                   "energySource": "WIND",
                   "capping": 100.0,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "newGroup1": {
                   "generatorId": "newGroup1",
                   "energySource": "SOLAR",
                   "capping": 5.0,
-                  "pinit": 5.0
+                  "pInit": 5.0
                 },
                 "newGroup2": {
                   "generatorId": "newGroup2",
                   "energySource": "WIND",
                   "capping": 7.0,
-                  "pinit": 7.0
+                  "pInit": 7.0
                 },
                 "TEST1": {
                   "generatorId": "TEST1",
                   "energySource": "SOLAR",
                   "capping": 24.0,
-                  "pinit": 24.0
+                  "pInit": 24.0
                 }
-              }
+              },
+              "p": 210.0
             },
             "line2": {
               "intensity": 70.0,
               "limitName": "IST",
               "limitValue": 128.0,
               "percentOverload": 54.6875,
-              "p": 70.0,
-              "maxP": null,
               "cappingByEnergySource": {
                 "HYDRO": 100.00000000000001,
                 "WIND": 7.000000000000014,
@@ -282,39 +277,40 @@
                   "generatorId": "GH2",
                   "energySource": "HYDRO",
                   "capping": 50.0,
-                  "pinit": 50.0
+                  "pInit": 50.0
                 },
                 "GH3": {
                   "generatorId": "GH3",
                   "energySource": "HYDRO",
                   "capping": 100.0,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "GROUP3": {
                   "generatorId": "GROUP3",
                   "energySource": "WIND",
                   "capping": 100.0,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "newGroup1": {
                   "generatorId": "newGroup1",
                   "energySource": "SOLAR",
                   "capping": 5.0,
-                  "pinit": 5.0
+                  "pInit": 5.0
                 },
                 "newGroup2": {
                   "generatorId": "newGroup2",
                   "energySource": "WIND",
                   "capping": 7.0,
-                  "pinit": 7.0
+                  "pInit": 7.0
                 },
                 "TEST1": {
                   "generatorId": "TEST1",
                   "energySource": "SOLAR",
                   "capping": 24.0,
-                  "pinit": 24.0
+                  "pInit": 24.0
                 }
-              }
+              },
+              "p": 70.0
             }
           }
         },
@@ -322,35 +318,33 @@
           "resultsbyMonitoredBranch": {
             "line3": {
               "intensity": 120.0,
-              "limitName": "IST",
-              "limitValue": 162.0,
-              "percentOverload": 74.07407407407408,
-              "p": null,
-              "maxP": null,
+              "limitName": "IT10",
+              "limitValue": 153.0,
+              "percentOverload": 78.43137254901961,
               "cappingByEnergySource": {},
               "overallCapping": null,
               "sensitivityByEnergySource": {},
-              "generatorsCapping": {}
+              "generatorsCapping": {},
+              "p": null
             },
             "line2": {
               "intensity": 70.0,
               "limitName": "IST",
               "limitValue": 128.0,
               "percentOverload": 54.6875,
-              "p": 60.0,
-              "maxP": null,
               "cappingByEnergySource": {},
               "overallCapping": null,
               "sensitivityByEnergySource": {},
-              "generatorsCapping": {}
+              "generatorsCapping": {},
+              "p": 60.0
             }
           }
         }
       },
-      "pinitByEnergySource": {
-        "HYDRO": 100.0,
-        "WIND": 200.0,
-        "SOLAR": 175.0
+      "pInitByEnergySource": {
+        "HYDRO": 150.0,
+        "WIND": 107.0,
+        "SOLAR": 29.0
       }
     },
     "EOL_70-PV_50-HYDRO_30": {
@@ -362,8 +356,6 @@
               "limitName": "IST",
               "limitValue": 180.0,
               "percentOverload": 83.33333333333334,
-              "p": 160.0,
-              "maxP": 4499.999999999999,
               "cappingByEnergySource": {
                 "HYDRO": 100.0,
                 "WIND": 7.0,
@@ -380,47 +372,46 @@
                   "generatorId": "GH2",
                   "energySource": "HYDRO",
                   "capping": 50.0,
-                  "pinit": 50.0
+                  "pInit": 50.0
                 },
                 "GH3": {
                   "generatorId": "GH3",
                   "energySource": "HYDRO",
                   "capping": 100.0,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "GROUP3": {
                   "generatorId": "GROUP3",
                   "energySource": "WIND",
                   "capping": 100.0,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "newGroup1": {
                   "generatorId": "newGroup1",
                   "energySource": "SOLAR",
                   "capping": 5.0,
-                  "pinit": 5.0
+                  "pInit": 5.0
                 },
                 "newGroup2": {
                   "generatorId": "newGroup2",
                   "energySource": "WIND",
                   "capping": 7.0,
-                  "pinit": 7.0
+                  "pInit": 7.0
                 },
                 "TEST1": {
                   "generatorId": "TEST1",
                   "energySource": "SOLAR",
                   "capping": 24.0,
-                  "pinit": 24.0
+                  "pInit": 24.0
                 }
-              }
+              },
+              "p": 160.0
             },
             "line2": {
               "intensity": 100.0,
-              "limitName": "IST",
-              "limitValue": 112.0,
-              "percentOverload": 89.28571428571429,
-              "p": 100.0,
-              "maxP": 6649.999999999999,
+              "limitName": "IT20",
+              "limitValue": 105.0,
+              "percentOverload": 95.23809523809523,
               "cappingByEnergySource": {
                 "HYDRO": 100.0,
                 "WIND": 7.0,
@@ -437,39 +428,40 @@
                   "generatorId": "GH2",
                   "energySource": "HYDRO",
                   "capping": 50.0,
-                  "pinit": 50.0
+                  "pInit": 50.0
                 },
                 "GH3": {
                   "generatorId": "GH3",
                   "energySource": "HYDRO",
                   "capping": 100.0,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "GROUP3": {
                   "generatorId": "GROUP3",
                   "energySource": "WIND",
                   "capping": 100.0,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "newGroup1": {
                   "generatorId": "newGroup1",
                   "energySource": "SOLAR",
                   "capping": 5.0,
-                  "pinit": 5.0
+                  "pInit": 5.0
                 },
                 "newGroup2": {
                   "generatorId": "newGroup2",
                   "energySource": "WIND",
                   "capping": 7.0,
-                  "pinit": 7.0
+                  "pInit": 7.0
                 },
                 "TEST1": {
                   "generatorId": "TEST1",
                   "energySource": "SOLAR",
                   "capping": 24.0,
-                  "pinit": 24.0
+                  "pInit": 24.0
                 }
-              }
+              },
+              "p": 100.0
             }
           }
         },
@@ -477,11 +469,9 @@
           "resultsbyMonitoredBranch": {
             "line3": {
               "intensity": 110.0,
-              "limitName": "IST",
-              "limitValue": 180.0,
-              "percentOverload": 61.111111111111114,
-              "p": 210.0,
-              "maxP": null,
+              "limitName": "IT10",
+              "limitValue": 216.0,
+              "percentOverload": 50.92592592592593,
               "cappingByEnergySource": {
                 "HYDRO": 100.0,
                 "WIND": 7.0,
@@ -498,47 +488,46 @@
                   "generatorId": "GH2",
                   "energySource": "HYDRO",
                   "capping": 50.0,
-                  "pinit": 50.0
+                  "pInit": 50.0
                 },
                 "GH3": {
                   "generatorId": "GH3",
                   "energySource": "HYDRO",
                   "capping": 100.0,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "GROUP3": {
                   "generatorId": "GROUP3",
                   "energySource": "WIND",
                   "capping": 100.0,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "newGroup1": {
                   "generatorId": "newGroup1",
                   "energySource": "SOLAR",
                   "capping": 5.0,
-                  "pinit": 5.0
+                  "pInit": 5.0
                 },
                 "newGroup2": {
                   "generatorId": "newGroup2",
                   "energySource": "WIND",
                   "capping": 7.0,
-                  "pinit": 7.0
+                  "pInit": 7.0
                 },
                 "TEST1": {
                   "generatorId": "TEST1",
                   "energySource": "SOLAR",
                   "capping": 24.0,
-                  "pinit": 24.0
+                  "pInit": 24.0
                 }
-              }
+              },
+              "p": 210.0
             },
             "line2": {
               "intensity": 80.0,
               "limitName": "IST",
               "limitValue": 128.0,
               "percentOverload": 62.5,
-              "p": 70.0,
-              "maxP": null,
               "cappingByEnergySource": {
                 "HYDRO": 100.00000000000001,
                 "WIND": 7.000000000000014,
@@ -555,39 +544,40 @@
                   "generatorId": "GH2",
                   "energySource": "HYDRO",
                   "capping": 50.0,
-                  "pinit": 50.0
+                  "pInit": 50.0
                 },
                 "GH3": {
                   "generatorId": "GH3",
                   "energySource": "HYDRO",
                   "capping": 100.0,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "GROUP3": {
                   "generatorId": "GROUP3",
                   "energySource": "WIND",
                   "capping": 100.0,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "newGroup1": {
                   "generatorId": "newGroup1",
                   "energySource": "SOLAR",
                   "capping": 5.0,
-                  "pinit": 5.0
+                  "pInit": 5.0
                 },
                 "newGroup2": {
                   "generatorId": "newGroup2",
                   "energySource": "WIND",
                   "capping": 7.0,
-                  "pinit": 7.0
+                  "pInit": 7.0
                 },
                 "TEST1": {
                   "generatorId": "TEST1",
                   "energySource": "SOLAR",
                   "capping": 24.0,
-                  "pinit": 24.0
+                  "pInit": 24.0
                 }
-              }
+              },
+              "p": 70.0
             }
           }
         },
@@ -595,23 +585,20 @@
           "resultsbyMonitoredBranch": {
             "line3": {
               "intensity": 120.0,
-              "limitName": "IST",
-              "limitValue": 162.0,
-              "percentOverload": 74.07407407407408,
-              "p": null,
-              "maxP": null,
+              "limitName": "IT10",
+              "limitValue": 153.0,
+              "percentOverload": 78.43137254901961,
               "cappingByEnergySource": {},
               "overallCapping": null,
               "sensitivityByEnergySource": {},
-              "generatorsCapping": {}
+              "generatorsCapping": {},
+              "p": null
             },
             "line2": {
               "intensity": 70.0,
               "limitName": "IST",
               "limitValue": 128.0,
               "percentOverload": 54.6875,
-              "p": 60.0,
-              "maxP": null,
               "cappingByEnergySource": {
                 "HYDRO": 27.33333333333333,
                 "WIND": 12.333333333333332,
@@ -628,47 +615,48 @@
                   "generatorId": "GH2",
                   "energySource": "HYDRO",
                   "capping": 21.999999999999996,
-                  "pinit": 50.0
+                  "pInit": 50.0
                 },
                 "GH3": {
                   "generatorId": "GH3",
                   "energySource": "HYDRO",
                   "capping": 21.999999999999996,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "GROUP3": {
                   "generatorId": "GROUP3",
                   "energySource": "WIND",
                   "capping": 21.999999999999996,
-                  "pinit": 100.0
+                  "pInit": 100.0
                 },
                 "newGroup1": {
                   "generatorId": "newGroup1",
                   "energySource": "SOLAR",
                   "capping": 5.0,
-                  "pinit": 5.0
+                  "pInit": 5.0
                 },
                 "newGroup2": {
                   "generatorId": "newGroup2",
                   "energySource": "WIND",
                   "capping": 7.0,
-                  "pinit": 7.0
+                  "pInit": 7.0
                 },
                 "TEST1": {
                   "generatorId": "TEST1",
                   "energySource": "SOLAR",
                   "capping": 21.999999999999996,
-                  "pinit": 24.0
+                  "pInit": 24.0
                 }
-              }
+              },
+              "p": 60.0
             }
           }
         }
       },
-      "pinitByEnergySource": {
-        "HYDRO": 60.0,
-        "WIND": 140.0,
-        "SOLAR": 125.0
+      "pInitByEnergySource": {
+        "HYDRO": 150.0,
+        "WIND": 107.0,
+        "SOLAR": 29.0
       }
     }
   }

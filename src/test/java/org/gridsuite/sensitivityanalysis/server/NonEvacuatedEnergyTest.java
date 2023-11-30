@@ -43,7 +43,7 @@ import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.gridsuite.sensitivityanalysis.server.service.ReportService;
 import org.gridsuite.sensitivityanalysis.server.service.UuidGeneratorService;
-import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.WorkerService;
+import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.NonEvacuatedEnergyWorkerService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -197,7 +197,7 @@ public class NonEvacuatedEnergyTest {
     private UuidGeneratorService uuidGeneratorService;
 
     @SpyBean
-    private WorkerService workerService;
+    private NonEvacuatedEnergyWorkerService nonEvacuatedEnergyWorkerService;
 
     @Value("${sensitivity-analysis.default-provider}")
     String defaultSensitivityAnalysisProvider;
@@ -708,7 +708,7 @@ public class NonEvacuatedEnergyTest {
             .willReturn(CompletableFuture.completedFuture(result2))
             .willReturn(CompletableFuture.completedFuture(result3))
             .willReturn(CompletableFuture.completedFuture(result4));
-        workerService.setSensitivityAnalysisFactorySupplier(provider -> runner);
+        nonEvacuatedEnergyWorkerService.setSensitivityAnalysisFactorySupplier(provider -> runner);
 
         // purge messages
         while (output.receive(1000, "nonEvacuatedEnergy.result") != null) {
