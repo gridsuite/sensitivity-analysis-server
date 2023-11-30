@@ -80,8 +80,9 @@ public class SensitivityAnalysisController {
                                                          @Parameter(description = "Provider") @RequestParam(name = "provider", required = false) String provider,
                                                          @Parameter(description = "reportUuid") @RequestParam(name = "reportUuid", required = false) UUID reportUuid,
                                                          @Parameter(description = "reporterId") @RequestParam(name = "reporterId", required = false) String reporterId,
+                                                         @Parameter(description = "The type name for the report") @RequestParam(name = "reportType", required = false, defaultValue = "SensitivityAnalysis") String reportType,
                                                          @RequestBody SensitivityAnalysisInputData sensitivityAnalysisInputData) {
-        SensitivityAnalysisResult result = workerService.run(new SensitivityAnalysisRunContext(networkUuid, variantId, sensitivityAnalysisInputData, null, provider, reportUuid, reporterId));
+        SensitivityAnalysisResult result = workerService.run(new SensitivityAnalysisRunContext(networkUuid, variantId, sensitivityAnalysisInputData, null, provider, reportUuid, reporterId, reportType));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result);
     }
 
@@ -97,8 +98,9 @@ public class SensitivityAnalysisController {
                                            @Parameter(description = "Provider") @RequestParam(name = "provider", required = false) String provider,
                                            @Parameter(description = "reportUuid") @RequestParam(name = "reportUuid", required = false) UUID reportUuid,
                                            @Parameter(description = "reporterId") @RequestParam(name = "reporterId", required = false) String reporterId,
+                                           @Parameter(description = "The type name for the report") @RequestParam(name = "reportType", required = false, defaultValue = "SensitivityAnalysis") String reportType,
                                            @RequestBody SensitivityAnalysisInputData sensitivityAnalysisInputData) {
-        UUID resultUuid = service.runAndSaveResult(new SensitivityAnalysisRunContext(networkUuid, variantId, sensitivityAnalysisInputData, receiver, provider, reportUuid, reporterId));
+        UUID resultUuid = service.runAndSaveResult(new SensitivityAnalysisRunContext(networkUuid, variantId, sensitivityAnalysisInputData, receiver, provider, reportUuid, reporterId, reportType));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 

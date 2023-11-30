@@ -20,6 +20,8 @@ import org.gridsuite.sensitivityanalysis.server.entities.ContingencyEmbeddable;
 import org.gridsuite.sensitivityanalysis.server.entities.GlobalStatusEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityFactorEmbeddable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -45,6 +49,8 @@ import java.util.stream.Stream;
  */
 @Repository
 public class SensitivityAnalysisResultRepository {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisResultRepository.class);
 
     private final GlobalStatusRepository globalStatusRepository;
 
@@ -124,8 +130,12 @@ public class SensitivityAnalysisResultRepository {
     @Transactional
     public void delete(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
+        AtomicReference<Long> startTime = new AtomicReference<>();
+        startTime.set(System.nanoTime());
         globalStatusRepository.deleteByResultUuid(resultUuid);
+        sensitivityRepository.deleteSensitivityBySensitivityAnalysisResultUUid(resultUuid);
         analysisResultRepository.deleteByResultUuid(resultUuid);
+        LOGGER.info("Sensitivity analysis result '{}' has been deleted in {}ms", resultUuid, TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime.get()));
     }
 
     @Transactional

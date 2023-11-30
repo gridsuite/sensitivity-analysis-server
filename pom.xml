@@ -45,9 +45,10 @@
         <jaxb-api.version>2.4.0-b180830.0359</jaxb-api.version>
         <jaxb-runtime.version>2.4.0-b180830.0438</jaxb-runtime.version>
         <jib.from.image>gridsuite/java-hades2:2.0.0</jib.from.image>
-        <gridsuite-dependencies.version>27</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>28</gridsuite-dependencies.version>
         <liquibase-hibernate-package>org.gridsuite.sensitivityanalysis.server</liquibase-hibernate-package>
         <mockito-inline.version>3.11.1</mockito-inline.version>
+        <db-util.version>1.0.5</db-util.version>
     </properties>
 
     <build>
@@ -265,6 +266,12 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.vladmihalcea</groupId>
+            <artifactId>db-util</artifactId>
+            <version>${db-util.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- Needed to mock SensitivityAnalysis.Runner (which happens to be a final class) in SensitivityAnalysisControllerTest -->
