@@ -81,6 +81,7 @@ import static org.gridsuite.sensitivityanalysis.server.service.NotificationServi
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -106,6 +107,7 @@ public class NonEvacuatedEnergyTest {
 
     private static final UUID NETWORK_UUID = UUID.randomUUID();
     private static final UUID NETWORK_ERROR_UUID = UUID.randomUUID();
+    private static final UUID NETWORK_ERROR_PERMANENT_LIMIT_UUID = UUID.randomUUID();
     private static final UUID RESULT_UUID = UUID.randomUUID();
     private static final UUID OTHER_RESULT_UUID = UUID.randomUUID();
 
@@ -174,6 +176,7 @@ public class NonEvacuatedEnergyTest {
     private static final String ERROR_MESSAGE = "Error message test";
 
     private static String INPUT;
+    private static String INPUT_WITH_TEMPORARY_LIMIT_NOT_FOUND;
 
     @Autowired
     private OutputDestination output;
@@ -625,19 +628,19 @@ public class NonEvacuatedEnergyTest {
     }
 
     private void mockActions() {
-        given(actionsService.getContingencyList(CONTINGENCIES_1_UUID, NETWORK_UUID, VARIANT_ID)).willReturn(CONTINGENCIES_1);
-        given(actionsService.getContingencyList(CONTINGENCIES_2_UUID, NETWORK_UUID, VARIANT_ID)).willReturn(CONTINGENCIES_2);
+        given(actionsService.getContingencyList(eq(CONTINGENCIES_1_UUID), any(), eq(VARIANT_ID))).willReturn(CONTINGENCIES_1);
+        given(actionsService.getContingencyList(eq(CONTINGENCIES_2_UUID), any(), eq(VARIANT_ID))).willReturn(CONTINGENCIES_2);
     }
 
     private void mockFilters() {
-        given(filterService.getIdentifiablesFromFilter(GENERATORS_WIND_FILTER_UUID, NETWORK_UUID, VARIANT_ID)).willReturn(GENERATORS_WIND);
-        given(filterService.getIdentifiablesFromFilter(GENERATORS_SOLAR_FILTER_UUID, NETWORK_UUID, VARIANT_ID)).willReturn(GENERATORS_SOLAR);
-        given(filterService.getIdentifiablesFromFilter(GENERATORS_HYDRO_FILTER_UUID, NETWORK_UUID, VARIANT_ID)).willReturn(GENERATORS_HYDRO);
-        given(filterService.getIdentifiablesFromFilter(CAPPING_GENERATORS_WIND_FILTER_UUID, NETWORK_UUID, VARIANT_ID)).willReturn(CAPPING_GENERATORS_WIND);
-        given(filterService.getIdentifiablesFromFilter(CAPPING_GENERATORS_SOLAR_FILTER_UUID, NETWORK_UUID, VARIANT_ID)).willReturn(CAPPING_GENERATORS_SOLAR);
-        given(filterService.getIdentifiablesFromFilter(CAPPING_GENERATORS_HYDRO_FILTER_UUID, NETWORK_UUID, VARIANT_ID)).willReturn(CAPPING_GENERATORS_HYDRO);
-        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_1_FILTER_UUID, NETWORK_UUID, VARIANT_ID)).willReturn(BRANCHES_1);
-        given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_2_FILTER_UUID, NETWORK_UUID, VARIANT_ID)).willReturn(BRANCHES_2);
+        given(filterService.getIdentifiablesFromFilter(eq(GENERATORS_WIND_FILTER_UUID), any(), eq(VARIANT_ID))).willReturn(GENERATORS_WIND);
+        given(filterService.getIdentifiablesFromFilter(eq(GENERATORS_SOLAR_FILTER_UUID), any(), eq(VARIANT_ID))).willReturn(GENERATORS_SOLAR);
+        given(filterService.getIdentifiablesFromFilter(eq(GENERATORS_HYDRO_FILTER_UUID), any(), eq(VARIANT_ID))).willReturn(GENERATORS_HYDRO);
+        given(filterService.getIdentifiablesFromFilter(eq(CAPPING_GENERATORS_WIND_FILTER_UUID), any(), eq(VARIANT_ID))).willReturn(CAPPING_GENERATORS_WIND);
+        given(filterService.getIdentifiablesFromFilter(eq(CAPPING_GENERATORS_SOLAR_FILTER_UUID), any(), eq(VARIANT_ID))).willReturn(CAPPING_GENERATORS_SOLAR);
+        given(filterService.getIdentifiablesFromFilter(eq(CAPPING_GENERATORS_HYDRO_FILTER_UUID), any(), eq(VARIANT_ID))).willReturn(CAPPING_GENERATORS_HYDRO);
+        given(filterService.getIdentifiablesFromFilter(eq(MONITORED_BRANCHES_1_FILTER_UUID), any(), eq(VARIANT_ID))).willReturn(BRANCHES_1);
+        given(filterService.getIdentifiablesFromFilter(eq(MONITORED_BRANCHES_2_FILTER_UUID), any(), eq(VARIANT_ID))).willReturn(BRANCHES_2);
     }
 
     private String resourceToString(String resource) throws IOException {
@@ -652,9 +655,13 @@ public class NonEvacuatedEnergyTest {
         Network network = Network.read("testForNonEvacuatedEnergy.xiidm", getClass().getResourceAsStream("/testForNonEvacuatedEnergy.xiidm"));
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_ID);
 
+        Network networkWithNoPermamentLimit = Network.read("testForNonEvacuatedEnergyNoPermanentLimit.xiidm", getClass().getResourceAsStream("/testForNonEvacuatedEnergyNoPermanentLimit.xiidm"));
+        networkWithNoPermamentLimit.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_ID);
+
         // network store service mocking
         given(networkStoreService.getNetwork(NETWORK_UUID, PreloadingStrategy.COLLECTION)).willReturn(network);
         given(networkStoreService.getNetwork(NETWORK_ERROR_UUID, PreloadingStrategy.COLLECTION)).willThrow(new RuntimeException(ERROR_MESSAGE));
+        given(networkStoreService.getNetwork(NETWORK_ERROR_PERMANENT_LIMIT_UUID, PreloadingStrategy.COLLECTION)).willReturn(networkWithNoPermamentLimit);
 
         // build non evacuated energy input data
         List<NonEvacuatedEnergyStageDefinition> stagesDefinition = buildStagesDefinition();
@@ -673,6 +680,10 @@ public class NonEvacuatedEnergyTest {
             .parameters(SensitivityAnalysisParameters.load())
             .build();
         INPUT = mapper.writeValueAsString(nonEvacuatedEnergyInputData);
+
+        nonEvacuatedEnergyInputData.getNonEvacuatedEnergyMonitoredBranches().get(0).setIstN(false);
+        nonEvacuatedEnergyInputData.getNonEvacuatedEnergyMonitoredBranches().get(0).setLimitNameN("limitNotFound");
+        INPUT_WITH_TEMPORARY_LIMIT_NOT_FOUND = mapper.writeValueAsString(nonEvacuatedEnergyInputData);
 
         // build the successive security analysis results
         // (only some sensitivity factors in results for line3 and line2)
@@ -807,7 +818,7 @@ public class NonEvacuatedEnergyTest {
 
     @SneakyThrows
     @Test
-    public void runTestWithError() {
+    public void testWithBadNetworkError() {
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?receiver=me&variantId=" + VARIANT_ID, NETWORK_ERROR_UUID)
             .contentType(MediaType.APPLICATION_JSON)
@@ -826,5 +837,33 @@ public class NonEvacuatedEnergyTest {
         // No result available
         mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy-results/{resultUuid}", RESULT_UUID))
             .andExpect(status().isNotFound());
+    }
+
+    private void testLimitError(String inputData, String variantId, UUID networkUuid, String messageExpected) throws Exception {
+        MvcResult result = mockMvc.perform(post(
+                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?receiver=me&variantId=" + variantId, networkUuid)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(inputData))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+        assertEquals(RESULT_UUID, mapper.readValue(result.getResponse().getContentAsString(), UUID.class));
+
+        // message failed should have been sent
+        Message<byte[]> failMessage = output.receive(TIMEOUT, "nonEvacuatedEnergy.failed");
+        assertEquals(RESULT_UUID.toString(), failMessage.getHeaders().get("resultUuid"));
+        assertEquals("me", failMessage.getHeaders().get("receiver"));
+        assertTrue(((String) failMessage.getHeaders().get("message")).contains(messageExpected));
+
+        // No result available
+        mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy-results/{resultUuid}", RESULT_UUID))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testWithPermanentOrTemporaryLimitNotFound() throws Exception {
+        testLimitError(INPUT, VARIANT_ID, NETWORK_ERROR_PERMANENT_LIMIT_UUID, "Branch 'line2' has no current limits !!");
+
+        testLimitError(INPUT_WITH_TEMPORARY_LIMIT_NOT_FOUND, VARIANT_ID, NETWORK_UUID, "Temporary limit 'limitNotFound' not found for branch 'line3' on side 'ONE' !!");
     }
 }

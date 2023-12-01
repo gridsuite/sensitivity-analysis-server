@@ -256,16 +256,19 @@ public class NonEvacuatedEnergyInputBuilderService {
                                             List<Contingency> contingencies,
                                             List<SensitivityFactor> result,
                                             Reporter reporter) {
-        if (currentLimits.isEmpty() || Double.isNaN(currentLimits.get().getPermanentLimit())) {
-            // no current limits on side found : report and throw exception
+        if (currentLimits.isEmpty()) {
+            return;
+        }
+        if (Double.isNaN(currentLimits.get().getPermanentLimit())) {
+            // no permanent limit on side found : report and throw exception
             reporter.report(Report.builder()
                 .withKey("monitoredBranchNoCurrentOrPermanentLimitsOnSide")
-                .withDefaultMessage("No current or permanent limits for the monitored branch ${id} on side ${side}")
+                .withDefaultMessage("No permanent limit for the monitored branch ${id} on side ${side}")
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .withValue("id", branch.getId())
                 .withValue("side", side.name())
                 .build());
-            throw new PowsyblException("Branch '" + branch.getId() + "' has no current or permanent limits on side '" + side.name() + "' !!");
+            throw new PowsyblException("Branch '" + branch.getId() + "' has no permanent limit on side '" + side.name() + "' !!");
         }
 
         SensitivityFunctionType functionTypeActivePower = side == Branch.Side.ONE ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1 : SensitivityFunctionType.BRANCH_ACTIVE_POWER_2;
@@ -296,9 +299,12 @@ public class NonEvacuatedEnergyInputBuilderService {
                                             List<Contingency> contingencies,
                                             List<SensitivityFactor> result,
                                             Reporter reporter) {
+        if (currentLimits.isEmpty()) {
+            return;
+        }
+
         // We must check if limit name provided appears in the branch temporary limits on side
-        if (currentLimits.isEmpty() ||
-            currentLimits.get().getTemporaryLimits().stream().noneMatch(l -> l.getName().equals(limitName))) {
+        if (currentLimits.get().getTemporaryLimits().stream().noneMatch(l -> l.getName().equals(limitName))) {
             // temporary limit name not found on side : report and throw exception
             reporter.report(Report.builder()
                 .withKey("monitoredBranchTemporaryLimitNotFoundOnSide")
@@ -310,6 +316,7 @@ public class NonEvacuatedEnergyInputBuilderService {
                 .build());
             throw new PowsyblException("Temporary limit '" + limitName + "' not found for branch '" + branch.getId() + "' on side '" + side.name() + "' !!");
         }
+
         SensitivityFunctionType functionTypeActivePower = side == Branch.Side.ONE ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1 : SensitivityFunctionType.BRANCH_ACTIVE_POWER_2;
         SensitivityFunctionType functionTypeCurrent = side == Branch.Side.ONE ? SensitivityFunctionType.BRANCH_CURRENT_1 : SensitivityFunctionType.BRANCH_CURRENT_2;
 

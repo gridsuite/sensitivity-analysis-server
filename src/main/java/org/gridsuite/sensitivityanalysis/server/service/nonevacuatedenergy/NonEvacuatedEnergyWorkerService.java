@@ -817,6 +817,17 @@ public class NonEvacuatedEnergyWorkerService {
                 return null;
             }
             SensitivityAnalysisParameters sensitivityAnalysisParameters = buildParameters(context);
+
+            if (sensitivityAnalysisParameters.getLoadFlowParameters().isDc()) {
+                // loadflow in dc mode not allowed
+                reporter.report(Report.builder()
+                    .withKey("NonEvacuatedEnergyLoadFlowDcNotAllowed")
+                    .withDefaultMessage("Loadflow in DC mode not allowed !!")
+                    .withSeverity(TypedValue.ERROR_SEVERITY)
+                    .build());
+                throw new PowsyblException("Loadflow in DC mode not allowed !!");
+            }
+
             Network network = getNetwork(context.getNetworkUuid(), context.getVariantId());
             ComputationManager computationManager = sensitivityAnalysisExecutionService.getLocalComputationManager();
 
