@@ -41,6 +41,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
 
 /**
@@ -210,6 +211,7 @@ public class SensitivityAnalysisWorkerService {
     private void cleanSensitivityAnalysisResultsAndPublishCancel(UUID resultUuid, String receiver) {
         resultRepository.delete(resultUuid);
         notificationService.publishStop(resultUuid, receiver);
+        LOGGER.info(CANCEL_MESSAGE + " (resultUuid='{}')", resultUuid);
     }
 
     @Bean
@@ -240,8 +242,8 @@ public class SensitivityAnalysisWorkerService {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception | OutOfMemoryError e) {
-                LOGGER.error(FAIL_MESSAGE, e);
                 if (!(e instanceof CancellationException)) {
+                    LOGGER.error(FAIL_MESSAGE, e);
                     notificationService.publishFail(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver(), e.getMessage());
                     resultRepository.delete(resultContext.getResultUuid());
                     resultRepository.insertStatus(List.of(resultContext.getResultUuid()), SensitivityAnalysisStatus.FAILED.name());
