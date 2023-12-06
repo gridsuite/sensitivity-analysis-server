@@ -202,10 +202,11 @@ public class SensitivityAnalysisController {
     public ResponseEntity<UUID> runNonEvacuatedEnergy(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                            @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                            @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver,
+                                           @Parameter(description = "Provider") @RequestParam(name = "provider", required = false) String provider,
                                            @Parameter(description = "reportUuid") @RequestParam(name = "reportUuid", required = false) UUID reportUuid,
                                            @Parameter(description = "reporterId") @RequestParam(name = "reporterId", required = false) String reporterId,
                                            @RequestBody NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData) {
-        UUID resultUuid = nonEvacuatedEnergyService.runAndSaveResult(new NonEvacuatedEnergyRunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, reportUuid, reporterId));
+        UUID resultUuid = nonEvacuatedEnergyService.runAndSaveResult(new NonEvacuatedEnergyRunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, provider, reportUuid, reporterId));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
@@ -259,5 +260,12 @@ public class SensitivityAnalysisController {
                                      @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver) {
         nonEvacuatedEnergyService.stop(resultUuid, receiver);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(value = "/non-evacuated-energy-default-provider", produces = TEXT_PLAIN_VALUE)
+    @Operation(summary = "Get sensitivity analysis non evacuated energy default provider")
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "The sensitivity analysis non evacuated energy default provider has been found"))
+    public ResponseEntity<String> getNonEvacuatedEnergyDefaultProvider() {
+        return ResponseEntity.ok().body(nonEvacuatedEnergyService.getDefaultProvider());
     }
 }

@@ -185,7 +185,7 @@ public class NonEvacuatedEnergyWorkerService {
 
         LOGGER.info("Run non evacuated energy sensitivity analysis");
 
-        SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(context.getInputData().getProvider());
+        SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(context.getProvider());
 
         Reporter rootReporter = Reporter.NO_OP;
         Reporter reporter = Reporter.NO_OP;
@@ -217,10 +217,10 @@ public class NonEvacuatedEnergyWorkerService {
             return params; // no specific LF params
         }
         LoadFlowProvider lfProvider = LoadFlowProvider.findAll().stream()
-                .filter(p -> p.getName().equals(context.getInputData().getProvider()))
-                .findFirst().orElseThrow(() -> new PowsyblException("Load flow provider not found " + context.getInputData().getProvider()));
+                .filter(p -> p.getName().equals(context.getProvider()))
+                .findFirst().orElseThrow(() -> new PowsyblException("Load flow provider not found " + context.getProvider()));
         Extension<LoadFlowParameters> extension = lfProvider.loadSpecificParameters(context.getInputData().getLoadFlowSpecificParameters())
-                .orElseThrow(() -> new PowsyblException("Cannot add specific loadflow parameters with sensitivity analysis provider " + context.getInputData().getProvider()));
+                .orElseThrow(() -> new PowsyblException("Cannot add specific loadflow parameters with sensitivity analysis provider " + context.getProvider()));
         params.getLoadFlowParameters().addExtension((Class) extension.getClass(), extension);
         return params;
     }

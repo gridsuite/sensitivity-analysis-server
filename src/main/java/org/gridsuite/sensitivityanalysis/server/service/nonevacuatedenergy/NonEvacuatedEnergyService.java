@@ -13,6 +13,7 @@ import org.gridsuite.sensitivityanalysis.server.service.NotificationService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisCancelContext;
 import org.gridsuite.sensitivityanalysis.server.service.UuidGeneratorService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,6 +25,8 @@ import java.util.UUID;
  */
 @Service
 public class NonEvacuatedEnergyService {
+    private final String defaultProvider;
+
     private final NonEvacuatedEnergyRepository nonEvacuatedEnergyRepository;
 
     private final UuidGeneratorService uuidGeneratorService;
@@ -33,10 +36,12 @@ public class NonEvacuatedEnergyService {
     private final ObjectMapper objectMapper;
 
     @Autowired
-    public NonEvacuatedEnergyService(NonEvacuatedEnergyRepository nonEvacuatedEnergyRepository,
+    public NonEvacuatedEnergyService(@Value("${non-evacuated-energy.default-provider}") String defaultProvider,
+                                     NonEvacuatedEnergyRepository nonEvacuatedEnergyRepository,
                                      UuidGeneratorService uuidGeneratorService,
                                      NotificationService notificationService,
                                      ObjectMapper objectMapper) {
+        this.defaultProvider = defaultProvider;
         this.nonEvacuatedEnergyRepository = Objects.requireNonNull(nonEvacuatedEnergyRepository);
         this.uuidGeneratorService = Objects.requireNonNull(uuidGeneratorService);
         this.notificationService = notificationService;
@@ -76,5 +81,9 @@ public class NonEvacuatedEnergyService {
 
     public void stop(UUID resultUuid, String receiver) {
         notificationService.sendCancelMessage("publishNonEvacuatedEnergyCancel-out-0", new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
+    }
+
+    public String getDefaultProvider() {
+        return defaultProvider;
     }
 }

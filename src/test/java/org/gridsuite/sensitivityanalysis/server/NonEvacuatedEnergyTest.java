@@ -671,7 +671,6 @@ public class NonEvacuatedEnergyTest {
         List<NonEvacuatedEnergyContingencies> contingencies = buildContingencies();
 
         NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData = NonEvacuatedEnergyInputData.builder()
-            .provider("OpenLoadFlow")
             .nonEvacuatedEnergyStagesDefinition(stagesDefinition)
             .nonEvacuatedEnergyStagesSelection(stagesSelection)
             .nonEvacuatedEnergyGeneratorsLimit(generatorsLimit)
