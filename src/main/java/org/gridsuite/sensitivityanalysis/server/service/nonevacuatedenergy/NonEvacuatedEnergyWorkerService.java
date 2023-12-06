@@ -92,6 +92,7 @@ import java.util.function.Function;
 
 import static java.lang.Math.abs;
 import static java.util.stream.Collectors.toMap;
+import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
 
 /**
@@ -863,6 +864,7 @@ public class NonEvacuatedEnergyWorkerService {
     private void cleanResultsAndPublishCancel(UUID resultUuid, String receiver) {
         nonEvacuatedEnergyRepository.delete(resultUuid);
         notificationService.publishStop("publishNonEvacuatedEnergyStopped-out-0", resultUuid, receiver);
+        LOGGER.info(CANCEL_MESSAGE + " (resultUuid='{}')", resultUuid);
     }
 
     @Bean
@@ -893,8 +895,8 @@ public class NonEvacuatedEnergyWorkerService {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception | OutOfMemoryError e) {
-                LOGGER.error(FAIL_MESSAGE, e);
                 if (!(e instanceof CancellationException)) {
+                    LOGGER.error(FAIL_MESSAGE, e);
                     notificationService.publishFail("publishNonEvacuatedEnergyFailed-out-0", nonEvacuatedEnergyResultContext.getResultUuid(), nonEvacuatedEnergyResultContext.getRunContext().getReceiver(), e.getMessage());
                     nonEvacuatedEnergyRepository.delete(nonEvacuatedEnergyResultContext.getResultUuid());
                     nonEvacuatedEnergyRepository.insertStatus(List.of(nonEvacuatedEnergyResultContext.getResultUuid()), SensitivityAnalysisStatus.FAILED.name());
