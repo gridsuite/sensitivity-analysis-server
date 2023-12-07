@@ -205,8 +205,9 @@ public class SensitivityAnalysisController {
                                            @Parameter(description = "Provider") @RequestParam(name = "provider", required = false) String provider,
                                            @Parameter(description = "reportUuid") @RequestParam(name = "reportUuid", required = false) UUID reportUuid,
                                            @Parameter(description = "reporterId") @RequestParam(name = "reporterId", required = false) String reporterId,
+                                           @Parameter(description = "The type name for the report") @RequestParam(name = "reportType", required = false, defaultValue = "NonEvacuatedEnergy") String reportType,
                                            @RequestBody NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData) {
-        UUID resultUuid = nonEvacuatedEnergyService.runAndSaveResult(new NonEvacuatedEnergyRunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, provider, reportUuid, reporterId));
+        UUID resultUuid = nonEvacuatedEnergyService.runAndSaveResult(new NonEvacuatedEnergyRunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, provider, reportUuid, reporterId, reportType));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 

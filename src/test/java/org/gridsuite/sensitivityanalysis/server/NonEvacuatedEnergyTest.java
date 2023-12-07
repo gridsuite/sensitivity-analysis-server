@@ -743,7 +743,7 @@ public class NonEvacuatedEnergyTest {
     @Test
     public void runTest() throws Exception {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?receiver=me&variantId=" + VARIANT_ID, NETWORK_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID, NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(INPUT))
             .andExpect(status().isOk())
@@ -798,7 +798,7 @@ public class NonEvacuatedEnergyTest {
     @Test
     public void stopTest() throws Exception {
         mockMvc.perform(post(
-            "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?receiver=me&variantId=" + VARIANT_ID, NETWORK_UUID)
+            "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID, NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(INPUT))
             .andExpect(status().isOk());
@@ -819,7 +819,7 @@ public class NonEvacuatedEnergyTest {
     @Test
     public void testWithBadNetworkError() {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?receiver=me&variantId=" + VARIANT_ID, NETWORK_ERROR_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID, NETWORK_ERROR_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(INPUT))
             .andExpect(status().isOk())
@@ -840,7 +840,7 @@ public class NonEvacuatedEnergyTest {
 
     private void testLimitError(String inputData, String variantId, UUID networkUuid, String messageExpected) throws Exception {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?receiver=me&variantId=" + variantId, networkUuid)
+                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + variantId, networkUuid)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(inputData))
             .andExpect(status().isOk())

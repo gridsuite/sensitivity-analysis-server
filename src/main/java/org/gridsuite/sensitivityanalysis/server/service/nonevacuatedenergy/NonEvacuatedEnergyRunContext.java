@@ -32,7 +32,9 @@ public class NonEvacuatedEnergyRunContext {
 
     private final String reporterId;
 
-    public NonEvacuatedEnergyRunContext(UUID networkUuid, String variantId, NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData, String receiver, String provider, UUID reportUuid, String reporterId) {
+    private final String reportType;
+
+    public NonEvacuatedEnergyRunContext(UUID networkUuid, String variantId, NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData, String receiver, String provider, UUID reportUuid, String reporterId, String reportType) {
         this.networkUuid = Objects.requireNonNull(networkUuid);
         this.variantId = variantId;
         this.nonEvacuatedEnergyInputData = Objects.requireNonNull(nonEvacuatedEnergyInputData);
@@ -41,6 +43,7 @@ public class NonEvacuatedEnergyRunContext {
         this.provider = provider;
         this.reportUuid = reportUuid;
         this.reporterId = reporterId;
+        this.reportType = reportType;
     }
 
     public UUID getNetworkUuid() {
@@ -73,5 +76,9 @@ public class NonEvacuatedEnergyRunContext {
 
     public String getReporterId() {
         return reporterId;
+    }
+
+    public String getReportType() {
+        return reportType;
     }
 }

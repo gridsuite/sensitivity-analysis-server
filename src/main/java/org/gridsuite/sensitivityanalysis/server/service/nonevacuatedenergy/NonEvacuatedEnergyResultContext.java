@@ -28,6 +28,8 @@ public class NonEvacuatedEnergyResultContext {
 
     public static final String REPORTER_ID_HEADER = "reporterId";
 
+    public static final String REPORT_TYPE_HEADER = "reportType";
+
     private final UUID resultUuid;
 
     private final NonEvacuatedEnergyRunContext nonEvacuatedEnergyRunContext;
@@ -70,7 +72,8 @@ public class NonEvacuatedEnergyResultContext {
         }
         UUID reportUuid = headers.containsKey(REPORT_UUID) ? UUID.fromString((String) Objects.requireNonNull(headers.get(REPORT_UUID))) : null;
         String reporterId = headers.containsKey(REPORTER_ID_HEADER) ? (String) headers.get(REPORTER_ID_HEADER) : null;
-        NonEvacuatedEnergyRunContext nonEvacuatedEnergyRunContext = new NonEvacuatedEnergyRunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, provider, reportUuid, reporterId);
+        String reportType = headers.containsKey(REPORT_TYPE_HEADER) ? (String) headers.get(REPORT_TYPE_HEADER) : null;
+        NonEvacuatedEnergyRunContext nonEvacuatedEnergyRunContext = new NonEvacuatedEnergyRunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, provider, reportUuid, reporterId, reportType);
         return new NonEvacuatedEnergyResultContext(resultUuid, nonEvacuatedEnergyRunContext);
     }
 
@@ -89,6 +92,7 @@ public class NonEvacuatedEnergyResultContext {
                 .setHeader("provider", nonEvacuatedEnergyRunContext.getProvider())
                 .setHeader(REPORT_UUID, nonEvacuatedEnergyRunContext.getReportUuid())
                 .setHeader(REPORTER_ID_HEADER, nonEvacuatedEnergyRunContext.getReporterId())
-                .build();
+                .setHeader(REPORT_TYPE_HEADER, nonEvacuatedEnergyRunContext.getReportType())
+            .build();
     }
 }

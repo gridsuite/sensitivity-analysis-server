@@ -103,8 +103,6 @@ public class NonEvacuatedEnergyWorkerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NonEvacuatedEnergyWorkerService.class);
 
-    private static final String NON_EVACUATED_ENERGY_TYPE_REPORT = "NonEvacuatedEnergy";
-
     private final NetworkStoreService networkStoreService;
 
     private final ReportService reportService;
@@ -191,9 +189,12 @@ public class NonEvacuatedEnergyWorkerService {
         Reporter rootReporter = Reporter.NO_OP;
         Reporter reporter = Reporter.NO_OP;
         if (context.getReportUuid() != null) {
-            String rootReporterId = context.getReporterId() == null ? NON_EVACUATED_ENERGY_TYPE_REPORT : context.getReporterId() + "@" + NON_EVACUATED_ENERGY_TYPE_REPORT;
+            final String reportType = context.getReportType();
+            String rootReporterId = context.getReporterId() == null ? reportType : context.getReporterId() + "@" + reportType;
             rootReporter = new ReporterModel(rootReporterId, rootReporterId);
-            reporter = rootReporter.createSubReporter(NON_EVACUATED_ENERGY_TYPE_REPORT, NON_EVACUATED_ENERGY_TYPE_REPORT + " (${providerToUse})", "providerToUse", sensitivityAnalysisRunner.getName());
+            reporter = rootReporter.createSubReporter(reportType, reportType + " (${providerToUse})", "providerToUse", sensitivityAnalysisRunner.getName());
+            // Delete any previous non evacuated energy computation logs
+            reportService.deleteReport(context.getReportUuid(), reportType);
         }
 
         try {
