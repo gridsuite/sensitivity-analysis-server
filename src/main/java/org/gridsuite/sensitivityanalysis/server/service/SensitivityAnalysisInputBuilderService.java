@@ -32,6 +32,7 @@ import java.util.stream.Stream;
 public class SensitivityAnalysisInputBuilderService {
     private static final String EXPECTED_TYPE = "expectedType";
     private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisInputBuilderService.class);
+    public static final String INJECTIONS = "injections";
     private final ActionsService actionsService;
     private final FilterService filterService;
 
@@ -111,6 +112,18 @@ public class SensitivityAnalysisInputBuilderService {
                 .build());
             return List.of();
         }
+    }
+
+    private Integer getCountFromFilterServer(Map<String, List<UUID>> containersIdMap, UUID networkUuid, Integer containersAttributesCount) {
+        Map<String, List<Integer>> map = filterService.fetchFiltersComplexity(containersIdMap, networkUuid, null);
+        Integer contAttributesCountTemp = containersAttributesCount;
+        for (String key : map.keySet()) {
+            int sensiFactorCount = map.get(key).stream().mapToInt(Integer::intValue).sum();
+            if (sensiFactorCount != 0) {
+                contAttributesCountTemp *= sensiFactorCount;
+            }
+        }
+        return contAttributesCountTemp;
     }
 
     private Stream<IdentifiableAttributes> getIdentifiablesFromContainer(SensitivityAnalysisRunContext context, EquipmentsContainer filter,
@@ -428,6 +441,16 @@ public class SensitivityAnalysisInputBuilderService {
             context.getSensitivityAnalysisInputs().addContingencies(cNodes);
             context.getSensitivityAnalysisInputs().addSensitivityFactors(fNodes);
         });
+    }
+
+    public Integer getContainersCount(Map<String, List<UUID>> containersIdMap, UUID networkUuid, Boolean isInjectionsSet) {
+        Integer containersAttributesCount = 1;
+        if (Boolean.TRUE.equals(isInjectionsSet)) {
+            containersAttributesCount *= containersIdMap.get(INJECTIONS).size();
+            containersIdMap.remove(INJECTIONS);
+        }
+        containersAttributesCount = getCountFromFilterServer(containersIdMap, networkUuid, containersAttributesCount);
+        return containersAttributesCount;
     }
 
     public void build(SensitivityAnalysisRunContext context, Network network, Reporter reporter) {

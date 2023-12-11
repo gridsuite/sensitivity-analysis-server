@@ -259,4 +259,8 @@ public class SensitivityAnalysisWorkerService {
     public Consumer<Message<String>> consumeCancel() {
         return message -> cancelSensitivityAnalysisAsync(SensitivityAnalysisCancelContext.fromMessage(message));
     }
+
+    public Integer getContainersCount(Map<String, List<UUID>> containersIdMap, UUID networkUuid, Boolean isInjectionsSet) {
+        return sensitivityAnalysisInputBuilderService.getContainersCount(containersIdMap, networkUuid, isInjectionsSet);
+    }
 }

@@ -31,6 +31,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -95,6 +96,16 @@ public class SensitivityAnalysisController {
                                            @RequestBody SensitivityAnalysisInputData sensitivityAnalysisInputData) {
         UUID resultUuid = service.runAndSaveResult(new SensitivityAnalysisRunContext(networkUuid, variantId, sensitivityAnalysisInputData, receiver, provider, reportUuid, reporterId, reportType));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
+    }
+
+    @PostMapping(value = "/networks/{networkUuid}/count", produces = APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get all containers complexity count")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis containers complexity count"),
+        @ApiResponse(responseCode = "404", description = "Sensitivity analysis result has not been found")})
+    public ResponseEntity<Integer> getContainersCount(@Parameter(description = "Result UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                      @Parameter(description = "Is Injections Set") @RequestParam(name = "isInjectionsSet", required = false) Boolean isInjectionsSet,
+                                                      @RequestBody Map<String, List<UUID>> containersIdsMap) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(workerService.getContainersCount(containersIdsMap, networkUuid, isInjectionsSet));
     }
 
     @GetMapping(value = "/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)

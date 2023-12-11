@@ -11,12 +11,16 @@ import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -30,6 +34,7 @@ public class FilterService {
     private static final String DELIMITER = "/";
     private final RestTemplate restTemplate = new RestTemplate();
     private String filterServerBaseUri;
+    public static final String NETWORK_UUID = "networkUuid";
     private static final String QUERY_PARAM_VARIANT_ID = "variantId";
 
     @Autowired
@@ -43,7 +48,7 @@ public class FilterService {
 
         var uriComponentsBuilder = UriComponentsBuilder
             .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/{id}/export")
-            .queryParam("networkUuid", networkUuid.toString());
+            .queryParam(NETWORK_UUID, networkUuid.toString());
         if (!StringUtils.isBlank(variantId)) {
             uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);
         }
@@ -52,5 +57,26 @@ public class FilterService {
         return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.GET, null,
             new ParameterizedTypeReference<List<IdentifiableAttributes>>() {
             }).getBody();
+    }
+
+    public Map<String, List<Integer>> fetchFiltersComplexity(Map<String, List<UUID>> containerIdsMap, UUID networkUuid, String variantId) {
+        var uriComponentsBuilder = UriComponentsBuilder
+                .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/count")
+                .queryParam(NETWORK_UUID, networkUuid);
+        if (!StringUtils.isBlank(variantId)) {
+            uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);
+        }
+        var path = uriComponentsBuilder
+                .build()
+                .toUriString();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Map<String, List<UUID>>> httpEntity = new HttpEntity<>(containerIdsMap, headers);
+
+        return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.POST, httpEntity,
+                new ParameterizedTypeReference<Map<String, List<Integer>>>() {
+                }).getBody();
     }
 }
