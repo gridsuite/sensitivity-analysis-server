@@ -59,9 +59,9 @@ public class FilterService {
             }).getBody();
     }
 
-    public Map<String, List<Integer>> fetchFiltersComplexity(Map<String, List<UUID>> containerIdsMap, UUID networkUuid, String variantId) {
+    public Map<String, List<Integer>> getIdentifiablesCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId) {
         var uriComponentsBuilder = UriComponentsBuilder
-                .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/count")
+                .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/identifiables-count")
                 .queryParam(NETWORK_UUID, networkUuid);
         if (!StringUtils.isBlank(variantId)) {
             uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);
@@ -73,7 +73,7 @@ public class FilterService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<Map<String, List<UUID>>> httpEntity = new HttpEntity<>(containerIdsMap, headers);
+        HttpEntity<Map<String, List<UUID>>> httpEntity = new HttpEntity<>(ids, headers);
 
         return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.POST, httpEntity,
                 new ParameterizedTypeReference<Map<String, List<Integer>>>() {

@@ -114,8 +114,8 @@ public class SensitivityAnalysisInputBuilderService {
         }
     }
 
-    private Integer getCountFromFilterServer(Map<String, List<UUID>> containersIdMap, UUID networkUuid, Integer containersAttributesCount) {
-        Map<String, List<Integer>> map = filterService.fetchFiltersComplexity(containersIdMap, networkUuid, null);
+    private Integer getComputationCount(Map<String, List<UUID>> ids, UUID networkUuid, Integer containersAttributesCount) {
+        Map<String, List<Integer>> map = filterService.getIdentifiablesCount(ids, networkUuid, null);
         Integer contAttributesCountTemp = containersAttributesCount;
         for (String key : map.keySet()) {
             int sensiFactorCount = map.get(key).stream().mapToInt(Integer::intValue).sum();
@@ -443,13 +443,13 @@ public class SensitivityAnalysisInputBuilderService {
         });
     }
 
-    public Integer getContainersCount(Map<String, List<UUID>> containersIdMap, UUID networkUuid, Boolean isInjectionsSet) {
+    public Integer getComputationCount(Map<String, List<UUID>> ids, UUID networkUuid, Boolean isInjectionsSet) {
         Integer containersAttributesCount = 1;
         if (Boolean.TRUE.equals(isInjectionsSet)) {
-            containersAttributesCount *= containersIdMap.get(INJECTIONS).size();
-            containersIdMap.remove(INJECTIONS);
+            containersAttributesCount *= ids.get(INJECTIONS).size();
+            ids.remove(INJECTIONS);
         }
-        containersAttributesCount = getCountFromFilterServer(containersIdMap, networkUuid, containersAttributesCount);
+        containersAttributesCount = getComputationCount(ids, networkUuid, containersAttributesCount);
         return containersAttributesCount;
     }
 
