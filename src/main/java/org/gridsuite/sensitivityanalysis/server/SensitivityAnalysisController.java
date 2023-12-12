@@ -102,10 +102,11 @@ public class SensitivityAnalysisController {
     @Operation(summary = "Get computation count of the total of identifiables for a list of filters")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis identifiables count"),
         @ApiResponse(responseCode = "404", description = "Sensitivity analysis identifiables count result has not been found")})
-    public ResponseEntity<Integer> getComputationCount(@Parameter(description = "Result UUID") @PathVariable("networkUuid") UUID networkUuid,
+    public ResponseEntity<Integer> getComputationCount(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                       @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                       @Parameter(description = "Is Injections Set") @RequestParam(name = "isInjectionsSet", required = false) Boolean isInjectionsSet,
                                                       @RequestBody Map<String, List<UUID>> ids) {
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(workerService.getComputationCount(ids, networkUuid, isInjectionsSet));
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(workerService.getComputationCount(ids, networkUuid, variantId, isInjectionsSet));
     }
 
     @GetMapping(value = "/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)
