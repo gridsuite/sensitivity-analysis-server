@@ -53,4 +53,22 @@ public class FilterService {
             new ParameterizedTypeReference<List<IdentifiableAttributes>>() {
             }).getBody();
     }
+
+    public List<IdentifiableAttributes> getIdentifiablesFromFilters(List<UUID> uuids, UUID networkUuid, String variantId) {
+        Objects.requireNonNull(uuids);
+        Objects.requireNonNull(networkUuid);
+
+        var uriComponentsBuilder = UriComponentsBuilder
+                .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/export")
+                .queryParam("ids", uuids)
+                .queryParam("networkUuid", networkUuid.toString());
+        if (!StringUtils.isBlank(variantId)) {
+            uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);
+        }
+        var path = uriComponentsBuilder.build().toUriString();
+
+        return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.GET, null,
+                new ParameterizedTypeReference<List<IdentifiableAttributes>>() {
+                }).getBody();
+    }
 }
