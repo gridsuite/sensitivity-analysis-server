@@ -94,19 +94,15 @@ public class NotificationService {
         publisher.send("publishFailed-out-0", message);
     }
 
-    // the message is shortened before being sent to the study-server.
-    // I keep the beginning and ending, it should make it easier to identify
+    // prevents the message from being too long for rabbitmq
+    // the beginning and ending are both kept, it should make it easier to identify
     public String shortenMessage(String msg) {
         if (msg == null) {
             return msg;
         }
 
-        String shortMsg = msg;
-        if (shortMsg.length() > MSG_MAX_LENGTH) {
-            shortMsg = msg.substring(0, MSG_MAX_LENGTH / 2) +
-                    " ... " +
-                    msg.substring(msg.length() - MSG_MAX_LENGTH / 2, msg.length() - 1);
-        }
-        return shortMsg;
+        return msg.length() > MSG_MAX_LENGTH ?
+                msg.substring(0, MSG_MAX_LENGTH / 2) + " ... " + msg.substring(msg.length() - MSG_MAX_LENGTH / 2, msg.length() - 1)
+                : msg;
     }
 }
