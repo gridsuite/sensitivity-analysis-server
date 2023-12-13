@@ -165,7 +165,7 @@ public class SensitivityAnalysisInputDataTest {
         Set<String> reportKeys = reports.stream().map(Report::getReportKey).collect(Collectors.toSet());
         assertThat(reportKeys.size(), is(1));
         /*, "filterTranslationFailure"*/
-        assertThat(reportKeys, contains("contingencyTranslationFailure")); //FIXME why and error disapear ?
+        assertThat(reportKeys, contains("contingencyTranslationFailure", "filterTranslationFailure")); //FIXME why and error disapear ?
     }
 
     @Test
