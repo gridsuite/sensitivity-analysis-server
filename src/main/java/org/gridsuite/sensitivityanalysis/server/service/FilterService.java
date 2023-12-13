@@ -37,23 +37,6 @@ public class FilterService {
         this.filterServerBaseUri = filterServerBaseUri;
     }
 
-    public List<IdentifiableAttributes> getIdentifiablesFromFilter(UUID uuid, UUID networkUuid, String variantId) {
-        Objects.requireNonNull(uuid);
-        Objects.requireNonNull(networkUuid);
-
-        var uriComponentsBuilder = UriComponentsBuilder
-            .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/{id}/export")
-            .queryParam("networkUuid", networkUuid.toString());
-        if (!StringUtils.isBlank(variantId)) {
-            uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);
-        }
-        var path = uriComponentsBuilder.buildAndExpand(uuid).toUriString();
-
-        return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.GET, null,
-            new ParameterizedTypeReference<List<IdentifiableAttributes>>() {
-            }).getBody();
-    }
-
     public List<IdentifiableAttributes> getIdentifiablesFromFilters(List<UUID> uuids, UUID networkUuid, String variantId) {
         Objects.requireNonNull(uuids);
         Objects.requireNonNull(networkUuid);
