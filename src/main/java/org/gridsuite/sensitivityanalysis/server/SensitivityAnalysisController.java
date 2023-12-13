@@ -104,9 +104,9 @@ public class SensitivityAnalysisController {
         @ApiResponse(responseCode = "404", description = "Sensitivity analysis identifiables count result has not been found")})
     public ResponseEntity<Integer> getComputationCount(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                        @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
-                                                      @Parameter(description = "Is Injections Set") @RequestParam(name = "isInjectionsSet", required = false) Boolean isInjectionsSet,
-                                                      @RequestBody Map<String, List<UUID>> ids) {
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(workerService.getComputationCount(ids, networkUuid, variantId, isInjectionsSet));
+                                                       @Parameter(description = "Is Injections Set") @RequestParam(name = "isInjectionsSet", required = false) Boolean isInjectionsSet,
+                                                       @RequestBody Map<String, List<UUID>> ids) {
+        return ResponseEntity.ok().body(workerService.getSensitivityAnalysisFactorsCount(ids, networkUuid, variantId, isInjectionsSet));
     }
 
     @GetMapping(value = "/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)

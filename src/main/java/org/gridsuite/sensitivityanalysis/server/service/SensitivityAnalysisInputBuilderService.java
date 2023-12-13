@@ -121,13 +121,15 @@ public class SensitivityAnalysisInputBuilderService {
                 .sum();
     }
 
-    private Integer getComputationCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Integer containersAttributesCount) {
+    private Integer getSensitivityAnalysisFactorsCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Integer containersAttributesCount) {
         int contAttributesCountTemp = containersAttributesCount;
-        if (ids.containsKey(CONTINGENCIES)) {
-            int sumContingencyListSizes = Optional.of(getContingenciesCount(ids.get(CONTINGENCIES), networkUuid, variantId)).orElse(1);
+        if (ids.containsKey(CONTINGENCIES) && !ids.get(CONTINGENCIES).isEmpty()) {
+            int sumContingencyListSizes = getContingenciesCount(ids.get(CONTINGENCIES), networkUuid, variantId);
+            sumContingencyListSizes = Math.max(sumContingencyListSizes, 1);
             contAttributesCountTemp *= sumContingencyListSizes;
             ids.remove(CONTINGENCIES);
         }
+        ids.entrySet().removeIf(entry -> Objects.isNull(entry.getValue()));
         Map<String, List<Integer>> map = filterService.getIdentifiablesCount(ids, networkUuid, null);
         for (List<Integer> valueList : map.values()) {
             int sensiFactorCount = valueList.stream().mapToInt(Integer::intValue).sum();
@@ -456,13 +458,13 @@ public class SensitivityAnalysisInputBuilderService {
         });
     }
 
-    public Integer getComputationCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Boolean isInjectionsSet) {
+    public Integer getSensitivityAnalysisFactorsCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Boolean isInjectionsSet) {
         Integer containersAttributesCount = 1;
         if (Boolean.TRUE.equals(isInjectionsSet)) {
             containersAttributesCount *= ids.get(INJECTIONS).size();
             ids.remove(INJECTIONS);
         }
-        containersAttributesCount = getComputationCount(ids, networkUuid, variantId, containersAttributesCount);
+        containersAttributesCount = getSensitivityAnalysisFactorsCount(ids, networkUuid, variantId, containersAttributesCount);
         return containersAttributesCount;
     }
 
