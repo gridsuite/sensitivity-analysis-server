@@ -31,6 +31,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -97,12 +98,23 @@ public class SensitivityAnalysisController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
+    @PostMapping(value = "/networks/{networkUuid}/factors-count", produces = APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get factors count")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis factors count"),
+        @ApiResponse(responseCode = "404", description = "Filters or contingencies has not been found")})
+    public ResponseEntity<Long> getFactorsCount(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                   @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                   @Parameter(description = "Is Injections Set") @RequestParam(name = "isInjectionsSet", required = false) Boolean isInjectionsSet,
+                                                   @RequestBody Map<String, List<UUID>> ids) {
+        return ResponseEntity.ok().body(workerService.getFactorsCount(ids, networkUuid, variantId, isInjectionsSet));
+    }
+
     @GetMapping(value = "/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Get a sensitivity analysis result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis result"),
         @ApiResponse(responseCode = "404", description = "Sensitivity analysis result has not been found")})
     public ResponseEntity<SensitivityRunQueryResult> getResult(@Parameter(description = "Result UUID")
-        @PathVariable("resultUuid") UUID resultUuid,
+                            @PathVariable("resultUuid") UUID resultUuid,
         @RequestParam(name = "selector", required = false) String selectorJson) {
 
         try {
