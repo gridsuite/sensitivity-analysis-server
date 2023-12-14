@@ -142,7 +142,6 @@ public class SensitivityAnalysisControllerTest {
     private static final Map<String, List<UUID>> IDS = Map.of(MONITORED_BRANCHS_KEY, MONITORED_BRANCHES_FILTERS_UUID, INJECTIONS_KEY, INJECTIONS_FILTERS_UUID, CONTINGENCIES_KEY, CONTINGENCIES_FILTERS_UUID);
     private static final Map<String, List<UUID>> IDS_1 = Map.of(MONITORED_BRANCHS_KEY, MONITORED_BRANCHES_FILTERS_UUID, INJECTIONS_KEY, INJECTIONS_FILTERS_UUID);
 
-
     private static final List<Contingency> CONTINGENCIES = List.of(
         new Contingency("l1", new BranchContingency("l1")),
         new Contingency("l2", new GeneratorContingency("l2")),
