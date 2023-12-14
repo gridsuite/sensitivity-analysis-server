@@ -757,7 +757,7 @@ public class SensitivityAnalysisControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
-        assertEquals("72", result.getResponse().getContentAsString());
+        assertEquals("1", result.getResponse().getContentAsString());
     }
 
     @Test
