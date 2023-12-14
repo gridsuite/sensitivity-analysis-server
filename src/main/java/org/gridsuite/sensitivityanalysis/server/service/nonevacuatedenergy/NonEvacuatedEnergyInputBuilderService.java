@@ -245,7 +245,7 @@ public class NonEvacuatedEnergyInputBuilderService {
             ));
     }
 
-    private void genFactorForPermanentLimit(Branch branch,
+    private boolean genFactorForPermanentLimit(Branch branch,
                                             Branch.Side side,
                                             Optional<CurrentLimits> currentLimits,
                                             List<String> variableIds,
@@ -257,7 +257,7 @@ public class NonEvacuatedEnergyInputBuilderService {
                                             List<SensitivityFactor> result,
                                             Reporter reporter) {
         if (currentLimits.isEmpty()) {
-            return;
+            return false;
         }
         if (Double.isNaN(currentLimits.get().getPermanentLimit())) {
             // no permanent limit on side found : report and throw exception
@@ -284,9 +284,10 @@ public class NonEvacuatedEnergyInputBuilderService {
             monitoredBranchThreshold.setIstNm1(true);
             monitoredBranchThreshold.setNm1Coeff(branches.getNm1Coefficient());
         }
+        return true;
     }
 
-    private void genFactorForTemporaryLimit(Branch branch,
+    private boolean genFactorForTemporaryLimit(Branch branch,
                                             Branch.Side side,
                                             Optional<CurrentLimits> currentLimits,
                                             String limitName,
@@ -299,22 +300,8 @@ public class NonEvacuatedEnergyInputBuilderService {
                                             List<Contingency> contingencies,
                                             List<SensitivityFactor> result,
                                             Reporter reporter) {
-        if (currentLimits.isEmpty()) {
-            return;
-        }
-
-        // We must check if limit name provided appears in the branch temporary limits on side
-        if (currentLimits.get().getTemporaryLimits().stream().noneMatch(l -> l.getName().equals(limitName))) {
-            // temporary limit name not found on side : report and throw exception
-            reporter.report(Report.builder()
-                .withKey("monitoredBranchTemporaryLimitNotFoundOnSide")
-                .withDefaultMessage("Temporary limit ${limitName} not found for the monitored branch ${id} on side ${side}")
-                .withSeverity(TypedValue.ERROR_SEVERITY)
-                .withValue("limitName", limitName)
-                .withValue("id", branch.getId())
-                .withValue("side", side.name())
-                .build());
-            throw new PowsyblException("Temporary limit '" + limitName + "' not found for branch '" + branch.getId() + "' on side '" + side.name() + "' !!");
+        if (currentLimits.isEmpty() || currentLimits.get().getTemporaryLimits().stream().noneMatch(l -> l.getName().equals(limitName))) {
+            return false;
         }
 
         SensitivityFunctionType functionTypeActivePower = side == Branch.Side.ONE ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1 : SensitivityFunctionType.BRANCH_ACTIVE_POWER_2;
@@ -331,6 +318,7 @@ public class NonEvacuatedEnergyInputBuilderService {
             monitoredBranchThreshold.setNm1LimitName(limitName);
             monitoredBranchThreshold.setNm1Coeff(branches.getNm1Coefficient());
         }
+        return true;
     }
 
     private List<SensitivityFactor> getSensitivityFactorsFromEquipments(NonEvacuatedEnergyRunContext context,
@@ -373,26 +361,59 @@ public class NonEvacuatedEnergyInputBuilderService {
 
             if (branches.isIstN() || branches.isIstNm1()) {  // Ist activated : we consider the permanent limit
                 // permanent limit on side 1
-                genFactorForPermanentLimit(branch, Branch.Side.ONE, currentLimits1, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
+                boolean factors1Generated = genFactorForPermanentLimit(branch, Branch.Side.ONE, currentLimits1, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
 
                 // permanent limit on side 2
-                genFactorForPermanentLimit(branch, Branch.Side.TWO, currentLimits2, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
+                boolean factors2Generated = genFactorForPermanentLimit(branch, Branch.Side.TWO, currentLimits2, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
+
+                if (!factors1Generated && !factors2Generated) {
+                    // no temporary limit on one side : report and throw exception
+                    reporter.report(Report.builder()
+                        .withKey("monitoredBranchNoPermanentLimits")
+                        .withDefaultMessage("No permanent limits for the monitored branch ${id}")
+                        .withSeverity(TypedValue.ERROR_SEVERITY)
+                        .withValue("id", monitoredEquipment.getId())
+                        .build());
+                    throw new PowsyblException("Branch '" + branch.getId() + "' has no permanent limits !!");
+                }
             }
 
             if (StringUtils.isNotEmpty(branches.getLimitNameN())) {  // here we consider the temporary limits
                 // temporary limits on side 1
-                genFactorForTemporaryLimit(branch, Branch.Side.ONE, currentLimits1, branches.getLimitNameN(), true, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
+                boolean factors1Generated = genFactorForTemporaryLimit(branch, Branch.Side.ONE, currentLimits1, branches.getLimitNameN(), true, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
 
                 // temporary limits on side 2
-                genFactorForTemporaryLimit(branch, Branch.Side.TWO, currentLimits2, branches.getLimitNameN(), true, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
+                boolean factors2Generated = genFactorForTemporaryLimit(branch, Branch.Side.TWO, currentLimits2, branches.getLimitNameN(), true, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
+
+                if (!factors1Generated && !factors2Generated) {
+                    reporter.report(Report.builder()
+                        .withKey("monitoredBranchTemporaryLimitNotFound")
+                        .withDefaultMessage("Temporary limit ${limitName} not found for the monitored branch ${id}")
+                        .withSeverity(TypedValue.ERROR_SEVERITY)
+                        .withValue("limitName", branches.getLimitNameN())
+                        .withValue("id", branch.getId())
+                        .build());
+                    throw new PowsyblException("Temporary limit '" + branches.getLimitNameN() + "' not found for branch '" + branch.getId() + "' !!");
+                }
             }
 
             if (StringUtils.isNotEmpty(branches.getLimitNameNm1())) {  // here we consider the temporary limit
                 // temporary limits on side 1
-                genFactorForTemporaryLimit(branch, Branch.Side.ONE, currentLimits1, branches.getLimitNameNm1(), false, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
+                boolean factors1Generated = genFactorForTemporaryLimit(branch, Branch.Side.ONE, currentLimits1, branches.getLimitNameNm1(), false, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
 
                 // temporary limits on side 2
-                genFactorForTemporaryLimit(branch, Branch.Side.TWO, currentLimits2, branches.getLimitNameNm1(), false, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
+                boolean factors2Generated = genFactorForTemporaryLimit(branch, Branch.Side.TWO, currentLimits2, branches.getLimitNameNm1(), false, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
+
+                if (!factors1Generated && !factors2Generated) {
+                    reporter.report(Report.builder()
+                        .withKey("monitoredBranchTemporaryLimitNotFound")
+                        .withDefaultMessage("Temporary limit ${limitName} not found for the monitored branch ${id}")
+                        .withSeverity(TypedValue.ERROR_SEVERITY)
+                        .withValue("limitName", branches.getLimitNameNm1())
+                        .withValue("id", branch.getId())
+                        .build());
+                    throw new PowsyblException("Temporary limit '" + branches.getLimitNameNm1() + "' not found for branch '" + branch.getId() + "' !!");
+                }
             }
 
             if (!result.isEmpty()) {
