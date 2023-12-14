@@ -121,7 +121,7 @@ public class SensitivityAnalysisInputBuilderService {
                 .sum();
     }
 
-    private Integer getSensitivityAnalysisFactorsCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Integer containersAttributesCount) {
+    private Integer getFactorsCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Integer containersAttributesCount) {
         int contAttributesCountTemp = containersAttributesCount;
         if (ids.containsKey(CONTINGENCIES) && !ids.get(CONTINGENCIES).isEmpty()) {
             int sumContingencyListSizes = getContingenciesCount(ids.get(CONTINGENCIES), networkUuid, variantId);
@@ -458,13 +458,13 @@ public class SensitivityAnalysisInputBuilderService {
         });
     }
 
-    public Integer getSensitivityAnalysisFactorsCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Boolean isInjectionsSet) {
+    public Integer getFactorsCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Boolean isInjectionsSet) {
         Integer containersAttributesCount = 1;
         if (Boolean.TRUE.equals(isInjectionsSet)) {
             containersAttributesCount *= ids.get(INJECTIONS).size();
             ids.remove(INJECTIONS);
         }
-        containersAttributesCount = getSensitivityAnalysisFactorsCount(ids, networkUuid, variantId, containersAttributesCount);
+        containersAttributesCount = getFactorsCount(ids, networkUuid, variantId, containersAttributesCount);
         return containersAttributesCount;
     }
 

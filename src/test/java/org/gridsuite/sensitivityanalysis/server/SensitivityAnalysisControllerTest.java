@@ -753,8 +753,8 @@ public class SensitivityAnalysisControllerTest {
     }
 
     @Test
-    public void testGetComputationCount() throws Exception {
-        MvcResult result = mockMvc.perform(post("/" + VERSION + "/networks/{networkUuid}/computation-count?variantId={variantId}", NETWORK_UUID, VARIANT_1_ID)
+    public void testGetFactorsCount() throws Exception {
+        MvcResult result = mockMvc.perform(post("/" + VERSION + "/networks/{networkUuid}/factors-count?variantId={variantId}", NETWORK_UUID, VARIANT_1_ID)
                 .contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(IDS)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))

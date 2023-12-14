@@ -155,7 +155,7 @@ public class FilterServiceTest {
 
     @SneakyThrows
     @Test
-    public void testGetComputationCount() {
+    public void testGetFactorsCount() {
         Map<String, List<Integer>> list = filterService.getIdentifiablesCount(IDENTIFIABLES_UUID, UUID.fromString(NETWORK_UUID), null);
         assertEquals(objectMapper.writeValueAsString(countResultMap()), objectMapper.writeValueAsString(list));
         list = filterService.getIdentifiablesCount(IDENTIFIABLES_UUID, UUID.fromString(NETWORK_UUID), VARIANT_ID);
