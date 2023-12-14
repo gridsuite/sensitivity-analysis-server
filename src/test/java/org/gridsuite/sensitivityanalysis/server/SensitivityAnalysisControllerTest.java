@@ -133,12 +133,15 @@ public class SensitivityAnalysisControllerTest {
     private static final UUID MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID = UUID.randomUUID();
     private static final UUID EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID = UUID.randomUUID();
     private static final UUID CONTINGENCIES_NODES_UUID = UUID.randomUUID();
+    private static final List<UUID> MONITORED_BRANCHES_FILTERS_UUID = List.of(UUID.randomUUID());
+    private static final List<UUID> INJECTIONS_FILTERS_UUID = List.of(UUID.randomUUID());
     private static final List<UUID> CONTINGENCIES_FILTERS_UUID = List.of(UUID.randomUUID());
     public static final String MONITORED_BRANCHS_KEY = "monitoredBranchs";
     public static final String INJECTIONS_KEY = "injections";
     public static final String CONTINGENCIES_KEY = "contingencies";
-    private static final Map<String, List<UUID>> IDS = Map.of(MONITORED_BRANCHS_KEY, List.of(UUID.randomUUID()), INJECTIONS_KEY, List.of(UUID.randomUUID()), CONTINGENCIES_KEY, List.of(UUID.randomUUID()));
-    private static final Map<String, List<UUID>> IDS_1 = Map.of(MONITORED_BRANCHS_KEY, List.of(UUID.randomUUID()), INJECTIONS_KEY, List.of(UUID.randomUUID()));
+    private static final Map<String, List<UUID>> IDS = Map.of(MONITORED_BRANCHS_KEY, MONITORED_BRANCHES_FILTERS_UUID, INJECTIONS_KEY, INJECTIONS_FILTERS_UUID, CONTINGENCIES_KEY, CONTINGENCIES_FILTERS_UUID);
+    private static final Map<String, List<UUID>> IDS_1 = Map.of(MONITORED_BRANCHS_KEY, MONITORED_BRANCHES_FILTERS_UUID, INJECTIONS_KEY, INJECTIONS_FILTERS_UUID);
+
 
     private static final List<Contingency> CONTINGENCIES = List.of(
         new Contingency("l1", new BranchContingency("l1")),
@@ -757,7 +760,7 @@ public class SensitivityAnalysisControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
-        assertEquals("1", result.getResponse().getContentAsString());
+        assertEquals("72", result.getResponse().getContentAsString());
     }
 
     @Test
