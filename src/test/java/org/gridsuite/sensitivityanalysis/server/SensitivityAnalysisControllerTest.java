@@ -474,7 +474,7 @@ public class SensitivityAnalysisControllerTest {
         given(filterService.getIdentifiablesFromFilter(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(EQUIPMENTS_IN_VOLTAGE_REGULATION);
         given(filterService.getIdentifiablesFromFilter(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, NETWORK_UUID, null)).willReturn(EQUIPMENTS_IN_VOLTAGE_REGULATION);
         given(filterService.getIdentifiablesFromFilter(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, NETWORK_STOP_UUID, VARIANT_2_ID)).willReturn(EQUIPMENTS_IN_VOLTAGE_REGULATION);
-        given(filterService.getIdentifiablesCount(IDS_1, NETWORK_UUID, null)).willReturn(Map.of(MONITORED_BRANCHS_KEY, List.of(6), INJECTIONS_KEY, List.of(6)));
+        given(filterService.getIdentifiablesCount(IDS_1, NETWORK_UUID, null)).willReturn(Map.<String, List<Long>>of(MONITORED_BRANCHS_KEY, List.<Long>of(6L), INJECTIONS_KEY, List.<Long>of(6L)));
         // report service mocking
         doAnswer(i -> null).when(reportService).sendReport(any(), any());
 

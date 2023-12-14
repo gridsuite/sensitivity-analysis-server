@@ -121,8 +121,8 @@ public class SensitivityAnalysisInputBuilderService {
                 .sum();
     }
 
-    private Integer getFactorsCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Integer containersAttributesCount) {
-        int contAttributesCountTemp = containersAttributesCount;
+    private Long getFactorsCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Long containersAttributesCount) {
+        Long contAttributesCountTemp = containersAttributesCount;
         if (ids.containsKey(CONTINGENCIES) && !ids.get(CONTINGENCIES).isEmpty()) {
             int sumContingencyListSizes = getContingenciesCount(ids.get(CONTINGENCIES), networkUuid, variantId);
             sumContingencyListSizes = Math.max(sumContingencyListSizes, 1);
@@ -130,9 +130,9 @@ public class SensitivityAnalysisInputBuilderService {
             ids.remove(CONTINGENCIES);
         }
         ids.entrySet().removeIf(entry -> Objects.isNull(entry.getValue()));
-        Map<String, List<Integer>> map = filterService.getIdentifiablesCount(ids, networkUuid, null);
-        for (List<Integer> valueList : map.values()) {
-            int sensiFactorCount = valueList.stream().mapToInt(Integer::intValue).sum();
+        Map<String, List<Long>> map = filterService.getIdentifiablesCount(ids, networkUuid, null);
+        for (List<Long> valueList : map.values()) {
+            int sensiFactorCount = valueList.stream().mapToInt(Long::intValue).sum();
             if (sensiFactorCount != 0) {
                 contAttributesCountTemp *= sensiFactorCount;
             }
@@ -458,8 +458,8 @@ public class SensitivityAnalysisInputBuilderService {
         });
     }
 
-    public Integer getFactorsCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Boolean isInjectionsSet) {
-        Integer containersAttributesCount = 1;
+    public Long getFactorsCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Boolean isInjectionsSet) {
+        Long containersAttributesCount = 1L;
         if (Boolean.TRUE.equals(isInjectionsSet)) {
             containersAttributesCount *= ids.get(INJECTIONS).size();
             ids.remove(INJECTIONS);

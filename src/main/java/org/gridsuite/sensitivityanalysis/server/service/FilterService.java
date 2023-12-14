@@ -59,7 +59,7 @@ public class FilterService {
             }).getBody();
     }
 
-    public Map<String, List<Integer>> getIdentifiablesCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId) {
+    public Map<String, List<Long>> getIdentifiablesCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId) {
         var uriComponentsBuilder = UriComponentsBuilder
                 .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/identifiables-count")
                 .queryParam(NETWORK_UUID, networkUuid);
@@ -76,7 +76,7 @@ public class FilterService {
         HttpEntity<Map<String, List<UUID>>> httpEntity = new HttpEntity<>(ids, headers);
 
         return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.POST, httpEntity,
-                new ParameterizedTypeReference<Map<String, List<Integer>>>() {
+                new ParameterizedTypeReference<Map<String, List<Long>>>() {
                 }).getBody();
     }
 }

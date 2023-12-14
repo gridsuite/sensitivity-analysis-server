@@ -102,7 +102,7 @@ public class SensitivityAnalysisController {
     @Operation(summary = "Get factors count")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis factors count"),
         @ApiResponse(responseCode = "404", description = "Filters or contingencies has not been found")})
-    public ResponseEntity<Integer> getFactorsCount(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+    public ResponseEntity<Long> getFactorsCount(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                    @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
                                                    @Parameter(description = "Is Injections Set") @RequestParam(name = "isInjectionsSet", required = false) Boolean isInjectionsSet,
                                                    @RequestBody Map<String, List<UUID>> ids) {

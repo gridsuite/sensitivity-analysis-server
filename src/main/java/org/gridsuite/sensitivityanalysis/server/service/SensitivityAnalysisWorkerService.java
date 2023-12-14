@@ -260,7 +260,7 @@ public class SensitivityAnalysisWorkerService {
         return message -> cancelSensitivityAnalysisAsync(SensitivityAnalysisCancelContext.fromMessage(message));
     }
 
-    public Integer getFactorsCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Boolean isInjectionsSet) {
+    public Long getFactorsCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Boolean isInjectionsSet) {
         return sensitivityAnalysisInputBuilderService.getFactorsCount(ids, networkUuid, variantId, isInjectionsSet);
     }
 }
