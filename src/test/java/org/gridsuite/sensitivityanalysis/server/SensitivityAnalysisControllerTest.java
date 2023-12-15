@@ -133,6 +133,14 @@ public class SensitivityAnalysisControllerTest {
     private static final UUID MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID = UUID.randomUUID();
     private static final UUID EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID = UUID.randomUUID();
     private static final UUID CONTINGENCIES_NODES_UUID = UUID.randomUUID();
+    private static final List<UUID> MONITORED_BRANCHES_FILTERS_UUID = List.of(UUID.randomUUID());
+    private static final List<UUID> INJECTIONS_FILTERS_UUID = List.of(UUID.randomUUID());
+    private static final List<UUID> CONTINGENCIES_FILTERS_UUID = List.of(UUID.randomUUID());
+    public static final String MONITORED_BRANCHS_KEY = "monitoredBranchs";
+    public static final String INJECTIONS_KEY = "injections";
+    public static final String CONTINGENCIES_KEY = "contingencies";
+    private static final Map<String, List<UUID>> IDS = Map.of(MONITORED_BRANCHS_KEY, MONITORED_BRANCHES_FILTERS_UUID, INJECTIONS_KEY, INJECTIONS_FILTERS_UUID, CONTINGENCIES_KEY, CONTINGENCIES_FILTERS_UUID);
+    private static final Map<String, List<UUID>> IDS_1 = Map.of(MONITORED_BRANCHS_KEY, MONITORED_BRANCHES_FILTERS_UUID, INJECTIONS_KEY, INJECTIONS_FILTERS_UUID);
 
     private static final List<Contingency> CONTINGENCIES = List.of(
         new Contingency("l1", new BranchContingency("l1")),
@@ -402,6 +410,7 @@ public class SensitivityAnalysisControllerTest {
         given(actionsService.getContingencyList(CONTINGENCIES_NODES_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(CONTINGENCIES);
         given(actionsService.getContingencyList(CONTINGENCIES_NODES_UUID, NETWORK_UUID, VARIANT_3_ID)).willReturn(CONTINGENCIES_VARIANT);
         given(actionsService.getContingencyList(CONTINGENCIES_NODES_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(CONTINGENCIES);
+        given(actionsService.getContingencyList(CONTINGENCIES_FILTERS_UUID.get(0), NETWORK_UUID, VARIANT_1_ID)).willReturn(CONTINGENCIES_VARIANT);
 
         // filter service mocking
         given(filterService.getIdentifiablesFromFilter(MONITORED_BRANCHES_FILTERS_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(BRANCHES);
@@ -465,7 +474,7 @@ public class SensitivityAnalysisControllerTest {
         given(filterService.getIdentifiablesFromFilter(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(EQUIPMENTS_IN_VOLTAGE_REGULATION);
         given(filterService.getIdentifiablesFromFilter(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, NETWORK_UUID, null)).willReturn(EQUIPMENTS_IN_VOLTAGE_REGULATION);
         given(filterService.getIdentifiablesFromFilter(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, NETWORK_STOP_UUID, VARIANT_2_ID)).willReturn(EQUIPMENTS_IN_VOLTAGE_REGULATION);
-
+        given(filterService.getIdentifiablesCount(IDS_1, NETWORK_UUID, null)).willReturn(Map.<String, List<Long>>of(MONITORED_BRANCHS_KEY, List.<Long>of(6L), INJECTIONS_KEY, List.<Long>of(6L)));
         // report service mocking
         doAnswer(i -> null).when(reportService).sendReport(any(), any());
 
@@ -741,6 +750,16 @@ public class SensitivityAnalysisControllerTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
         assertEquals(SensitivityAnalysisStatus.NOT_DONE.name(), result.getResponse().getContentAsString());
+    }
+
+    @Test
+    public void testGetFactorsCount() throws Exception {
+        MvcResult result = mockMvc.perform(post("/" + VERSION + "/networks/{networkUuid}/factors-count?variantId={variantId}", NETWORK_UUID, VARIANT_1_ID)
+                .contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(IDS)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        assertEquals("72", result.getResponse().getContentAsString());
     }
 
     @Test
