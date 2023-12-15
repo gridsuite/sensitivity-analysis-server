@@ -262,7 +262,6 @@ public class SensitivityAnalysisInputBuilderService {
                     .build());
                 return;
             }
-
             for (IdentifiableAttributes identifiableAttributes : variablesList.getRight()) {
                 switch (identifiableAttributes.getType()) {
                     case GENERATOR: {
@@ -304,9 +303,6 @@ public class SensitivityAnalysisInputBuilderService {
             return List.of();
         }
 
-        // List<IdentifiableAttributes> monitoredEquipments = monitoredEquipmentsContainers.stream()
-        //     .flatMap(filter -> getMonitoredIdentifiablesFromContainer(context, network, filter, monitoredEquipmentsTypesAllowed, reporter))
-        //     .collect(Collectors.toList());
         List<IdentifiableAttributes> monitoredEquipments = getMonitoredIdentifiablesFromContainer(context, network, monitoredEquipmentsContainers, monitoredEquipmentsTypesAllowed, reporter).collect(Collectors.toList());
 
         return getSensitivityFactorsFromEquipments(variablesSets.stream().map(SensitivityVariableSet::getId).collect(Collectors.toList()),
@@ -321,18 +317,11 @@ public class SensitivityAnalysisInputBuilderService {
                                                                           List<Contingency> contingencies,
                                                                           SensitivityFunctionType sensitivityFunctionType,
                                                                           SensitivityVariableType sensitivityVariableType) {
-        // List<IdentifiableAttributes> equipments = filters.stream()
-        //     .flatMap(filter -> getIdentifiablesFromContainer(context, filter, equipmentsTypesAllowed, reporter))
-        //     .collect(Collectors.toList());
-
         List<IdentifiableAttributes> equipments = getIdentifiablesFromContainer(context, filters, equipmentsTypesAllowed, reporter).collect(Collectors.toList());
         if (equipments.isEmpty()) {
             return List.of();
         }
 
-        // List<IdentifiableAttributes> monitoredEquipments = monitoredEquipmentsContainers.stream()
-        //     .flatMap(filter -> getMonitoredIdentifiablesFromContainer(context, network, filter, monitoredEquipmentsTypesAllowed, reporter))
-        //     .collect(Collectors.toList());
         List<IdentifiableAttributes> monitoredEquipments = getMonitoredIdentifiablesFromContainer(context, network, filters, monitoredEquipmentsTypesAllowed, reporter)
                 .collect(Collectors.toList());
 
