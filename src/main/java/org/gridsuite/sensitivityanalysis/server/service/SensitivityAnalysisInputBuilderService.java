@@ -317,16 +317,16 @@ public class SensitivityAnalysisInputBuilderService {
                                                                           List<Contingency> contingencies,
                                                                           SensitivityFunctionType sensitivityFunctionType,
                                                                           SensitivityVariableType sensitivityVariableType) {
-        List<IdentifiableAttributes> equipments = getIdentifiablesFromContainer(context, filters, equipmentsTypesAllowed, reporter).collect(Collectors.toList());
+        List<IdentifiableAttributes> equipments = getIdentifiablesFromContainer(context, filters, equipmentsTypesAllowed, reporter).toList();
+
         if (equipments.isEmpty()) {
             return List.of();
         }
-
-        List<IdentifiableAttributes> monitoredEquipments = getMonitoredIdentifiablesFromContainer(context, network, filters, monitoredEquipmentsTypesAllowed, reporter)
-                .collect(Collectors.toList());
+        List<EquipmentsContainer> monitoredEquipementContainer = monitoredEquipmentsContainers.stream().toList();
+        List<IdentifiableAttributes> monitoredEquipments = getMonitoredIdentifiablesFromContainer(context, network, monitoredEquipementContainer, monitoredEquipmentsTypesAllowed, reporter).toList();
 
         return getSensitivityFactorsFromEquipments(equipments.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()),
-            monitoredEquipments, contingencies, sensitivityFunctionType, sensitivityVariableType, false);
+                monitoredEquipments, contingencies, sensitivityFunctionType, sensitivityVariableType, false);
     }
 
     private void buildSensitivityInjectionsSets(SensitivityAnalysisRunContext context, Network network, Reporter reporter) {
