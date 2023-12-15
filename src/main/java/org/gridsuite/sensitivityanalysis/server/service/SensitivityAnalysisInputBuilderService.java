@@ -32,6 +32,8 @@ import java.util.stream.Stream;
 public class SensitivityAnalysisInputBuilderService {
     private static final String EXPECTED_TYPE = "expectedType";
     private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisInputBuilderService.class);
+    public static final String INJECTIONS = "injections";
+    public static final String CONTINGENCIES = "contingencies";
     private final ActionsService actionsService;
     private final FilterService filterService;
 
@@ -115,6 +117,32 @@ public class SensitivityAnalysisInputBuilderService {
                 .build());
             return List.of();
         }
+    }
+
+    private Integer getContingenciesCount(List<UUID> ids, UUID networkUuid, String variantId) {
+        return ids.stream()
+                .mapToInt(uuid -> actionsService.getContingencyList(uuid, networkUuid, variantId).size())
+                .sum();
+    }
+
+    private Long getFactorsCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Long containersAttributesCount) {
+        Long contAttributesCountTemp = containersAttributesCount;
+        if (ids.containsKey(CONTINGENCIES) && !ids.get(CONTINGENCIES).isEmpty()) {
+            int sumContingencyListSizes = getContingenciesCount(ids.get(CONTINGENCIES), networkUuid, variantId);
+            sumContingencyListSizes = Math.max(sumContingencyListSizes, 1);
+            contAttributesCountTemp *= sumContingencyListSizes;
+            ids.remove(CONTINGENCIES);
+        }
+        ids.entrySet().removeIf(entry -> Objects.isNull(entry.getValue()));
+        Map<String, List<Long>> map = filterService.getIdentifiablesCount(ids, networkUuid, null);
+        for (List<Long> valueList : map.values()) {
+            int sensiFactorCount = valueList.stream().mapToInt(Long::intValue).sum();
+            if (sensiFactorCount != 0) {
+                contAttributesCountTemp *= sensiFactorCount;
+            }
+        }
+
+        return contAttributesCountTemp;
     }
 
     private Stream<IdentifiableAttributes> getIdentifiablesFromContainer(SensitivityAnalysisRunContext context, List<EquipmentsContainer> filters,
@@ -440,6 +468,16 @@ public class SensitivityAnalysisInputBuilderService {
             context.getSensitivityAnalysisInputs().addContingencies(cNodes);
             context.getSensitivityAnalysisInputs().addSensitivityFactors(fNodes);
         });
+    }
+
+    public Long getFactorsCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Boolean isInjectionsSet) {
+        Long containersAttributesCount = 1L;
+        if (Boolean.TRUE.equals(isInjectionsSet)) {
+            containersAttributesCount *= ids.get(INJECTIONS).size();
+            ids.remove(INJECTIONS);
+        }
+        containersAttributesCount = getFactorsCount(ids, networkUuid, variantId, containersAttributesCount);
+        return containersAttributesCount;
     }
 
     public void build(SensitivityAnalysisRunContext context, Network network, Reporter reporter) {
