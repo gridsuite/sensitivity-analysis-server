@@ -863,6 +863,6 @@ public class NonEvacuatedEnergyTest {
     public void testWithPermanentOrTemporaryLimitNotFound() throws Exception {
         testLimitError(INPUT, VARIANT_ID, NETWORK_ERROR_PERMANENT_LIMIT_UUID, "Branch 'line2' has no current limits !!");
 
-        testLimitError(INPUT_WITH_TEMPORARY_LIMIT_NOT_FOUND, VARIANT_ID, NETWORK_UUID, "Temporary limit 'limitNotFound' not found for branch 'line3' on side 'ONE' !!");
+        testLimitError(INPUT_WITH_TEMPORARY_LIMIT_NOT_FOUND, VARIANT_ID, NETWORK_UUID, "Temporary limit 'limitNotFound' not found for branch 'line3' !!");
     }
 }
