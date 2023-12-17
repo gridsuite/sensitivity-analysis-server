@@ -14,6 +14,7 @@ import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.gridsuite.sensitivityanalysis.server.dto.FilterEquipments;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
@@ -27,10 +28,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -85,11 +83,11 @@ public class FilterServiceTest {
         server = new MockWebServer();
         server.start();
 
-        String jsonExpected = objectMapper.writeValueAsString(List.of(IDENTIFIABLE));
-        String veryLargeJsonExpected = objectMapper.writeValueAsString(createVeryLargeList());
-        String jsonVariantExpected = objectMapper.writeValueAsString(List.of(IDENTIFIABLE_VARIANT));
+        String jsonExpected = objectMapper.writeValueAsString(createFromIdentifiableList(LIST_UUID, List.of(IDENTIFIABLE)));
+        String veryLargeJsonExpected = objectMapper.writeValueAsString(createFromIdentifiableList(VERY_LARGE_LIST_UUID, createVeryLargeList()));
+        String jsonLargeFilterEquipement = objectMapper.writeValueAsString(createFilterEquipments());
+        String jsonVariantExpected = objectMapper.writeValueAsString(createFromIdentifiableList(LIST_UUID, List.of(IDENTIFIABLE_VARIANT)));
         String jsonIdentifiablesExpected = objectMapper.writeValueAsString(countResultMap());
-
         final Dispatcher dispatcher = new Dispatcher() {
             @Override
             public MockResponse dispatch(RecordedRequest request) {
@@ -98,6 +96,10 @@ public class FilterServiceTest {
                     return new MockResponse().setResponseCode(HttpStatus.OK.value())
                             .setBody(jsonVariantExpected)
                             .addHeader("Content-Type", "application/json; charset=utf-8");
+                } else if (requestPath.equals(String.format("/v1/filters/export?ids=%s&ids=%s&networkUuid=%s", VERY_LARGE_LIST_UUID, LIST_UUID, NETWORK_UUID))) {
+                        return new MockResponse().setResponseCode(HttpStatus.OK.value())
+                                .setBody(jsonLargeFilterEquipement)
+                                .addHeader("Content-Type", "application/json; charset=utf-8");
                 } else if (requestPath.equals(String.format("/v1/filters/export?ids=%s&networkUuid=%s", LIST_UUID, NETWORK_UUID))) {
                     return new MockResponse().setResponseCode(HttpStatus.OK.value())
                         .setBody(jsonExpected)
@@ -134,6 +136,28 @@ public class FilterServiceTest {
         return IntStream.range(0, DATA_BUFFER_LIMIT).mapToObj(i -> new IdentifiableAttributes("l" + i, IdentifiableType.GENERATOR, null)).collect(Collectors.toList());
     }
 
+    private List<FilterEquipments> createFromIdentifiableList(UUID uuid, List<IdentifiableAttributes> identifiableAttributes) {
+        return List.of(
+                FilterEquipments.builder()
+                        .identifiableAttributes(identifiableAttributes)
+                        .filterId(uuid)
+                        .build()
+        );
+    }
+
+    private List<FilterEquipments> createFilterEquipments() {
+        return List.of(
+            FilterEquipments.builder()
+                .identifiableAttributes(createVeryLargeList())
+                .filterId(VERY_LARGE_LIST_UUID)
+                .build(),
+            FilterEquipments.builder()
+                .identifiableAttributes(List.of(IDENTIFIABLE))
+                .filterId(LIST_UUID)
+                .build()
+        );
+    }
+
     @SneakyThrows
     @Test
     public void test() {
@@ -155,10 +179,28 @@ public class FilterServiceTest {
 
     @SneakyThrows
     @Test
+    public void testGetMultipleLists() {
+        List<IdentifiableAttributes> list = filterService.getIdentifiablesFromFilters(List.of(VERY_LARGE_LIST_UUID, LIST_UUID), UUID.fromString(NETWORK_UUID), null);
+        List<IdentifiableAttributes> expectedList = new ArrayList<>();
+        expectedList.addAll(createVeryLargeList());
+        expectedList.addAll(List.of(IDENTIFIABLE));
+        assertEquals(objectMapper.writeValueAsString(expectedList), objectMapper.writeValueAsString(list));
+    }
+
+    @SneakyThrows
+    @Test
     public void testGetFactorsCount() {
         Map<String, List<Long>> list = filterService.getIdentifiablesCount(IDENTIFIABLES_UUID, UUID.fromString(NETWORK_UUID), null);
         assertEquals(objectMapper.writeValueAsString(countResultMap()), objectMapper.writeValueAsString(list));
         list = filterService.getIdentifiablesCount(IDENTIFIABLES_UUID, UUID.fromString(NETWORK_UUID), VARIANT_ID);
         assertEquals(objectMapper.writeValueAsString(countResultMap()), objectMapper.writeValueAsString(list));
+    }
+
+    @SneakyThrows
+    @Test
+    public void testListOfUuids() {
+        // DataBufferLimitException should not be thrown with this message : "Exceeded limit on max bytes to buffer : DATA_BUFFER_LIMIT"
+        List<FilterEquipments> list = filterService.getFilterEquipements(List.of(VERY_LARGE_LIST_UUID, LIST_UUID), UUID.fromString(NETWORK_UUID), null);
+        assertEquals(objectMapper.writeValueAsString(createFilterEquipments()), objectMapper.writeValueAsString(list));
     }
 }

@@ -7,6 +7,7 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import org.apache.commons.lang3.StringUtils;
+import org.gridsuite.sensitivityanalysis.server.dto.FilterEquipments;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -44,21 +46,32 @@ public class FilterService {
         this.filterServerBaseUri = filterServerBaseUri;
     }
 
-    public List<IdentifiableAttributes> getIdentifiablesFromFilters(List<UUID> uuids, UUID networkUuid, String variantId) {
-        Objects.requireNonNull(uuids);
+    public List<IdentifiableAttributes> getIdentifiablesFromFilters(List<UUID> filterUuids, UUID networkUuid, String variantId) {
+        List<FilterEquipments> filterEquipments = getFilterEquipements(filterUuids, networkUuid, variantId);
+
+        List<IdentifiableAttributes> mergedIdentifiables = new ArrayList<>();
+        for (FilterEquipments filterEquipment : filterEquipments) {
+            mergedIdentifiables.addAll(filterEquipment.getIdentifiableAttributes());
+        }
+
+        return mergedIdentifiables;
+    }
+
+    public List<FilterEquipments> getFilterEquipements(List<UUID> filterUuids, UUID networkUuid, String variantId) {
+        Objects.requireNonNull(filterUuids);
         Objects.requireNonNull(networkUuid);
 
         var uriComponentsBuilder = UriComponentsBuilder
-            .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/export")
-            .queryParam(IDS, uuids)
-            .queryParam(NETWORK_UUID, networkUuid.toString());
+                .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/export")
+                .queryParam(IDS, filterUuids)
+                .queryParam(NETWORK_UUID, networkUuid.toString());
         if (!StringUtils.isBlank(variantId)) {
             uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);
         }
         var path = uriComponentsBuilder.build().toUriString();
 
         return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.GET, null,
-                new ParameterizedTypeReference<List<IdentifiableAttributes>>() {
+                new ParameterizedTypeReference<List<FilterEquipments>>() {
                 }).getBody();
     }
 
