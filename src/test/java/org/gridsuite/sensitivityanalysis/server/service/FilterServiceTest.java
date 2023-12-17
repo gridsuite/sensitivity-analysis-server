@@ -181,9 +181,8 @@ public class FilterServiceTest {
     @Test
     public void testGetMultipleLists() {
         List<IdentifiableAttributes> list = filterService.getIdentifiablesFromFilters(List.of(VERY_LARGE_LIST_UUID, LIST_UUID), UUID.fromString(NETWORK_UUID), null);
-        List<IdentifiableAttributes> expectedList = new ArrayList<>();
-        expectedList.addAll(createVeryLargeList());
-        expectedList.addAll(List.of(IDENTIFIABLE));
+        List<IdentifiableAttributes> expectedList = new ArrayList<>(createVeryLargeList());
+        expectedList.add(IDENTIFIABLE);
         assertEquals(objectMapper.writeValueAsString(expectedList), objectMapper.writeValueAsString(list));
     }
 
