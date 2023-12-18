@@ -37,6 +37,8 @@ public class SensitivityAnalysisInputBuilderService {
     private final ActionsService actionsService;
     private final FilterService filterService;
 
+    private static final String NAMES = "names";
+
     public SensitivityAnalysisInputBuilderService(ActionsService actionsService, FilterService filterService) {
         this.actionsService = actionsService;
         this.filterService = filterService;
@@ -100,11 +102,10 @@ public class SensitivityAnalysisInputBuilderService {
     }
 
     private List<IdentifiableAttributes> goGetIdentifiables(List<EquipmentsContainer> filters, UUID networkUuid, String variantId, Reporter reporter) {
-        List<String> containerNamesList = filters.stream().map(EquipmentsContainer::getContainerName).toList();
-        String containersNames = Arrays.toString(containerNamesList.toArray());
+        String containersNames = getContainerNames(filters);
         try {
             //extract container id from filters
-            List<UUID> filterIds = filters.stream().map(EquipmentsContainer::getContainerId).collect(Collectors.toList());
+            List<UUID> filterIds = filters.stream().map(EquipmentsContainer::getContainerId).toList();
             return filterService.getIdentifiablesFromFilters(filterIds, networkUuid, variantId);
         } catch (Exception ex) {
             LOGGER.error("Could not get identifiables from filter " + containersNames, ex);
@@ -113,7 +114,7 @@ public class SensitivityAnalysisInputBuilderService {
                 .withDefaultMessage("Could not get identifiables from filters ${names} : ${exception}")
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .withValue("exception", ex.getMessage())
-                .withValue("names", containersNames)
+                .withValue(NAMES, containersNames)
                 .build());
             return List.of();
         }
@@ -147,28 +148,31 @@ public class SensitivityAnalysisInputBuilderService {
 
     private Stream<IdentifiableAttributes> getIdentifiablesFromContainers(SensitivityAnalysisRunContext context, List<EquipmentsContainer> filters,
                                                                           List<IdentifiableType> equipmentsTypesAllowed, Reporter reporter) {
-        List<String> containerNamesList = filters.stream().map(EquipmentsContainer::getContainerName).toList();
-        String containerNames = Arrays.toString(containerNamesList.toArray());
-        List<IdentifiableAttributes> listIdentAttributes = goGetIdentifiables(filters, context.getNetworkUuid(), context.getVariantId(), reporter);
+        String containersNames = getContainerNames(filters);
+        List<IdentifiableAttributes> listIdentifiableAttributes = goGetIdentifiables(filters, context.getNetworkUuid(), context.getVariantId(), reporter);
 
         // check that monitored equipments type is allowed
-        if (!listIdentAttributes.stream().allMatch(i -> equipmentsTypesAllowed.contains(i.getType()))) {
+        if (!listIdentifiableAttributes.stream().allMatch(i -> equipmentsTypesAllowed.contains(i.getType()))) {
             reporter.report(Report.builder()
                 .withKey("badEquipmentType")
                 .withDefaultMessage("Equipments type in filter with name=${names} should be ${expectedType} : filter is ignored")
-                .withValue("names", containerNames)
+                .withValue(NAMES, containersNames)
                 .withValue(EXPECTED_TYPE, equipmentsTypesAllowed.toString())
                 .withSeverity(TypedValue.WARN_SEVERITY)
                 .build());
             return Stream.empty();
         }
 
-        return listIdentAttributes.stream();
+        return listIdentifiableAttributes.stream();
+    }
+
+    private String getContainerNames(List<EquipmentsContainer> filters) {
+        List<String> containerNamesList = filters.stream().map(EquipmentsContainer::getContainerName).toList();
+        return "[" + String.join(", ", containerNamesList) + "]";
     }
 
     private Stream<IdentifiableAttributes> getMonitoredIdentifiablesFromContainers(SensitivityAnalysisRunContext context, Network network, List<EquipmentsContainer> filters, List<IdentifiableType> equipmentsTypesAllowed, Reporter reporter) {
-        List<String> containerNamesList = filters.stream().map(EquipmentsContainer::getContainerName).toList();
-        String containerNames = Arrays.toString(containerNamesList.toArray());
+        String containersNames = getContainerNames(filters);
         List<IdentifiableAttributes> listIdentAttributes = goGetIdentifiables(filters, context.getNetworkUuid(), context.getVariantId(), reporter);
 
         // check that monitored equipments type is allowed
@@ -176,7 +180,7 @@ public class SensitivityAnalysisInputBuilderService {
             reporter.report(Report.builder()
                 .withKey("badMonitoredEquipmentType")
                 .withDefaultMessage("Monitored equipments type in filter with name=${names} should be ${expectedType} : filter is ignored")
-                .withValue("names", containerNames)
+                .withValue(NAMES, containersNames)
                 .withValue(EXPECTED_TYPE, equipmentsTypesAllowed.toString())
                 .withSeverity(TypedValue.WARN_SEVERITY)
                 .build());
@@ -237,7 +241,7 @@ public class SensitivityAnalysisInputBuilderService {
                                                                       SensitivityAnalysisInputData.DistributionType distributionType) {
         List<SensitivityVariableSet> result = new ArrayList<>();
         List<IdentifiableAttributes> monitoredVariablesContainersLists = getIdentifiablesFromContainers(context, filters, variablesTypesAllowed, reporter)
-                .collect(Collectors.toList());
+                .toList();
         String containerNames = Arrays.toString(filters.stream().map(EquipmentsContainer::getContainerName).toList().toArray());
         Stream<Pair<String, List<IdentifiableAttributes>>> variablesContainersLists = Stream.of(Pair.of(containerNames, monitoredVariablesContainersLists))
                 .filter(list -> !list.getRight().isEmpty());
