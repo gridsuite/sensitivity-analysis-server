@@ -70,6 +70,7 @@ import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -139,8 +140,7 @@ public class SensitivityAnalysisControllerTest {
     public static final String MONITORED_BRANCHS_KEY = "monitoredBranchs";
     public static final String INJECTIONS_KEY = "injections";
     public static final String CONTINGENCIES_KEY = "contingencies";
-    private static final Map<String, List<UUID>> IDS = Map.of(MONITORED_BRANCHS_KEY, MONITORED_BRANCHES_FILTERS_UUID, INJECTIONS_KEY, INJECTIONS_FILTERS_UUID, CONTINGENCIES_KEY, CONTINGENCIES_FILTERS_UUID);
-    private static final Map<String, List<UUID>> IDS_1 = Map.of(MONITORED_BRANCHS_KEY, MONITORED_BRANCHES_FILTERS_UUID, INJECTIONS_KEY, INJECTIONS_FILTERS_UUID);
+    private static final SensitivityFactorsIdsByGroup IDS = SensitivityFactorsIdsByGroup.builder().ids(Map.of(MONITORED_BRANCHS_KEY, MONITORED_BRANCHES_FILTERS_UUID, INJECTIONS_KEY, INJECTIONS_FILTERS_UUID, CONTINGENCIES_KEY, CONTINGENCIES_FILTERS_UUID)).build();
 
     private static final List<Contingency> CONTINGENCIES = List.of(
         new Contingency("l1", new BranchContingency("l1")),
@@ -474,7 +474,7 @@ public class SensitivityAnalysisControllerTest {
         given(filterService.getIdentifiablesFromFilter(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, NETWORK_UUID, VARIANT_2_ID)).willReturn(EQUIPMENTS_IN_VOLTAGE_REGULATION);
         given(filterService.getIdentifiablesFromFilter(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, NETWORK_UUID, null)).willReturn(EQUIPMENTS_IN_VOLTAGE_REGULATION);
         given(filterService.getIdentifiablesFromFilter(EQUIPMENTS_IN_VOLTAGE_REGULATION_FILTERS_UUID, NETWORK_STOP_UUID, VARIANT_2_ID)).willReturn(EQUIPMENTS_IN_VOLTAGE_REGULATION);
-        given(filterService.getIdentifiablesCount(IDS_1, NETWORK_UUID, null)).willReturn(Map.<String, List<Long>>of(MONITORED_BRANCHS_KEY, List.<Long>of(6L), INJECTIONS_KEY, List.<Long>of(6L)));
+        given(filterService.getIdentifiablesCount(any(), eq(NETWORK_UUID), eq(null))).willReturn(Map.of(MONITORED_BRANCHS_KEY, 6L, INJECTIONS_KEY, 6L));
         // report service mocking
         doAnswer(i -> null).when(reportService).sendReport(any(), any());
 
@@ -754,8 +754,9 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     public void testGetFactorsCount() throws Exception {
-        MvcResult result = mockMvc.perform(post("/" + VERSION + "/networks/{networkUuid}/factors-count?variantId={variantId}", NETWORK_UUID, VARIANT_1_ID)
-                .contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(IDS)))
+        MockHttpServletRequestBuilder requestBuilder = get("/" + VERSION + "/networks/{networkUuid}/factors-count?variantId={variantId}", NETWORK_UUID, VARIANT_1_ID);
+        IDS.getIds().forEach((key, list) -> requestBuilder.queryParam(String.format("ids[%s]", key), list.stream().map(UUID::toString).toArray(String[]::new)));
+        MvcResult result = mockMvc.perform(requestBuilder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();

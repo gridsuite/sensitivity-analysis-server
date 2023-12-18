@@ -15,6 +15,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
@@ -52,7 +53,7 @@ public class FilterServiceTest {
 
     private static final UUID LIST_UUID = UUID.randomUUID();
 
-    private static final Map<String, List<UUID>> IDENTIFIABLES_UUID = Map.of("0", List.of(LIST_UUID), "1", List.of(LIST_UUID), "2", List.of(LIST_UUID));
+    private static final SensitivityFactorsIdsByGroup IDENTIFIABLES_UUID = SensitivityFactorsIdsByGroup.builder().ids(Map.of("0", List.of(LIST_UUID), "1", List.of(LIST_UUID), "2", List.of(LIST_UUID))).build();
 
     private static final UUID VERY_LARGE_LIST_UUID = UUID.randomUUID();
 
@@ -107,8 +108,8 @@ public class FilterServiceTest {
                     return new MockResponse().setResponseCode(HttpStatus.OK.value())
                             .setBody(veryLargeJsonExpected)
                             .addHeader("Content-Type", "application/json; charset=utf-8");
-                } else if (requestPath.equals(String.format("/v1/filters/identifiables-count?networkUuid=%s&variantId=%s", NETWORK_UUID, VARIANT_ID))
-                        || requestPath.equals(String.format("/v1/filters/identifiables-count?networkUuid=%s", NETWORK_UUID))) {
+                } else if (requestPath.matches(String.format("/v1/filters/identifiables-count\\?networkUuid=%s&variantId=%s", NETWORK_UUID, VARIANT_ID) + "\\&ids.*")
+                        || requestPath.matches(String.format("/v1/filters/identifiables-count\\?networkUuid=%s", NETWORK_UUID) + "\\&ids.*")) {
                     return new MockResponse().setResponseCode(HttpStatus.OK.value())
                             .setBody(jsonIdentifiablesExpected)
                             .addHeader("Content-Type", "application/json; charset=utf-8");
@@ -126,8 +127,8 @@ public class FilterServiceTest {
     }
 
     @NotNull
-    private static Map<String, List<Integer>> countResultMap() {
-        return Map.of("0", List.of(6), "1", List.of(6), "2", List.of(6));
+    private static Map<String, Integer> countResultMap() {
+        return Map.of("0", 6, "1", 6, "2", 6);
     }
 
     private List<IdentifiableAttributes> createVeryLargeList() {
@@ -156,7 +157,7 @@ public class FilterServiceTest {
     @SneakyThrows
     @Test
     public void testGetFactorsCount() {
-        Map<String, List<Long>> list = filterService.getIdentifiablesCount(IDENTIFIABLES_UUID, UUID.fromString(NETWORK_UUID), null);
+        Map<String, Long> list = filterService.getIdentifiablesCount(IDENTIFIABLES_UUID, UUID.fromString(NETWORK_UUID), null);
         assertEquals(objectMapper.writeValueAsString(countResultMap()), objectMapper.writeValueAsString(list));
         list = filterService.getIdentifiablesCount(IDENTIFIABLES_UUID, UUID.fromString(NETWORK_UUID), VARIANT_ID);
         assertEquals(objectMapper.writeValueAsString(countResultMap()), objectMapper.writeValueAsString(list));
