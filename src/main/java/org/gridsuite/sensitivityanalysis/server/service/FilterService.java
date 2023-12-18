@@ -62,7 +62,7 @@ public class FilterService {
         Objects.requireNonNull(networkUuid);
 
         var uriComponentsBuilder = UriComponentsBuilder
-                .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/exports")
+                .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/export")
                 .queryParam(IDS, filterUuids)
                 .queryParam(NETWORK_UUID, networkUuid.toString());
         if (!StringUtils.isBlank(variantId)) {
