@@ -42,8 +42,6 @@
     </developers>
 
     <properties>
-        <jaxb-api.version>2.4.0-b180830.0359</jaxb-api.version>
-        <jaxb-runtime.version>2.4.0-b180830.0438</jaxb-runtime.version>
         <gridsuite-dependencies.version>28</gridsuite-dependencies.version>
         <liquibase-hibernate-package>org.gridsuite.sensitivityanalysis.server</liquibase-hibernate-package>
         <mockito-inline.version>3.11.1</mockito-inline.version>
@@ -166,12 +164,6 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-open-loadflow</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-            <version>${jaxb-api.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
