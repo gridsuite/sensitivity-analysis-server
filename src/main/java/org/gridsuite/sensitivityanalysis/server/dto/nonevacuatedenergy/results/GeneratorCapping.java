@@ -6,6 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.powsybl.iidm.network.EnergySource;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,5 +31,8 @@ public class GeneratorCapping {
     @JsonProperty("pInit")
     private Double pInit;
 
+    @JsonIgnore
     private Double capping;
+
+    private Double cumulatedCapping;
 }

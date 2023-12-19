@@ -326,8 +326,6 @@ public class NonEvacuatedEnergyWorkerService {
             monitoredBranchDetailResult.setLimitName(limitName);
             monitoredBranchDetailResult.setLimitValue(limitValue);
             monitoredBranchDetailResult.setPercentOverload((sensitivityValue.getFunctionReference() / limitValue) * 100.);
-        } else {  // sensitivity in MW/MW
-            monitoredBranchDetailResult.setP(sensitivityValue.getFunctionReference());
         }
 
         // limit value is set only for sensitivity in A/MW : it will be NaN for sensitivity in MW/MW
@@ -340,7 +338,7 @@ public class NonEvacuatedEnergyWorkerService {
                                                       MonitoredBranchThreshold monitoredBranchThreshold,
                                                       Map<String, Double> generatorsSensitivities,
                                                       SensitivityValue sensitivityValue,
-                                                      Map<String, Double> generatorsCappingsForMonitoredBranch,
+                                                      Map<String, GeneratorCapping> generatorCappings,
                                                       MonitoredBranchDetailResult monitoredBranchDetailResult) {
         double injectionVariation = Double.NaN;
         double functionReference = sensitivityValue.getFunctionReference();
@@ -354,7 +352,7 @@ public class NonEvacuatedEnergyWorkerService {
             if (delta < 0) {
                 // monitored branch is over the limit :
                 // we compute the generators cappings needed to set the monitored branch under the limit
-                injectionVariation = computeInjectionVariationForMonitoredBranch(network, nonEvacuatedEnergyInputs, generatorsSensitivities, delta, generatorsCappingsForMonitoredBranch, monitoredBranchDetailResult);
+                injectionVariation = computeInjectionVariationForMonitoredBranch(network, nonEvacuatedEnergyInputs, generatorsSensitivities, delta, generatorCappings, monitoredBranchDetailResult);
             }
         }
 
@@ -365,7 +363,7 @@ public class NonEvacuatedEnergyWorkerService {
                                                                NonEvacuatedEnergyInputs nonEvacuatedEnergyInputs,
                                                                Map<String, Double> generatorsSensitivities,
                                                                double delta,
-                                                               Map<String, Double> generatorsCappingsForMonitoredBranch,
+                                                               Map<String, GeneratorCapping> generatorCappings,
                                                                MonitoredBranchDetailResult monitoredBranchDetailResult) {
         // sort the map in reverse order to get first the generator which have the most impact
         LinkedHashMap<String, Double> sensitivities = generatorsSensitivities.entrySet()
@@ -392,12 +390,9 @@ public class NonEvacuatedEnergyWorkerService {
 
         // compute the generators cappings needed to set the monitored branch under the limit
         Map<EnergySource, Double> variationsByEnergySource = new EnumMap<>(EnergySource.class);
-        Map<String, GeneratorCapping> generatorCappings = new HashMap<>();
         double injectionVariation = computeInjectionVariationFromGeneratorsSensitivities(network, nonEvacuatedEnergyInputs, sensitivities, sensitivityCoeff, delta, variationsByEnergySource, generatorCappings);
 
-        // update monitored branch result
-        monitoredBranchDetailResult.getCappingByEnergySource().putAll(variationsByEnergySource);
-        monitoredBranchDetailResult.setOverallCapping(variationsByEnergySource.values().stream().mapToDouble(d -> d).sum());
+        // update sensitivities by energy source in monitored branch result
         Map<EnergySource, Double> sensitivitiesByEnergySource = new EnumMap<>(EnergySource.class);
         sensitivities.forEach((key, value) -> {
             Generator generator = network.getGenerator(key);
@@ -410,10 +405,6 @@ public class NonEvacuatedEnergyWorkerService {
             }
         });
         monitoredBranchDetailResult.getSensitivityByEnergySource().putAll(sensitivitiesByEnergySource);
-        monitoredBranchDetailResult.getGeneratorsCapping().putAll(generatorCappings);
-
-        generatorsCappingsForMonitoredBranch.putAll(generatorCappings.entrySet()
-            .stream().collect(toMap(Map.Entry::getKey, e -> e.getValue().getCapping())));
 
         return injectionVariation;
     }
@@ -432,7 +423,7 @@ public class NonEvacuatedEnergyWorkerService {
         for (Map.Entry<String, Double> entry : generatorsSensitivities.entrySet()) {
             coeffSum += entry.getValue() * sensitivitiesCoefficients.get(entry.getKey());
         }
-        //double referenceGeneratorVariation = abs(100 * delta / coeffSum); ????
+        //double referenceGeneratorVariation = abs(100 * delta / coeffSum); in CVG ????
         double referenceGeneratorVariation = abs(delta / coeffSum);
 
         // for each generator, we try to limit his power
@@ -464,6 +455,7 @@ public class NonEvacuatedEnergyWorkerService {
             generatorCapping.setEnergySource(generator.getEnergySource());
             generatorCapping.setPInit(nonEvacuatedEnergyInputs.getGeneratorsPInit().get(generatorId));
             generatorCapping.setCapping(generatorVariation);
+            generatorCapping.setCumulatedCapping(0.);
             generatorCappings.put(generatorId, generatorCapping);
             variationsByEnergySource.put(generator.getEnergySource(), generatorVariation);
         }
@@ -572,6 +564,8 @@ public class NonEvacuatedEnergyWorkerService {
 
         // loop on all sensitivity result values of the sensitivity analysis computation
         // each sensitivity value will contain a sensitivity factor, a contingency and the delta and reference value for a monitored branch
+        Map<String, Map<String, Boolean>> mapEncounteredBranchesByContingency = new HashMap<>();
+
         for (SensitivityValue sensitivityValue : sensiResult.getValues()) {
             int factorIndex = sensitivityValue.getFactorIndex();
             SensitivityFactor factor = sensiResult.getFactors().get(factorIndex);
@@ -581,37 +575,62 @@ public class NonEvacuatedEnergyWorkerService {
             if (contingencyIndex >= 0) { // N-1
                 contingencyId = factor.getContingencyContext().getContingencyId();
             }
-            // create result associated with the contingency in the stage detail result
+
+            Map<String, Boolean> mapEncounteredBranches = mapEncounteredBranchesByContingency.computeIfAbsent(contingencyId, k -> new HashMap<>());
+            mapEncounteredBranches.putIfAbsent(functionId, Boolean.FALSE);
+
+            // create or get result associated with the contingency in the stage detail result
             ContingencyStageDetailResult contingencyStageDetailResult = stageDetailResult.getResultsbyContingency().computeIfAbsent(contingencyId, k -> new ContingencyStageDetailResult());
 
             // get monitored branch thresholds information from monitored branch id
             MonitoredBranchThreshold monitoredBranchThreshold = nonEvacuatedEnergyInputs.getBranchesThresholds().get(functionId);
             if (monitoredBranchThreshold != null) {
-                // create the generators cappings data structure for the monitored branch
-                Map<String, Double> generatorsCappingsForMonitoredBranch = new HashMap<>();
-
-                // create result associated to the monitored branch
+                // create or get result associated to the monitored branch
                 MonitoredBranchDetailResult monitoredBranchDetailResult = contingencyStageDetailResult.getResultsbyMonitoredBranch().computeIfAbsent(functionId, k -> new MonitoredBranchDetailResult());
 
-                // compute the variation for the monitored branch
-                SensitivitiesByBranch sensitivitiesByBranch = sensitivitiesByBranches.get(functionId);
-                Map<String, Double> generatorsSensitivities = sensitivitiesByBranch.getSensitivitiesByContingency().get(contingencyId);
-                double variation = computeVariationForMonitoredBranch(network, nonEvacuatedEnergyInputs, factor, monitoredBranchThreshold, generatorsSensitivities, sensitivityValue, generatorsCappingsForMonitoredBranch, monitoredBranchDetailResult);
+                if (factor.isVariableSet()) {
+                    monitoredBranchDetailResult.setP(sensitivityValue.getFunctionReference());
+                }
 
-                // keeping only the max computed variation
-                if (!Double.isNaN(variation) && maxVariationForMonitoredBranch < variation) {
-                    maxVariationForMonitoredBranch = variation;
-                    maxGeneratorsCappings = generatorsCappingsForMonitoredBranch;
+                if (!mapEncounteredBranches.get(functionId)) {  // <branch, contingency> not already handled
+                    // compute the variation for the monitored branch
+                    SensitivitiesByBranch sensitivitiesByBranch = sensitivitiesByBranches.get(functionId);
+                    Map<String, Double> generatorsSensitivities = sensitivitiesByBranch.getSensitivitiesByContingency().get(contingencyId);
+                    Map<String, GeneratorCapping> generatorCappings = new HashMap<>();
+                    double variation = computeVariationForMonitoredBranch(network, nonEvacuatedEnergyInputs, factor, monitoredBranchThreshold, generatorsSensitivities, sensitivityValue, generatorCappings, monitoredBranchDetailResult);
+
+                    // update monitored branch result with the cappings information
+                    Map<EnergySource, Double> cappingsByEnergySource = new EnumMap<>(EnergySource.class);
+                    for (Map.Entry<String, GeneratorCapping> entry : generatorCappings.entrySet()) {
+                        Generator generator = network.getGenerator(entry.getKey());
+                        GeneratorCapping capping = !monitoredBranchDetailResult.getGeneratorsCapping().containsKey(entry.getKey())
+                            ? entry.getValue() : monitoredBranchDetailResult.getGeneratorsCapping().get(entry.getKey());
+                        capping.setCumulatedCapping(capping.getCumulatedCapping() + entry.getValue().getCapping());
+                        monitoredBranchDetailResult.getGeneratorsCapping().put(entry.getKey(), capping);
+                        cappingsByEnergySource.putIfAbsent(generator.getEnergySource(), 0.);
+                        cappingsByEnergySource.put(generator.getEnergySource(), cappingsByEnergySource.get(generator.getEnergySource()) + capping.getCumulatedCapping());
+                    }
+                    monitoredBranchDetailResult.getCappingByEnergySource().putAll(cappingsByEnergySource);
+                    monitoredBranchDetailResult.setOverallCapping(cappingsByEnergySource.values().stream().mapToDouble(d -> d).sum());
+
+                    // keeping only the max computed variation
+                    if (!Double.isNaN(variation) && maxVariationForMonitoredBranch < variation) {
+                        maxVariationForMonitoredBranch = variation;
+                        maxGeneratorsCappings = new HashMap<>(generatorCappings.entrySet()
+                            .stream().collect(toMap(Map.Entry::getKey, e -> e.getValue().getCapping())));
+                    }
+
+                    mapEncounteredBranches.put(functionId, Boolean.TRUE);
                 }
             }
         }
 
         if (maxVariationForMonitoredBranch < 0.3) {
-            // the max varation for all monitored branches is small :
+            // the max variation for all monitored branches is small :
             // there is no limit violation detected and no further sensitivity analysis computation will be done for the current stage
             noMoreLimitViolation.set(true);
         } else {
-            // the max varation for all monitored branches is not small :
+            // the max variation for all monitored branches is not small :
             // there is a limit violation detected and a further sensitivity analysis computation will be done for the current stage, except if max iteration is reached
             // we memorize the generators cappings needed to eliminate this limit violation
             generatorsCappings.putAll(maxGeneratorsCappings);
