@@ -44,7 +44,6 @@
     <properties>
         <jaxb-api.version>2.4.0-b180830.0359</jaxb-api.version>
         <jaxb-runtime.version>2.4.0-b180830.0438</jaxb-runtime.version>
-        <jib.from.image>gridsuite/java-dynawo</jib.from.image>
         <gridsuite-dependencies.version>28</gridsuite-dependencies.version>
         <liquibase-hibernate-package>org.gridsuite.sensitivityanalysis.server</liquibase-hibernate-package>
         <mockito-inline.version>3.11.1</mockito-inline.version>
