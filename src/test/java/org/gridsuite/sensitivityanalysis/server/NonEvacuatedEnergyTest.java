@@ -79,6 +79,7 @@ import java.util.stream.Stream;
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
+import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.HEADER_USER_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -745,6 +746,7 @@ public class NonEvacuatedEnergyTest {
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID, NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
+            .header(HEADER_USER_ID, "userId")
             .content(INPUT))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -800,6 +802,7 @@ public class NonEvacuatedEnergyTest {
         mockMvc.perform(post(
             "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID, NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
+            .header(HEADER_USER_ID, "userId")
             .content(INPUT))
             .andExpect(status().isOk());
 
@@ -821,6 +824,7 @@ public class NonEvacuatedEnergyTest {
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID, NETWORK_ERROR_UUID)
             .contentType(MediaType.APPLICATION_JSON)
+            .header(HEADER_USER_ID, "userId")
             .content(INPUT))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -842,6 +846,7 @@ public class NonEvacuatedEnergyTest {
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + variantId, networkUuid)
                 .contentType(MediaType.APPLICATION_JSON)
+                .header(HEADER_USER_ID, "userId")
                 .content(inputData))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))

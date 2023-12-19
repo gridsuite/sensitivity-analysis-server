@@ -33,6 +33,7 @@ public class NotificationService {
     private static final Logger STOP_MESSAGE_LOGGER = LoggerFactory.getLogger(STOP_CATEGORY_BROKER_OUTPUT);
     private static final Logger RESULT_MESSAGE_LOGGER = LoggerFactory.getLogger(RESULT_CATEGORY_BROKER_OUTPUT);
     private static final Logger FAILED_MESSAGE_LOGGER = LoggerFactory.getLogger(FAILED_CATEGORY_BROKER_OUTPUT);
+    private static final String LOGGER_PREFIX = "Sending message : {}";
 
     public static final String CANCEL_MESSAGE = "Sensitivity analysis was canceled";
     public static final String FAIL_MESSAGE = "Sensitivity analysis has failed";
@@ -40,17 +41,20 @@ public class NotificationService {
     public static final String HEADER_RESULT_UUID = "resultUuid";
     public static final String HEADER_RECEIVER = "receiver";
     public static final String HEADER_MESSAGE = "message";
+    public static final String HEADER_USER_ID = "userId";
+
+    private static final int MSG_MAX_LENGTH = 256;
 
     @Autowired
     private StreamBridge publisher;
 
     public void sendRunMessage(String bindingName, Message<String> message) {
-        RUN_MESSAGE_LOGGER.debug("Sending message : {}", message);
+        RUN_MESSAGE_LOGGER.debug(LOGGER_PREFIX, message);
         publisher.send(bindingName, message);
     }
 
     public void sendCancelMessage(String bindingName, Message<String> message) {
-        CANCEL_MESSAGE_LOGGER.debug("Sending message : {}", message);
+        CANCEL_MESSAGE_LOGGER.debug(LOGGER_PREFIX, message);
         publisher.send(bindingName, message);
     }
 
@@ -61,7 +65,7 @@ public class NotificationService {
             .setHeader(HEADER_RESULT_UUID, resultUuid.toString())
             .setHeader(HEADER_RECEIVER, receiver)
             .build();
-        RESULT_MESSAGE_LOGGER.debug("Sending message : {}", message);
+        RESULT_MESSAGE_LOGGER.debug(LOGGER_PREFIX, message);
         publisher.send(bindingName, message);
     }
 
@@ -73,19 +77,32 @@ public class NotificationService {
             .setHeader(HEADER_RECEIVER, receiver)
             .setHeader(HEADER_MESSAGE, CANCEL_MESSAGE)
             .build();
-        STOP_MESSAGE_LOGGER.debug("Sending message : {}", message);
+        STOP_MESSAGE_LOGGER.debug(LOGGER_PREFIX, message);
         publisher.send(bindingName, message);
     }
 
     @PostCompletion
-    public void publishFail(String bindingName, UUID resultUuid, String receiver, String causeMessage) {
+    public void publishFail(String bindingName, UUID resultUuid, String receiver, String causeMessage, String userId) {
         Message<String> message = MessageBuilder
             .withPayload("")
             .setHeader(HEADER_RESULT_UUID, resultUuid.toString())
             .setHeader(HEADER_RECEIVER, receiver)
-            .setHeader(HEADER_MESSAGE, FAIL_MESSAGE + " : " + causeMessage)
+            .setHeader(HEADER_USER_ID, userId)
+            .setHeader(HEADER_MESSAGE, shortenMessage(FAIL_MESSAGE + " : " + causeMessage))
             .build();
-        FAILED_MESSAGE_LOGGER.debug("Sending message : {}", message);
+        FAILED_MESSAGE_LOGGER.debug(LOGGER_PREFIX, message);
         publisher.send(bindingName, message);
+    }
+
+    // prevents the message from being too long for rabbitmq
+    // the beginning and ending are both kept, it should make it easier to identify
+    public String shortenMessage(String msg) {
+        if (msg == null) {
+            return msg;
+        }
+
+        return msg.length() > MSG_MAX_LENGTH ?
+                msg.substring(0, MSG_MAX_LENGTH / 2) + " ... " + msg.substring(msg.length() - MSG_MAX_LENGTH / 2, msg.length() - 1)
+                : msg;
     }
 }

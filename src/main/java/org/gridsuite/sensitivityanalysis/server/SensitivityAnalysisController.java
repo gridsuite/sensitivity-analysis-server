@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.HEADER_USER_ID;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
@@ -82,8 +83,9 @@ public class SensitivityAnalysisController {
                                                          @Parameter(description = "reportUuid") @RequestParam(name = "reportUuid", required = false) UUID reportUuid,
                                                          @Parameter(description = "reporterId") @RequestParam(name = "reporterId", required = false) String reporterId,
                                                          @Parameter(description = "The type name for the report") @RequestParam(name = "reportType", required = false, defaultValue = "SensitivityAnalysis") String reportType,
-                                                         @RequestBody SensitivityAnalysisInputData sensitivityAnalysisInputData) {
-        SensitivityAnalysisResult result = workerService.run(new SensitivityAnalysisRunContext(networkUuid, variantId, sensitivityAnalysisInputData, null, provider, reportUuid, reporterId, reportType));
+                                                         @RequestBody SensitivityAnalysisInputData sensitivityAnalysisInputData,
+                                                         @RequestHeader(HEADER_USER_ID) String userId) {
+        SensitivityAnalysisResult result = workerService.run(new SensitivityAnalysisRunContext(networkUuid, variantId, sensitivityAnalysisInputData, null, provider, reportUuid, reporterId, reportType, userId));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result);
     }
 
@@ -100,8 +102,9 @@ public class SensitivityAnalysisController {
                                            @Parameter(description = "reportUuid") @RequestParam(name = "reportUuid", required = false) UUID reportUuid,
                                            @Parameter(description = "reporterId") @RequestParam(name = "reporterId", required = false) String reporterId,
                                            @Parameter(description = "The type name for the report") @RequestParam(name = "reportType", required = false, defaultValue = "SensitivityAnalysis") String reportType,
-                                           @RequestBody SensitivityAnalysisInputData sensitivityAnalysisInputData) {
-        UUID resultUuid = service.runAndSaveResult(new SensitivityAnalysisRunContext(networkUuid, variantId, sensitivityAnalysisInputData, receiver, provider, reportUuid, reporterId, reportType));
+                                           @RequestBody SensitivityAnalysisInputData sensitivityAnalysisInputData,
+                                           @RequestHeader(HEADER_USER_ID) String userId) {
+        UUID resultUuid = service.runAndSaveResult(new SensitivityAnalysisRunContext(networkUuid, variantId, sensitivityAnalysisInputData, receiver, provider, reportUuid, reporterId, reportType, userId));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
@@ -218,8 +221,9 @@ public class SensitivityAnalysisController {
                                            @Parameter(description = "reportUuid") @RequestParam(name = "reportUuid", required = false) UUID reportUuid,
                                            @Parameter(description = "reporterId") @RequestParam(name = "reporterId", required = false) String reporterId,
                                            @Parameter(description = "The type name for the report") @RequestParam(name = "reportType", required = false, defaultValue = "NonEvacuatedEnergy") String reportType,
-                                           @RequestBody NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData) {
-        UUID resultUuid = nonEvacuatedEnergyService.runAndSaveResult(new NonEvacuatedEnergyRunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, provider, reportUuid, reporterId, reportType));
+                                           @RequestBody NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData,
+                                           @RequestHeader(HEADER_USER_ID) String userId) {
+        UUID resultUuid = nonEvacuatedEnergyService.runAndSaveResult(new NonEvacuatedEnergyRunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, provider, reportUuid, reporterId, reportType, userId));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 

@@ -245,7 +245,8 @@ public class SensitivityAnalysisWorkerService {
             } catch (Exception | OutOfMemoryError e) {
                 if (!(e instanceof CancellationException)) {
                     LOGGER.error(FAIL_MESSAGE, e);
-                    notificationService.publishFail("publishFailed-out-0", resultContext.getResultUuid(), resultContext.getRunContext().getReceiver(), e.getMessage());
+                    notificationService.publishFail("publishFailed-out-0", resultContext.getResultUuid(), resultContext.getRunContext().getReceiver(),
+                            e.getMessage(), resultContext.getRunContext().getUserId());
                     resultRepository.delete(resultContext.getResultUuid());
                     resultRepository.insertStatus(List.of(resultContext.getResultUuid()), SensitivityAnalysisStatus.FAILED.name());
                 }

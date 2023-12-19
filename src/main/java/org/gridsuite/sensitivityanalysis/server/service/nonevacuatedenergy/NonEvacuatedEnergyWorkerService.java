@@ -208,20 +208,20 @@ public class NonEvacuatedEnergyWorkerService {
     }
 
     private static SensitivityAnalysisParameters buildParameters(NonEvacuatedEnergyRunContext context) {
-        SensitivityAnalysisParameters params = context.getInputData().getParameters() == null ?
-            new SensitivityAnalysisParameters() : context.getInputData().getParameters();
+        SensitivityAnalysisParameters params = context.getNonEvacuatedEnergyInputData().getParameters() == null ?
+            new SensitivityAnalysisParameters() : context.getNonEvacuatedEnergyInputData().getParameters();
 
         // set the flowFlowThreshold value
-        params.setFlowFlowSensitivityValueThreshold(context.getInputData().getNonEvacuatedEnergyGeneratorsLimit().getSensitivityThreshold());
+        params.setFlowFlowSensitivityValueThreshold(context.getNonEvacuatedEnergyInputData().getNonEvacuatedEnergyGeneratorsLimit().getSensitivityThreshold());
 
-        if (context.getInputData().getLoadFlowSpecificParameters() == null
-                || context.getInputData().getLoadFlowSpecificParameters().isEmpty()) {
+        if (context.getNonEvacuatedEnergyInputData().getLoadFlowSpecificParameters() == null
+                || context.getNonEvacuatedEnergyInputData().getLoadFlowSpecificParameters().isEmpty()) {
             return params; // no specific LF params
         }
         LoadFlowProvider lfProvider = LoadFlowProvider.findAll().stream()
                 .filter(p -> p.getName().equals(context.getProvider()))
                 .findFirst().orElseThrow(() -> new PowsyblException("Load flow provider not found " + context.getProvider()));
-        Extension<LoadFlowParameters> extension = lfProvider.loadSpecificParameters(context.getInputData().getLoadFlowSpecificParameters())
+        Extension<LoadFlowParameters> extension = lfProvider.loadSpecificParameters(context.getNonEvacuatedEnergyInputData().getLoadFlowSpecificParameters())
                 .orElseThrow(() -> new PowsyblException("Cannot add specific loadflow parameters with sensitivity analysis provider " + context.getProvider()));
         params.getLoadFlowParameters().addExtension((Class) extension.getClass(), extension);
         return params;
@@ -244,7 +244,7 @@ public class NonEvacuatedEnergyWorkerService {
         // loop on each energy source in the stage input data
         for (int i = 0; i < stageSelection.getStagesDefinitonIndex().size(); ++i) {
             int stageDefinitionIndex = stageSelection.getStagesDefinitonIndex().get(i);
-            NonEvacuatedEnergyStageDefinition stageDefinition = context.getInputData().getNonEvacuatedEnergyStagesDefinition().get(stageDefinitionIndex);
+            NonEvacuatedEnergyStageDefinition stageDefinition = context.getNonEvacuatedEnergyInputData().getNonEvacuatedEnergyStagesDefinition().get(stageDefinitionIndex);
             float pMaxPercent = stageDefinition.getPMaxPercents().get(stageSelection.getPMaxPercentsIndex().get(i));
             List<EquipmentsContainer> generatorsFilters = stageDefinition.getGenerators();
 
@@ -706,20 +706,20 @@ public class NonEvacuatedEnergyWorkerService {
     private void computeCappingsGeneratorsInitialP(Network network, NonEvacuatedEnergyRunContext context) {
         // memorize the initial targetP for the capping generators
         // compute and memorize the initial overall targetP for the capping generators by energy source
-        context.getInputs().getGeneratorsPInit().clear();
-        context.getInputs().getGeneratorsPInitByEnergySource().clear();
+        context.getNonEvacuatedEnergyInputs().getGeneratorsPInit().clear();
+        context.getNonEvacuatedEnergyInputs().getGeneratorsPInitByEnergySource().clear();
 
         Map<EnergySource, AtomicDouble> pInitByEnergySource = new EnumMap<>(EnergySource.class);
-        context.getInputs().getCappingsGenerators().forEach((key, value) -> value.forEach(generatorId -> {
+        context.getNonEvacuatedEnergyInputs().getCappingsGenerators().forEach((key, value) -> value.forEach(generatorId -> {
             Generator generator = network.getGenerator(generatorId);
             if (generator != null) {
                 double targetP = generator.getTargetP();
-                context.getInputs().getGeneratorsPInit().put(generatorId, targetP);
+                context.getNonEvacuatedEnergyInputs().getGeneratorsPInit().put(generatorId, targetP);
                 AtomicDouble sum = pInitByEnergySource.computeIfAbsent(generator.getEnergySource(), k -> new AtomicDouble(0));
                 sum.addAndGet(generator.getTargetP());
             }
         }));
-        pInitByEnergySource.forEach((key, value) -> context.getInputs().getGeneratorsPInitByEnergySource().put(key, value.get()));
+        pInitByEnergySource.forEach((key, value) -> context.getNonEvacuatedEnergyInputs().getGeneratorsPInitByEnergySource().put(key, value.get()));
     }
 
     private String run(NonEvacuatedEnergyRunContext context,
@@ -733,7 +733,7 @@ public class NonEvacuatedEnergyWorkerService {
         // build the contingencies, variable sets and sensitivity factors used as input of the sensitivity analysis computation
         nonEvacuatedEnergyInputBuilderService.build(context, network, reporter);
 
-        List<NonEvacuatedEnergyStagesSelection> stages = context.getInputData().getNonEvacuatedEnergyStagesSelection();
+        List<NonEvacuatedEnergyStagesSelection> stages = context.getNonEvacuatedEnergyInputData().getNonEvacuatedEnergyStagesSelection();
         int stageIndex = 0;
 
         // create global result
@@ -762,7 +762,7 @@ public class NonEvacuatedEnergyWorkerService {
 
                 // compute the initial overall targetP for the capping generators by energy source
                 computeCappingsGeneratorsInitialP(network, context);
-                stageDetailResult.setPInitByEnergySource(context.getInputs().getGeneratorsPInitByEnergySource());
+                stageDetailResult.setPInitByEnergySource(context.getNonEvacuatedEnergyInputs().getGeneratorsPInitByEnergySource());
 
                 int iterationCount = 1;
                 boolean noMoreLimitViolation = true;
@@ -773,9 +773,9 @@ public class NonEvacuatedEnergyWorkerService {
                     CompletableFuture<SensitivityAnalysisResult> future = sensitivityAnalysisRunner.runAsync(
                         network,
                         stageVariantId,
-                        context.getInputs().getFactors(),
-                        context.getInputs().getContingencies(),
-                        context.getInputs().getVariablesSets(),
+                        context.getNonEvacuatedEnergyInputs().getFactors(),
+                        context.getNonEvacuatedEnergyInputs().getContingencies(),
+                        context.getNonEvacuatedEnergyInputs().getVariablesSets(),
                         sensitivityAnalysisParameters,
                         computationManager,
                         subReporter);
@@ -787,7 +787,7 @@ public class NonEvacuatedEnergyWorkerService {
 
                     if (sensiResult != null) {
                         // analyze sensi results and generate the generators cappings
-                        noMoreLimitViolation = analyzeSensitivityResults(network, context.getInputs(), sensiResult, generatorsCappings, stageDetailResult);
+                        noMoreLimitViolation = analyzeSensitivityResults(network, context.getNonEvacuatedEnergyInputs(), sensiResult, generatorsCappings, stageDetailResult);
                     }
                     if (!noMoreLimitViolation) {  // there is a limit violation on a monitored branch
                         // apply the generators cappings calculated just above to eliminate this limit violation
@@ -917,7 +917,7 @@ public class NonEvacuatedEnergyWorkerService {
             } catch (Exception | OutOfMemoryError e) {
                 if (!(e instanceof CancellationException)) {
                     LOGGER.error(FAIL_MESSAGE, e);
-                    notificationService.publishFail("publishNonEvacuatedEnergyFailed-out-0", nonEvacuatedEnergyResultContext.getResultUuid(), nonEvacuatedEnergyResultContext.getRunContext().getReceiver(), e.getMessage());
+                    notificationService.publishFail("publishNonEvacuatedEnergyFailed-out-0", nonEvacuatedEnergyResultContext.getResultUuid(), nonEvacuatedEnergyResultContext.getRunContext().getReceiver(), e.getMessage(), nonEvacuatedEnergyResultContext.getRunContext().getUserId());
                     nonEvacuatedEnergyRepository.delete(nonEvacuatedEnergyResultContext.getResultUuid());
                     nonEvacuatedEnergyRepository.insertStatus(List.of(nonEvacuatedEnergyResultContext.getResultUuid()), SensitivityAnalysisStatus.FAILED.name());
                 }

@@ -417,7 +417,7 @@ public class NonEvacuatedEnergyInputBuilderService {
             }
 
             if (!result.isEmpty()) {
-                context.getInputs().getBranchesThresholds().put(monitoredEquipment.getId(), monitoredBranchThreshold);
+                context.getNonEvacuatedEnergyInputs().getBranchesThresholds().put(monitoredEquipment.getId(), monitoredBranchThreshold);
             }
         });
 
@@ -427,8 +427,8 @@ public class NonEvacuatedEnergyInputBuilderService {
     private void buildSensitivityFactorsAndVariableSets(NonEvacuatedEnergyRunContext context,
                                                         Network network,
                                                         Reporter reporter) {
-        List<NonEvacuatedEnergyMonitoredBranches> monitoredBranches = context.getInputData().getNonEvacuatedEnergyMonitoredBranches();
-        List<NonEvacuatedEnergyGeneratorLimitByType> generatorsLimitByType = context.getInputData().getNonEvacuatedEnergyGeneratorsLimit().getGenerators();
+        List<NonEvacuatedEnergyMonitoredBranches> monitoredBranches = context.getNonEvacuatedEnergyInputData().getNonEvacuatedEnergyMonitoredBranches();
+        List<NonEvacuatedEnergyGeneratorLimitByType> generatorsLimitByType = context.getNonEvacuatedEnergyInputData().getNonEvacuatedEnergyGeneratorsLimit().getGenerators();
 
         // build inputs for the sensitivities in MW per generation kind (similar to sensitivity analysis computation with injections set)
         generatorsLimitByType.stream()
@@ -440,10 +440,10 @@ public class NonEvacuatedEnergyInputBuilderService {
                     List.of(IdentifiableType.GENERATOR),
                     generatorLimitByType.getGenerators(),
                     SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP);
-                context.getInputs().addSensitivityVariableSets(vInjectionsSets);
+                context.getNonEvacuatedEnergyInputs().addSensitivityVariableSets(vInjectionsSets);
 
                 // we store the cappings generators by energy source
-                context.getInputs().getCappingsGenerators().put(generatorLimitByType.getEnergySource(),
+                context.getNonEvacuatedEnergyInputs().getCappingsGenerators().put(generatorLimitByType.getEnergySource(),
                     vInjectionsSets.stream().flatMap(v -> v.getVariablesById().keySet().stream()).toList());
 
                 // build sensitivity factors from the variable sets (=set of generators), the contingencies and the monitored branches sets
@@ -455,9 +455,9 @@ public class NonEvacuatedEnergyInputBuilderService {
                             List.of(IdentifiableType.LINE, IdentifiableType.TWO_WINDINGS_TRANSFORMER),
                             branches,
                             vInjectionsSets,
-                            context.getInputs().getContingencies(),
+                            context.getNonEvacuatedEnergyInputs().getContingencies(),
                             SensitivityVariableType.INJECTION_ACTIVE_POWER);
-                        context.getInputs().addSensitivityFactors(fInjectionsSet);
+                        context.getNonEvacuatedEnergyInputs().addSensitivityFactors(fInjectionsSet);
                     });
             });
 
@@ -475,9 +475,9 @@ public class NonEvacuatedEnergyInputBuilderService {
                             List.of(IdentifiableType.LINE, IdentifiableType.TWO_WINDINGS_TRANSFORMER),
                             branches,
                             generatorLimitByType.getGenerators(),
-                            context.getInputs().getContingencies(),
+                            context.getNonEvacuatedEnergyInputs().getContingencies(),
                             SensitivityVariableType.INJECTION_ACTIVE_POWER);
-                        context.getInputs().addSensitivityFactors(fInjectionsSet);
+                        context.getNonEvacuatedEnergyInputs().addSensitivityFactors(fInjectionsSet);
                     });
             });
     }
@@ -485,9 +485,9 @@ public class NonEvacuatedEnergyInputBuilderService {
     public void build(NonEvacuatedEnergyRunContext context, Network network, Reporter reporter) {
         try {
             // build all contingencies from the input data
-            context.getInputs().addContingencies(buildContingencies(context.getNetworkUuid(),
+            context.getNonEvacuatedEnergyInputs().addContingencies(buildContingencies(context.getNetworkUuid(),
                     context.getVariantId(),
-                    context.getInputData().getNonEvacuatedEnergyContingencies().stream()
+                    context.getNonEvacuatedEnergyInputData().getNonEvacuatedEnergyContingencies().stream()
                         .filter(NonEvacuatedEnergyContingencies::isActivated)  // we keep only the activated contingencies
                         .map(NonEvacuatedEnergyContingencies::getContingencies)
                         .flatMap(List::stream)

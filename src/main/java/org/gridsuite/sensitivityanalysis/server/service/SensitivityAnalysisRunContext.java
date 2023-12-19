@@ -6,6 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
+import lombok.Getter;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 
 import java.util.Objects;
@@ -14,6 +15,7 @@ import java.util.UUID;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
+@Getter
 public class SensitivityAnalysisRunContext {
 
     private final UUID networkUuid;
@@ -32,11 +34,14 @@ public class SensitivityAnalysisRunContext {
 
     private final String reporterId;
 
+    private final String userId;
+
     private final String reportType;
 
     public SensitivityAnalysisRunContext(UUID networkUuid, String variantId,
                                          SensitivityAnalysisInputData sensitivityAnalysisInputData,
-                                         String receiver, String provider, UUID reportUuid, String reporterId, String reportType) {
+                                         String receiver, String provider, UUID reportUuid,
+                                         String reporterId, String reportType, String userId) {
         this.networkUuid = Objects.requireNonNull(networkUuid);
         this.variantId = variantId;
         this.sensitivityAnalysisInputData = Objects.requireNonNull(sensitivityAnalysisInputData);
@@ -46,41 +51,6 @@ public class SensitivityAnalysisRunContext {
         this.reportUuid = reportUuid;
         this.reporterId = reporterId;
         this.reportType = reportType;
-    }
-
-    public UUID getNetworkUuid() {
-        return networkUuid;
-    }
-
-    public String getVariantId() {
-        return variantId;
-    }
-
-    public SensitivityAnalysisInputData getSensitivityAnalysisInputData() {
-        return sensitivityAnalysisInputData;
-    }
-
-    public SensitivityAnalysisInputs getSensitivityAnalysisInputs() {
-        return sensitivityAnalysisInputs;
-    }
-
-    public String getReceiver() {
-        return receiver;
-    }
-
-    public String getProvider() {
-        return provider;
-    }
-
-    public UUID getReportUuid() {
-        return reportUuid;
-    }
-
-    public String getReporterId() {
-        return reporterId;
-    }
-
-    public String getReportType() {
-        return reportType;
+        this.userId = userId;
     }
 }

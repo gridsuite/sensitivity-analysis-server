@@ -6,6 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy;
 
+import lombok.Getter;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
 
 import java.util.Objects;
@@ -14,6 +15,7 @@ import java.util.UUID;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
+@Getter
 public class NonEvacuatedEnergyRunContext {
 
     private final UUID networkUuid;
@@ -34,7 +36,9 @@ public class NonEvacuatedEnergyRunContext {
 
     private final String reportType;
 
-    public NonEvacuatedEnergyRunContext(UUID networkUuid, String variantId, NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData, String receiver, String provider, UUID reportUuid, String reporterId, String reportType) {
+    private final String userId;
+
+    public NonEvacuatedEnergyRunContext(UUID networkUuid, String variantId, NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData, String receiver, String provider, UUID reportUuid, String reporterId, String reportType, String userId) {
         this.networkUuid = Objects.requireNonNull(networkUuid);
         this.variantId = variantId;
         this.nonEvacuatedEnergyInputData = Objects.requireNonNull(nonEvacuatedEnergyInputData);
@@ -44,41 +48,6 @@ public class NonEvacuatedEnergyRunContext {
         this.reportUuid = reportUuid;
         this.reporterId = reporterId;
         this.reportType = reportType;
-    }
-
-    public UUID getNetworkUuid() {
-        return networkUuid;
-    }
-
-    public String getVariantId() {
-        return variantId;
-    }
-
-    public NonEvacuatedEnergyInputData getInputData() {
-        return nonEvacuatedEnergyInputData;
-    }
-
-    public NonEvacuatedEnergyInputs getInputs() {
-        return nonEvacuatedEnergyInputs;
-    }
-
-    public String getReceiver() {
-        return receiver;
-    }
-
-    public String getProvider() {
-        return provider;
-    }
-
-    public UUID getReportUuid() {
-        return reportUuid;
-    }
-
-    public String getReporterId() {
-        return reporterId;
-    }
-
-    public String getReportType() {
-        return reportType;
+        this.userId = userId;
     }
 }

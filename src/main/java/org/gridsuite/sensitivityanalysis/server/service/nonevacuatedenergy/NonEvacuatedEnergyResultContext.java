@@ -19,6 +19,8 @@ import java.io.UncheckedIOException;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.HEADER_USER_ID;
+
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
@@ -64,6 +66,7 @@ public class NonEvacuatedEnergyResultContext {
 
         String receiver = (String) headers.get("receiver");
         String provider = (String) headers.get("provider");
+        String userId = (String) headers.get(HEADER_USER_ID);
         NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData;
         try {
             nonEvacuatedEnergyInputData = objectMapper.readValue(message.getPayload(), new TypeReference<>() { });
@@ -73,14 +76,14 @@ public class NonEvacuatedEnergyResultContext {
         UUID reportUuid = headers.containsKey(REPORT_UUID) ? UUID.fromString((String) Objects.requireNonNull(headers.get(REPORT_UUID))) : null;
         String reporterId = headers.containsKey(REPORTER_ID_HEADER) ? (String) headers.get(REPORTER_ID_HEADER) : null;
         String reportType = headers.containsKey(REPORT_TYPE_HEADER) ? (String) headers.get(REPORT_TYPE_HEADER) : null;
-        NonEvacuatedEnergyRunContext nonEvacuatedEnergyRunContext = new NonEvacuatedEnergyRunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, provider, reportUuid, reporterId, reportType);
+        NonEvacuatedEnergyRunContext nonEvacuatedEnergyRunContext = new NonEvacuatedEnergyRunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, provider, reportUuid, reporterId, reportType, userId);
         return new NonEvacuatedEnergyResultContext(resultUuid, nonEvacuatedEnergyRunContext);
     }
 
     public Message<String> toMessage(ObjectMapper objectMapper) {
         String nonEvacuatedEnergyInputDataJson;
         try {
-            nonEvacuatedEnergyInputDataJson = objectMapper.writeValueAsString(nonEvacuatedEnergyRunContext.getInputData());
+            nonEvacuatedEnergyInputDataJson = objectMapper.writeValueAsString(nonEvacuatedEnergyRunContext.getNonEvacuatedEnergyInputData());
         } catch (JsonProcessingException e) {
             throw new UncheckedIOException(e);
         }
@@ -93,6 +96,7 @@ public class NonEvacuatedEnergyResultContext {
                 .setHeader(REPORT_UUID, nonEvacuatedEnergyRunContext.getReportUuid())
                 .setHeader(REPORTER_ID_HEADER, nonEvacuatedEnergyRunContext.getReporterId())
                 .setHeader(REPORT_TYPE_HEADER, nonEvacuatedEnergyRunContext.getReportType())
+                .setHeader(HEADER_USER_ID, nonEvacuatedEnergyRunContext.getUserId())
             .build();
     }
 }
