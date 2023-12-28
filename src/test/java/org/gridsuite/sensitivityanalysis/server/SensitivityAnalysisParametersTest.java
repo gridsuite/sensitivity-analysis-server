@@ -79,7 +79,7 @@ public class SensitivityAnalysisParametersTest {
         String parametersToCreateJson = mapper.writeValueAsString(parametersToCreate);
 
         mockMvc.perform(post(URI_PARAMETERS_BASE).content(parametersToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
+            .andExpect(status().isOk()).andReturn();
 
         SensitivityAnalysisParametersInfos createdParameters = parametersRepository.findAll().get(0).toInfos();
 
@@ -94,7 +94,7 @@ public class SensitivityAnalysisParametersTest {
         UUID parametersUuid = saveAndReturnId(parametersToRead);
 
         MvcResult mvcResult = mockMvc.perform(get(URI_PARAMETERS_GET_PUT + parametersUuid))
-                .andExpect(status().isOk()).andReturn();
+            .andExpect(status().isOk()).andReturn();
         String resultAsString = mvcResult.getResponse().getContentAsString();
         SensitivityAnalysisParametersInfos receivedParameters = mapper.readValue(resultAsString, new TypeReference<>() {
         });
@@ -114,7 +114,7 @@ public class SensitivityAnalysisParametersTest {
         String parametersToUpdateJson = mapper.writeValueAsString(parametersToUpdate);
 
         mockMvc.perform(put(URI_PARAMETERS_GET_PUT + parametersUuid).content(parametersToUpdateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk());
 
         SensitivityAnalysisParametersInfos updatedParameters = parametersRepository.findById(parametersUuid).get().toInfos();
 
@@ -146,7 +146,7 @@ public class SensitivityAnalysisParametersTest {
         saveAndReturnId(parameters2);
 
         MvcResult mvcResult = mockMvc.perform(get(URI_PARAMETERS_BASE))
-                .andExpect(status().isOk()).andReturn();
+            .andExpect(status().isOk()).andReturn();
         String resultAsString = mvcResult.getResponse().getContentAsString();
         List<SensitivityAnalysisParametersInfos> receivedParameters = mapper.readValue(resultAsString, new TypeReference<>() {
         });
@@ -213,7 +213,10 @@ public class SensitivityAnalysisParametersTest {
         assertEquals(inputData.getSensitivityNodes().size(), parametersInfos.getSensitivityNodes().size());
         assertThat(inputData.getSensitivityNodes().get(0)).recursivelyEquals(parametersInfos.getSensitivityNodes().get(0));
     }
-    /** Save parameters into the repository and return its UUID. */
+
+    /**
+     * Save parameters into the repository and return its UUID.
+     */
     protected UUID saveAndReturnId(SensitivityAnalysisParametersInfos parametersInfos) {
         return parametersRepository.save(parametersInfos.toEntity()).getId();
     }
