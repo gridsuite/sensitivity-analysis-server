@@ -7,6 +7,7 @@
 package org.gridsuite.sensitivityanalysis.server.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,6 +19,7 @@ import java.util.List;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @SuperBuilder
+@AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
@@ -30,4 +32,6 @@ public class SensitivityInjectionsSet {
     SensitivityAnalysisInputData.DistributionType distributionType;
 
     List<EquipmentsContainer> contingencies;
+
+    boolean activated;
 }

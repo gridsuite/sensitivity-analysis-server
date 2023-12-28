@@ -4,27 +4,25 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.computation.ComputationManager;
+import com.powsybl.contingency.ContingencyContext;
+import com.powsybl.contingency.ContingencyContextType;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.VariantManagerConstants;
+import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.network.store.client.PreloadingStrategy;
+import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import com.powsybl.sensitivity.*;
 import lombok.SneakyThrows;
-import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
-import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.SensitivityAnalysisApplication;
-import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
 import org.hamcrest.Matchers;
 import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.hamcrest.core.Every;
@@ -42,34 +40,19 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.computation.ComputationManager;
-import com.powsybl.contingency.ContingencyContext;
-import com.powsybl.contingency.ContingencyContextType;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.VariantManagerConstants;
-import com.powsybl.network.store.client.NetworkStoreService;
-import com.powsybl.network.store.client.PreloadingStrategy;
-import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import com.powsybl.sensitivity.SensitivityAnalysis;
-import com.powsybl.sensitivity.SensitivityAnalysisParameters;
-import com.powsybl.sensitivity.SensitivityAnalysisResult;
-import com.powsybl.sensitivity.SensitivityFactor;
-import com.powsybl.sensitivity.SensitivityFunctionType;
-import com.powsybl.sensitivity.SensitivityValue;
-import com.powsybl.sensitivity.SensitivityVariableType;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import static org.gridsuite.sensitivityanalysis.server.util.OrderMatcher.isOrderedAccordingTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Laurent Garnier <laurent.garnier at rte-france.com>
@@ -85,6 +68,9 @@ public class SensitivityAnalysisServiceTest {
 
     @SpyBean
     SensitivityAnalysisService analysisService;
+
+    @SpyBean
+    private SensitivityAnalysisParametersService parametersService;
 
     @MockBean
     private NetworkStoreService networkStoreService;
@@ -140,10 +126,9 @@ public class SensitivityAnalysisServiceTest {
 
     @Test
     public void test0() {
-        SensitivityAnalysisRunContext context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID,
-                getDummyInputData(), null, null, null, null, null, null);
-        testBasic(true, context);
-        testBasic(false, context);
+        doReturn(getDummyInputData()).when(parametersService).buildInputData(any(), any());
+        testBasic(true);
+        testBasic(false);
     }
 
     @Test
@@ -157,24 +142,24 @@ public class SensitivityAnalysisServiceTest {
                 .parameters(null) // null LF params
                 .loadFlowSpecificParameters(null)
                 .build();
-        SensitivityAnalysisRunContext context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID,
-                inputData, null, "OpenLoadFlow", null, null, null, null);
-        testBasic(true, context);
+        doReturn(inputData).when(parametersService).buildInputData(any(), any());
+        testBasic(true);
 
         // with non-null LF params
         inputData.setParameters(SensitivityAnalysisParameters.load());
-        testBasic(true, context);
+        // PS : no need to mock again, it will return the updated inputData
+        testBasic(true);
 
         // with empty specific parameters
         inputData.setLoadFlowSpecificParameters(Map.of());
-        testBasic(true, context);
+        testBasic(true);
 
         // with 2 specific parameters
         inputData.setLoadFlowSpecificParameters(Map.of("reactiveRangeCheckMode", "TARGET_P", "plausibleActivePowerLimit", "5000.0"));
-        testBasic(true, context);
+        testBasic(true);
     }
 
-    private void testBasic(boolean specific, SensitivityAnalysisRunContext context) {
+    private void testBasic(boolean specific) {
         List<String> aleaIds = List.of("a1", "a2", "a3");
         final List<SensitivityAnalysisResult.SensitivityContingencyStatus> contingenciesStatuses = aleaIds.stream()
             .map(aleaId -> new SensitivityAnalysisResult.SensitivityContingencyStatus(aleaId, SensitivityAnalysisResult.Status.SUCCESS))
@@ -212,7 +197,7 @@ public class SensitivityAnalysisServiceTest {
             any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class)))
             .willReturn(CompletableFuture.completedFuture(result));
 
-        UUID gottenResultUuid = analysisService.runAndSaveResult(context);
+        UUID gottenResultUuid = analysisService.runAndSaveResult(NETWORK_UUID, VARIANT_ID, null, "OpenLoadFlow", null, null, null, null, null, null);
         assertThat(gottenResultUuid, not(nullValue()));
         assertThat(gottenResultUuid, is(resultUuid));
 
@@ -304,9 +289,9 @@ public class SensitivityAnalysisServiceTest {
             any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class)))
             .willReturn(CompletableFuture.completedFuture(result));
 
-        UUID gottenResultUuid = analysisService.runAndSaveResult(
-            new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID,
-                getDummyInputData(), null, null, null, null, null, null));
+        doReturn(getDummyInputData()).when(parametersService).buildInputData(any(), any());
+        UUID gottenResultUuid = analysisService.runAndSaveResult(NETWORK_UUID, VARIANT_ID,
+                null, null, null, null, null, null, null, null);
         assertThat(gottenResultUuid, not(nullValue()));
         assertThat(gottenResultUuid, is(resultUuid));
 
@@ -376,9 +361,9 @@ public class SensitivityAnalysisServiceTest {
             any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class)))
             .willReturn(CompletableFuture.completedFuture(result));
 
-        UUID gottenResultUuid = analysisService.runAndSaveResult(
-            new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID,
-                getDummyInputData(), null, null, null, null, null, null));
+        doReturn(getDummyInputData()).when(parametersService).buildInputData(any(), any());
+        UUID gottenResultUuid = analysisService.runAndSaveResult(NETWORK_UUID, VARIANT_ID,
+                null, null, null, null, null, null, null, null);
         assertThat(gottenResultUuid, not(nullValue()));
         assertThat(gottenResultUuid, is(resultUuid));
 

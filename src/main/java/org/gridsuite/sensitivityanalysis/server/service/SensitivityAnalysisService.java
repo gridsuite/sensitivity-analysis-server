@@ -8,10 +8,12 @@ package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.sensitivity.SensitivityAnalysisProvider;
-import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersInfos;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +37,8 @@ public class SensitivityAnalysisService {
 
     private final NotificationService notificationService;
 
+    private final SensitivityAnalysisParametersService parametersService;
+
     private final ObjectMapper objectMapper;
 
     @Autowired
@@ -42,15 +46,22 @@ public class SensitivityAnalysisService {
                                       SensitivityAnalysisResultRepository resultRepository,
                                       UuidGeneratorService uuidGeneratorService,
                                       NotificationService notificationService,
+                                      SensitivityAnalysisParametersService parametersService,
                                       ObjectMapper objectMapper) {
         this.defaultProvider = defaultProvider;
         this.resultRepository = Objects.requireNonNull(resultRepository);
         this.uuidGeneratorService = Objects.requireNonNull(uuidGeneratorService);
         this.notificationService = notificationService;
+        this.parametersService = parametersService;
         this.objectMapper = Objects.requireNonNull(objectMapper);
     }
 
-    public UUID runAndSaveResult(SensitivityAnalysisRunContext runContext) {
+    public UUID runAndSaveResult(UUID networkUuid, String variantId, String receiver, String provider, UUID reportUuid, String reporterId, String reportType, String userId, UUID parametersUuid, LoadFlowParametersInfos loadFlowParametersInfos) {
+
+        SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersUuid, loadFlowParametersInfos);
+
+        SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid, variantId, inputData, receiver, provider, reportUuid, reporterId, reportType, userId);
+
         Objects.requireNonNull(runContext);
         var resultUuid = uuidGeneratorService.generate();
 

@@ -10,49 +10,26 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.computation.ComputationManager;
-import com.powsybl.contingency.BranchContingency;
-import com.powsybl.contingency.BusbarSectionContingency;
-import com.powsybl.contingency.Contingency;
-import com.powsybl.contingency.ContingencyContext;
-import com.powsybl.contingency.ContingencyContextType;
-import com.powsybl.contingency.DanglingLineContingency;
-import com.powsybl.contingency.GeneratorContingency;
-import com.powsybl.contingency.HvdcLineContingency;
-import com.powsybl.contingency.LineContingency;
-import com.powsybl.contingency.ShuntCompensatorContingency;
-import com.powsybl.contingency.StaticVarCompensatorContingency;
-import com.powsybl.contingency.ThreeWindingsTransformerContingency;
-import com.powsybl.contingency.TwoWindingsTransformerContingency;
+import com.powsybl.contingency.*;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.iidm.network.test.EurostagTutorialExample1Factory;
+import com.powsybl.loadflow.LoadFlowParameters;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-
-import com.powsybl.sensitivity.SensitivityAnalysis;
-import com.powsybl.sensitivity.SensitivityAnalysisParameters;
-import com.powsybl.sensitivity.SensitivityAnalysisResult;
-import com.powsybl.sensitivity.SensitivityFactor;
-import com.powsybl.sensitivity.SensitivityFunctionType;
-import com.powsybl.sensitivity.SensitivityValue;
-import com.powsybl.sensitivity.SensitivityVariableType;
+import com.powsybl.sensitivity.*;
 import lombok.SneakyThrows;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
-import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
-import org.gridsuite.sensitivityanalysis.server.service.FilterService;
-import org.gridsuite.sensitivityanalysis.server.service.ReportService;
-import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService;
-import org.gridsuite.sensitivityanalysis.server.service.UuidGeneratorService;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.gridsuite.sensitivityanalysis.server.service.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,7 +44,6 @@ import org.springframework.http.MediaType;
 import org.springframework.messaging.Message;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -80,30 +56,18 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.HEADER_USER_ID;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.*;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-@RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @ContextHierarchy({@ContextConfiguration(classes = {SensitivityAnalysisApplication.class, TestChannelBinderConfiguration.class})})
@@ -263,15 +227,16 @@ public class SensitivityAnalysisControllerTest {
 
     private static final String ERROR_MESSAGE = "Error message test";
 
-    private static String SENSITIVITY_INPUT_1;
-    private static String SENSITIVITY_INPUT_2;
-    private static String SENSITIVITY_INPUT_3;
-    private static String SENSITIVITY_INPUT_4;
-    private static String SENSITIVITY_INPUT_5;
-    private static String SENSITIVITY_INPUT_6;
-    private static String SENSITIVITY_INPUT_HVDC_DELTA_A;
-    private static String SENSITIVITY_INPUT_LOAD_PROPORTIONAL_MAXP;
-    private static String SENSITIVITY_INPUT_VENTILATION;
+    private static String DEFAULT_LOADFLOW_PARAMS;
+    private static SensitivityAnalysisInputData SENSITIVITY_INPUT_1;
+    private static SensitivityAnalysisInputData SENSITIVITY_INPUT_2;
+    private static SensitivityAnalysisInputData SENSITIVITY_INPUT_3;
+    private static SensitivityAnalysisInputData SENSITIVITY_INPUT_4;
+    private static SensitivityAnalysisInputData SENSITIVITY_INPUT_5;
+    private static SensitivityAnalysisInputData SENSITIVITY_INPUT_6;
+    private static SensitivityAnalysisInputData SENSITIVITY_INPUT_HVDC_DELTA_A;
+    private static SensitivityAnalysisInputData SENSITIVITY_INPUT_LOAD_PROPORTIONAL_MAXP;
+    private static SensitivityAnalysisInputData SENSITIVITY_INPUT_VENTILATION;
 
     @Autowired
     private OutputDestination output;
@@ -297,6 +262,9 @@ public class SensitivityAnalysisControllerTest {
     @SpyBean
     private SensitivityAnalysisWorkerService workerService;
 
+    @SpyBean
+    private SensitivityAnalysisParametersService parametersService;
+
     @Value("${sensitivity-analysis.default-provider}")
     String defaultSensitivityAnalysisProvider;
 
@@ -306,10 +274,10 @@ public class SensitivityAnalysisControllerTest {
     private Network network;
     private Network network1;
 
-    @Before
+    @BeforeEach
     @SneakyThrows
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
 
         // network store service mocking
         network = EurostagTutorialExample1Factory.createWithMoreGenerators(new NetworkFactoryImpl());
@@ -330,6 +298,12 @@ public class SensitivityAnalysisControllerTest {
             Thread.sleep(3000);
             return network1;
         });
+
+        LoadFlowParametersInfos loadFlowParametersInfos = LoadFlowParametersInfos.builder()
+            .commonParameters(LoadFlowParameters.load())
+            .specificParameters(Map.of())
+            .build();
+        DEFAULT_LOADFLOW_PARAMS = mapper.writeValueAsString(loadFlowParametersInfos);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData1 = SensitivityAnalysisInputData.builder()
             .sensitivityInjectionsSets(List.of(SensitivityInjectionsSet.builder()
@@ -357,40 +331,40 @@ public class SensitivityAnalysisControllerTest {
                 .contingencies(List.of(new EquipmentsContainer(CONTINGENCIES_NODES_UUID, "name18"))).build()))
             .parameters(SensitivityAnalysisParameters.load())
             .build();
-        SENSITIVITY_INPUT_1 = mapper.writeValueAsString(sensitivityAnalysisInputData1);
+        SENSITIVITY_INPUT_1 = sensitivityAnalysisInputData1;
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData2 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
         sensitivityAnalysisInputData2.getSensitivityInjectionsSets().get(0).setDistributionType(SensitivityAnalysisInputData.DistributionType.PROPORTIONAL);
-        SENSITIVITY_INPUT_2 = mapper.writeValueAsString(sensitivityAnalysisInputData2);
+        SENSITIVITY_INPUT_2 = sensitivityAnalysisInputData2;
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData3 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
         sensitivityAnalysisInputData3.getSensitivityInjectionsSets().get(0).getInjections().get(0).setContainerId(HVDC_FILTERS_UUID);
-        SENSITIVITY_INPUT_3 = mapper.writeValueAsString(sensitivityAnalysisInputData3);
+        SENSITIVITY_INPUT_3 = sensitivityAnalysisInputData3;
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData4 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
         sensitivityAnalysisInputData4.getSensitivityInjectionsSets().get(0).getMonitoredBranches().get(0).setContainerId(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
-        SENSITIVITY_INPUT_4 = mapper.writeValueAsString(sensitivityAnalysisInputData4);
+        SENSITIVITY_INPUT_4 = sensitivityAnalysisInputData4;
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData5 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
         sensitivityAnalysisInputData5.getSensitivityInjections().get(0).getMonitoredBranches().get(0).setContainerId(MONITORED_VOLTAGE_LEVELS_FILTERS_NODES_UUID);
-        SENSITIVITY_INPUT_5 = mapper.writeValueAsString(sensitivityAnalysisInputData5);
+        SENSITIVITY_INPUT_5 = sensitivityAnalysisInputData5;
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData6 = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
         sensitivityAnalysisInputData6.getSensitivityPSTs().get(0).getPsts().get(0).setContainerId(GENERATORS_FILTERS_INJECTIONS_UUID);
-        SENSITIVITY_INPUT_6 = mapper.writeValueAsString(sensitivityAnalysisInputData6);
+        SENSITIVITY_INPUT_6 = sensitivityAnalysisInputData6;
 
         SensitivityAnalysisInputData sensitivityAnalysisInputDataHvdcWithDeltaA = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
         sensitivityAnalysisInputDataHvdcWithDeltaA.getSensitivityHVDCs().get(0).setSensitivityType(SensitivityAnalysisInputData.SensitivityType.DELTA_A);
-        SENSITIVITY_INPUT_HVDC_DELTA_A = mapper.writeValueAsString(sensitivityAnalysisInputDataHvdcWithDeltaA);
+        SENSITIVITY_INPUT_HVDC_DELTA_A = sensitivityAnalysisInputDataHvdcWithDeltaA;
 
         SensitivityAnalysisInputData sensitivityAnalysisInputDataLoadWithProportionalMaxP = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
         sensitivityAnalysisInputDataLoadWithProportionalMaxP.getSensitivityInjectionsSets().get(0).setDistributionType(SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP);
         sensitivityAnalysisInputDataLoadWithProportionalMaxP.getSensitivityInjectionsSets().get(0).getInjections().get(1).setContainerId(LOADS_FILTERS_INJECTIONS_SET_WITH_BAD_DISTRIBUTION_TYPE_UUID);
-        SENSITIVITY_INPUT_LOAD_PROPORTIONAL_MAXP = mapper.writeValueAsString(sensitivityAnalysisInputDataLoadWithProportionalMaxP);
+        SENSITIVITY_INPUT_LOAD_PROPORTIONAL_MAXP = sensitivityAnalysisInputDataLoadWithProportionalMaxP;
 
         SensitivityAnalysisInputData sensitivityAnalysisInputDataVentilation = mapper.convertValue(sensitivityAnalysisInputData1, SensitivityAnalysisInputData.class);
         sensitivityAnalysisInputDataVentilation.getSensitivityInjectionsSets().get(0).setDistributionType(SensitivityAnalysisInputData.DistributionType.VENTILATION);
-        SENSITIVITY_INPUT_VENTILATION = mapper.writeValueAsString(sensitivityAnalysisInputDataVentilation);
+        SENSITIVITY_INPUT_VENTILATION = sensitivityAnalysisInputDataVentilation;
 
         // action service mocking
         given(actionsService.getContingencyList(CONTINGENCIES_INJECTIONS_SET_UUID, NETWORK_UUID, VARIANT_1_ID)).willReturn(CONTINGENCIES);
@@ -509,7 +483,7 @@ public class SensitivityAnalysisControllerTest {
 
     // added for testStatus can return null, after runTest
     @SneakyThrows
-    @After
+    @AfterEach
     public void tearDown() {
         mockMvc.perform(delete("/" + VERSION + "/results"))
             .andExpect(status().isOk());
@@ -517,25 +491,28 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     public void runTest() throws Exception {
+        MockitoAnnotations.openMocks(this);
 
         // run with specific variant
+        doReturn(SENSITIVITY_INPUT_1).when(parametersService).buildInputData(any(), any());
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/run?reportType=SensitivityAnalysis&variantId=" + VARIANT_3_ID, NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "testUserId")
-            .content(SENSITIVITY_INPUT_1))
+            .content(DEFAULT_LOADFLOW_PARAMS))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
         assertEquals(mapper.writeValueAsString(RESULT_VARIANT), result.getResponse().getContentAsString());
 
         // run with implicit initial variant
-        for (String sensitivityInput : List.of(SENSITIVITY_INPUT_1, SENSITIVITY_INPUT_2, SENSITIVITY_INPUT_3, SENSITIVITY_INPUT_4, SENSITIVITY_INPUT_5, SENSITIVITY_INPUT_6, SENSITIVITY_INPUT_LOAD_PROPORTIONAL_MAXP, SENSITIVITY_INPUT_VENTILATION)) {
+        for (SensitivityAnalysisInputData sensitivityInput : List.of(SENSITIVITY_INPUT_1, SENSITIVITY_INPUT_2, SENSITIVITY_INPUT_3, SENSITIVITY_INPUT_4, SENSITIVITY_INPUT_5, SENSITIVITY_INPUT_6, SENSITIVITY_INPUT_LOAD_PROPORTIONAL_MAXP, SENSITIVITY_INPUT_VENTILATION)) {
+            doReturn(sensitivityInput).when(parametersService).buildInputData(any(), any());
             result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/run?reportType=SensitivityAnalysis", NETWORK_UUID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .header(HEADER_USER_ID, "testUserId")
-                .content(sensitivityInput))
+                .content(DEFAULT_LOADFLOW_PARAMS))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
@@ -543,11 +520,12 @@ public class SensitivityAnalysisControllerTest {
         }
 
         // run with OpenLoadFlow provider and sensitivityType DELTA_A for HVDC
+        doReturn(SENSITIVITY_INPUT_HVDC_DELTA_A).when(parametersService).buildInputData(any(), any());
         result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/run?reportType=SensitivityAnalysis&provider=OpenLoadFlow", NETWORK_UUID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .header(HEADER_USER_ID, "testUserId")
-                .content(SENSITIVITY_INPUT_HVDC_DELTA_A))
+                .content(DEFAULT_LOADFLOW_PARAMS))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
@@ -560,7 +538,7 @@ public class SensitivityAnalysisControllerTest {
                 "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "testUserId")
-            .content(SENSITIVITY_INPUT_1))
+            .content(DEFAULT_LOADFLOW_PARAMS))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
@@ -724,7 +702,7 @@ public class SensitivityAnalysisControllerTest {
                 "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis", NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "testUserId")
-            .content(SENSITIVITY_INPUT_1))
+            .content(DEFAULT_LOADFLOW_PARAMS))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
@@ -775,7 +753,7 @@ public class SensitivityAnalysisControllerTest {
             "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_STOP_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "testUserId")
-            .content(SENSITIVITY_INPUT_1))
+            .content(DEFAULT_LOADFLOW_PARAMS))
             .andExpect(status().isOk());
 
         // stop sensitivity analysis
@@ -796,7 +774,7 @@ public class SensitivityAnalysisControllerTest {
                 "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_1_ID, NETWORK_ERROR_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "testUserId")
-            .content(SENSITIVITY_INPUT_1))
+            .content(DEFAULT_LOADFLOW_PARAMS))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
@@ -820,7 +798,7 @@ public class SensitivityAnalysisControllerTest {
                 "/" + VERSION + "/networks/{networkUuid}/run?reportType=SensitivityAnalysis&reportUuid=" + REPORT_UUID + "&reporterId=" + UUID.randomUUID(), NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "testUserId")
-            .content(SENSITIVITY_INPUT_1))
+            .content(DEFAULT_LOADFLOW_PARAMS))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
