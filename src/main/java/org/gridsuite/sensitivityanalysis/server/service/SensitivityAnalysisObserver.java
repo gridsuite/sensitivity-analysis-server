@@ -21,8 +21,10 @@ public class SensitivityAnalysisObserver {
 
     private final ObservationRegistry observationRegistry;
     private final String defaultProvider;
-    private static final String OBSERVATION_PREFIX = "app.sensitivity.analysis.";
+    private static final String OBSERVATION_PREFIX = "app.";
     private static final String PROVIDER_TAG_NAME = "provider";
+    private static final String TYPE_TAG_NAME = "type";
+    private static final String COMPUTATION_NAME = "sensi";
 
     public SensitivityAnalysisObserver(@NonNull ObservationRegistry observationRegistry,
                                        @Value("${sensitivity-analysis.default-provider}") String defaultProvider) {
@@ -41,6 +43,7 @@ public class SensitivityAnalysisObserver {
     private Observation createSensitivityAnalysisObservation(String name, SensitivityAnalysisRunContext runContext) {
         String provider = runContext.getProvider() != null ? runContext.getProvider() : defaultProvider;
         return Observation.createNotStarted(OBSERVATION_PREFIX + name, observationRegistry)
-                .lowCardinalityKeyValue(PROVIDER_TAG_NAME, provider);
+            .lowCardinalityKeyValue(PROVIDER_TAG_NAME, provider)
+            .lowCardinalityKeyValue(TYPE_TAG_NAME, COMPUTATION_NAME);
     }
 }
