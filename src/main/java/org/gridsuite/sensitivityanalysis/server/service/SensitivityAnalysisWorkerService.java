@@ -34,7 +34,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -144,7 +147,7 @@ public class SensitivityAnalysisWorkerService {
 
         CompletableFuture<SensitivityAnalysisResult> future = runSensitivityAnalysisAsync(context, sensitivityAnalysisRunner, reporter, resultUuid);
 
-        SensitivityAnalysisResult result = future == null ? null : sensitivityAnalysisObserver.observe("run", context, () -> future.get());
+        SensitivityAnalysisResult result = future == null ? null : sensitivityAnalysisObserver.observeRun("run", context, future::get);
         if (context.getReportUuid() != null) {
             sensitivityAnalysisObserver.observe("report.send", context, () ->
                 reportService.sendReport(context.getReportUuid(), rootReporter.get()));

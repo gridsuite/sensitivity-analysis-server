@@ -7,6 +7,9 @@
 
 package org.gridsuite.sensitivityanalysis.server.service;
 
+import com.powsybl.sensitivity.SensitivityAnalysisResult;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.NonNull;
@@ -19,31 +22,62 @@ import org.springframework.stereotype.Service;
 @Service
 public class SensitivityAnalysisObserver {
 
-    private final ObservationRegistry observationRegistry;
-    private final String defaultProvider;
-    private static final String OBSERVATION_PREFIX = "app.";
+    private static final String OBSERVATION_PREFIX = "app.computation.";
     private static final String PROVIDER_TAG_NAME = "provider";
     private static final String TYPE_TAG_NAME = "type";
-    private static final String COMPUTATION_NAME = "sensi";
+    private static final String STATUS_TAG_NAME = "status";
+    private static final String COMPUTATION_TYPE = "sensi";
+    private static final String COMPUTATION_COUNTER_NAME = OBSERVATION_PREFIX + "count";
 
-    public SensitivityAnalysisObserver(@NonNull ObservationRegistry observationRegistry,
-                                       @Value("${sensitivity-analysis.default-provider}") String defaultProvider) {
-        this.observationRegistry = observationRegistry;
+    private final String defaultProvider;
+    private final ObservationRegistry observationRegistry;
+    private final MeterRegistry meterRegistry;
+
+
+    public SensitivityAnalysisObserver(@Value("${sensitivity-analysis.default-provider}") String defaultProvider,
+                                       @NonNull ObservationRegistry observationRegistry,
+                                       @NonNull MeterRegistry meterRegistry) {
         this.defaultProvider = defaultProvider;
+        this.observationRegistry = observationRegistry;
+        this.meterRegistry = meterRegistry;
     }
 
     public <E extends Throwable> void observe(String name, SensitivityAnalysisRunContext runContext, Observation.CheckedRunnable<E> callable) throws E {
-        createSensitivityAnalysisObservation(name, runContext).observeChecked(callable);
+        createObservation(name, runContext).observeChecked(callable);
     }
 
     public <T, E extends Throwable> T observe(String name, SensitivityAnalysisRunContext runContext, Observation.CheckedCallable<T, E> callable) throws E {
-        return createSensitivityAnalysisObservation(name, runContext).observeChecked(callable);
+        return createObservation(name, runContext).observeChecked(callable);
     }
 
-    private Observation createSensitivityAnalysisObservation(String name, SensitivityAnalysisRunContext runContext) {
+    public <T extends SensitivityAnalysisResult, E extends Throwable> T observeRun(String name, SensitivityAnalysisRunContext runContext, Observation.CheckedCallable<T, E> callable) throws E {
+        T result = createObservation(name, runContext).observeChecked(callable);
+        incrementCount(runContext, result);
+        return result;
+    }
+
+    private Observation createObservation(String name, SensitivityAnalysisRunContext runContext) {
         String provider = runContext.getProvider() != null ? runContext.getProvider() : defaultProvider;
         return Observation.createNotStarted(OBSERVATION_PREFIX + name, observationRegistry)
             .lowCardinalityKeyValue(PROVIDER_TAG_NAME, provider)
-            .lowCardinalityKeyValue(TYPE_TAG_NAME, COMPUTATION_NAME);
+            .lowCardinalityKeyValue(TYPE_TAG_NAME, COMPUTATION_TYPE);
+    }
+
+    private void incrementCount(SensitivityAnalysisRunContext runContext, SensitivityAnalysisResult result) {
+        Counter.builder(COMPUTATION_COUNTER_NAME)
+            .tag(PROVIDER_TAG_NAME, runContext.getProvider())
+            .tag(TYPE_TAG_NAME, COMPUTATION_TYPE)
+            .tag(STATUS_TAG_NAME, getStatusFromResult(result))
+            .register(meterRegistry)
+            .increment();
+    }
+
+    private static String getStatusFromResult(SensitivityAnalysisResult result) {
+        if (result == null) {
+            return "NOK";
+        }
+        return result.getContingencyStatuses().stream()
+            .map(SensitivityAnalysisResult.SensitivityContingencyStatus::getStatus)
+            .allMatch(status1 -> status1 == SensitivityAnalysisResult.Status.SUCCESS) ? "OK" : "NOK";
     }
 }
