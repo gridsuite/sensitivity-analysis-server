@@ -63,8 +63,9 @@ public class SensitivityAnalysisObserver {
     }
 
     private void incrementCount(SensitivityAnalysisRunContext runContext, SensitivityAnalysisResult result) {
+        String provider = runContext.getProvider() != null ? runContext.getProvider() : defaultProvider;
         Counter.builder(COMPUTATION_COUNTER_NAME)
-            .tag(PROVIDER_TAG_NAME, runContext.getProvider())
+            .tag(PROVIDER_TAG_NAME, provider)
             .tag(TYPE_TAG_NAME, COMPUTATION_TYPE)
             .tag(STATUS_TAG_NAME, getStatusFromResult(result))
             .register(meterRegistry)
