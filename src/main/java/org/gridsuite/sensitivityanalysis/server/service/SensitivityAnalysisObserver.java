@@ -33,7 +33,6 @@ public class SensitivityAnalysisObserver {
     private final ObservationRegistry observationRegistry;
     private final MeterRegistry meterRegistry;
 
-
     public SensitivityAnalysisObserver(@Value("${sensitivity-analysis.default-provider}") String defaultProvider,
                                        @NonNull ObservationRegistry observationRegistry,
                                        @NonNull MeterRegistry meterRegistry) {
