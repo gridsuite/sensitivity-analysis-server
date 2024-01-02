@@ -73,7 +73,7 @@ public class SensitivityAnalysisParametersTest {
     }
 
     @Test
-    public void testCreate() throws Exception {
+    void testCreate() throws Exception {
 
         SensitivityAnalysisParametersInfos parametersToCreate = buildParameters();
         String parametersToCreateJson = mapper.writeValueAsString(parametersToCreate);
@@ -87,7 +87,7 @@ public class SensitivityAnalysisParametersTest {
     }
 
     @Test
-    public void testRead() throws Exception {
+    void testRead() throws Exception {
 
         SensitivityAnalysisParametersInfos parametersToRead = buildParameters();
 
@@ -103,7 +103,7 @@ public class SensitivityAnalysisParametersTest {
     }
 
     @Test
-    public void testUpdate() throws Exception {
+    void testUpdate() throws Exception {
 
         SensitivityAnalysisParametersInfos parametersToUpdate = buildParameters();
 
@@ -122,7 +122,7 @@ public class SensitivityAnalysisParametersTest {
     }
 
     @Test
-    public void testDelete() throws Exception {
+    void testDelete() throws Exception {
 
         SensitivityAnalysisParametersInfos parametersToDelete = buildParameters();
 
@@ -136,7 +136,7 @@ public class SensitivityAnalysisParametersTest {
     }
 
     @Test
-    public void testGetAll() throws Exception {
+    void testGetAll() throws Exception {
         SensitivityAnalysisParametersInfos parameters1 = buildParameters();
 
         SensitivityAnalysisParametersInfos parameters2 = buildParametersUpdate();
@@ -155,7 +155,7 @@ public class SensitivityAnalysisParametersTest {
     }
 
     @Test
-    public void testDuplicate() throws Exception {
+    void testDuplicate() throws Exception {
 
         SensitivityAnalysisParametersInfos parametersToCreate = buildParameters();
         String parametersToCreateJson = mapper.writeValueAsString(parametersToCreate);
@@ -177,7 +177,7 @@ public class SensitivityAnalysisParametersTest {
     }
 
     @Test
-    public void buildInputDataTest() {
+    void buildInputDataTest() {
         SensitivityAnalysisParametersInfos parametersInfos = buildParameters();
         UUID parametersUuid = saveAndReturnId(parametersInfos);
         LoadFlowParametersInfos loadFlowParametersInfos = LoadFlowParametersInfos.builder()

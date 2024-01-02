@@ -40,7 +40,7 @@ public class SensitivityAnalysisParametersService {
 
     public Optional<UUID> duplicateParameters(UUID sourceParametersId) {
         return sensitivityAnalysisParametersRepository.findById(sourceParametersId)
-            .map(SensitivityAnalysisParametersEntity::clone)
+            .map(SensitivityAnalysisParametersEntity::copy)
             .map(entity -> {
                 sensitivityAnalysisParametersRepository.save(entity);
                 return Optional.of(entity.getId());

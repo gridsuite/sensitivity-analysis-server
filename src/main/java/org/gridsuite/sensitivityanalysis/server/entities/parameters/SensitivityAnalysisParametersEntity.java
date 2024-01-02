@@ -52,7 +52,7 @@ public class SensitivityAnalysisParametersEntity {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "sensitivity_analysis_parameters_id")
-    private List<SensitivityFactorWithDistribTypeEntity> sensitivityInjectionsSet = new ArrayList<>();
+    private List<SensitivityFactorWithDistribTypeEntity> sensitivityInjectionsSets = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "sensitivity_analysis_parameters_id")
@@ -60,11 +60,11 @@ public class SensitivityAnalysisParametersEntity {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "sensitivity_analysis_parameters_id")
-    private List<SensitivityFactorWithSensiTypeForHvdcEntity> sensitivityHvdc = new ArrayList<>();
+    private List<SensitivityFactorWithSensiTypeForHvdcEntity> sensitivityHVDCs = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "sensitivity_analysis_parameters_id")
-    private List<SensitivityFactorWithSensiTypeForPstEntity> sensitivityPST = new ArrayList<>();
+    private List<SensitivityFactorWithSensiTypeForPstEntity> sensitivityPSTs = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "sensitivity_analysis_parameters_id")
@@ -81,18 +81,17 @@ public class SensitivityAnalysisParametersEntity {
      *
      * @return a copy of the entity
      */
-    @Override
-    public SensitivityAnalysisParametersEntity clone() {
+    public SensitivityAnalysisParametersEntity copy() {
         return SensitivityAnalysisParametersEntity.builder()
             .date(ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS))
             .name(this.name)
             .flowFlowSensitivityValueThreshold(this.flowFlowSensitivityValueThreshold)
             .angleFlowSensitivityValueThreshold(this.angleFlowSensitivityValueThreshold)
             .flowVoltageSensitivityValueThreshold(this.flowVoltageSensitivityValueThreshold)
-            .sensitivityInjectionsSet(new ArrayList<>(this.sensitivityInjectionsSet))
+            .sensitivityInjectionsSets(new ArrayList<>(this.sensitivityInjectionsSets))
             .sensitivityInjections(new ArrayList<>(this.sensitivityInjections))
-            .sensitivityHvdc(new ArrayList<>(this.sensitivityHvdc))
-            .sensitivityPST(new ArrayList<>(this.sensitivityPST))
+            .sensitivityHVDCs(new ArrayList<>(this.sensitivityHVDCs))
+            .sensitivityPSTs(new ArrayList<>(this.sensitivityPSTs))
             .sensitivityNodes(new ArrayList<>(this.sensitivityNodes))
             .build();
     }
@@ -106,14 +105,14 @@ public class SensitivityAnalysisParametersEntity {
         this.flowFlowSensitivityValueThreshold = parametersInfos.getFlowFlowSensitivityValueThreshold();
         this.angleFlowSensitivityValueThreshold = parametersInfos.getAngleFlowSensitivityValueThreshold();
         this.flowVoltageSensitivityValueThreshold = parametersInfos.getFlowVoltageSensitivityValueThreshold();
-        this.sensitivityInjectionsSet.clear();
-        this.sensitivityInjectionsSet.addAll(convertInjectionsSets(parametersInfos.getSensitivityInjectionsSet()));
+        this.sensitivityInjectionsSets.clear();
+        this.sensitivityInjectionsSets.addAll(convertInjectionsSets(parametersInfos.getSensitivityInjectionsSet()));
         this.sensitivityInjections.clear();
         this.sensitivityInjections.addAll(convertInjections(parametersInfos.getSensitivityInjection()));
-        this.sensitivityHvdc.clear();
-        this.sensitivityHvdc.addAll(convertHdvcs(parametersInfos.getSensitivityHVDC()));
-        this.sensitivityPST.clear();
-        this.sensitivityPST.addAll(convertPsts(parametersInfos.getSensitivityPST()));
+        this.sensitivityHVDCs.clear();
+        this.sensitivityHVDCs.addAll(convertHdvcs(parametersInfos.getSensitivityHVDC()));
+        this.sensitivityPSTs.clear();
+        this.sensitivityPSTs.addAll(convertPsts(parametersInfos.getSensitivityPST()));
         this.sensitivityNodes.clear();
         this.sensitivityNodes.addAll(convertNodes(parametersInfos.getSensitivityNodes()));
     }
@@ -198,48 +197,48 @@ public class SensitivityAnalysisParametersEntity {
 
     public SensitivityAnalysisParametersInfos toInfos() {
 
-        List<SensitivityInjectionsSet> sensitivityInjectionsSets = new ArrayList<>();
-        this.sensitivityInjectionsSet.stream().map(sensitivityInjectionsSet -> new SensitivityInjectionsSet(
+        List<SensitivityInjectionsSet> sensiInjectionsSets = new ArrayList<>();
+        this.sensitivityInjectionsSets.stream().map(sensitivityInjectionsSet -> new SensitivityInjectionsSet(
             EquipmentsContainerEmbeddable.fromEmbeddableContainerEquipments(sensitivityInjectionsSet.getMonitoredBranch()),
             EquipmentsContainerEmbeddable.fromEmbeddableContainerEquipments(sensitivityInjectionsSet.getInjections()),
             sensitivityInjectionsSet.getDistributionType(),
             EquipmentsContainerEmbeddable.fromEmbeddableContainerEquipments(sensitivityInjectionsSet.getContingencies()),
             sensitivityInjectionsSet.isActivated()
-        )).forEach(sensitivityInjectionsSets::add);
+        )).forEach(sensiInjectionsSets::add);
 
-        List<SensitivityInjection> sensitivityInjections = new ArrayList<>();
+        List<SensitivityInjection> sensiInjections = new ArrayList<>();
         this.sensitivityInjections.stream().map(sensitivityInjection -> new SensitivityInjection(
             EquipmentsContainerEmbeddable.fromEmbeddableContainerEquipments(sensitivityInjection.getMonitoredBranch()),
             EquipmentsContainerEmbeddable.fromEmbeddableContainerEquipments(sensitivityInjection.getInjections()),
             EquipmentsContainerEmbeddable.fromEmbeddableContainerEquipments(sensitivityInjection.getContingencies()),
             sensitivityInjection.isActivated()
-        )).forEach(sensitivityInjections::add);
+        )).forEach(sensiInjections::add);
 
-        List<SensitivityHVDC> sensitivityHvdcs = new ArrayList<>();
-        this.sensitivityHvdc.stream().map(sensitivityHvdc -> new SensitivityHVDC(
+        List<SensitivityHVDC> sensiHvdcs = new ArrayList<>();
+        this.sensitivityHVDCs.stream().map(sensitivityHvdc -> new SensitivityHVDC(
             EquipmentsContainerEmbeddable.fromEmbeddableContainerEquipments(sensitivityHvdc.getMonitoredBranch()),
             sensitivityHvdc.getSensitivityType(),
             EquipmentsContainerEmbeddable.fromEmbeddableContainerEquipments(sensitivityHvdc.getInjections()),
             EquipmentsContainerEmbeddable.fromEmbeddableContainerEquipments(sensitivityHvdc.getContingencies()),
             sensitivityHvdc.isActivated()
-        )).forEach(sensitivityHvdcs::add);
+        )).forEach(sensiHvdcs::add);
 
-        List<SensitivityPST> sensitivityPsts = new ArrayList<>();
-        this.sensitivityPST.stream().map(sensitivityPst -> new SensitivityPST(
+        List<SensitivityPST> sensiPsts = new ArrayList<>();
+        this.sensitivityPSTs.stream().map(sensitivityPst -> new SensitivityPST(
             EquipmentsContainerEmbeddable.fromEmbeddableContainerEquipments(sensitivityPst.getMonitoredBranch()),
             sensitivityPst.getSensitivityType(),
             EquipmentsContainerEmbeddable.fromEmbeddableContainerEquipments(sensitivityPst.getInjections()),
             EquipmentsContainerEmbeddable.fromEmbeddableContainerEquipments(sensitivityPst.getContingencies()),
             sensitivityPst.isActivated()
-        )).forEach(sensitivityPsts::add);
+        )).forEach(sensiPsts::add);
 
-        List<SensitivityNodes> sensitivityNodes = new ArrayList<>();
+        List<SensitivityNodes> sensiNodes = new ArrayList<>();
         this.sensitivityNodes.stream().map(sensitivityNode -> new SensitivityNodes(
             EquipmentsContainerEmbeddable.fromEmbeddableContainerEquipments(sensitivityNode.getMonitoredBranch()),
             EquipmentsContainerEmbeddable.fromEmbeddableContainerEquipments(sensitivityNode.getInjections()),
             EquipmentsContainerEmbeddable.fromEmbeddableContainerEquipments(sensitivityNode.getContingencies()),
             sensitivityNode.isActivated()
-        )).forEach(sensitivityNodes::add);
+        )).forEach(sensiNodes::add);
 
         return SensitivityAnalysisParametersInfos.builder()
             .uuid(this.id)
@@ -248,11 +247,11 @@ public class SensitivityAnalysisParametersEntity {
             .flowFlowSensitivityValueThreshold(this.flowFlowSensitivityValueThreshold)
             .angleFlowSensitivityValueThreshold(this.angleFlowSensitivityValueThreshold)
             .flowVoltageSensitivityValueThreshold(this.flowVoltageSensitivityValueThreshold)
-            .sensitivityInjectionsSet(sensitivityInjectionsSets)
-            .sensitivityInjection(sensitivityInjections)
-            .sensitivityHVDC(sensitivityHvdcs)
-            .sensitivityPST(sensitivityPsts)
-            .sensitivityNodes(sensitivityNodes)
+            .sensitivityInjectionsSet(sensiInjectionsSets)
+            .sensitivityInjection(sensiInjections)
+            .sensitivityHVDC(sensiHvdcs)
+            .sensitivityPST(sensiPsts)
+            .sensitivityNodes(sensiNodes)
             .build();
     }
 }
