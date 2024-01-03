@@ -115,13 +115,13 @@ public class SensitivityAnalysisService {
             containersAttributesCount *= factorIds.getIds().get(INJECTIONS).size();
             factorIds.getIds().remove(INJECTIONS);
         }
-        containersAttributesCount = getFactorsCount(factorIds, networkUuid, variantId, containersAttributesCount);
+        containersAttributesCount *= getFactorsCount(factorIds, networkUuid, variantId);
         return containersAttributesCount;
     }
 
-    private Long getFactorsCount(SensitivityFactorsIdsByGroup factorIds, UUID networkUuid, String variantId, Long containersAttributesCount) {
+    private Long getFactorsCount(SensitivityFactorsIdsByGroup factorIds, UUID networkUuid, String variantId) {
         Map<String, List<UUID>> ids = factorIds.getIds();
-        Long contAttributesCountTemp = containersAttributesCount;
+        long contAttributesCountTemp = 1L;
         if (ids.containsKey(CONTINGENCIES) && !ids.get(CONTINGENCIES).isEmpty()) {
             int sumContingencyListSizes = getContingenciesCount(ids.get(CONTINGENCIES), networkUuid, variantId);
             sumContingencyListSizes = Math.max(sumContingencyListSizes, 1);
