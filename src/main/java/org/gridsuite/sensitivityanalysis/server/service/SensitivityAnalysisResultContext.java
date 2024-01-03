@@ -18,6 +18,8 @@ import org.springframework.messaging.support.MessageBuilder;
 import java.io.UncheckedIOException;
 import java.util.*;
 
+import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.HEADER_USER_ID;
+
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
@@ -63,6 +65,7 @@ public class SensitivityAnalysisResultContext {
 
         String receiver = (String) headers.get("receiver");
         String provider = (String) headers.get("provider");
+        String userId = (String) headers.get(HEADER_USER_ID);
         SensitivityAnalysisInputData sensitivityAnalysisInputData;
         try {
             sensitivityAnalysisInputData = objectMapper.readValue(message.getPayload(), new TypeReference<>() { });
@@ -73,7 +76,7 @@ public class SensitivityAnalysisResultContext {
         String reporterId = headers.containsKey(REPORTER_ID_HEADER) ? (String) headers.get(REPORTER_ID_HEADER) : null;
         String reportType = headers.containsKey(REPORT_TYPE_HEADER) ? (String) headers.get(REPORT_TYPE_HEADER) : null;
         SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid,
-            variantId, sensitivityAnalysisInputData, receiver, provider, reportUuid, reporterId, reportType);
+            variantId, sensitivityAnalysisInputData, receiver, provider, reportUuid, reporterId, reportType, userId);
         return new SensitivityAnalysisResultContext(resultUuid, runContext);
     }
 
@@ -93,6 +96,7 @@ public class SensitivityAnalysisResultContext {
                 .setHeader(REPORT_UUID, runContext.getReportUuid())
                 .setHeader(REPORTER_ID_HEADER, runContext.getReporterId())
                 .setHeader(REPORT_TYPE_HEADER, runContext.getReportType())
+                .setHeader(HEADER_USER_ID, runContext.getUserId())
                 .build();
     }
 }
