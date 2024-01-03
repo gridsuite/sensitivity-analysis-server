@@ -262,8 +262,4 @@ public class SensitivityAnalysisWorkerService {
     public Consumer<Message<String>> consumeCancel() {
         return message -> cancelSensitivityAnalysisAsync(SensitivityAnalysisCancelContext.fromMessage(message));
     }
-
-    public Long getFactorsCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Boolean isInjectionsSet) {
-        return sensitivityAnalysisInputBuilderService.getFactorsCount(ids, networkUuid, variantId, isInjectionsSet);
-    }
 }
