@@ -8,6 +8,10 @@ package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.sensitivity.SensitivityAnalysisProvider;
+import com.univocity.parsers.csv.CsvWriter;
+import com.univocity.parsers.csv.CsvWriterSettings;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
@@ -17,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -96,5 +101,46 @@ public class SensitivityAnalysisService {
 
     public String getDefaultProvider() {
         return defaultProvider;
+    }
+
+    public byte[] exportSensitivityResultsAsCsv(UUID resultUuid, ResultsSelector selector) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        CsvWriterSettings settings = new CsvWriterSettings();
+        CsvWriter csvWriter = new CsvWriter(outputStream, settings);
+
+        SensitivityRunQueryResult result = getRunResult(resultUuid, selector);
+        if (result == null) {
+            return null;
+        }
+
+        if (selector.getTabSelection() == ResultTab.N) {
+            csvWriter.writeHeaders(List.of("functionId", "variableId", "functionReference", "value"));
+            result.getSensitivities()
+                    .forEach(sensitivity -> {
+                        csvWriter.writeRow(
+                                sensitivity.getFuncId(),
+                                sensitivity.getVarId(),
+                                sensitivity.getFunctionReference(),
+                                sensitivity.getValue()
+                        );
+                    });
+        } else if (selector.getTabSelection() == ResultTab.N_K) {
+            csvWriter.writeHeaders(List.of("functionId", "variableId", "contingencyId", "functionReference", "value", "functionReferenceAfter"));
+            result.getSensitivities()
+                    .forEach(sensitivity -> {
+                        SensitivityWithContingency sensitivityWithContingency = (SensitivityWithContingency) sensitivity;
+                        csvWriter.writeRow(
+                                sensitivityWithContingency.getFuncId(),
+                                sensitivityWithContingency.getVarId(),
+                                sensitivityWithContingency.getContingencyId(),
+                                sensitivityWithContingency.getFunctionReference(),
+                                sensitivityWithContingency.getValue(),
+                                sensitivityWithContingency.getFunctionReferenceAfter()
+                        );
+                    });
+        }
+        csvWriter.close();
+
+        return outputStream.toByteArray();
     }
 }

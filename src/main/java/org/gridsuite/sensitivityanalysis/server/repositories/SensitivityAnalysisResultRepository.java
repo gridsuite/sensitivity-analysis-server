@@ -8,6 +8,8 @@ package org.gridsuite.sensitivityanalysis.server.repositories;
 
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityValue;
+import com.univocity.parsers.csv.CsvWriter;
+import com.univocity.parsers.csv.CsvWriterSettings;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
@@ -30,6 +32,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -301,15 +304,14 @@ public class SensitivityAnalysisResultRepository {
     }
 
     private String getSort(SortKey sortKey) {
-        switch (sortKey) {
-            case FUNCTION : return "factor.functionId";
-            case SENSITIVITY : return "value";
-            case REFERENCE : return "functionReference";
-            case VARIABLE : return "factor.variableId";
-            case CONTINGENCY : return "contingency.contingencyId";
-            case POST_REFERENCE : return "functionReferenceAfter";
-            case POST_SENSITIVITY : return "valueAfter";
-            default: return null;
-        }
+        return switch (sortKey) {
+            case FUNCTION -> "factor.functionId";
+            case SENSITIVITY -> "value";
+            case REFERENCE -> "functionReference";
+            case VARIABLE -> "factor.variableId";
+            case CONTINGENCY -> "contingency.contingencyId";
+            case POST_REFERENCE -> "functionReferenceAfter";
+            case POST_SENSITIVITY -> "valueAfter";
+        };
     }
 }

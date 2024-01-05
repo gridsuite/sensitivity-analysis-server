@@ -17,15 +17,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
-import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisRunContext;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +37,7 @@ import java.util.UUID;
 
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.HEADER_USER_ID;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 /**
@@ -202,5 +204,23 @@ public class SensitivityAnalysisController {
     @ApiResponses(@ApiResponse(responseCode = "200", description = "The sensitivity analysis default provider has been found"))
     public ResponseEntity<String> getDefaultProvider() {
         return ResponseEntity.ok().body(service.getDefaultProvider());
+    }
+
+    @GetMapping(value = "/results/{resultUuid}/csv")
+    @Operation(summary = "export sensitivity results as csv file")
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "Sensitivity results successfully exported as csv file"))
+    public ResponseEntity<byte[]> exportSensitivityResultsAsCsv(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
+                                                                @RequestParam(name = "selector", required = false) String selectorJson) {
+        try {
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setContentType(APPLICATION_OCTET_STREAM);
+            httpHeaders.setContentDispositionFormData("attachment", "sensitivity_results.csv");
+            return ResponseEntity.ok()
+                    .headers(httpHeaders)
+                    .body(service.exportSensitivityResultsAsCsv(resultUuid, getSelector(selectorJson)));
+        } catch (JsonProcessingException e) {
+            return ResponseEntity.badRequest().build();
+        }
+
     }
 }

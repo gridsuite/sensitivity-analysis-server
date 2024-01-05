@@ -4,7 +4,9 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -64,6 +66,8 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -336,6 +340,22 @@ public class SensitivityAnalysisServiceTest {
         sensitivities = gottenResult.getSensitivities();
         assertThat(sensitivities, not(nullValue()));
         assertThat(sensitivities.size(), is(0));
+
+        ResultsSelector exportCsvSelector = ResultsSelector.builder()
+                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+                .tabSelection(ResultTab.N)
+                .build();
+
+        var csv = analysisService.exportSensitivityResultsAsCsv(resultUuid, exportCsvSelector);
+        var csvStr = new String(csv, StandardCharsets.UTF_8);
+        List<String> actualLines = Arrays.asList(csvStr.split("`\n"));
+        List<String> expectedLines = new ArrayList<>(List.of("functionId,variableId,functionReference,value",
+                "l1,GEN,2.9,500.1",
+                "l2,GEN,2.8,500.2",
+                "l3,LOAD,2.1,500.9"));
+        actualLines.sort(String::compareTo);
+        expectedLines.sort(String::compareTo);
+        assertEquals(expectedLines, actualLines);
     }
 
     @Test
