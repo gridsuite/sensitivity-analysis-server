@@ -212,7 +212,7 @@ public class NonEvacuatedEnergyWorkerService {
             new SensitivityAnalysisParameters() : context.getNonEvacuatedEnergyInputData().getParameters();
 
         // set the flowFlowThreshold value
-        params.setFlowFlowSensitivityValueThreshold(context.getNonEvacuatedEnergyInputData().getNonEvacuatedEnergyGeneratorsLimit().getSensitivityThreshold());
+        params.setFlowFlowSensitivityValueThreshold(context.getNonEvacuatedEnergyInputData().getNonEvacuatedEnergyGeneratorsCappings().getSensitivityThreshold());
 
         if (context.getNonEvacuatedEnergyInputData().getLoadFlowSpecificParameters() == null
                 || context.getNonEvacuatedEnergyInputData().getLoadFlowSpecificParameters().isEmpty()) {

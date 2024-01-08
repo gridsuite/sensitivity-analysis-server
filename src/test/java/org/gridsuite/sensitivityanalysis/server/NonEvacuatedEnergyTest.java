@@ -33,8 +33,8 @@ import org.gridsuite.sensitivityanalysis.server.dto.EquipmentsContainer;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyContingencies;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyGeneratorLimitByType;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyGeneratorsLimit;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyGeneratorsCappingsByType;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyGeneratorsCappings;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyMonitoredBranches;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStageDefinition;
@@ -238,20 +238,20 @@ public class NonEvacuatedEnergyTest {
                 .build());
     }
 
-    private NonEvacuatedEnergyGeneratorsLimit buildGeneratorsLimit() {
-        return NonEvacuatedEnergyGeneratorsLimit.builder()
+    private NonEvacuatedEnergyGeneratorsCappings buildGeneratorsCappings() {
+        return NonEvacuatedEnergyGeneratorsCappings.builder()
             .sensitivityThreshold(0.01)
-            .generators(List.of(NonEvacuatedEnergyGeneratorLimitByType.builder()
+            .generators(List.of(NonEvacuatedEnergyGeneratorsCappingsByType.builder()
                     .energySource(EnergySource.WIND)
                     .activated(true)
                     .generators(List.of(new EquipmentsContainer(CAPPING_GENERATORS_WIND_FILTER_UUID, "capping_generators_wind")))
                     .build(),
-                NonEvacuatedEnergyGeneratorLimitByType.builder()
+                NonEvacuatedEnergyGeneratorsCappingsByType.builder()
                     .energySource(EnergySource.SOLAR)
                     .activated(true)
                     .generators(List.of(new EquipmentsContainer(CAPPING_GENERATORS_SOLAR_FILTER_UUID, "capping_generators_solar")))
                     .build(),
-                NonEvacuatedEnergyGeneratorLimitByType.builder()
+                NonEvacuatedEnergyGeneratorsCappingsByType.builder()
                     .energySource(EnergySource.HYDRO)
                     .activated(true)
                     .generators(List.of(new EquipmentsContainer(CAPPING_GENERATORS_HYDRO_FILTER_UUID, "capping_generators_hydro")))
@@ -667,14 +667,14 @@ public class NonEvacuatedEnergyTest {
         // build non evacuated energy input data
         List<NonEvacuatedEnergyStageDefinition> stagesDefinition = buildStagesDefinition();
         List<NonEvacuatedEnergyStagesSelection> stagesSelection = buildStagesSelection();
-        NonEvacuatedEnergyGeneratorsLimit generatorsLimit = buildGeneratorsLimit();
+        NonEvacuatedEnergyGeneratorsCappings generatorsCappings = buildGeneratorsCappings();
         List<NonEvacuatedEnergyMonitoredBranches> monitoredBranches = buildMonitoredBranches();
         List<NonEvacuatedEnergyContingencies> contingencies = buildContingencies();
 
         NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData = NonEvacuatedEnergyInputData.builder()
             .nonEvacuatedEnergyStagesDefinition(stagesDefinition)
             .nonEvacuatedEnergyStagesSelection(stagesSelection)
-            .nonEvacuatedEnergyGeneratorsLimit(generatorsLimit)
+            .nonEvacuatedEnergyGeneratorsCappings(generatorsCappings)
             .nonEvacuatedEnergyMonitoredBranches(monitoredBranches)
             .nonEvacuatedEnergyContingencies(contingencies)
             .parameters(SensitivityAnalysisParameters.load())

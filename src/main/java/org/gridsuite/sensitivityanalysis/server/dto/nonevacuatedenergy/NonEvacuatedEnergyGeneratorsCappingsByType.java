@@ -25,8 +25,8 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
-@Schema(description = "Sensitivity analysis non evacuated energy generators limit by type")
-public class NonEvacuatedEnergyGeneratorLimitByType {
+@Schema(description = "Sensitivity analysis non evacuated energy generators cappings by type")
+public class NonEvacuatedEnergyGeneratorsCappingsByType {
     List<EquipmentsContainer> generators;
 
     EnergySource energySource;

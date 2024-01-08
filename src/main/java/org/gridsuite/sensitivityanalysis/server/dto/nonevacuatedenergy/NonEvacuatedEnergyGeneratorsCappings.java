@@ -23,9 +23,9 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
-@Schema(description = "Sensitivity analysis non evacuated energy generators limit")
-public class NonEvacuatedEnergyGeneratorsLimit {
+@Schema(description = "Sensitivity analysis non evacuated energy generators cappings")
+public class NonEvacuatedEnergyGeneratorsCappings {
     Double sensitivityThreshold;
 
-    List<NonEvacuatedEnergyGeneratorLimitByType> generators;
+    List<NonEvacuatedEnergyGeneratorsCappingsByType> generators;
 }

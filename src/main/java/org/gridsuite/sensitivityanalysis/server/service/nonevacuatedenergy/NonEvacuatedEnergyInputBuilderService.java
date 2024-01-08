@@ -28,7 +28,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.EquipmentsContainer;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyContingencies;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyGeneratorLimitByType;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyGeneratorsCappingsByType;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyMonitoredBranches;
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
@@ -428,11 +428,11 @@ public class NonEvacuatedEnergyInputBuilderService {
                                                         Network network,
                                                         Reporter reporter) {
         List<NonEvacuatedEnergyMonitoredBranches> monitoredBranches = context.getNonEvacuatedEnergyInputData().getNonEvacuatedEnergyMonitoredBranches();
-        List<NonEvacuatedEnergyGeneratorLimitByType> generatorsLimitByType = context.getNonEvacuatedEnergyInputData().getNonEvacuatedEnergyGeneratorsLimit().getGenerators();
+        List<NonEvacuatedEnergyGeneratorsCappingsByType> generatorsCappingsByType = context.getNonEvacuatedEnergyInputData().getNonEvacuatedEnergyGeneratorsCappings().getGenerators();
 
         // build inputs for the sensitivities in MW per generation kind (similar to sensitivity analysis computation with injections set)
-        generatorsLimitByType.stream()
-            .filter(NonEvacuatedEnergyGeneratorLimitByType::isActivated) // we keep only activated generators limits
+        generatorsCappingsByType.stream()
+            .filter(NonEvacuatedEnergyGeneratorsCappingsByType::isActivated) // we keep only activated generators limits
             .forEach(generatorLimitByType -> {
                 // build sensitivity variable sets from generators limits in input data
                 List<SensitivityVariableSet> vInjectionsSets = buildSensitivityVariableSets(
@@ -462,8 +462,8 @@ public class NonEvacuatedEnergyInputBuilderService {
             });
 
         // build inputs for the sensitivities in A for each generator (similar to sensitivity analysis computation with injections)
-        generatorsLimitByType.stream()
-            .filter(NonEvacuatedEnergyGeneratorLimitByType::isActivated)  // we keep only activated generators limits
+        generatorsCappingsByType.stream()
+            .filter(NonEvacuatedEnergyGeneratorsCappingsByType::isActivated)  // we keep only activated generators limits
             .forEach(generatorLimitByType -> {
                 // build sensitivity factors from the variables (=generators), the contingencies and the monitored branches sets
                 monitoredBranches.stream()

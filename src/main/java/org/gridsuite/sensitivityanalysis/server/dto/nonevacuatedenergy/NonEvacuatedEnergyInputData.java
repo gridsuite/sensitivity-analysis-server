@@ -29,7 +29,7 @@ public class NonEvacuatedEnergyInputData {
 
     private List<NonEvacuatedEnergyStagesSelection> nonEvacuatedEnergyStagesSelection;
 
-    private NonEvacuatedEnergyGeneratorsLimit nonEvacuatedEnergyGeneratorsLimit;
+    private NonEvacuatedEnergyGeneratorsCappings nonEvacuatedEnergyGeneratorsCappings;
 
     private List<NonEvacuatedEnergyMonitoredBranches> nonEvacuatedEnergyMonitoredBranches;
 
