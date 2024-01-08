@@ -11,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-public class CsvFileInputData {
+public class SensitivityAnalysisCsvFileInfos {
     private String selector;
     private List<String> csvHeaders;
 }
