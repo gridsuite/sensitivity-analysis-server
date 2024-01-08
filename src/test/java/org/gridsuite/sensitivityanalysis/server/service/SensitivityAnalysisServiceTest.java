@@ -66,7 +66,6 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -346,9 +345,9 @@ public class SensitivityAnalysisServiceTest {
                 .tabSelection(ResultTab.N)
                 .build();
 
-        var csv = analysisService.exportSensitivityResultsAsCsv(resultUuid, exportCsvSelector);
-        var csvStr = new String(csv, StandardCharsets.UTF_8);
-        List<String> actualLines = Arrays.asList(csvStr.split("`\n"));
+        byte[] csv = analysisService.exportSensitivityResultsAsCsv(resultUuid, exportCsvSelector, List.of("functionId,variableId,functionReference,value"));
+        String csvStr = new String(csv, StandardCharsets.UTF_8);
+        List<String> actualLines = Arrays.asList(csvStr.split("\n"));
         List<String> expectedLines = new ArrayList<>(List.of("functionId,variableId,functionReference,value",
                 "l1,GEN,2.9,500.1",
                 "l2,GEN,2.8,500.2",

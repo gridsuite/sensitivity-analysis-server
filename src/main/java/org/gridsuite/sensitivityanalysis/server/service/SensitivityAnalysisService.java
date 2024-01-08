@@ -22,10 +22,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -103,44 +107,46 @@ public class SensitivityAnalysisService {
         return defaultProvider;
     }
 
-    public byte[] exportSensitivityResultsAsCsv(UUID resultUuid, ResultsSelector selector) {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        CsvWriterSettings settings = new CsvWriterSettings();
-        CsvWriter csvWriter = new CsvWriter(outputStream, settings);
-
+    public byte[] exportSensitivityResultsAsCsv(UUID resultUuid, ResultsSelector selector, List<String> headers) {
         SensitivityRunQueryResult result = getRunResult(resultUuid, selector);
         if (result == null) {
             return null;
         }
 
-        if (selector.getTabSelection() == ResultTab.N) {
-            csvWriter.writeHeaders(List.of("functionId", "variableId", "functionReference", "value"));
-            result.getSensitivities()
-                    .forEach(sensitivity -> {
-                        csvWriter.writeRow(
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
+            zipOutputStream.putNextEntry(new ZipEntry("sensitivity_result.csv"));
+
+            CsvWriterSettings settings = new CsvWriterSettings();
+            CsvWriter csvWriter = new CsvWriter(zipOutputStream, settings);
+            csvWriter.writeHeaders(headers);
+            if (selector.getTabSelection() == ResultTab.N) {
+                result.getSensitivities()
+                        .forEach(sensitivity -> csvWriter.writeRow(
                                 sensitivity.getFuncId(),
                                 sensitivity.getVarId(),
                                 sensitivity.getFunctionReference(),
                                 sensitivity.getValue()
-                        );
-                    });
-        } else if (selector.getTabSelection() == ResultTab.N_K) {
-            csvWriter.writeHeaders(List.of("functionId", "variableId", "contingencyId", "functionReference", "value", "functionReferenceAfter"));
-            result.getSensitivities()
-                    .forEach(sensitivity -> {
-                        SensitivityWithContingency sensitivityWithContingency = (SensitivityWithContingency) sensitivity;
-                        csvWriter.writeRow(
-                                sensitivityWithContingency.getFuncId(),
-                                sensitivityWithContingency.getVarId(),
-                                sensitivityWithContingency.getContingencyId(),
-                                sensitivityWithContingency.getFunctionReference(),
-                                sensitivityWithContingency.getValue(),
-                                sensitivityWithContingency.getFunctionReferenceAfter()
-                        );
-                    });
-        }
-        csvWriter.close();
+                        ));
+            } else if (selector.getTabSelection() == ResultTab.N_K) {
+                result.getSensitivities()
+                        .forEach(sensitivity -> {
+                            SensitivityWithContingency sensitivityWithContingency = (SensitivityWithContingency) sensitivity;
+                            csvWriter.writeRow(
+                                    sensitivityWithContingency.getFuncId(),
+                                    sensitivityWithContingency.getVarId(),
+                                    sensitivityWithContingency.getContingencyId(),
+                                    sensitivityWithContingency.getFunctionReference(),
+                                    sensitivityWithContingency.getValue(),
+                                    sensitivityWithContingency.getFunctionReferenceAfter()
+                            );
+                        });
+            }
 
-        return outputStream.toByteArray();
+            csvWriter.close();
+            return outputStream.toByteArray();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 }

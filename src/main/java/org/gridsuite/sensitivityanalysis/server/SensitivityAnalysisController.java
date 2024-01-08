@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.gridsuite.sensitivityanalysis.server.dto.CsvFileInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
@@ -206,18 +207,25 @@ public class SensitivityAnalysisController {
         return ResponseEntity.ok().body(service.getDefaultProvider());
     }
 
-    @GetMapping(value = "/results/{resultUuid}/csv")
+    @PostMapping(value = "/results/{resultUuid}/csv")
     @Operation(summary = "export sensitivity results as csv file")
     @ApiResponses(@ApiResponse(responseCode = "200", description = "Sensitivity results successfully exported as csv file"))
     public ResponseEntity<byte[]> exportSensitivityResultsAsCsv(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
-                                                                @RequestParam(name = "selector", required = false) String selectorJson) {
+                                                                @RequestBody CsvFileInputData csvFileInputData) {
         try {
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.setContentType(APPLICATION_OCTET_STREAM);
             httpHeaders.setContentDispositionFormData("attachment", "sensitivity_results.csv");
+            byte[] csv = service.exportSensitivityResultsAsCsv(resultUuid,
+                    getSelector(csvFileInputData.getSelector()),
+                    csvFileInputData.getCsvHeaders());
+
+            if (csv == null) {
+                return ResponseEntity.notFound().build();
+            }
             return ResponseEntity.ok()
                     .headers(httpHeaders)
-                    .body(service.exportSensitivityResultsAsCsv(resultUuid, getSelector(selectorJson)));
+                    .body(csv);
         } catch (JsonProcessingException e) {
             return ResponseEntity.badRequest().build();
         }
