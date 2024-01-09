@@ -737,14 +737,14 @@ public class NonEvacuatedEnergyTest {
     @SneakyThrows
     @After
     public void tearDown() {
-        mockMvc.perform(delete("/" + VERSION + "/non-evacuated-energy-results"))
+        mockMvc.perform(delete("/" + VERSION + "/non-evacuated-energy/results"))
             .andExpect(status().isOk());
     }
 
     @Test
     public void runTest() throws Exception {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID, NETWORK_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy/run-and-save?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID, NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "userId")
             .content(INPUT))
@@ -758,7 +758,7 @@ public class NonEvacuatedEnergyTest {
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
 
         // get result
-        result = mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy-results/{resultUuid}", RESULT_UUID))
+        result = mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy/results/{resultUuid}", RESULT_UUID))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
@@ -766,14 +766,14 @@ public class NonEvacuatedEnergyTest {
         JSONAssert.assertEquals(resourceToString("/non-evacuated-energy-results.json"), res, JSONCompareMode.LENIENT);
 
         // should throw not found if result does not exist
-        mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy-results/{resultUuid}", OTHER_RESULT_UUID))
+        mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy/results/{resultUuid}", OTHER_RESULT_UUID))
             .andExpect(status().isNotFound());
 
         // test one result deletion
-        mockMvc.perform(delete("/" + VERSION + "/non-evacuated-energy-results/{resultUuid}", RESULT_UUID))
+        mockMvc.perform(delete("/" + VERSION + "/non-evacuated-energy/results/{resultUuid}", RESULT_UUID))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy-results/{resultUuid}", RESULT_UUID))
+        mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy/results/{resultUuid}", RESULT_UUID))
             .andExpect(status().isNotFound());
     }
 
@@ -781,16 +781,16 @@ public class NonEvacuatedEnergyTest {
     @Test
     public void testStatus() {
         MvcResult result = mockMvc.perform(get(
-                "/" + VERSION + "/non-evacuated-energy-results/{resultUuid}/status", RESULT_UUID))
+                "/" + VERSION + "/non-evacuated-energy/results/{resultUuid}/status", RESULT_UUID))
             .andExpect(status().isOk())
             .andReturn();
         assertEquals("", result.getResponse().getContentAsString());
 
-        mockMvc.perform(put("/" + VERSION + "/non-evacuated-energy-results/invalidate-status?resultUuid=" + RESULT_UUID))
+        mockMvc.perform(put("/" + VERSION + "/non-evacuated-energy/results/invalidate-status?resultUuid=" + RESULT_UUID))
             .andExpect(status().isOk());
 
         result = mockMvc.perform(get(
-                "/" + VERSION + "/non-evacuated-energy-results/{resultUuid}/status", RESULT_UUID))
+                "/" + VERSION + "/non-evacuated-energy/results/{resultUuid}/status", RESULT_UUID))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
@@ -800,14 +800,14 @@ public class NonEvacuatedEnergyTest {
     @Test
     public void stopTest() throws Exception {
         mockMvc.perform(post(
-            "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID, NETWORK_UUID)
+            "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy/run-and-save?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID, NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "userId")
             .content(INPUT))
             .andExpect(status().isOk());
 
         // stop non evacuated energy analysis
-        mockMvc.perform(put("/" + VERSION + "/non-evacuated-energy-results/{resultUuid}/stop" + "?receiver=me", RESULT_UUID))
+        mockMvc.perform(put("/" + VERSION + "/non-evacuated-energy/results/{resultUuid}/stop" + "?receiver=me", RESULT_UUID))
             .andExpect(status().isOk());
 
         // message stopped should have been sent
@@ -822,7 +822,7 @@ public class NonEvacuatedEnergyTest {
     @Test
     public void testWithBadNetworkError() {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID, NETWORK_ERROR_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy/run-and-save?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID, NETWORK_ERROR_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "userId")
             .content(INPUT))
@@ -838,13 +838,13 @@ public class NonEvacuatedEnergyTest {
         assertEquals(FAIL_MESSAGE + " : " + ERROR_MESSAGE, failMessage.getHeaders().get("message"));
 
         // No result available
-        mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy-results/{resultUuid}", RESULT_UUID))
+        mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy/results/{resultUuid}", RESULT_UUID))
             .andExpect(status().isNotFound());
     }
 
     private void testLimitError(String inputData, String variantId, UUID networkUuid, String messageExpected) throws Exception {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + variantId, networkUuid)
+                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy/run-and-save?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + variantId, networkUuid)
                 .contentType(MediaType.APPLICATION_JSON)
                 .header(HEADER_USER_ID, "userId")
                 .content(inputData))
@@ -860,7 +860,7 @@ public class NonEvacuatedEnergyTest {
         assertTrue(((String) failMessage.getHeaders().get("message")).contains(messageExpected));
 
         // No result available
-        mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy-results/{resultUuid}", RESULT_UUID))
+        mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy/results/{resultUuid}", RESULT_UUID))
             .andExpect(status().isNotFound());
     }
 

@@ -212,7 +212,7 @@ public class SensitivityAnalysisController {
         return ResponseEntity.ok().body(service.getDefaultProvider());
     }
 
-    @PostMapping(value = "/networks/{networkUuid}/non-evacuated-energy", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/networks/{networkUuid}/non-evacuated-energy/run-and-save", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @Operation(summary = "Run a non evacuated energy sensitivity analysis on a network and save results in the database")
     @ApiResponses(@ApiResponse(responseCode = "200", description = "The non evacuated energy sensitivity analysis default provider has been found"))
     public ResponseEntity<UUID> runNonEvacuatedEnergy(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
@@ -228,7 +228,7 @@ public class SensitivityAnalysisController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
-    @GetMapping(value = "/non-evacuated-energy-results/{resultUuid}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/non-evacuated-energy/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Get a non evacuated energy result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The non evacuated energy result"),
         @ApiResponse(responseCode = "404", description = "Non evacuated energy result has not been found")})
@@ -239,7 +239,7 @@ public class SensitivityAnalysisController {
             : ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping(value = "/non-evacuated-energy-results/{resultUuid}", produces = APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/non-evacuated-energy/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Delete a non evacuated energy result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The non evacuated energy result has been deleted")})
     public ResponseEntity<Void> deleteNonEvacuatedEnergyResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
@@ -247,7 +247,7 @@ public class SensitivityAnalysisController {
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping(value = "/non-evacuated-energy-results", produces = APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/non-evacuated-energy/results", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Delete all non evacuated energy results from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All non evacuated energy results have been deleted")})
     public ResponseEntity<Void> deleteNonEvacuatedEnergyResults() {
@@ -255,7 +255,7 @@ public class SensitivityAnalysisController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping(value = "/non-evacuated-energy-results/{resultUuid}/status", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/non-evacuated-energy/results/{resultUuid}/status", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Get the non evacuated energy status from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The non evacuated energy status status")})
     public ResponseEntity<String> getNonEvacuatedEnergyStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
@@ -263,7 +263,7 @@ public class SensitivityAnalysisController {
         return ResponseEntity.ok().body(result);
     }
 
-    @PutMapping(value = "/non-evacuated-energy-results/invalidate-status", produces = APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/non-evacuated-energy/results/invalidate-status", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Invalidate the non evacuated energy status from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The non evacuated energy status has been invalidated")})
     public ResponseEntity<Void> invalidateNonEvacuatedEnergyStatus(@Parameter(description = "Result uuids") @RequestParam(name = "resultUuid") List<UUID> resultUuids) {
@@ -271,7 +271,7 @@ public class SensitivityAnalysisController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping(value = "/non-evacuated-energy-results/{resultUuid}/stop", produces = APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/non-evacuated-energy/results/{resultUuid}/stop", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Stop a non evacuated energy computation")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The non evacuated energy has been stopped")})
     public ResponseEntity<Void> stopNonEvacuatedEnergy(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
