@@ -22,6 +22,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisRunContext;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService;
@@ -266,7 +267,7 @@ public class SensitivityAnalysisController {
     @Operation(summary = "Invalidate the non evacuated energy status from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The non evacuated energy status has been invalidated")})
     public ResponseEntity<Void> invalidateNonEvacuatedEnergyStatus(@Parameter(description = "Result uuids") @RequestParam(name = "resultUuid") List<UUID> resultUuids) {
-        nonEvacuatedEnergyService.setStatus(resultUuids, SensitivityAnalysisStatus.NOT_DONE.name());
+        nonEvacuatedEnergyService.setStatus(resultUuids, NonEvacuatedEnergyStatus.NOT_DONE.name());
         return ResponseEntity.ok().build();
     }
 

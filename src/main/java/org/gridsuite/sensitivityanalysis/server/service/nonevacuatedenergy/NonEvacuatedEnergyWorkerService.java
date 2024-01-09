@@ -41,9 +41,9 @@ import com.powsybl.sensitivity.SensitivityValue;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.sensitivityanalysis.server.dto.EquipmentsContainer;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStageDefinition;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStagesSelection;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.ContingencyStageDetailResult;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.GeneratorCapping;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.MonitoredBranchDetailResult;
@@ -900,7 +900,7 @@ public class NonEvacuatedEnergyWorkerService {
                 long nanoTime = System.nanoTime();
                 LOGGER.info("Just run in {}s", TimeUnit.NANOSECONDS.toSeconds(nanoTime - startTime.getAndSet(nanoTime)));
 
-                nonEvacuatedEnergyRepository.insert(nonEvacuatedEnergyResultContext.getResultUuid(), result, SensitivityAnalysisStatus.COMPLETED.name());
+                nonEvacuatedEnergyRepository.insert(nonEvacuatedEnergyResultContext.getResultUuid(), result, NonEvacuatedEnergyStatus.COMPLETED.name());
                 long finalNanoTime = System.nanoTime();
                 LOGGER.info("Stored in {}s", TimeUnit.NANOSECONDS.toSeconds(finalNanoTime - startTime.getAndSet(finalNanoTime)));
 
@@ -919,7 +919,7 @@ public class NonEvacuatedEnergyWorkerService {
                     LOGGER.error(FAIL_MESSAGE, e);
                     notificationService.publishFail("publishNonEvacuatedEnergyFailed-out-0", nonEvacuatedEnergyResultContext.getResultUuid(), nonEvacuatedEnergyResultContext.getRunContext().getReceiver(), e.getMessage(), nonEvacuatedEnergyResultContext.getRunContext().getUserId());
                     nonEvacuatedEnergyRepository.delete(nonEvacuatedEnergyResultContext.getResultUuid());
-                    nonEvacuatedEnergyRepository.insertStatus(List.of(nonEvacuatedEnergyResultContext.getResultUuid()), SensitivityAnalysisStatus.FAILED.name());
+                    nonEvacuatedEnergyRepository.insertStatus(List.of(nonEvacuatedEnergyResultContext.getResultUuid()), NonEvacuatedEnergyStatus.FAILED.name());
                 }
             } finally {
                 futures.remove(nonEvacuatedEnergyResultContext.getResultUuid());
