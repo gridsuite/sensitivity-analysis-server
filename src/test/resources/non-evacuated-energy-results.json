@@ -83,7 +83,7 @@
     "EOL_100-PV_70-HYDRO_50": {
       "resultsByContingency": {
         "": {
-          "resultsbyMonitoredBranch": {
+          "resultsByMonitoredBranch": {
             "line3": {
               "intensity": 130.0,
               "limitName": "IST",
@@ -154,7 +154,7 @@
           }
         },
         "c1": {
-          "resultsbyMonitoredBranch": {
+          "resultsByMonitoredBranch": {
             "line3": {
               "intensity": 130.0,
               "limitName": "IT10",
@@ -225,7 +225,7 @@
           }
         },
         "c2": {
-          "resultsbyMonitoredBranch": {
+          "resultsByMonitoredBranch": {
             "line3": {
               "intensity": 100.0,
               "limitName": "IT10",
@@ -260,7 +260,7 @@
     "EOL_70-PV_50-HYDRO_30": {
       "resultsByContingency": {
         "": {
-          "resultsbyMonitoredBranch": {
+          "resultsByMonitoredBranch": {
             "line3": {
               "intensity": 130.0,
               "limitName": "IST",
@@ -331,7 +331,7 @@
           }
         },
         "c1": {
-          "resultsbyMonitoredBranch": {
+          "resultsByMonitoredBranch": {
             "line3": {
               "intensity": 120.0,
               "limitName": "IT10",
@@ -357,7 +357,7 @@
           }
         },
         "c2": {
-          "resultsbyMonitoredBranch": {
+          "resultsByMonitoredBranch": {
             "line3": {
               "intensity": 100.0,
               "limitName": "IT10",
