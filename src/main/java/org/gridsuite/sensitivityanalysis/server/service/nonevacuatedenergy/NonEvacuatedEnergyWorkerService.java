@@ -39,6 +39,7 @@ import com.powsybl.sensitivity.SensitivityFactor;
 import com.powsybl.sensitivity.SensitivityFunctionType;
 import com.powsybl.sensitivity.SensitivityValue;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.util.Pair;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStageDefinition;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStagesSelection;
@@ -257,13 +258,35 @@ public class NonEvacuatedEnergyWorkerService {
         }
     }
 
+    private Pair<String, Double> getLimitValue(SensitivityFactor factor, boolean isIst, Float coeff, String limitName,
+                                               Optional<CurrentLimits> currentLimits1, Optional<CurrentLimits> currentLimits2) {
+        String name = null;
+        double limitValue = Double.NaN;
+
+        if (isIst) {
+            name = "IST";
+            if (factor.getFunctionType() == SensitivityFunctionType.BRANCH_CURRENT_1) {
+                limitValue = currentLimits1.map(l -> l.getPermanentLimit() * coeff / 100).orElse(Double.NaN);
+            } else if (factor.getFunctionType() == SensitivityFunctionType.BRANCH_CURRENT_2) {
+                limitValue = currentLimits2.map(l -> l.getPermanentLimit() * coeff / 100).orElse(Double.NaN);
+            }
+        } else if (!StringUtils.isEmpty(limitName)) {
+            name = limitName;
+            if (factor.getFunctionType() == SensitivityFunctionType.BRANCH_CURRENT_1) {
+                Optional<LoadingLimits.TemporaryLimit> limit = currentLimits1.flatMap(currentLimits -> currentLimits.getTemporaryLimits().stream().filter(l -> l.getName().equals(limitName)).findFirst());
+                limitValue = limit.map(temporaryLimit -> temporaryLimit.getValue() * coeff / 100).orElse(Double.NaN);
+            } else if (factor.getFunctionType() == SensitivityFunctionType.BRANCH_CURRENT_2) {
+                Optional<LoadingLimits.TemporaryLimit> limit = currentLimits2.flatMap(currentLimits -> currentLimits.getTemporaryLimits().stream().filter(l -> l.getName().equals(limitName)).findFirst());
+                limitValue = limit.map(temporaryLimit -> temporaryLimit.getValue() * coeff / 100).orElse(Double.NaN);
+            }
+        }
+        return new Pair<>(name, limitValue);
+    }
+
     private double getLimitValueFromFactorAndSensitivityValue(SensitivityValue sensitivityValue,
                                                               SensitivityFactor factor,
                                                               MonitoredBranchThreshold monitoredBranchThreshold,
                                                               MonitoredBranchDetailResult monitoredBranchDetailResult) {
-        double limitValue = Double.NaN;
-        String limitName = null;
-
         int contingencyIndex = sensitivityValue.getContingencyIndex();
 
         Branch<?> branch = monitoredBranchThreshold.getBranch();
@@ -273,54 +296,23 @@ public class NonEvacuatedEnergyWorkerService {
         // use contingencyIndex (-1 or not) to check istN/Nlimitname or istNm1/Nm1Limitname
         // limits in iidm are in A, so consider only SensitivityFunctionType BRANCH_CURRENT to return
         // the limit value multiplied by the input coefficient (nCoeff/nm1Coeff)
+        Pair<String, Double> limit;
         if (contingencyIndex < 0) { // N
-            if (monitoredBranchThreshold.isIstN()) {
-                limitName = "IST";
-                if (factor.getFunctionType() == SensitivityFunctionType.BRANCH_CURRENT_1) {
-                    limitValue = currentLimits1.map(l -> l.getPermanentLimit() * monitoredBranchThreshold.getNCoeff() / 100).orElse(Double.NaN);
-                } else if (factor.getFunctionType() == SensitivityFunctionType.BRANCH_CURRENT_2) {
-                    limitValue = currentLimits2.map(l -> l.getPermanentLimit() * monitoredBranchThreshold.getNCoeff() / 100).orElse(Double.NaN);
-                }
-            } else if (!StringUtils.isEmpty(monitoredBranchThreshold.getNLimitName())) {
-                limitName = monitoredBranchThreshold.getNLimitName();
-                if (factor.getFunctionType() == SensitivityFunctionType.BRANCH_CURRENT_1) {
-                    Optional<LoadingLimits.TemporaryLimit> limit = currentLimits1.flatMap(currentLimits -> currentLimits.getTemporaryLimits().stream().filter(l -> l.getName().equals(monitoredBranchThreshold.getNLimitName())).findFirst());
-                    limitValue = limit.map(temporaryLimit -> temporaryLimit.getValue() * monitoredBranchThreshold.getNCoeff() / 100).orElse(Double.NaN);
-                } else if (factor.getFunctionType() == SensitivityFunctionType.BRANCH_CURRENT_2) {
-                    Optional<LoadingLimits.TemporaryLimit> limit = currentLimits2.flatMap(currentLimits -> currentLimits.getTemporaryLimits().stream().filter(l -> l.getName().equals(monitoredBranchThreshold.getNLimitName())).findFirst());
-                    limitValue = limit.map(temporaryLimit -> temporaryLimit.getValue() * monitoredBranchThreshold.getNCoeff() / 100).orElse(Double.NaN);
-                }
-            }
+            limit = getLimitValue(factor, monitoredBranchThreshold.isIstN(), monitoredBranchThreshold.getNCoeff(), monitoredBranchThreshold.getNLimitName(), currentLimits1, currentLimits2);
         } else {  // N-1
-            if (monitoredBranchThreshold.isIstNm1()) {
-                limitName = "IST";
-                if (factor.getFunctionType() == SensitivityFunctionType.BRANCH_CURRENT_1) {
-                    limitValue = currentLimits1.map(l -> l.getPermanentLimit() * monitoredBranchThreshold.getNm1Coeff() / 100).orElse(Double.NaN);
-                } else if (factor.getFunctionType() == SensitivityFunctionType.BRANCH_CURRENT_2) {
-                    limitValue = currentLimits2.map(l -> l.getPermanentLimit() * monitoredBranchThreshold.getNm1Coeff() / 100).orElse(Double.NaN);
-                }
-            } else if (!StringUtils.isEmpty(monitoredBranchThreshold.getNm1LimitName())) {
-                limitName = monitoredBranchThreshold.getNm1LimitName();
-                if (factor.getFunctionType() == SensitivityFunctionType.BRANCH_CURRENT_1) {
-                    Optional<LoadingLimits.TemporaryLimit> limit = currentLimits1.flatMap(currentLimits -> currentLimits.getTemporaryLimits().stream().filter(l -> l.getName().equals(monitoredBranchThreshold.getNm1LimitName())).findFirst());
-                    limitValue = limit.map(temporaryLimit -> temporaryLimit.getValue() * monitoredBranchThreshold.getNm1Coeff() / 100).orElse(Double.NaN);
-                } else if (factor.getFunctionType() == SensitivityFunctionType.BRANCH_CURRENT_2) {
-                    Optional<LoadingLimits.TemporaryLimit> limit = currentLimits2.flatMap(currentLimits -> currentLimits.getTemporaryLimits().stream().filter(l -> l.getName().equals(monitoredBranchThreshold.getNm1LimitName())).findFirst());
-                    limitValue = limit.map(temporaryLimit -> temporaryLimit.getValue() * monitoredBranchThreshold.getNm1Coeff() / 100).orElse(Double.NaN);
-                }
-            }
+            limit = getLimitValue(factor, monitoredBranchThreshold.isIstNm1(), monitoredBranchThreshold.getNm1Coeff(), monitoredBranchThreshold.getNm1LimitName(), currentLimits1, currentLimits2);
         }
 
         // update monitored branch detail result
-        if (!Double.isNaN(limitValue)) {  // sensitivity in A/MW
+        if (!Double.isNaN(limit.getSecond())) {  // sensitivity in A/MW
             monitoredBranchDetailResult.setIntensity(sensitivityValue.getFunctionReference());
-            monitoredBranchDetailResult.setLimitName(limitName);
-            monitoredBranchDetailResult.setLimitValue(limitValue);
-            monitoredBranchDetailResult.setPercentOverload((sensitivityValue.getFunctionReference() / limitValue) * 100.);
+            monitoredBranchDetailResult.setLimitName(limit.getFirst());
+            monitoredBranchDetailResult.setLimitValue(limit.getSecond());
+            monitoredBranchDetailResult.setPercentOverload((sensitivityValue.getFunctionReference() / limit.getSecond()) * 100.);
         }
 
         // limit value is set only for sensitivity in A/MW : it will be NaN for sensitivity in MW/MW
-        return limitValue;
+        return limit.getSecond();
     }
 
     private double computeVariationForMonitoredBranch(Network network,
