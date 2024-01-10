@@ -7,11 +7,11 @@
 package org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.experimental.SuperBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,12 +19,13 @@ import java.util.Map;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-@SuperBuilder
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
 @Schema(description = "Sensitivity analysis non evacuated energy stage detail result for a contingency")
 public class ContingencyStageDetailResult {
     @Builder.Default
-    private Map<String, MonitoredBranchDetailResult> resultsbyMonitoredBranch = new HashMap<>();
+    private Map<String, MonitoredBranchDetailResult> resultsByMonitoredBranch = new HashMap<>();
 }

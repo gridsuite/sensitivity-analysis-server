@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022, RTE (http://www.rte-france.com)
+ * Copyright (c) 2023, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -8,6 +8,7 @@ package org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy
 
 import org.gridsuite.sensitivityanalysis.server.entities.nonevacuatedenergy.NonEvacuatedEnergyGlobalStatusEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.nonevacuatedenergy.NonEvacuatedEnergyResultEntity;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -20,16 +21,16 @@ import java.util.stream.Collectors;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-@org.springframework.stereotype.Repository
+@Repository
 public class NonEvacuatedEnergyRepository {
 
-    private final NonEvacuatedEnergyStatusRepository globalStatusRepository;
+    private final NonEvacuatedEnergyStatusRepository nonEvacuatedEnergyStatusRepository;
 
     private final NonEvacuatedEnergyResultRepository nonEvacuatedEnergyResultRepository;
 
-    public NonEvacuatedEnergyRepository(NonEvacuatedEnergyStatusRepository globalStatusRepository,
+    public NonEvacuatedEnergyRepository(NonEvacuatedEnergyStatusRepository nonEvacuatedEnergyStatusRepository,
                                         NonEvacuatedEnergyResultRepository nonEvacuatedEnergyResultRepository) {
-        this.globalStatusRepository = globalStatusRepository;
+        this.nonEvacuatedEnergyStatusRepository = nonEvacuatedEnergyStatusRepository;
         this.nonEvacuatedEnergyResultRepository = nonEvacuatedEnergyResultRepository;
     }
 
@@ -40,7 +41,7 @@ public class NonEvacuatedEnergyRepository {
     @Transactional
     public void insertStatus(List<UUID> resultUuids, String status) {
         Objects.requireNonNull(resultUuids);
-        globalStatusRepository.saveAll(resultUuids.stream()
+        nonEvacuatedEnergyStatusRepository.saveAll(resultUuids.stream()
             .map(uuid -> toStatusEntity(uuid, status)).collect(Collectors.toList()));
     }
 
@@ -52,26 +53,26 @@ public class NonEvacuatedEnergyRepository {
                 LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 result));
         }
-        globalStatusRepository.save(toStatusEntity(resultUuid, status));
+        nonEvacuatedEnergyStatusRepository.save(toStatusEntity(resultUuid, status));
     }
 
     @Transactional
     public void delete(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        globalStatusRepository.deleteByResultUuid(resultUuid);
+        nonEvacuatedEnergyStatusRepository.deleteByResultUuid(resultUuid);
         nonEvacuatedEnergyResultRepository.deleteByResultUuid(resultUuid);
     }
 
     @Transactional
     public void deleteAll() {
-        globalStatusRepository.deleteAll();
+        nonEvacuatedEnergyStatusRepository.deleteAll();
         nonEvacuatedEnergyResultRepository.deleteAll();
     }
 
     @Transactional(readOnly = true)
     public String findStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        NonEvacuatedEnergyGlobalStatusEntity globalEntity = globalStatusRepository.findByResultUuid(resultUuid);
+        NonEvacuatedEnergyGlobalStatusEntity globalEntity = nonEvacuatedEnergyStatusRepository.findByResultUuid(resultUuid);
         if (globalEntity != null) {
             return globalEntity.getStatus();
         } else {

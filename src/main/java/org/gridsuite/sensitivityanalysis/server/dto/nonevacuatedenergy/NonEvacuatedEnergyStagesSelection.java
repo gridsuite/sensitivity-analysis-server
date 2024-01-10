@@ -13,7 +13,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.experimental.SuperBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +20,7 @@ import java.util.List;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -31,7 +30,7 @@ public class NonEvacuatedEnergyStagesSelection {
     String name;
 
     @Builder.Default
-    List<Integer> stagesDefinitonIndex = new ArrayList<>();
+    List<Integer> stagesDefinitionIndex = new ArrayList<>();
 
     @Builder.Default
     @JsonProperty("pMaxPercentsIndex")

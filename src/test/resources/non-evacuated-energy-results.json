@@ -81,7 +81,7 @@
   },
   "stagesDetail": {
     "EOL_100-PV_70-HYDRO_50": {
-      "resultsbyContingency": {
+      "resultsByContingency": {
         "": {
           "resultsbyMonitoredBranch": {
             "line3": {
@@ -258,7 +258,7 @@
       }
     },
     "EOL_70-PV_50-HYDRO_30": {
-      "resultsbyContingency": {
+      "resultsByContingency": {
         "": {
           "resultsbyMonitoredBranch": {
             "line3": {

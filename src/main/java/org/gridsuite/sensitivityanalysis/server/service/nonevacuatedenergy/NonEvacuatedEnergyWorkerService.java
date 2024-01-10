@@ -242,8 +242,8 @@ public class NonEvacuatedEnergyWorkerService {
                             NonEvacuatedEnergyRunContext context,
                             Reporter reporter) {
         // loop on each energy source in the stage input data
-        for (int i = 0; i < stageSelection.getStagesDefinitonIndex().size(); ++i) {
-            int stageDefinitionIndex = stageSelection.getStagesDefinitonIndex().get(i);
+        for (int i = 0; i < stageSelection.getStagesDefinitionIndex().size(); ++i) {
+            int stageDefinitionIndex = stageSelection.getStagesDefinitionIndex().get(i);
             NonEvacuatedEnergyStageDefinition stageDefinition = context.getNonEvacuatedEnergyInputData().getNonEvacuatedEnergyStagesDefinition().get(stageDefinitionIndex);
             float pMaxPercent = stageDefinition.getPMaxPercents().get(stageSelection.getPMaxPercentsIndex().get(i));
             List<EquipmentsContainer> generatorsFilters = stageDefinition.getGenerators();
@@ -580,13 +580,13 @@ public class NonEvacuatedEnergyWorkerService {
             mapEncounteredBranches.putIfAbsent(functionId, Boolean.FALSE);
 
             // create or get result associated with the contingency in the stage detail result
-            ContingencyStageDetailResult contingencyStageDetailResult = stageDetailResult.getResultsbyContingency().computeIfAbsent(contingencyId, k -> new ContingencyStageDetailResult());
+            ContingencyStageDetailResult contingencyStageDetailResult = stageDetailResult.getResultsByContingency().computeIfAbsent(contingencyId, k -> new ContingencyStageDetailResult());
 
             // get monitored branch thresholds information from monitored branch id
             MonitoredBranchThreshold monitoredBranchThreshold = nonEvacuatedEnergyInputs.getBranchesThresholds().get(functionId);
             if (monitoredBranchThreshold != null) {
                 // create or get result associated to the monitored branch
-                MonitoredBranchDetailResult monitoredBranchDetailResult = contingencyStageDetailResult.getResultsbyMonitoredBranch().computeIfAbsent(functionId, k -> new MonitoredBranchDetailResult());
+                MonitoredBranchDetailResult monitoredBranchDetailResult = contingencyStageDetailResult.getResultsByMonitoredBranch().computeIfAbsent(functionId, k -> new MonitoredBranchDetailResult());
 
                 if (factor.isVariableSet()) {
                     monitoredBranchDetailResult.setP(sensitivityValue.getFunctionReference());
@@ -665,7 +665,7 @@ public class NonEvacuatedEnergyWorkerService {
             Double pInitTotal = stageDetailResult.getPInitByEnergySource().values().stream().mapToDouble(d -> d).sum();
 
             // for each contingency results
-            for (Map.Entry<String, ContingencyStageDetailResult> contingencyResultEntry : stageDetailResult.getResultsbyContingency().entrySet()) {
+            for (Map.Entry<String, ContingencyStageDetailResult> contingencyResultEntry : stageDetailResult.getResultsByContingency().entrySet()) {
                 String contingencyName = contingencyResultEntry.getKey();  // null if N
                 ContingencyStageDetailResult contingencyResult = contingencyResultEntry.getValue();
 
@@ -674,7 +674,7 @@ public class NonEvacuatedEnergyWorkerService {
                 stageSummaryContingencyResult.setPLim(0.);
 
                 // for each monitored branch in contingency result
-                for (Map.Entry<String, MonitoredBranchDetailResult> monitoredBranchResultEntry : contingencyResult.getResultsbyMonitoredBranch().entrySet()) {
+                for (Map.Entry<String, MonitoredBranchDetailResult> monitoredBranchResultEntry : contingencyResult.getResultsByMonitoredBranch().entrySet()) {
                     String monitoredBranchId = monitoredBranchResultEntry.getKey();
                     MonitoredBranchDetailResult monitoredBranchDetailResult = monitoredBranchResultEntry.getValue();
 
@@ -883,7 +883,7 @@ public class NonEvacuatedEnergyWorkerService {
 
     private void cleanResultsAndPublishCancel(UUID resultUuid, String receiver) {
         nonEvacuatedEnergyRepository.delete(resultUuid);
-        notificationService.publishStop("publishNonEvacuatedEnergyStopped-out-0", resultUuid, receiver);
+        notificationService.publishNonEvacuatedEnergyStop(resultUuid, receiver);
         LOGGER.info(CANCEL_MESSAGE + " (resultUuid='{}')", resultUuid);
     }
 
@@ -905,7 +905,7 @@ public class NonEvacuatedEnergyWorkerService {
                 LOGGER.info("Stored in {}s", TimeUnit.NANOSECONDS.toSeconds(finalNanoTime - startTime.getAndSet(finalNanoTime)));
 
                 if (result != null) {  // result available
-                    notificationService.sendResultMessage("publishNonEvacuatedEnergyResult-out-0", nonEvacuatedEnergyResultContext.getResultUuid(), nonEvacuatedEnergyResultContext.getRunContext().getReceiver());
+                    notificationService.sendNonEvacuatedEnergyResultMessage(nonEvacuatedEnergyResultContext.getResultUuid(), nonEvacuatedEnergyResultContext.getRunContext().getReceiver());
                     LOGGER.info("Non evacuated energy complete (resultUuid='{}')", nonEvacuatedEnergyResultContext.getResultUuid());
                 } else {  // result not available : stop computation request
                     if (cancelComputationRequests.get(nonEvacuatedEnergyResultContext.getResultUuid()) != null) {
@@ -917,7 +917,7 @@ public class NonEvacuatedEnergyWorkerService {
             } catch (Exception | OutOfMemoryError e) {
                 if (!(e instanceof CancellationException)) {
                     LOGGER.error(FAIL_MESSAGE, e);
-                    notificationService.publishFail("publishNonEvacuatedEnergyFailed-out-0", nonEvacuatedEnergyResultContext.getResultUuid(), nonEvacuatedEnergyResultContext.getRunContext().getReceiver(), e.getMessage(), nonEvacuatedEnergyResultContext.getRunContext().getUserId());
+                    notificationService.publishNonEvacuatedEnergyFail(nonEvacuatedEnergyResultContext.getResultUuid(), nonEvacuatedEnergyResultContext.getRunContext().getReceiver(), e.getMessage(), nonEvacuatedEnergyResultContext.getRunContext().getUserId());
                     nonEvacuatedEnergyRepository.delete(nonEvacuatedEnergyResultContext.getResultUuid());
                     nonEvacuatedEnergyRepository.insertStatus(List.of(nonEvacuatedEnergyResultContext.getResultUuid()), NonEvacuatedEnergyStatus.FAILED.name());
                 }

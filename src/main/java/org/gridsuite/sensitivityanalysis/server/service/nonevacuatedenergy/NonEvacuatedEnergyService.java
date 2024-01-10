@@ -12,7 +12,6 @@ import org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy.
 import org.gridsuite.sensitivityanalysis.server.service.NotificationService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisCancelContext;
 import org.gridsuite.sensitivityanalysis.server.service.UuidGeneratorService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +34,6 @@ public class NonEvacuatedEnergyService {
 
     private final ObjectMapper objectMapper;
 
-    @Autowired
     public NonEvacuatedEnergyService(@Value("${non-evacuated-energy.default-provider}") String defaultProvider,
                                      NonEvacuatedEnergyRepository nonEvacuatedEnergyRepository,
                                      UuidGeneratorService uuidGeneratorService,
@@ -54,7 +52,7 @@ public class NonEvacuatedEnergyService {
 
         // update status to running status
         setStatus(List.of(resultUuid), NonEvacuatedEnergyStatus.RUNNING.name());
-        notificationService.sendRunMessage("publishNonEvacuatedEnergyRun-out-0", new NonEvacuatedEnergyResultContext(resultUuid, nonEvacuatedEnergyRunContext).toMessage(objectMapper));
+        notificationService.sendNonEvacuatedEnergyRunMessage(new NonEvacuatedEnergyResultContext(resultUuid, nonEvacuatedEnergyRunContext).toMessage(objectMapper));
         return resultUuid;
     }
 
@@ -80,7 +78,7 @@ public class NonEvacuatedEnergyService {
     }
 
     public void stop(UUID resultUuid, String receiver) {
-        notificationService.sendCancelMessage("publishNonEvacuatedEnergyCancel-out-0", new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
+        notificationService.sendNonEvacuatedEnergyCancelMessage(new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
     }
 
     public String getDefaultProvider() {

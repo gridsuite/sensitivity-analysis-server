@@ -227,13 +227,13 @@ public class NonEvacuatedEnergyTest {
         return List.of(NonEvacuatedEnergyStagesSelection.builder()
                 .name("EOL_100-PV_70-HYDRO_50")
                 .activated(true)
-                .stagesDefinitonIndex(List.of(0, 1, 2))
+                .stagesDefinitionIndex(List.of(0, 1, 2))
                 .pMaxPercentsIndex(List.of(0, 0, 0))
                 .build(),
             NonEvacuatedEnergyStagesSelection.builder()
                 .name("EOL_70-PV_50-HYDRO_30")
                 .activated(true)
-                .stagesDefinitonIndex(List.of(0, 1, 2))
+                .stagesDefinitionIndex(List.of(0, 1, 2))
                 .pMaxPercentsIndex(List.of(1, 1, 1))
                 .build());
     }
