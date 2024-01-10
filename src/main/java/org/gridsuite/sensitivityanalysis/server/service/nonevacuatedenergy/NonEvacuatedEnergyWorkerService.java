@@ -39,7 +39,6 @@ import com.powsybl.sensitivity.SensitivityFactor;
 import com.powsybl.sensitivity.SensitivityFunctionType;
 import com.powsybl.sensitivity.SensitivityValue;
 import org.apache.commons.lang3.StringUtils;
-import org.gridsuite.sensitivityanalysis.server.dto.EquipmentsContainer;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStageDefinition;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStagesSelection;
@@ -130,6 +129,8 @@ public class NonEvacuatedEnergyWorkerService {
     private static final double EPSILON = 0.0001;
 
     private static final int MAX_ITERATION_IN_STAGE = 4;
+
+    private static final double EPSILON_MAX_VARIATION = 0.3;
 
     // to serialize null key in results by contingency HashMap as "" (for pre-contingency results)
     static class NullKeySerializer extends StdSerializer<Object> {
@@ -246,23 +247,13 @@ public class NonEvacuatedEnergyWorkerService {
             int stageDefinitionIndex = stageSelection.getStagesDefinitionIndex().get(i);
             NonEvacuatedEnergyStageDefinition stageDefinition = context.getNonEvacuatedEnergyInputData().getNonEvacuatedEnergyStagesDefinition().get(stageDefinitionIndex);
             float pMaxPercent = stageDefinition.getPMaxPercents().get(stageSelection.getPMaxPercentsIndex().get(i));
-            List<EquipmentsContainer> generatorsFilters = stageDefinition.getGenerators();
 
-            // get the generators id from the filters
-            List<IdentifiableAttributes> generators = new ArrayList<>();
-            generatorsFilters.forEach(generatorFilter -> {
-                List<IdentifiableAttributes> identifiables = nonEvacuatedEnergyInputBuilderService
-                    .getIdentifiablesFromContainer(context.getNetworkUuid(), context.getVariantId(), generatorFilter, List.of(IdentifiableType.GENERATOR), reporter).toList();
-                generators.addAll(identifiables);
-            });
-
-            // for each generator, set targetP to a percent of maxP
-            generators.forEach(identifiableAttributes -> {
-                Generator generator = network.getGenerator(identifiableAttributes.getId());
-                if (generator != null) {
-                    generator.setTargetP((generator.getMaxP() * pMaxPercent) / 100);
-                }
-            });
+            stageDefinition.getGenerators().stream()
+                .flatMap(generatorFilter -> nonEvacuatedEnergyInputBuilderService.getIdentifiablesFromContainer(context.getNetworkUuid(), context.getVariantId(), generatorFilter, List.of(IdentifiableType.GENERATOR), reporter))
+                .map(IdentifiableAttributes::getId)
+                .map(network::getGenerator)
+                .filter(Objects::nonNull)
+                .forEach(generator -> generator.setTargetP((generator.getMaxP() * pMaxPercent) / 100));
         }
     }
 
@@ -359,19 +350,7 @@ public class NonEvacuatedEnergyWorkerService {
         return injectionVariation;
     }
 
-    private double computeInjectionVariationForMonitoredBranch(Network network,
-                                                               NonEvacuatedEnergyInputs nonEvacuatedEnergyInputs,
-                                                               Map<String, Double> generatorsSensitivities,
-                                                               double delta,
-                                                               Map<String, GeneratorCapping> generatorCappings,
-                                                               MonitoredBranchDetailResult monitoredBranchDetailResult) {
-        // sort the map in reverse order to get first the generator which have the most impact
-        LinkedHashMap<String, Double> sensitivities = generatorsSensitivities.entrySet()
-            .stream()
-            .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-            .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (oldValue, newValue) -> oldValue, LinkedHashMap::new));
-
-        // define sensitivity coefficient for each generator
+    private Map<String, Double> getSensitivityCoeffs(Map<String, Double> sensitivities) {
         Double referenceSensitivity = 1.;
         Map<String, Double> sensitivityCoeff = new HashMap<>();
         int i = 0;
@@ -387,6 +366,23 @@ public class NonEvacuatedEnergyWorkerService {
                 sensitivityCoeff.put(entry.getKey(), entry.getValue() / referenceSensitivity);
             }
         }
+        return sensitivityCoeff;
+    }
+
+    private double computeInjectionVariationForMonitoredBranch(Network network,
+                                                               NonEvacuatedEnergyInputs nonEvacuatedEnergyInputs,
+                                                               Map<String, Double> generatorsSensitivities,
+                                                               double delta,
+                                                               Map<String, GeneratorCapping> generatorCappings,
+                                                               MonitoredBranchDetailResult monitoredBranchDetailResult) {
+        // sort the map in reverse order to get first the generator which have the most impact
+        LinkedHashMap<String, Double> sensitivities = generatorsSensitivities.entrySet()
+            .stream()
+            .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+            .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+
+        // define sensitivity coefficient for each generator
+        Map<String, Double> sensitivityCoeff = getSensitivityCoeffs(sensitivities);
 
         // compute the generators cappings needed to set the monitored branch under the limit
         Map<EnergySource, Double> variationsByEnergySource = new EnumMap<>(EnergySource.class);
@@ -462,11 +458,10 @@ public class NonEvacuatedEnergyWorkerService {
 
         // there is a remaining, and we still have generators to dispatch
         if (remaining >= EPSILON && !generatorsToDispatch.isEmpty()) {
-            boolean finished = false;
             int i = 0;
 
             // loop until no more remaining or no more generators to dispatch or max iteration reached
-            while (!finished) {
+            while (remaining >= EPSILON && !generatorsToDispatch.isEmpty() && i <= 10) {
                 i++;
                 int j = 0;
                 String referenceGeneratorId = "";
@@ -518,27 +513,13 @@ public class NonEvacuatedEnergyWorkerService {
                         }
                     }
                 }
-
-                if (remaining < EPSILON || generatorsToDispatch.isEmpty() || i > 10) {
-                    finished = true;
-                }
             }
         }
 
         return injectionVariation;
     }
 
-    private boolean analyzeSensitivityResults(Network network,
-                                              NonEvacuatedEnergyInputs nonEvacuatedEnergyInputs,
-                                              SensitivityAnalysisResult sensiResult,
-                                              Map<String, Double> generatorsCappings,
-                                              StageDetailResult stageDetailResult) {
-        AtomicBoolean noMoreLimitViolation = new AtomicBoolean(true);
-
-        Map<String, Double> maxGeneratorsCappings = new HashMap<>();
-        double maxVariationForMonitoredBranch = -Double.MAX_VALUE;
-
-        // collect, for each branch and then for each contingency, the sensitivity values for all generators who have an impact on the monitored branch
+    private Map<String, SensitivitiesByBranch> collectSensitivitiesByBranches(SensitivityAnalysisResult sensiResult) {
         Map<String, SensitivitiesByBranch> sensitivitiesByBranches = new HashMap<>();
         for (SensitivityValue sensitivityValue : sensiResult.getValues()) {
             int factorIndex = sensitivityValue.getFactorIndex();
@@ -561,10 +542,34 @@ public class NonEvacuatedEnergyWorkerService {
                 generatorsSensitivities.put(variableId, sensitivityValue.getValue());
             }
         }
+        return sensitivitiesByBranches;
+    }
 
-        // loop on all sensitivity result values of the sensitivity analysis computation
-        // each sensitivity value will contain a sensitivity factor, a contingency and the delta and reference value for a monitored branch
-        Map<String, Map<String, Boolean>> mapEncounteredBranchesByContingency = new HashMap<>();
+    private void updateMonitoredBranchResultWithCappingsInfos(Network network, Map<String, GeneratorCapping> generatorCappings,
+                                                              MonitoredBranchDetailResult monitoredBranchDetailResult) {
+        Map<EnergySource, Double> cappingsByEnergySource = new EnumMap<>(EnergySource.class);
+        for (Map.Entry<String, GeneratorCapping> entry : generatorCappings.entrySet()) {
+            Generator generator = network.getGenerator(entry.getKey());
+            GeneratorCapping capping = !monitoredBranchDetailResult.getGeneratorsCapping().containsKey(entry.getKey())
+                ? entry.getValue() : monitoredBranchDetailResult.getGeneratorsCapping().get(entry.getKey());
+            capping.setCumulatedCapping(capping.getCumulatedCapping() + entry.getValue().getCapping());
+            monitoredBranchDetailResult.getGeneratorsCapping().put(entry.getKey(), capping);
+            cappingsByEnergySource.putIfAbsent(generator.getEnergySource(), 0.);
+            cappingsByEnergySource.put(generator.getEnergySource(), cappingsByEnergySource.get(generator.getEnergySource()) + capping.getCumulatedCapping());
+        }
+        monitoredBranchDetailResult.getCappingByEnergySource().putAll(cappingsByEnergySource);
+        monitoredBranchDetailResult.setOverallCapping(cappingsByEnergySource.values().stream().mapToDouble(d -> d).sum());
+    }
+
+    private double computeMaxVariationForAllMonitoredBranches(Network network,
+                                                              NonEvacuatedEnergyInputs nonEvacuatedEnergyInputs,
+                                                              SensitivityAnalysisResult sensiResult,
+                                                              Map<String, Map<String, Boolean>> mapEncounteredBranchesByContingency,
+                                                              Map<String, SensitivitiesByBranch> sensitivitiesByBranches,
+                                                              StageDetailResult stageDetailResult,
+                                                              double maxVariationForMonitoredBranch,
+                                                              Map<String, Double> maxGeneratorsCappings) {
+        double maxVariation = -Double.MAX_VALUE;
 
         for (SensitivityValue sensitivityValue : sensiResult.getValues()) {
             int factorIndex = sensitivityValue.getFactorIndex();
@@ -592,7 +597,7 @@ public class NonEvacuatedEnergyWorkerService {
                     monitoredBranchDetailResult.setP(sensitivityValue.getFunctionReference());
                 }
 
-                if (!mapEncounteredBranches.get(functionId)) {  // <branch, contingency> not already handled
+                if (Boolean.FALSE.equals(mapEncounteredBranches.get(functionId))) {  // <branch, contingency> not already handled
                     // compute the variation for the monitored branch
                     SensitivitiesByBranch sensitivitiesByBranch = sensitivitiesByBranches.get(functionId);
                     Map<String, Double> generatorsSensitivities = sensitivitiesByBranch.getSensitivitiesByContingency().get(contingencyId);
@@ -600,32 +605,42 @@ public class NonEvacuatedEnergyWorkerService {
                     double variation = computeVariationForMonitoredBranch(network, nonEvacuatedEnergyInputs, factor, monitoredBranchThreshold, generatorsSensitivities, sensitivityValue, generatorCappings, monitoredBranchDetailResult);
 
                     // update monitored branch result with the cappings information
-                    Map<EnergySource, Double> cappingsByEnergySource = new EnumMap<>(EnergySource.class);
-                    for (Map.Entry<String, GeneratorCapping> entry : generatorCappings.entrySet()) {
-                        Generator generator = network.getGenerator(entry.getKey());
-                        GeneratorCapping capping = !monitoredBranchDetailResult.getGeneratorsCapping().containsKey(entry.getKey())
-                            ? entry.getValue() : monitoredBranchDetailResult.getGeneratorsCapping().get(entry.getKey());
-                        capping.setCumulatedCapping(capping.getCumulatedCapping() + entry.getValue().getCapping());
-                        monitoredBranchDetailResult.getGeneratorsCapping().put(entry.getKey(), capping);
-                        cappingsByEnergySource.putIfAbsent(generator.getEnergySource(), 0.);
-                        cappingsByEnergySource.put(generator.getEnergySource(), cappingsByEnergySource.get(generator.getEnergySource()) + capping.getCumulatedCapping());
-                    }
-                    monitoredBranchDetailResult.getCappingByEnergySource().putAll(cappingsByEnergySource);
-                    monitoredBranchDetailResult.setOverallCapping(cappingsByEnergySource.values().stream().mapToDouble(d -> d).sum());
+                    updateMonitoredBranchResultWithCappingsInfos(network, generatorCappings, monitoredBranchDetailResult);
 
                     // keeping only the max computed variation
                     if (!Double.isNaN(variation) && maxVariationForMonitoredBranch < variation) {
-                        maxVariationForMonitoredBranch = variation;
-                        maxGeneratorsCappings = new HashMap<>(generatorCappings.entrySet()
-                            .stream().collect(toMap(Map.Entry::getKey, e -> e.getValue().getCapping())));
+                        maxVariation = variation;
+                        maxGeneratorsCappings.putAll(generatorCappings.entrySet().stream().collect(toMap(Map.Entry::getKey, e -> e.getValue().getCapping())));
                     }
-
                     mapEncounteredBranches.put(functionId, Boolean.TRUE);
                 }
             }
         }
+        return maxVariation;
+    }
 
-        if (maxVariationForMonitoredBranch < 0.3) {
+    private boolean analyzeSensitivityResults(Network network,
+                                              NonEvacuatedEnergyInputs nonEvacuatedEnergyInputs,
+                                              SensitivityAnalysisResult sensiResult,
+                                              Map<String, Double> generatorsCappings,
+                                              StageDetailResult stageDetailResult) {
+        AtomicBoolean noMoreLimitViolation = new AtomicBoolean(true);
+
+        Map<String, Double> maxGeneratorsCappings = new HashMap<>();
+        double maxVariationForMonitoredBranch = -Double.MAX_VALUE;
+
+        // collect, for each branch and then for each contingency, the sensitivity values for all generators who have an impact on the monitored branch
+        Map<String, SensitivitiesByBranch> sensitivitiesByBranches = collectSensitivitiesByBranches(sensiResult);
+
+        // loop on all sensitivity result values of the sensitivity analysis computation
+        // each sensitivity value will contain a sensitivity factor, a contingency and the delta and reference value for a monitored branch
+        Map<String, Map<String, Boolean>> mapEncounteredBranchesByContingency = new HashMap<>();
+
+        maxVariationForMonitoredBranch = computeMaxVariationForAllMonitoredBranches(network, nonEvacuatedEnergyInputs,
+            sensiResult, mapEncounteredBranchesByContingency, sensitivitiesByBranches,
+            stageDetailResult, maxVariationForMonitoredBranch, maxGeneratorsCappings);
+
+        if (maxVariationForMonitoredBranch < EPSILON_MAX_VARIATION) {
             // the max variation for all monitored branches is small :
             // there is no limit violation detected and no further sensitivity analysis computation will be done for the current stage
             noMoreLimitViolation.set(true);
@@ -650,57 +665,70 @@ public class NonEvacuatedEnergyWorkerService {
         }
     }
 
+    private void buildSummaryMonitoredBranchResults(Map.Entry<String, MonitoredBranchDetailResult> monitoredBranchResultEntry,
+                                                    Double pInitTotal,
+                                                    String contingencyName,
+                                                    StageSummaryResult stageSummaryResult,
+                                                    StageSummaryContingencyResult stageSummaryContingencyResult) {
+        String monitoredBranchId = monitoredBranchResultEntry.getKey();
+        MonitoredBranchDetailResult monitoredBranchDetailResult = monitoredBranchResultEntry.getValue();
+
+        Double deltaPEchTotal = monitoredBranchDetailResult.getCappingByEnergySource().values().stream().mapToDouble(d -> d).sum();
+        if (deltaPEchTotal > stageSummaryContingencyResult.getPLim()) {
+            stageSummaryContingencyResult.setLimitViolated(true);
+            stageSummaryContingencyResult.setPLim(pInitTotal - deltaPEchTotal);
+            stageSummaryContingencyResult.setPercentOverload(monitoredBranchDetailResult.getPercentOverload());
+            stageSummaryContingencyResult.setMonitoredEquipmentWithMaxLimit(monitoredBranchId);
+            stageSummaryContingencyResult.setMonitoredEquipmentPower(monitoredBranchDetailResult.getP());
+            stageSummaryContingencyResult.setCapping(monitoredBranchDetailResult.getOverallCapping());
+        }
+
+        Double pLim = contingencyName == null ? stageSummaryResult.getPLimN() : stageSummaryResult.getPLimNm1();
+        if (deltaPEchTotal > pLim) {
+            stageSummaryResult.setPLimMonitoredEquipment(monitoredBranchId);
+            stageSummaryResult.setContingencyId(contingencyName);
+            stageSummaryResult.setPLimLimit(monitoredBranchDetailResult.getLimitName());
+            stageSummaryResult.setPercentOverload(monitoredBranchDetailResult.getPercentOverload());
+            stageSummaryResult.setPLimN(deltaPEchTotal);
+        }
+    }
+
+    private void buildSummaryContingencyResults(Map.Entry<String, ContingencyStageDetailResult> contingencyResultEntry,
+                                                Double pInitTotal,
+                                                StageSummaryResult stageSummaryResult) {
+        String contingencyName = contingencyResultEntry.getKey();  // null if N
+        ContingencyStageDetailResult contingencyResult = contingencyResultEntry.getValue();
+
+        StageSummaryContingencyResult stageSummaryContingencyResult = new StageSummaryContingencyResult();
+        stageSummaryContingencyResult.setLimitViolated(false);
+        stageSummaryContingencyResult.setPLim(0.);
+
+        // for each monitored branch in contingency result
+        contingencyResult.getResultsByMonitoredBranch().entrySet().forEach(entry -> buildSummaryMonitoredBranchResults(entry, pInitTotal, contingencyName, stageSummaryResult, stageSummaryContingencyResult));
+
+        stageSummaryResult.getResultsByContingency().put(contingencyName, stageSummaryContingencyResult);
+    }
+
+    private void buildSummaryStageResults(NonEvacuatedEnergyResults nonEvacuatedEnergyResults,
+                                          Map.Entry<String, StageDetailResult> stageResultEntry) {
+        String stageName = stageResultEntry.getKey();
+        StageDetailResult stageDetailResult = stageResultEntry.getValue();
+
+        StageSummaryResult stageSummaryResult = new StageSummaryResult();
+        stageSummaryResult.setPLimN(0.);
+        stageSummaryResult.setPLimNm1(0.);
+
+        nonEvacuatedEnergyResults.getStagesSummary().put(stageName, stageSummaryResult);
+        stageSummaryResult.setPInitByEnergySource(stageDetailResult.getPInitByEnergySource());
+        Double pInitTotal = stageDetailResult.getPInitByEnergySource().values().stream().mapToDouble(d -> d).sum();
+
+        // for each contingency results
+        stageDetailResult.getResultsByContingency().entrySet().forEach(entry -> buildSummaryContingencyResults(entry, pInitTotal, stageSummaryResult));
+    }
+
     private void buildSummaryResults(NonEvacuatedEnergyResults nonEvacuatedEnergyResults) {
         // for each stage detail result
-        for (Map.Entry<String, StageDetailResult> stageResultEntry : nonEvacuatedEnergyResults.getStagesDetail().entrySet()) {
-            String stageName = stageResultEntry.getKey();
-            StageDetailResult stageDetailResult = stageResultEntry.getValue();
-
-            StageSummaryResult stageSummaryResult = new StageSummaryResult();
-            stageSummaryResult.setPLimN(0.);
-            stageSummaryResult.setPLimNm1(0.);
-
-            nonEvacuatedEnergyResults.getStagesSummary().put(stageName, stageSummaryResult);
-            stageSummaryResult.setPInitByEnergySource(stageDetailResult.getPInitByEnergySource());
-            Double pInitTotal = stageDetailResult.getPInitByEnergySource().values().stream().mapToDouble(d -> d).sum();
-
-            // for each contingency results
-            for (Map.Entry<String, ContingencyStageDetailResult> contingencyResultEntry : stageDetailResult.getResultsByContingency().entrySet()) {
-                String contingencyName = contingencyResultEntry.getKey();  // null if N
-                ContingencyStageDetailResult contingencyResult = contingencyResultEntry.getValue();
-
-                StageSummaryContingencyResult stageSummaryContingencyResult = new StageSummaryContingencyResult();
-                stageSummaryContingencyResult.setLimitViolated(false);
-                stageSummaryContingencyResult.setPLim(0.);
-
-                // for each monitored branch in contingency result
-                for (Map.Entry<String, MonitoredBranchDetailResult> monitoredBranchResultEntry : contingencyResult.getResultsByMonitoredBranch().entrySet()) {
-                    String monitoredBranchId = monitoredBranchResultEntry.getKey();
-                    MonitoredBranchDetailResult monitoredBranchDetailResult = monitoredBranchResultEntry.getValue();
-
-                    Double deltaPEchTotal = monitoredBranchDetailResult.getCappingByEnergySource().values().stream().mapToDouble(d -> d).sum();
-                    if (deltaPEchTotal > stageSummaryContingencyResult.getPLim()) {
-                        stageSummaryContingencyResult.setLimitViolated(true);
-                        stageSummaryContingencyResult.setPLim(pInitTotal - deltaPEchTotal);
-                        stageSummaryContingencyResult.setPercentOverload(monitoredBranchDetailResult.getPercentOverload());
-                        stageSummaryContingencyResult.setMonitoredEquipmentWithMaxLimit(monitoredBranchId);
-                        stageSummaryContingencyResult.setMonitoredEquipmentPower(monitoredBranchDetailResult.getP());
-                        stageSummaryContingencyResult.setCapping(monitoredBranchDetailResult.getOverallCapping());
-                    }
-
-                    Double pLim = contingencyName == null ? stageSummaryResult.getPLimN() : stageSummaryResult.getPLimNm1();
-                    if (deltaPEchTotal > pLim) {
-                        stageSummaryResult.setPLimMonitoredEquipment(monitoredBranchId);
-                        stageSummaryResult.setContingencyId(contingencyName);
-                        stageSummaryResult.setPLimLimit(monitoredBranchDetailResult.getLimitName());
-                        stageSummaryResult.setPercentOverload(monitoredBranchDetailResult.getPercentOverload());
-                        stageSummaryResult.setPLimN(deltaPEchTotal);
-                    }
-                }
-
-                stageSummaryResult.getResultsByContingency().put(contingencyName, stageSummaryContingencyResult);
-            }
-        }
+        nonEvacuatedEnergyResults.getStagesDetail().entrySet().forEach(entry -> buildSummaryStageResults(nonEvacuatedEnergyResults, entry));
     }
 
     private void computeCappingsGeneratorsInitialP(Network network, NonEvacuatedEnergyRunContext context) {
