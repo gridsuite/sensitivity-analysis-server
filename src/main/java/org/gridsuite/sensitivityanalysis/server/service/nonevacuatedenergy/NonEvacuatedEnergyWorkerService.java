@@ -346,11 +346,12 @@ public class NonEvacuatedEnergyWorkerService {
         LimitInfos limitInfos = getLimitValueFromFactorAndSensitivityValue(sensitivityValue, factor, monitoredBranchThreshold, monitoredBranchDetailResult);
 
         if (!Double.isNaN(limitInfos.getValue())) {
+            String contingencyStr = contingencyId != null ? ("Contingency " + contingencyId) : "N";
             reporter.report(Report.builder()
                 .withKey("MonitoredBranchLimitValueToConsider")
-                .withDefaultMessage((contingencyId != null ? "Contingency " + contingencyId : "N") +
-                    " : ${limitName} limit value to consider on side ${side} for monitored branch ${branchId} = ${limitValue} to compare with I = ${intensity}")
+                .withDefaultMessage("${contingency} : ${limitName} limit value to consider on side ${side} for monitored branch ${branchId} = ${limitValue} to compare with I = ${intensity}")
                 .withSeverity(TypedValue.TRACE_SEVERITY)
+                .withValue("contingency", contingencyStr)
                 .withValue("limitName", limitInfos.getName())
                 .withValue("side", limitInfos.getSide().name())
                 .withValue("branchId", monitoredBranchThreshold.getBranch().getId())
@@ -672,7 +673,6 @@ public class NonEvacuatedEnergyWorkerService {
         AtomicBoolean noMoreLimitViolation = new AtomicBoolean(true);
 
         Map<String, Double> maxGeneratorsCappings = new HashMap<>();
-        double maxVariationForMonitoredBranch = -Double.MAX_VALUE;
 
         // collect, for each branch and then for each contingency, the sensitivity values for all generators who have an impact on the monitored branch
         Map<String, SensitivitiesByBranch> sensitivitiesByBranches = collectSensitivitiesByBranches(sensiResult);
@@ -681,7 +681,7 @@ public class NonEvacuatedEnergyWorkerService {
         // each sensitivity value will contain a sensitivity factor, a contingency and the delta and reference value for a monitored branch
         Map<String, Map<String, Boolean>> mapEncounteredBranchesByContingency = new HashMap<>();
 
-        maxVariationForMonitoredBranch = computeMaxVariationForAllMonitoredBranches(network, nonEvacuatedEnergyInputs,
+        double maxVariationForMonitoredBranch = computeMaxVariationForAllMonitoredBranches(network, nonEvacuatedEnergyInputs,
             sensiResult, mapEncounteredBranchesByContingency, sensitivitiesByBranches,
             stageDetailResult, maxGeneratorsCappings, reporter);
 
