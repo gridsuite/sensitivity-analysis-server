@@ -7,9 +7,11 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.sensitivity.SensitivityAnalysisProvider;
 import com.univocity.parsers.csv.CsvWriter;
 import com.univocity.parsers.csv.CsvWriterSettings;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisCsvFileInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
@@ -21,6 +23,7 @@ import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysis
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -158,7 +161,18 @@ public class SensitivityAnalysisService {
         return defaultProvider;
     }
 
-    public byte[] exportSensitivityResultsAsCsv(UUID resultUuid, ResultsSelector selector, List<String> headers) {
+    public byte[] exportSensitivityResultsAsCsv(UUID resultUuid, SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos) {
+        if (sensitivityAnalysisCsvFileInfos == null ||
+                sensitivityAnalysisCsvFileInfos.getSensitivityFunctionType() == null ||
+                sensitivityAnalysisCsvFileInfos.getTabSelection() == null ||
+                CollectionUtils.isEmpty(sensitivityAnalysisCsvFileInfos.getCsvHeaders())) {
+            throw new PowsyblException("Missing information to export sensitivity result: Sensitivity result tab, sensitivity function type and csv file headers must be provided");
+        }
+        ResultsSelector selector = ResultsSelector.builder()
+                .functionType(sensitivityAnalysisCsvFileInfos.getSensitivityFunctionType())
+                .tabSelection(sensitivityAnalysisCsvFileInfos.getTabSelection())
+                .build();
+
         SensitivityRunQueryResult result = getRunResult(resultUuid, selector);
         if (result == null) {
             return null;
@@ -170,14 +184,14 @@ public class SensitivityAnalysisService {
 
             CsvWriterSettings settings = new CsvWriterSettings();
             CsvWriter csvWriter = new CsvWriter(zipOutputStream, settings);
-            csvWriter.writeHeaders(headers);
+            csvWriter.writeHeaders(sensitivityAnalysisCsvFileInfos.getCsvHeaders());
             if (selector.getTabSelection() == ResultTab.N) {
                 result.getSensitivities()
                         .forEach(sensitivity -> csvWriter.writeRow(
                                 sensitivity.getFuncId(),
                                 sensitivity.getVarId(),
-                                sensitivity.getFunctionReference(),
-                                sensitivity.getValue()
+                                nullIfNan(sensitivity.getFunctionReference()),
+                                nullIfNan(sensitivity.getValue())
                         ));
             } else if (selector.getTabSelection() == ResultTab.N_K) {
                 result.getSensitivities()
@@ -187,9 +201,10 @@ public class SensitivityAnalysisService {
                                     sensitivityWithContingency.getFuncId(),
                                     sensitivityWithContingency.getVarId(),
                                     sensitivityWithContingency.getContingencyId(),
-                                    sensitivityWithContingency.getFunctionReference(),
-                                    sensitivityWithContingency.getValue(),
-                                    sensitivityWithContingency.getFunctionReferenceAfter()
+                                    nullIfNan(sensitivityWithContingency.getFunctionReference()),
+                                    nullIfNan(sensitivityWithContingency.getValue()),
+                                    nullIfNan(sensitivityWithContingency.getFunctionReferenceAfter()),
+                                    nullIfNan(sensitivityWithContingency.getValueAfter())
                             );
                         });
             }
@@ -199,5 +214,9 @@ public class SensitivityAnalysisService {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    private static Double nullIfNan(double d) {
+        return Double.isNaN(d) ? null : d;
     }
 }

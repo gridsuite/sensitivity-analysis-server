@@ -4,6 +4,8 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,8 +19,10 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipInputStream;
 
 import lombok.SneakyThrows;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisCsvFileInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.SensitivityAnalysisApplication;
@@ -278,7 +282,7 @@ public class SensitivityAnalysisServiceTest {
     }
 
     @Test
-    public void testNoNKStillOK() {
+    public void testNoNKStillOK() throws Exception {
         List<String> aleaIds = List.of("a1", "a2", "a3");
         final List<SensitivityAnalysisResult.SensitivityContingencyStatus> contingenciesStatuses = aleaIds.stream()
             .map(aleaId -> new SensitivityAnalysisResult.SensitivityContingencyStatus(aleaId, SensitivityAnalysisResult.Status.SUCCESS))
@@ -340,21 +344,38 @@ public class SensitivityAnalysisServiceTest {
         assertThat(sensitivities, not(nullValue()));
         assertThat(sensitivities.size(), is(0));
 
-        ResultsSelector exportCsvSelector = ResultsSelector.builder()
-                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+        SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos = SensitivityAnalysisCsvFileInfos.builder()
+                .sensitivityFunctionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
                 .tabSelection(ResultTab.N)
+                .csvHeaders(List.of("functionId,variableId,functionReference,value"))
                 .build();
 
-        byte[] csv = analysisService.exportSensitivityResultsAsCsv(resultUuid, exportCsvSelector, List.of("functionId,variableId,functionReference,value"));
+        byte[] zip = analysisService.exportSensitivityResultsAsCsv(resultUuid, sensitivityAnalysisCsvFileInfos);
+        byte[] csv = unzip(zip);
         String csvStr = new String(csv, StandardCharsets.UTF_8);
         List<String> actualLines = Arrays.asList(csvStr.split("\n"));
-        List<String> expectedLines = new ArrayList<>(List.of("functionId,variableId,functionReference,value",
+        List<String> expectedLines = new ArrayList<>(List.of("\"functionId,variableId,functionReference,value\"",
                 "l1,GEN,2.9,500.1",
                 "l2,GEN,2.8,500.2",
                 "l3,LOAD,2.1,500.9"));
+
         actualLines.sort(String::compareTo);
         expectedLines.sort(String::compareTo);
         assertEquals(expectedLines, actualLines);
+    }
+
+    private static byte[] unzip(byte[] zippedBytes) throws Exception {
+        var zipInputStream = new ZipInputStream(new ByteArrayInputStream(zippedBytes));
+        var buff = new byte[1024];
+        if (zipInputStream.getNextEntry() != null) {
+            var outputStream = new ByteArrayOutputStream();
+            int l;
+            while ((l = zipInputStream.read(buff)) > 0) {
+                outputStream.write(buff, 0, l);
+            }
+            return outputStream.toByteArray();
+        }
+        return new byte[0];
     }
 
     @Test

@@ -1,9 +1,11 @@
 package org.gridsuite.sensitivityanalysis.server.dto;
 
+import com.powsybl.sensitivity.SensitivityFunctionType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 
 import java.util.List;
 
@@ -12,6 +14,7 @@ import java.util.List;
 @Getter
 @Setter
 public class SensitivityAnalysisCsvFileInfos {
-    private String selector;
+    private SensitivityFunctionType sensitivityFunctionType;
+    private ResultTab tabSelection;
     private List<String> csvHeaders;
 }

@@ -216,9 +216,7 @@ public class SensitivityAnalysisController {
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.setContentType(APPLICATION_OCTET_STREAM);
             httpHeaders.setContentDispositionFormData("attachment", "sensitivity_results.zip");
-            byte[] csv = service.exportSensitivityResultsAsCsv(resultUuid,
-                    getSelector(sensitivityAnalysisCsvFileInfos.getSelector()),
-                    sensitivityAnalysisCsvFileInfos.getCsvHeaders());
+            byte[] csv = service.exportSensitivityResultsAsCsv(resultUuid, sensitivityAnalysisCsvFileInfos);
 
             if (csv == null) {
                 return ResponseEntity.notFound().build();
@@ -226,7 +224,7 @@ public class SensitivityAnalysisController {
             return ResponseEntity.ok()
                     .headers(httpHeaders)
                     .body(csv);
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
 
