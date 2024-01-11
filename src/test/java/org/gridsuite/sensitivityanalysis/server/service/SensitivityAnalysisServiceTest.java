@@ -65,6 +65,7 @@ import com.powsybl.sensitivity.SensitivityFunctionType;
 import com.powsybl.sensitivity.SensitivityValue;
 import com.powsybl.sensitivity.SensitivityVariableType;
 import static org.gridsuite.sensitivityanalysis.server.util.OrderMatcher.isOrderedAccordingTo;
+import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
@@ -362,20 +363,6 @@ public class SensitivityAnalysisServiceTest {
         actualLines.sort(String::compareTo);
         expectedLines.sort(String::compareTo);
         assertEquals(expectedLines, actualLines);
-    }
-
-    private static byte[] unzip(byte[] zippedBytes) throws Exception {
-        var zipInputStream = new ZipInputStream(new ByteArrayInputStream(zippedBytes));
-        var buff = new byte[1024];
-        if (zipInputStream.getNextEntry() != null) {
-            var outputStream = new ByteArrayOutputStream();
-            int l;
-            while ((l = zipInputStream.read(buff)) > 0) {
-                outputStream.write(buff, 0, l);
-            }
-            return outputStream.toByteArray();
-        }
-        return new byte[0];
     }
 
     @Test
