@@ -640,6 +640,11 @@ public class SensitivityAnalysisControllerTest {
                         .content(mapper.writeValueAsString(sensitivityAnalysisCsvFileInfos)))
                 .andExpect(status().isNotFound());
 
+        mockMvc.perform(post("/" + VERSION + "/results/{resultUuid}/csv", RESULT_UUID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(SensitivityAnalysisCsvFileInfos.builder().build())))
+                .andExpect(status().isBadRequest());
+
         result = mockMvc.perform(post("/" + VERSION + "/results/{resultUuid}/csv", RESULT_UUID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(sensitivityAnalysisCsvFileInfos)))
