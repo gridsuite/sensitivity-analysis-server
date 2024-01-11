@@ -166,7 +166,7 @@ public class SensitivityAnalysisService {
                 sensitivityAnalysisCsvFileInfos.getSensitivityFunctionType() == null ||
                 sensitivityAnalysisCsvFileInfos.getTabSelection() == null ||
                 CollectionUtils.isEmpty(sensitivityAnalysisCsvFileInfos.getCsvHeaders())) {
-            throw new PowsyblException("Missing information to export sensitivity result: Sensitivity result tab, sensitivity function type and csv file headers must be provided");
+            throw new PowsyblException("Missing information to export sensitivity result as csv : Sensitivity result tab, sensitivity function type and csv file headers must be provided");
         }
         ResultsSelector selector = ResultsSelector.builder()
                 .functionType(sensitivityAnalysisCsvFileInfos.getSensitivityFunctionType())
@@ -195,8 +195,9 @@ public class SensitivityAnalysisService {
                         ));
             } else if (selector.getTabSelection() == ResultTab.N_K) {
                 result.getSensitivities()
-                        .forEach(sensitivity -> {
-                            SensitivityWithContingency sensitivityWithContingency = (SensitivityWithContingency) sensitivity;
+                        .stream()
+                        .map(sensitivity -> (SensitivityWithContingency) sensitivity)
+                        .forEach(sensitivityWithContingency -> {
                             csvWriter.writeRow(
                                     sensitivityWithContingency.getFuncId(),
                                     sensitivityWithContingency.getVarId(),

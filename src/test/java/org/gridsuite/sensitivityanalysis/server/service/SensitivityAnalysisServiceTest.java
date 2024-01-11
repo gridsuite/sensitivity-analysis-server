@@ -347,14 +347,14 @@ public class SensitivityAnalysisServiceTest {
         SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos = SensitivityAnalysisCsvFileInfos.builder()
                 .sensitivityFunctionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
                 .tabSelection(ResultTab.N)
-                .csvHeaders(List.of("functionId,variableId,functionReference,value"))
+                .csvHeaders(List.of("functionId", "variableId", "functionReference", "value"))
                 .build();
 
         byte[] zip = analysisService.exportSensitivityResultsAsCsv(resultUuid, sensitivityAnalysisCsvFileInfos);
         byte[] csv = unzip(zip);
         String csvStr = new String(csv, StandardCharsets.UTF_8);
         List<String> actualLines = Arrays.asList(csvStr.split("\n"));
-        List<String> expectedLines = new ArrayList<>(List.of("\"functionId,variableId,functionReference,value\"",
+        List<String> expectedLines = new ArrayList<>(List.of("functionId,variableId,functionReference,value",
                 "l1,GEN,2.9,500.1",
                 "l2,GEN,2.8,500.2",
                 "l3,LOAD,2.1,500.9"));
