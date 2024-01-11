@@ -181,8 +181,7 @@ public class SensitivityAnalysisWorkerService {
                 return null;
             }
             SensitivityAnalysisParameters sensitivityAnalysisParameters = buildParameters(context);
-            Network network = sensitivityAnalysisObserver.observe("network.load", context, () ->
-                getNetwork(context.getNetworkUuid(), context.getVariantId()));
+            Network network = getNetwork(context.getNetworkUuid(), context.getVariantId());
             sensitivityAnalysisInputBuilderService.build(context, network, reporter);
 
             CompletableFuture<SensitivityAnalysisResult> future = sensitivityAnalysisRunner.runAsync(
