@@ -196,18 +196,16 @@ public class SensitivityAnalysisService {
             } else if (selector.getTabSelection() == ResultTab.N_K) {
                 result.getSensitivities()
                         .stream()
-                        .map(sensitivity -> (SensitivityWithContingency) sensitivity)
-                        .forEach(sensitivityWithContingency -> {
-                            csvWriter.writeRow(
-                                    sensitivityWithContingency.getFuncId(),
-                                    sensitivityWithContingency.getVarId(),
-                                    sensitivityWithContingency.getContingencyId(),
-                                    nullIfNan(sensitivityWithContingency.getFunctionReference()),
-                                    nullIfNan(sensitivityWithContingency.getValue()),
-                                    nullIfNan(sensitivityWithContingency.getFunctionReferenceAfter()),
-                                    nullIfNan(sensitivityWithContingency.getValueAfter())
-                            );
-                        });
+                        .map(SensitivityWithContingency.class::cast)
+                        .forEach(sensitivityWithContingency -> csvWriter.writeRow(
+                                sensitivityWithContingency.getFuncId(),
+                                sensitivityWithContingency.getVarId(),
+                                sensitivityWithContingency.getContingencyId(),
+                                nullIfNan(sensitivityWithContingency.getFunctionReference()),
+                                nullIfNan(sensitivityWithContingency.getValue()),
+                                nullIfNan(sensitivityWithContingency.getFunctionReferenceAfter()),
+                                nullIfNan(sensitivityWithContingency.getValueAfter())
+                        ));
             }
 
             csvWriter.close();
