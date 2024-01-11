@@ -6,7 +6,6 @@
  */
 package org.gridsuite.sensitivityanalysis.server.util;
 
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.zip.ZipInputStream;

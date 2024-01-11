@@ -4,8 +4,6 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +17,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.ZipInputStream;
 
 import lombok.SneakyThrows;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisCsvFileInfos;
