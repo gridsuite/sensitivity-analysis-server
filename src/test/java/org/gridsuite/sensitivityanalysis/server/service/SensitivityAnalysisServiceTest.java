@@ -69,6 +69,8 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -342,12 +344,14 @@ public class SensitivityAnalysisServiceTest {
         assertThat(sensitivities, not(nullValue()));
         assertThat(sensitivities.size(), is(0));
 
+        // test export result as zipped csv
         SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos = SensitivityAnalysisCsvFileInfos.builder()
                 .sensitivityFunctionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
                 .tabSelection(ResultTab.N)
                 .csvHeaders(List.of("functionId", "variableId", "functionReference", "value"))
                 .build();
 
+        assertNull(analysisService.exportSensitivityResultsAsCsv(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos));
         byte[] zip = analysisService.exportSensitivityResultsAsCsv(resultUuid, sensitivityAnalysisCsvFileInfos);
         byte[] csv = unzip(zip);
         String csvStr = new String(csv, StandardCharsets.UTF_8);
@@ -360,6 +364,22 @@ public class SensitivityAnalysisServiceTest {
         actualLines.sort(String::compareTo);
         expectedLines.sort(String::compareTo);
         assertEquals(expectedLines, actualLines);
+
+        SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos2 = SensitivityAnalysisCsvFileInfos.builder()
+                .sensitivityFunctionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+                .tabSelection(ResultTab.N_K)
+                .csvHeaders(List.of("functionId", "variableId", "contingencyId", "functionReference", "value", "functionReferenceAfter", "valueAfter"))
+                .build();
+
+        byte[] zip2 = analysisService.exportSensitivityResultsAsCsv(resultUuid, sensitivityAnalysisCsvFileInfos2);
+        byte[] csv2 = unzip(zip2);
+        String csvStr2 = new String(csv2, StandardCharsets.UTF_8);
+        List<String> actualLines2 = Arrays.asList(csvStr2.split("\n"));
+        List<String> expectedLines2 = new ArrayList<>(List.of("functionId,variableId,contingencyId,functionReference,value,functionReferenceAfter,valueAfter"));
+
+        actualLines2.sort(String::compareTo);
+        expectedLines2.sort(String::compareTo);
+        assertEquals(expectedLines2, actualLines2);
     }
 
     @Test

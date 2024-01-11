@@ -633,6 +633,13 @@ public class SensitivityAnalysisControllerTest {
                 .tabSelection(ResultTab.N)
                 .csvHeaders(List.of("functionId", "variableId", "functionReference", "value"))
                 .build();
+
+        UUID randomUuid = UUID.randomUUID();
+        mockMvc.perform(post("/" + VERSION + "/results/{resultUuid}/csv", randomUuid)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(sensitivityAnalysisCsvFileInfos)))
+                .andExpect(status().isNotFound());
+
         result = mockMvc.perform(post("/" + VERSION + "/results/{resultUuid}/csv", RESULT_UUID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(sensitivityAnalysisCsvFileInfos)))
@@ -651,6 +658,7 @@ public class SensitivityAnalysisControllerTest {
         expectedCsvLines.sort(String::compareTo);
         assertEquals(expectedCsvLines, actualCsvLines);
 
+        // test filter options
         ResultsSelector filterOptionsSelector = ResultsSelector.builder().tabSelection(ResultTab.N_K)
                 .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/filter-options?selector={selector}", RESULT_UUID,
