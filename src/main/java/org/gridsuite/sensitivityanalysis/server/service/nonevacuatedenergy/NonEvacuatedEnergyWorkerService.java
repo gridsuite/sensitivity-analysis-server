@@ -39,6 +39,7 @@ import com.powsybl.sensitivity.SensitivityFactor;
 import com.powsybl.sensitivity.SensitivityFunctionType;
 import com.powsybl.sensitivity.SensitivityValue;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStageDefinition;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStagesSelection;
@@ -463,7 +464,6 @@ public class NonEvacuatedEnergyWorkerService {
         for (Map.Entry<String, Double> entry : generatorsSensitivities.entrySet()) {
             coeffSum += entry.getValue() * sensitivitiesCoefficients.get(entry.getKey());
         }
-        //double referenceGeneratorVariation = abs(100 * delta / coeffSum); in CVG ????
         double referenceGeneratorVariation = abs(delta / coeffSum);
 
         // for each generator, we try to limit his power
@@ -605,15 +605,16 @@ public class NonEvacuatedEnergyWorkerService {
         monitoredBranchDetailResult.setOverallCapping(cappingsByEnergySource.values().stream().mapToDouble(d -> d).sum());
     }
 
-    private double computeMaxVariationForAllMonitoredBranches(Network network,
-                                                              NonEvacuatedEnergyInputs nonEvacuatedEnergyInputs,
-                                                              SensitivityAnalysisResult sensiResult,
-                                                              Map<String, Map<String, Boolean>> mapEncounteredBranchesByContingency,
-                                                              Map<String, SensitivitiesByBranch> sensitivitiesByBranches,
-                                                              StageDetailResult stageDetailResult,
-                                                              Map<String, Double> maxGeneratorsCappings,
-                                                              Reporter reporter) {
+    private Pair<String, Double> computeMaxVariationForAllMonitoredBranches(Network network,
+                                                                            NonEvacuatedEnergyInputs nonEvacuatedEnergyInputs,
+                                                                            SensitivityAnalysisResult sensiResult,
+                                                                            Map<String, Map<String, Boolean>> mapEncounteredBranchesByContingency,
+                                                                            Map<String, SensitivitiesByBranch> sensitivitiesByBranches,
+                                                                            StageDetailResult stageDetailResult,
+                                                                            Map<String, Double> maxGeneratorsCappings,
+                                                                            Reporter reporter) {
         double maxVariationForMonitoredBranch = -Double.MAX_VALUE;
+        String maxMonitoredBranchId = null;
 
         for (SensitivityValue sensitivityValue : sensiResult.getValues()) {
             int factorIndex = sensitivityValue.getFactorIndex();
@@ -655,13 +656,14 @@ public class NonEvacuatedEnergyWorkerService {
                     // keeping only the max computed variation
                     if (!Double.isNaN(variation) && maxVariationForMonitoredBranch < variation) {
                         maxVariationForMonitoredBranch = variation;
+                        maxMonitoredBranchId = monitoredBranchThreshold.getBranch().getId();
                         maxGeneratorsCappings.putAll(generatorCappings.entrySet().stream().collect(toMap(Map.Entry::getKey, e -> e.getValue().getCapping())));
                     }
                     mapEncounteredBranches.put(functionId, Boolean.TRUE);
                 }
             }
         }
-        return maxVariationForMonitoredBranch;
+        return Pair.of(maxMonitoredBranchId, maxVariationForMonitoredBranch);
     }
 
     private boolean analyzeSensitivityResults(Network network,
@@ -681,11 +683,11 @@ public class NonEvacuatedEnergyWorkerService {
         // each sensitivity value will contain a sensitivity factor, a contingency and the delta and reference value for a monitored branch
         Map<String, Map<String, Boolean>> mapEncounteredBranchesByContingency = new HashMap<>();
 
-        double maxVariationForMonitoredBranch = computeMaxVariationForAllMonitoredBranches(network, nonEvacuatedEnergyInputs,
+        Pair<String, Double> maxVariationForMonitoredBranch = computeMaxVariationForAllMonitoredBranches(network, nonEvacuatedEnergyInputs,
             sensiResult, mapEncounteredBranchesByContingency, sensitivitiesByBranches,
             stageDetailResult, maxGeneratorsCappings, reporter);
 
-        if (maxVariationForMonitoredBranch < EPSILON_MAX_VARIATION) {
+        if (maxVariationForMonitoredBranch.getValue() < EPSILON_MAX_VARIATION) {
             // the max variation for all monitored branches is small :
             // there is no limit violation detected and no further sensitivity analysis computation will be done for the current stage
             noMoreLimitViolation.set(true);
@@ -693,6 +695,13 @@ public class NonEvacuatedEnergyWorkerService {
             // the max variation for all monitored branches is not small :
             // there is a limit violation detected and a further sensitivity analysis computation will be done for the current stage, except if max iteration is reached
             // we memorize the generators cappings needed to eliminate this limit violation
+            reporter.report(Report.builder()
+                .withKey("MaxVariationForMonitoredBranchToConsider")
+                .withDefaultMessage("The maximum variation has been found for monitored branch ${branchId}")
+                .withSeverity(TypedValue.TRACE_SEVERITY)
+                .withValue("branchId", maxVariationForMonitoredBranch.getKey())
+                .build());
+
             generatorsCappings.putAll(maxGeneratorsCappings);
             noMoreLimitViolation.set(false);
         }
@@ -711,7 +720,7 @@ public class NonEvacuatedEnergyWorkerService {
                 generator.setTargetP(newTargetP);
                 reporter.report(Report.builder()
                     .withKey("ApplyGeneratorCapping")
-                    .withDefaultMessage("Capping generator ${generatorId} using capping value ${cappingValue} : ${oldTargetP} --> ${newTargetP}")
+                    .withDefaultMessage("Capping generator ${generatorId} using capping value ${cappingValue} : targetP ${oldTargetP} --> ${newTargetP}")
                     .withSeverity(TypedValue.TRACE_SEVERITY)
                     .withValue("generatorId", generator.getId())
                     .withValue("oldTargetP", oldTargetP)
