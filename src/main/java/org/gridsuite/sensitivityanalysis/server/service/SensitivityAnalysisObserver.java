@@ -41,8 +41,8 @@ public class SensitivityAnalysisObserver {
         this.meterRegistry = meterRegistry;
     }
 
-    public <E extends Throwable> void observe(String name, SensitivityAnalysisRunContext runContext, Observation.CheckedRunnable<E> callable) throws E {
-        createObservation(name, runContext).observeChecked(callable);
+    public <E extends Throwable> void observe(String name, SensitivityAnalysisRunContext runContext, Observation.CheckedRunnable<E> runnable) throws E {
+        createObservation(name, runContext).observeChecked(runnable);
     }
 
     public <T, E extends Throwable> T observe(String name, SensitivityAnalysisRunContext runContext, Observation.CheckedCallable<T, E> callable) throws E {
