@@ -220,7 +220,7 @@ public class SensitivityAnalysisWorkerService {
 
     private void cleanSensitivityAnalysisResultsAndPublishCancel(UUID resultUuid, String receiver) {
         resultRepository.delete(resultUuid);
-        notificationService.publishStop(resultUuid, receiver);
+        notificationService.publishSensitivityAnalysisStop(resultUuid, receiver);
         LOGGER.info(CANCEL_MESSAGE + " (resultUuid='{}')", resultUuid);
     }
 
@@ -243,7 +243,7 @@ public class SensitivityAnalysisWorkerService {
                 LOGGER.info("Stored in {}s", TimeUnit.NANOSECONDS.toSeconds(finalNanoTime - startTime.getAndSet(finalNanoTime)));
 
                 if (result != null) {  // result available
-                    notificationService.sendResultMessage(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver());
+                    notificationService.sendSensitivityAnalysisResultMessage(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver());
                     LOGGER.info("Sensitivity analysis complete (resultUuid='{}')", resultContext.getResultUuid());
                 } else {  // result not available : stop computation request
                     if (cancelComputationRequests.get(resultContext.getResultUuid()) != null) {
@@ -255,7 +255,7 @@ public class SensitivityAnalysisWorkerService {
             } catch (Exception | OutOfMemoryError e) {
                 if (!(e instanceof CancellationException)) {
                     LOGGER.error(FAIL_MESSAGE, e);
-                    notificationService.publishFail(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver(),
+                    notificationService.publishSensitivityAnalysisFail(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver(),
                             e.getMessage(), resultContext.getRunContext().getUserId());
                     resultRepository.delete(resultContext.getResultUuid());
                     resultRepository.insertStatus(List.of(resultContext.getResultUuid()), SensitivityAnalysisStatus.FAILED.name());

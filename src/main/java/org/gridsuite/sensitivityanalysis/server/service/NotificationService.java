@@ -48,29 +48,63 @@ public class NotificationService {
     @Autowired
     private StreamBridge publisher;
 
-    public void sendRunMessage(Message<String> message) {
-        RUN_MESSAGE_LOGGER.debug(LOGGER_PREFIX, message);
-        publisher.send("publishRun-out-0", message);
+    public void sendNonEvacuatedEnergyRunMessage(Message<String> message) {
+        sendRunMessage("publishNonEvacuatedEnergyRun-out-0", message);
     }
 
-    public void sendCancelMessage(Message<String> message) {
+    public void sendSensitivityAnalysisRunMessage(Message<String> message) {
+        sendRunMessage("publishRun-out-0", message);
+    }
+
+    private void sendRunMessage(String bindingName, Message<String> message) {
+        RUN_MESSAGE_LOGGER.debug(LOGGER_PREFIX, message);
+        publisher.send(bindingName, message);
+    }
+
+    public void sendNonEvacuatedEnergyCancelMessage(Message<String> message) {
+        sendCancelMessage("publishNonEvacuatedEnergyCancel-out-0", message);
+    }
+
+    public void sendSensitivityAnalysisCancelMessage(Message<String> message) {
+        sendCancelMessage("publishCancel-out-0", message);
+    }
+
+    private void sendCancelMessage(String bindingName, Message<String> message) {
         CANCEL_MESSAGE_LOGGER.debug(LOGGER_PREFIX, message);
-        publisher.send("publishCancel-out-0", message);
+        publisher.send(bindingName, message);
     }
 
     @PostCompletion
-    public void sendResultMessage(UUID resultUuid, String receiver) {
+    public void sendNonEvacuatedEnergyResultMessage(UUID resultUuid, String receiver) {
+        sendResultMessage("publishNonEvacuatedEnergyResult-out-0", resultUuid, receiver);
+    }
+
+    @PostCompletion
+    public void sendSensitivityAnalysisResultMessage(UUID resultUuid, String receiver) {
+        sendResultMessage("publishResult-out-0", resultUuid, receiver);
+    }
+
+    private void sendResultMessage(String bindingName, UUID resultUuid, String receiver) {
         Message<String> message = MessageBuilder
             .withPayload("")
             .setHeader(HEADER_RESULT_UUID, resultUuid.toString())
             .setHeader(HEADER_RECEIVER, receiver)
             .build();
         RESULT_MESSAGE_LOGGER.debug(LOGGER_PREFIX, message);
-        publisher.send("publishResult-out-0", message);
+        publisher.send(bindingName, message);
     }
 
     @PostCompletion
-    public void publishStop(UUID resultUuid, String receiver) {
+    public void publishNonEvacuatedEnergyStop(UUID resultUuid, String receiver) {
+        publishStop("publishNonEvacuatedEnergyStopped-out-0", resultUuid, receiver);
+    }
+
+    @PostCompletion
+    public void publishSensitivityAnalysisStop(UUID resultUuid, String receiver) {
+        publishStop("publishStopped-out-0", resultUuid, receiver);
+    }
+
+    private void publishStop(String bindingName, UUID resultUuid, String receiver) {
         Message<String> message = MessageBuilder
             .withPayload("")
             .setHeader(HEADER_RESULT_UUID, resultUuid.toString())
@@ -78,11 +112,21 @@ public class NotificationService {
             .setHeader(HEADER_MESSAGE, CANCEL_MESSAGE)
             .build();
         STOP_MESSAGE_LOGGER.debug(LOGGER_PREFIX, message);
-        publisher.send("publishStopped-out-0", message);
+        publisher.send(bindingName, message);
     }
 
     @PostCompletion
-    public void publishFail(UUID resultUuid, String receiver, String causeMessage, String userId) {
+    public void publishNonEvacuatedEnergyFail(UUID resultUuid, String receiver, String causeMessage, String userId) {
+        publishFail("publishNonEvacuatedEnergyFailed-out-0", resultUuid, receiver, causeMessage, userId);
+    }
+
+    @PostCompletion
+    public void publishSensitivityAnalysisFail(UUID resultUuid, String receiver, String causeMessage, String userId) {
+        publishFail("publishFailed-out-0", resultUuid, receiver, causeMessage, userId);
+    }
+
+    @PostCompletion
+    private void publishFail(String bindingName, UUID resultUuid, String receiver, String causeMessage, String userId) {
         Message<String> message = MessageBuilder
             .withPayload("")
             .setHeader(HEADER_RESULT_UUID, resultUuid.toString())
@@ -91,12 +135,12 @@ public class NotificationService {
             .setHeader(HEADER_MESSAGE, shortenMessage(FAIL_MESSAGE + " : " + causeMessage))
             .build();
         FAILED_MESSAGE_LOGGER.debug(LOGGER_PREFIX, message);
-        publisher.send("publishFailed-out-0", message);
+        publisher.send(bindingName, message);
     }
 
     // prevents the message from being too long for rabbitmq
     // the beginning and ending are both kept, it should make it easier to identify
-    public String shortenMessage(String msg) {
+    private String shortenMessage(String msg) {
         if (msg == null) {
             return msg;
         }
