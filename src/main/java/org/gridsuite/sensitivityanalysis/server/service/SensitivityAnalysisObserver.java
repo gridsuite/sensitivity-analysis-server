@@ -67,17 +67,8 @@ public class SensitivityAnalysisObserver {
         Counter.builder(COMPUTATION_COUNTER_NAME)
             .tag(PROVIDER_TAG_NAME, provider)
             .tag(TYPE_TAG_NAME, COMPUTATION_TYPE)
-            .tag(STATUS_TAG_NAME, getStatusFromResult(result))
+            .tag(STATUS_TAG_NAME, result == null ? "NOK" : "OK")
             .register(meterRegistry)
             .increment();
-    }
-
-    private static String getStatusFromResult(SensitivityAnalysisResult result) {
-        if (result == null) {
-            return "NOK";
-        }
-        return result.getContingencyStatuses().stream()
-            .map(SensitivityAnalysisResult.SensitivityContingencyStatus::getStatus)
-            .allMatch(status1 -> status1 == SensitivityAnalysisResult.Status.SUCCESS) ? "OK" : "NOK";
     }
 }
