@@ -34,6 +34,10 @@ public class SensitivityAnalysisParametersService {
         this.sensitivityAnalysisParametersRepository = sensitivityAnalysisParametersRepository;
     }
 
+    public UUID createDefaultParameters() {
+        return createParameters(SensitivityAnalysisParametersInfos.builder().build());
+    }
+
     public UUID createParameters(SensitivityAnalysisParametersInfos parametersInfos) {
         return sensitivityAnalysisParametersRepository.save(parametersInfos.toEntity()).getId();
     }

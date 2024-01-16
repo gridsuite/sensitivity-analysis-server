@@ -87,6 +87,19 @@ public class SensitivityAnalysisParametersTest {
     }
 
     @Test
+    void testCreateDefaultValues() throws Exception {
+
+        SensitivityAnalysisParametersInfos defaultParameters = SensitivityAnalysisParametersInfos.builder().build();
+
+        mockMvc.perform(post(URI_PARAMETERS_BASE + "/default"))
+            .andExpect(status().isOk()).andReturn();
+
+        SensitivityAnalysisParametersInfos createdParameters = parametersRepository.findAll().get(0).toInfos();
+
+        assertThat(createdParameters).recursivelyEquals(defaultParameters);
+    }
+
+    @Test
     void testRead() throws Exception {
 
         SensitivityAnalysisParametersInfos parametersToRead = buildParameters();

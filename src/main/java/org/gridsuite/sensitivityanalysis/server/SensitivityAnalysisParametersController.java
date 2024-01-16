@@ -36,6 +36,14 @@ public class SensitivityAnalysisParametersController {
         this.parametersService = parametersService;
     }
 
+    @PostMapping(value = "/default", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Create default parameters")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Default parameters were created")})
+    public ResponseEntity<UUID> createDefaultParameters() {
+        return ResponseEntity.ok().body(parametersService.createDefaultParameters());
+    }
+
     @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create parameters")
     @ApiResponses(value = {
