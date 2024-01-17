@@ -12,7 +12,7 @@ import com.powsybl.loadflow.LoadFlowParameters;
 import com.powsybl.sensitivity.SensitivityAnalysisParameters;
 import org.assertj.core.api.Assertions;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
-import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersInfos;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.entities.parameters.SensitivityAnalysisParametersEntity;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisParametersRepository;
@@ -193,16 +193,16 @@ public class SensitivityAnalysisParametersTest {
     void buildInputDataTest() {
         SensitivityAnalysisParametersInfos parametersInfos = buildParameters();
         UUID parametersUuid = saveAndReturnId(parametersInfos);
-        LoadFlowParametersInfos loadFlowParametersInfos = LoadFlowParametersInfos.builder()
+        LoadFlowParametersValues loadFlowParametersValues = LoadFlowParametersValues.builder()
             .commonParameters(LoadFlowParameters.load())
             .specificParameters(Map.of("reactiveRangeCheckMode", "TARGET_P", "plausibleActivePowerLimit", "5000.0"))
             .build();
 
-        SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersUuid, loadFlowParametersInfos);
+        SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersUuid, loadFlowParametersValues);
 
         // now we check that each field contains the good value
         SensitivityAnalysisParameters sensitivityAnalysisParameters = inputData.getParameters();
-        assertThat(sensitivityAnalysisParameters.getLoadFlowParameters()).recursivelyEquals(loadFlowParametersInfos.getCommonParameters());
+        assertThat(sensitivityAnalysisParameters.getLoadFlowParameters()).recursivelyEquals(loadFlowParametersValues.getCommonParameters());
         assertThat(sensitivityAnalysisParameters)
             .extracting(
                 SensitivityAnalysisParameters::getAngleFlowSensitivityValueThreshold,
@@ -213,7 +213,7 @@ public class SensitivityAnalysisParametersTest {
                 parametersInfos.getFlowFlowSensitivityValueThreshold(),
                 parametersInfos.getFlowVoltageSensitivityValueThreshold());
 
-        assertEquals(inputData.getLoadFlowSpecificParameters(), loadFlowParametersInfos.getSpecificParameters());
+        assertEquals(inputData.getLoadFlowSpecificParameters(), loadFlowParametersValues.getSpecificParameters());
 
         assertEquals(inputData.getSensitivityInjections().size(), parametersInfos.getSensitivityInjection().size());
         assertThat(inputData.getSensitivityInjections().get(0)).recursivelyEquals(parametersInfos.getSensitivityInjection().get(0));

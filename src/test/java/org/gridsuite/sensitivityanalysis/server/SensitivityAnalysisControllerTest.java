@@ -22,7 +22,7 @@ import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import com.powsybl.sensitivity.*;
 import lombok.SneakyThrows;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
-import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersInfos;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
@@ -299,11 +299,11 @@ public class SensitivityAnalysisControllerTest {
             return network1;
         });
 
-        LoadFlowParametersInfos loadFlowParametersInfos = LoadFlowParametersInfos.builder()
+        LoadFlowParametersValues loadFlowParametersValues = LoadFlowParametersValues.builder()
             .commonParameters(LoadFlowParameters.load())
             .specificParameters(Map.of())
             .build();
-        DEFAULT_LOADFLOW_PARAMS = mapper.writeValueAsString(loadFlowParametersInfos);
+        DEFAULT_LOADFLOW_PARAMS = mapper.writeValueAsString(loadFlowParametersValues);
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData1 = SensitivityAnalysisInputData.builder()
             .sensitivityInjectionsSets(List.of(SensitivityInjectionsSet.builder()

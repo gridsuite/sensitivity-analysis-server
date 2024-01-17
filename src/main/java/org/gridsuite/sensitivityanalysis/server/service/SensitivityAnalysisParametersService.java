@@ -9,7 +9,7 @@ package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.powsybl.sensitivity.SensitivityAnalysisParameters;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
-import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersInfos;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.entities.parameters.SensitivityAnalysisParametersEntity;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisParametersRepository;
@@ -69,9 +69,9 @@ public class SensitivityAnalysisParametersService {
         sensitivityAnalysisParametersRepository.deleteById(parametersUuid);
     }
 
-    public SensitivityAnalysisInputData buildInputData(UUID parametersUuid, LoadFlowParametersInfos loadFlowParametersInfos) {
+    public SensitivityAnalysisInputData buildInputData(UUID parametersUuid, LoadFlowParametersValues loadFlowParametersValues) {
 
-        Objects.requireNonNull(loadFlowParametersInfos);
+        Objects.requireNonNull(loadFlowParametersValues);
 
         SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersUuid != null ?
             sensitivityAnalysisParametersRepository.findById(parametersUuid)
@@ -84,11 +84,11 @@ public class SensitivityAnalysisParametersService {
         sensitivityAnalysisParameters.setAngleFlowSensitivityValueThreshold(sensitivityAnalysisParametersInfos.getAngleFlowSensitivityValueThreshold());
         sensitivityAnalysisParameters.setFlowFlowSensitivityValueThreshold(sensitivityAnalysisParametersInfos.getFlowFlowSensitivityValueThreshold());
         sensitivityAnalysisParameters.setFlowVoltageSensitivityValueThreshold(sensitivityAnalysisParametersInfos.getFlowVoltageSensitivityValueThreshold());
-        sensitivityAnalysisParameters.setLoadFlowParameters(loadFlowParametersInfos.getCommonParameters());
+        sensitivityAnalysisParameters.setLoadFlowParameters(loadFlowParametersValues.getCommonParameters());
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData = new SensitivityAnalysisInputData();
         sensitivityAnalysisInputData.setParameters(sensitivityAnalysisParameters);
-        sensitivityAnalysisInputData.setLoadFlowSpecificParameters(loadFlowParametersInfos.getSpecificParameters());
+        sensitivityAnalysisInputData.setLoadFlowSpecificParameters(loadFlowParametersValues.getSpecificParameters());
         sensitivityAnalysisInputData.setSensitivityInjectionsSets(sensitivityAnalysisParametersInfos.getSensitivityInjectionsSet()
             .stream()
             .filter(SensitivityInjectionsSet::isActivated)

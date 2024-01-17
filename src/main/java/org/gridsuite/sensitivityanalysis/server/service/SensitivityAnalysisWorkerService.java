@@ -24,7 +24,7 @@ import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
-import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersInfos;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
 import org.slf4j.Logger;
@@ -116,9 +116,9 @@ public class SensitivityAnalysisWorkerService {
         return network;
     }
 
-    public SensitivityAnalysisResult run(UUID networkUuid, String variantId, String provider, UUID reportUuid, String reporterId, String reportType, String userId, UUID parametersUuid, LoadFlowParametersInfos loadFlowParametersInfos) {
+    public SensitivityAnalysisResult run(UUID networkUuid, String variantId, String provider, UUID reportUuid, String reporterId, String reportType, String userId, UUID parametersUuid, LoadFlowParametersValues loadFlowParametersValues) {
 
-        SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersUuid, loadFlowParametersInfos);
+        SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersUuid, loadFlowParametersValues);
 
         SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid, variantId, inputData, null, provider, reportUuid, reporterId, reportType, userId);
         try {

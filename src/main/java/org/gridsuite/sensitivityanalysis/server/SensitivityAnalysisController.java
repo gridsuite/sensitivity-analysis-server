@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
-import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersInfos;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisService;
@@ -76,9 +76,9 @@ public class SensitivityAnalysisController {
                                                          @Parameter(description = "reporterId") @RequestParam(name = "reporterId", required = false) String reporterId,
                                                          @Parameter(description = "The type name for the report") @RequestParam(name = "reportType", required = false, defaultValue = "SensitivityAnalysis") String reportType,
                                                          @Parameter(description = "parametersUuid") @RequestParam(name = "parametersUuid", required = false) UUID parametersUuid,
-                                                         @RequestBody LoadFlowParametersInfos loadFlowParametersInfos,
+                                                         @RequestBody LoadFlowParametersValues loadFlowParametersValues,
                                                          @RequestHeader(HEADER_USER_ID) String userId) {
-        SensitivityAnalysisResult result = workerService.run(networkUuid, variantId, provider, reportUuid, reporterId, reportType, userId, parametersUuid, loadFlowParametersInfos);
+        SensitivityAnalysisResult result = workerService.run(networkUuid, variantId, provider, reportUuid, reporterId, reportType, userId, parametersUuid, loadFlowParametersValues);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result);
     }
 
@@ -96,9 +96,9 @@ public class SensitivityAnalysisController {
                                            @Parameter(description = "reporterId") @RequestParam(name = "reporterId", required = false) String reporterId,
                                            @Parameter(description = "The type name for the report") @RequestParam(name = "reportType", required = false, defaultValue = "SensitivityAnalysis") String reportType,
                                            @Parameter(description = "parametersUuid") @RequestParam(name = "parametersUuid", required = false) UUID parametersUuid,
-                                           @RequestBody LoadFlowParametersInfos loadFlowParametersInfos,
+                                           @RequestBody LoadFlowParametersValues loadFlowParametersValues,
                                            @RequestHeader(HEADER_USER_ID) String userId) {
-        UUID resultUuid = service.runAndSaveResult(networkUuid, variantId, receiver, provider, reportUuid, reporterId, reportType, userId, parametersUuid, loadFlowParametersInfos);
+        UUID resultUuid = service.runAndSaveResult(networkUuid, variantId, receiver, provider, reportUuid, reporterId, reportType, userId, parametersUuid, loadFlowParametersValues);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
