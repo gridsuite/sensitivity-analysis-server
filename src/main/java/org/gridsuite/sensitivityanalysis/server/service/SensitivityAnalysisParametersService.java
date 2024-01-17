@@ -47,9 +47,8 @@ public class SensitivityAnalysisParametersService {
             .map(SensitivityAnalysisParametersEntity::copy)
             .map(entity -> {
                 sensitivityAnalysisParametersRepository.save(entity);
-                return Optional.of(entity.getId());
-            })
-            .orElse(Optional.empty());
+                return entity.getId();
+            });
     }
 
     public Optional<SensitivityAnalysisParametersInfos> getParameters(UUID parametersUuid) {
