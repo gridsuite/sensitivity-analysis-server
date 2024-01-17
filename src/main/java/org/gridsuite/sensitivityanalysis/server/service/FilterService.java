@@ -55,6 +55,10 @@ public class FilterService {
         return mergedIdentifiables;
     }
 
+    public List<IdentifiableAttributes> getIdentifiablesFromFilter(UUID filterUuid, UUID networkUuid, String variantId) {
+        return getIdentifiablesFromFilters(List.of(filterUuid), networkUuid, variantId);
+    }
+
     public List<FilterEquipments> getFilterEquipements(List<UUID> filterUuids, UUID networkUuid, String variantId) {
         Objects.requireNonNull(filterUuids);
         Objects.requireNonNull(networkUuid);

@@ -20,7 +20,6 @@ import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -60,7 +59,6 @@ public class SensitivityAnalysisService {
 
     private final ObjectMapper objectMapper;
 
-    @Autowired
     public SensitivityAnalysisService(@Value("${sensitivity-analysis.default-provider}") String defaultProvider,
                                       SensitivityAnalysisResultRepository resultRepository,
                                       UuidGeneratorService uuidGeneratorService,
@@ -83,7 +81,7 @@ public class SensitivityAnalysisService {
 
         // update status to running status
         setStatus(List.of(resultUuid), SensitivityAnalysisStatus.RUNNING.name());
-        notificationService.sendRunMessage(new SensitivityAnalysisResultContext(resultUuid, runContext).toMessage(objectMapper));
+        notificationService.sendSensitivityAnalysisRunMessage(new SensitivityAnalysisResultContext(resultUuid, runContext).toMessage(objectMapper));
         return resultUuid;
     }
 
@@ -112,7 +110,7 @@ public class SensitivityAnalysisService {
     }
 
     public void stop(UUID resultUuid, String receiver) {
-        notificationService.sendCancelMessage(new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
+        notificationService.sendSensitivityAnalysisCancelMessage(new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
     }
 
     public List<String> getProviders() {

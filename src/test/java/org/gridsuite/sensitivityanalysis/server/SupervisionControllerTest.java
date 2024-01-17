@@ -44,5 +44,12 @@ public class SupervisionControllerTest {
         String resultCount = mvcResult.getResponse().getContentAsString();
         assertEquals("0", resultCount);
 
+        mvcResult = mockMvc.perform(get("/v1/supervision/non-evacuated-energy/results-count"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+
+        resultCount = mvcResult.getResponse().getContentAsString();
+        assertEquals("0", resultCount);
     }
 }
