@@ -346,7 +346,7 @@ public class SensitivityAnalysisServiceTest {
         // test export result as zipped csv
         SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos = SensitivityAnalysisCsvFileInfos.builder()
                 .sensitivityFunctionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
-                .tabSelection(ResultTab.N)
+                .resultTab(ResultTab.N)
                 .csvHeaders(List.of("functionId", "variableId", "functionReference", "value"))
                 .build();
 
@@ -366,7 +366,7 @@ public class SensitivityAnalysisServiceTest {
 
         SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos2 = SensitivityAnalysisCsvFileInfos.builder()
                 .sensitivityFunctionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
-                .tabSelection(ResultTab.N_K)
+                .resultTab(ResultTab.N_K)
                 .csvHeaders(List.of("functionId", "variableId", "contingencyId", "functionReference", "value", "functionReferenceAfter", "valueAfter"))
                 .build();
 

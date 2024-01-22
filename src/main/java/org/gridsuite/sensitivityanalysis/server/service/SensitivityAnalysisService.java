@@ -162,13 +162,13 @@ public class SensitivityAnalysisService {
     public byte[] exportSensitivityResultsAsCsv(UUID resultUuid, SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos) {
         if (sensitivityAnalysisCsvFileInfos == null ||
                 sensitivityAnalysisCsvFileInfos.getSensitivityFunctionType() == null ||
-                sensitivityAnalysisCsvFileInfos.getTabSelection() == null ||
+                sensitivityAnalysisCsvFileInfos.getResultTab() == null ||
                 CollectionUtils.isEmpty(sensitivityAnalysisCsvFileInfos.getCsvHeaders())) {
             throw new PowsyblException("Missing information to export sensitivity result as csv : Sensitivity result tab, sensitivity function type and csv file headers must be provided");
         }
         ResultsSelector selector = ResultsSelector.builder()
                 .functionType(sensitivityAnalysisCsvFileInfos.getSensitivityFunctionType())
-                .tabSelection(sensitivityAnalysisCsvFileInfos.getTabSelection())
+                .tabSelection(sensitivityAnalysisCsvFileInfos.getResultTab())
                 .build();
 
         SensitivityRunQueryResult result = getRunResult(resultUuid, selector);
