@@ -1015,7 +1015,6 @@ public class NonEvacuatedEnergyWorkerService {
                     LOGGER.error(FAIL_MESSAGE, e);
                     notificationService.publishNonEvacuatedEnergyFail(nonEvacuatedEnergyResultContext.getResultUuid(), nonEvacuatedEnergyResultContext.getRunContext().getReceiver(), e.getMessage(), nonEvacuatedEnergyResultContext.getRunContext().getUserId());
                     nonEvacuatedEnergyRepository.delete(nonEvacuatedEnergyResultContext.getResultUuid());
-                    nonEvacuatedEnergyRepository.insertStatus(List.of(nonEvacuatedEnergyResultContext.getResultUuid()), NonEvacuatedEnergyStatus.FAILED.name());
                 }
             } finally {
                 futures.remove(nonEvacuatedEnergyResultContext.getResultUuid());

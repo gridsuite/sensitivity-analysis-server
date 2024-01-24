@@ -12,6 +12,5 @@ package org.gridsuite.sensitivityanalysis.server.dto;
 public enum SensitivityAnalysisStatus {
     NOT_DONE,
     RUNNING,
-    COMPLETED,
-    FAILED
+    COMPLETED
 }
