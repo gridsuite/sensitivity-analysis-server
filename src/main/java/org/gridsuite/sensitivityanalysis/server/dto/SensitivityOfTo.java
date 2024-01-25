@@ -6,11 +6,13 @@
  */
 package org.gridsuite.sensitivityanalysis.server.dto;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 @Getter
+@EqualsAndHashCode
 @SuperBuilder(toBuilder = true)
 public class SensitivityOfTo {
     @NonNull
