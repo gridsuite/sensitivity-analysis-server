@@ -22,7 +22,8 @@ public class RestResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleSensibilityAnalysisException(SensibilityAnalysisException exception) {
         return switch (exception.getType()) {
             case RESULT_NOT_FOUND -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
-            case FILE_EXPORT_ERROR, INVALID_EXPORT_PARAMS -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+            case FILE_EXPORT_ERROR -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exception.getMessage());
+            case INVALID_EXPORT_PARAMS -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
             default -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         };
     }
