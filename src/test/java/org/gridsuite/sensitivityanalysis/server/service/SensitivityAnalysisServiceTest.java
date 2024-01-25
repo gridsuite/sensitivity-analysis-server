@@ -384,12 +384,12 @@ public class SensitivityAnalysisServiceTest {
     }
 
     @Test
-    public void testNoNStillOK() {
+    public void testNoNStillOK() throws Exception {
         testNoN(false);
         testNoN(true);
     }
 
-    private void testNoN(boolean specific) {
+    private void testNoN(boolean specific) throws Exception {
         List<String> aleaIds = List.of("a1", "a2", "a3");
         final List<SensitivityAnalysisResult.SensitivityContingencyStatus> contingenciesStatuses = aleaIds.stream()
             .map(aleaId -> new SensitivityAnalysisResult.SensitivityContingencyStatus(aleaId, SensitivityAnalysisResult.Status.SUCCESS))
@@ -454,6 +454,28 @@ public class SensitivityAnalysisServiceTest {
         sensitivityVals = sensitivities.stream().map(SensitivityOfTo::getValue).collect(Collectors.toList());
         assertThat(sensitivityVals, not(hasItem(500.2)));
         assertThat(sensitivityVals, isOrderedAccordingTo(Comparator.<Double>naturalOrder()));
+
+        SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos = SensitivityAnalysisCsvFileInfos.builder()
+                .sensitivityFunctionType(MW_FUNC_TYPE)
+                .resultTab(ResultTab.N_K)
+                .csvHeaders(List.of("functionId", "variableId", "contingencyId", "functionReference", "value", "functionReferenceAfter", "valueAfter"))
+                .build();
+
+        byte[] zip = analysisService.exportSensitivityResultsAsCsv(resultUuid, sensitivityAnalysisCsvFileInfos);
+        byte[] csv = unzip(zip);
+        String csvStr = new String(csv, StandardCharsets.UTF_8);
+        List<String> actualLines = Arrays.asList(csvStr.split("\n"));
+        List<String> expectedLines = new ArrayList<>(List.of("functionId,variableId,contingencyId,functionReference,value,functionReferenceAfter,valueAfter",
+                "l1,GEN,a1,0.0,0.0,2.7,500.3",
+                "l1,GEN,a2,0.0,0.0,2.6,500.4",
+                "l1,GEN,a3,0.0,0.0,2.5,500.5",
+                "l3,LOAD,a1,0.0,0.0,2.3,500.7",
+                "l3,LOAD,a2,0.0,0.0,2.4,500.6",
+                "l3,LOAD,a3,0.0,0.0,2.2,500.8"));
+
+        actualLines.sort(String::compareTo);
+        expectedLines.sort(String::compareTo);
+        assertEquals(expectedLines, actualLines);
     }
 
     @SneakyThrows
