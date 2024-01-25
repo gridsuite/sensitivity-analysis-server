@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.SneakyThrows;
+import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisCsvFileInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
@@ -70,6 +71,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -350,7 +352,8 @@ public class SensitivityAnalysisServiceTest {
                 .csvHeaders(List.of("functionId", "variableId", "functionReference", "value"))
                 .build();
 
-        assertNull(analysisService.exportSensitivityResultsAsCsv(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos));
+        assertThrows(SensibilityAnalysisException.class, () -> analysisService.exportSensitivityResultsAsCsv(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos));
+
         byte[] zip = analysisService.exportSensitivityResultsAsCsv(resultUuid, sensitivityAnalysisCsvFileInfos);
         byte[] csv = unzip(zip);
         String csvStr = new String(csv, StandardCharsets.UTF_8);
