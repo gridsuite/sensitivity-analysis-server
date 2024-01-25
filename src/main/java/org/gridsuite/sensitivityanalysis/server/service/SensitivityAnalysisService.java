@@ -7,10 +7,10 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.sensitivity.SensitivityAnalysisProvider;
 import com.univocity.parsers.csv.CsvWriter;
 import com.univocity.parsers.csv.CsvWriterSettings;
+import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisCsvFileInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
@@ -26,7 +26,6 @@ import org.springframework.util.CollectionUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,6 +33,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import static org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException.Type.FILE_EXPORT_ERROR;
+import static org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException.Type.INVALID_EXPORT_PARAMS;
+import static org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException.Type.RESULT_NOT_FOUND;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -164,7 +167,7 @@ public class SensitivityAnalysisService {
                 sensitivityAnalysisCsvFileInfos.getSensitivityFunctionType() == null ||
                 sensitivityAnalysisCsvFileInfos.getResultTab() == null ||
                 CollectionUtils.isEmpty(sensitivityAnalysisCsvFileInfos.getCsvHeaders())) {
-            throw new PowsyblException("Missing information to export sensitivity result as csv : Sensitivity result tab, sensitivity function type and csv file headers must be provided");
+            throw new SensibilityAnalysisException(INVALID_EXPORT_PARAMS, "Missing information to export sensitivity result as csv : Sensitivity result tab, sensitivity function type and csv file headers must be provided");
         }
         ResultsSelector selector = ResultsSelector.builder()
                 .functionType(sensitivityAnalysisCsvFileInfos.getSensitivityFunctionType())
@@ -173,7 +176,7 @@ public class SensitivityAnalysisService {
 
         SensitivityRunQueryResult result = getRunResult(resultUuid, selector);
         if (result == null) {
-            return null;
+            throw new SensibilityAnalysisException(RESULT_NOT_FOUND, "The sensitivity analysis result '" + resultUuid + "' does not exist");
         }
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -209,7 +212,7 @@ public class SensitivityAnalysisService {
             csvWriter.close();
             return outputStream.toByteArray();
         } catch (IOException e) {
-            throw new UncheckedIOException(e);
+            throw new SensibilityAnalysisException(FILE_EXPORT_ERROR, e.getMessage());
         }
     }
 

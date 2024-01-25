@@ -220,21 +220,13 @@ public class SensitivityAnalysisController {
     @ApiResponses(@ApiResponse(responseCode = "200", description = "Sensitivity results successfully exported as csv file"))
     public ResponseEntity<byte[]> exportSensitivityResultsAsCsv(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
                                                                 @RequestBody SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos) {
-        try {
-            HttpHeaders httpHeaders = new HttpHeaders();
-            httpHeaders.setContentType(APPLICATION_OCTET_STREAM);
-            httpHeaders.setContentDispositionFormData("attachment", "sensitivity_results.zip");
-            byte[] csv = service.exportSensitivityResultsAsCsv(resultUuid, sensitivityAnalysisCsvFileInfos);
-
-            if (csv == null) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.ok()
-                    .headers(httpHeaders)
-                    .body(csv);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(APPLICATION_OCTET_STREAM);
+        httpHeaders.setContentDispositionFormData("attachment", "sensitivity_results.zip");
+        byte[] csv = service.exportSensitivityResultsAsCsv(resultUuid, sensitivityAnalysisCsvFileInfos);
+        return ResponseEntity.ok()
+                .headers(httpHeaders)
+                .body(csv);
     }
 
     @PostMapping(value = "/networks/{networkUuid}/non-evacuated-energy/run-and-save", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
