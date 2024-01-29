@@ -8,18 +8,15 @@ package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.sensitivity.SensitivityAnalysisProvider;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
+import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,6 +26,11 @@ import java.util.stream.Collectors;
  */
 @Service
 public class SensitivityAnalysisService {
+
+    public static final String INJECTIONS = "injections";
+
+    public static final String CONTINGENCIES = "contingencies";
+
     private final String defaultProvider;
 
     private final SensitivityAnalysisResultRepository resultRepository;
@@ -37,21 +39,28 @@ public class SensitivityAnalysisService {
 
     private final NotificationService notificationService;
 
+    private final ActionsService actionsService;
+
+    private final FilterService filterService;
+
     private final SensitivityAnalysisParametersService parametersService;
 
     private final ObjectMapper objectMapper;
 
-    @Autowired
     public SensitivityAnalysisService(@Value("${sensitivity-analysis.default-provider}") String defaultProvider,
                                       SensitivityAnalysisResultRepository resultRepository,
                                       UuidGeneratorService uuidGeneratorService,
                                       NotificationService notificationService,
+                                      ActionsService actionsService,
+                                      FilterService filterService,
                                       SensitivityAnalysisParametersService parametersService,
                                       ObjectMapper objectMapper) {
         this.defaultProvider = defaultProvider;
         this.resultRepository = Objects.requireNonNull(resultRepository);
         this.uuidGeneratorService = Objects.requireNonNull(uuidGeneratorService);
         this.notificationService = notificationService;
+        this.actionsService = actionsService;
+        this.filterService = filterService;
         this.parametersService = parametersService;
         this.objectMapper = Objects.requireNonNull(objectMapper);
     }
@@ -67,7 +76,7 @@ public class SensitivityAnalysisService {
 
         // update status to running status
         setStatus(List.of(resultUuid), SensitivityAnalysisStatus.RUNNING.name());
-        notificationService.sendRunMessage(new SensitivityAnalysisResultContext(resultUuid, runContext).toMessage(objectMapper));
+        notificationService.sendSensitivityAnalysisRunMessage(new SensitivityAnalysisResultContext(resultUuid, runContext).toMessage(objectMapper));
         return resultUuid;
     }
 
@@ -96,13 +105,49 @@ public class SensitivityAnalysisService {
     }
 
     public void stop(UUID resultUuid, String receiver) {
-        notificationService.sendCancelMessage(new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
+        notificationService.sendSensitivityAnalysisCancelMessage(new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
     }
 
     public List<String> getProviders() {
         return SensitivityAnalysisProvider.findAll().stream()
                 .map(SensitivityAnalysisProvider::getName)
                 .collect(Collectors.toList());
+    }
+
+    public Long getFactorsCount(SensitivityFactorsIdsByGroup factorIds, UUID networkUuid, String variantId, Boolean isInjectionsSet) {
+        Long containersAttributesCount = 1L;
+        if (Boolean.TRUE.equals(isInjectionsSet)) {
+            containersAttributesCount *= factorIds.getIds().get(INJECTIONS).size();
+            factorIds.getIds().remove(INJECTIONS);
+        }
+        containersAttributesCount *= getFactorsCount(factorIds, networkUuid, variantId);
+        return containersAttributesCount;
+    }
+
+    private Long getFactorsCount(SensitivityFactorsIdsByGroup factorIds, UUID networkUuid, String variantId) {
+        Map<String, List<UUID>> ids = factorIds.getIds();
+        long contAttributesCountTemp = 1L;
+        if (ids.containsKey(CONTINGENCIES) && !ids.get(CONTINGENCIES).isEmpty()) {
+            int sumContingencyListSizes = getContingenciesCount(ids.get(CONTINGENCIES), networkUuid, variantId);
+            sumContingencyListSizes = Math.max(sumContingencyListSizes, 1);
+            contAttributesCountTemp *= sumContingencyListSizes;
+            ids.remove(CONTINGENCIES);
+        }
+        ids.entrySet().removeIf(entry -> Objects.isNull(entry.getValue()));
+        Map<String, Long> map = filterService.getIdentifiablesCount(factorIds, networkUuid, null);
+        for (Long count : map.values()) {
+            if (count != 0) {
+                contAttributesCountTemp *= count;
+            }
+        }
+
+        return contAttributesCountTemp;
+    }
+
+    private Integer getContingenciesCount(List<UUID> ids, UUID networkUuid, String variantId) {
+        return ids.stream()
+                .mapToInt(uuid -> actionsService.getContingencyList(uuid, networkUuid, variantId).size())
+                .sum();
     }
 
     public String getDefaultProvider() {

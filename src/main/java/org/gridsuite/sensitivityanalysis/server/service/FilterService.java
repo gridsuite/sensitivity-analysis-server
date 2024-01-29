@@ -9,13 +9,11 @@ package org.gridsuite.sensitivityanalysis.server.service;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.sensitivityanalysis.server.dto.FilterEquipments;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -57,6 +55,10 @@ public class FilterService {
         return mergedIdentifiables;
     }
 
+    public List<IdentifiableAttributes> getIdentifiablesFromFilter(UUID filterUuid, UUID networkUuid, String variantId) {
+        return getIdentifiablesFromFilters(List.of(filterUuid), networkUuid, variantId);
+    }
+
     public List<FilterEquipments> getFilterEquipements(List<UUID> filterUuids, UUID networkUuid, String variantId) {
         Objects.requireNonNull(filterUuids);
         Objects.requireNonNull(networkUuid);
@@ -75,24 +77,19 @@ public class FilterService {
                 }).getBody();
     }
 
-    public Map<String, List<Long>> getIdentifiablesCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId) {
+    public Map<String, Long> getIdentifiablesCount(SensitivityFactorsIdsByGroup factorsIds, UUID networkUuid, String variantId) {
         var uriComponentsBuilder = UriComponentsBuilder
                 .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/identifiables-count")
                 .queryParam(NETWORK_UUID, networkUuid);
         if (!StringUtils.isBlank(variantId)) {
             uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);
         }
-        var path = uriComponentsBuilder
-                .build()
-                .toUriString();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        factorsIds.getIds().forEach((key, value) -> uriComponentsBuilder.queryParam(String.format("ids[%s]", key), value));
 
-        HttpEntity<Map<String, List<UUID>>> httpEntity = new HttpEntity<>(ids, headers);
+        var path = uriComponentsBuilder.build().toUriString();
 
-        return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.POST, httpEntity,
-                new ParameterizedTypeReference<Map<String, List<Long>>>() {
-                }).getBody();
+        return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.GET, null, new ParameterizedTypeReference<Map<String, Long>>() {
+        }).getBody();
     }
 }
