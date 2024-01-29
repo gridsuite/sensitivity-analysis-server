@@ -301,15 +301,14 @@ public class SensitivityAnalysisResultRepository {
     }
 
     private String getSort(SortKey sortKey) {
-        switch (sortKey) {
-            case FUNCTION : return "factor.functionId";
-            case SENSITIVITY : return "value";
-            case REFERENCE : return "functionReference";
-            case VARIABLE : return "factor.variableId";
-            case CONTINGENCY : return "contingency.contingencyId";
-            case POST_REFERENCE : return "functionReferenceAfter";
-            case POST_SENSITIVITY : return "valueAfter";
-            default: return null;
-        }
+        return switch (sortKey) {
+            case FUNCTION -> "factor.functionId";
+            case SENSITIVITY -> "value";
+            case REFERENCE -> "functionReference";
+            case VARIABLE -> "factor.variableId";
+            case CONTINGENCY -> "contingency.contingencyId";
+            case POST_REFERENCE -> "functionReferenceAfter";
+            case POST_SENSITIVITY -> "valueAfter";
+        };
     }
 }

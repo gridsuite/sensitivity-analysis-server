@@ -6,6 +6,9 @@
  */
 package org.gridsuite.sensitivityanalysis.server.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.zip.ZipInputStream;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
 
@@ -21,5 +24,19 @@ public final class TestUtils {
         assertInsertCount(insert);
         assertUpdateCount(update);
         assertDeleteCount(delete);
+    }
+
+    public static byte[] unzip(byte[] zippedBytes) throws Exception {
+        var zipInputStream = new ZipInputStream(new ByteArrayInputStream(zippedBytes));
+        var buff = new byte[1024];
+        if (zipInputStream.getNextEntry() != null) {
+            var outputStream = new ByteArrayOutputStream();
+            int l;
+            while ((l = zipInputStream.read(buff)) > 0) {
+                outputStream.write(buff, 0, l);
+            }
+            return outputStream.toByteArray();
+        }
+        return new byte[0];
     }
 }
