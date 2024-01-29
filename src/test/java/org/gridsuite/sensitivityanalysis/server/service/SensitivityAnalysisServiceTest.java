@@ -351,7 +351,8 @@ public class SensitivityAnalysisServiceTest {
                 .csvHeaders(List.of("functionId", "variableId", "functionReference", "value"))
                 .build();
 
-        assertThrows(SensibilityAnalysisException.class, () -> analysisService.exportSensitivityResultsAsCsv(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos));
+        UUID randomUuid = UUID.randomUUID();
+        assertThrows(SensibilityAnalysisException.class, () -> analysisService.exportSensitivityResultsAsCsv(randomUuid, sensitivityAnalysisCsvFileInfos));
 
         byte[] zip = analysisService.exportSensitivityResultsAsCsv(resultUuid, sensitivityAnalysisCsvFileInfos);
         byte[] csv = unzip(zip);
