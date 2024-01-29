@@ -45,10 +45,8 @@ public class SensitivityAnalysisParametersService {
     public Optional<UUID> duplicateParameters(UUID sourceParametersId) {
         return sensitivityAnalysisParametersRepository.findById(sourceParametersId)
             .map(SensitivityAnalysisParametersEntity::copy)
-            .map(entity -> {
-                sensitivityAnalysisParametersRepository.save(entity);
-                return entity.getId();
-            });
+            .map(sensitivityAnalysisParametersRepository::save)
+            .map(SensitivityAnalysisParametersEntity::getId);
     }
 
     public Optional<SensitivityAnalysisParametersInfos> getParameters(UUID parametersUuid) {
@@ -83,11 +81,11 @@ public class SensitivityAnalysisParametersService {
         sensitivityAnalysisParameters.setAngleFlowSensitivityValueThreshold(sensitivityAnalysisParametersInfos.getAngleFlowSensitivityValueThreshold());
         sensitivityAnalysisParameters.setFlowFlowSensitivityValueThreshold(sensitivityAnalysisParametersInfos.getFlowFlowSensitivityValueThreshold());
         sensitivityAnalysisParameters.setFlowVoltageSensitivityValueThreshold(sensitivityAnalysisParametersInfos.getFlowVoltageSensitivityValueThreshold());
-        sensitivityAnalysisParameters.setLoadFlowParameters(loadFlowParametersValues.getCommonParameters());
+        sensitivityAnalysisParameters.setLoadFlowParameters(loadFlowParametersValues.commonParameters());
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData = new SensitivityAnalysisInputData();
         sensitivityAnalysisInputData.setParameters(sensitivityAnalysisParameters);
-        sensitivityAnalysisInputData.setLoadFlowSpecificParameters(loadFlowParametersValues.getSpecificParameters());
+        sensitivityAnalysisInputData.setLoadFlowSpecificParameters(loadFlowParametersValues.specificParameters());
         sensitivityAnalysisInputData.setSensitivityInjectionsSets(sensitivityAnalysisParametersInfos.getSensitivityInjectionsSet()
             .stream()
             .filter(SensitivityInjectionsSet::isActivated)

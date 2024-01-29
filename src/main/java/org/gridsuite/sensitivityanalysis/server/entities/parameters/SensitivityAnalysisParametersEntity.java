@@ -42,13 +42,13 @@ public class SensitivityAnalysisParametersEntity {
     private String name;
 
     @Column(name = "flowFlowSensitivityValueThreshold")
-    private double flowFlowSensitivityValueThreshold;
+    private double flowFlowSensitivityValueThreshold = 0.0;
 
     @Column(name = "angleFlowSensitivityValueThreshold")
-    private double angleFlowSensitivityValueThreshold;
+    private double angleFlowSensitivityValueThreshold = 0.0;
 
     @Column(name = "flowVoltageSensitivityValueThreshold")
-    private double flowVoltageSensitivityValueThreshold;
+    private double flowVoltageSensitivityValueThreshold = 0.0;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "sensitivity_analysis_parameters_id")

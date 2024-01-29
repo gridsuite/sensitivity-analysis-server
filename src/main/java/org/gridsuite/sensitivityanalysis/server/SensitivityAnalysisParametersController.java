@@ -10,7 +10,6 @@ package org.gridsuite.sensitivityanalysis.server;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisParametersService;
@@ -38,55 +37,47 @@ public class SensitivityAnalysisParametersController {
 
     @PostMapping(value = "/default", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create default parameters")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Default parameters were created")})
+    @ApiResponse(responseCode = "200", description = "Default parameters were created")
     public ResponseEntity<UUID> createDefaultParameters() {
-        return ResponseEntity.ok().body(parametersService.createDefaultParameters());
+        return ResponseEntity.ok(parametersService.createDefaultParameters());
     }
 
     @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create parameters")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "parameters were created")})
+    @ApiResponse(responseCode = "200", description = "parameters were created")
     public ResponseEntity<UUID> createParameters(
             @RequestBody SensitivityAnalysisParametersInfos parametersInfos) {
-        return ResponseEntity.ok().body(parametersService.createParameters(parametersInfos));
+        return ResponseEntity.ok(parametersService.createParameters(parametersInfos));
     }
 
-    @PostMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/{sourceParametersUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Duplicate parameters")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "parameters were duplicated"),
-        @ApiResponse(responseCode = "404", description = "source parameters were not found")})
+    @ApiResponse(responseCode = "200", description = "parameters were duplicated")
+    @ApiResponse(responseCode = "404", description = "source parameters were not found")
     public ResponseEntity<UUID> duplicateParameters(
-        @Parameter(description = "source parameters UUID") @RequestParam(name = "duplicateFrom") UUID sourceParametersUuid) {
-        return parametersService.duplicateParameters(sourceParametersUuid)
-            .map(duplicatedParametersUuid -> ResponseEntity.ok().body(duplicatedParametersUuid))
-            .orElse(ResponseEntity.notFound().build());
+        @Parameter(description = "source parameters UUID") @PathVariable("sourceParametersUuid") UUID sourceParametersUuid) {
+        return ResponseEntity.of(parametersService.duplicateParameters(sourceParametersUuid));
     }
 
     @GetMapping(value = "/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get parameters")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "parameters were returned"),
-        @ApiResponse(responseCode = "404", description = "parameters were not found")})
+    @ApiResponse(responseCode = "200", description = "parameters were returned")
+    @ApiResponse(responseCode = "404", description = "parameters were not found")
     public ResponseEntity<SensitivityAnalysisParametersInfos> getParameters(
-            @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid) {
-        return parametersService.getParameters(parametersUuid)
-            .map(parametersInfos -> ResponseEntity.ok().body(parametersInfos))
-            .orElse(ResponseEntity.notFound().build());
+        @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid) {
+        return ResponseEntity.of(parametersService.getParameters(parametersUuid));
     }
 
     @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get all parameters")
     @ApiResponse(responseCode = "200", description = "the list of all parameters was returned")
     public ResponseEntity<List<SensitivityAnalysisParametersInfos>> getAllParameters() {
-        return ResponseEntity.ok().body(parametersService.getAllParameters());
+        return ResponseEntity.ok(parametersService.getAllParameters());
     }
 
     @PutMapping(value = "/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Update parameters")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "parameters were updated")})
+    @ApiResponse(responseCode = "200", description = "parameters were updated")
     public ResponseEntity<Void> updateParameters(
             @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid,
             @RequestBody SensitivityAnalysisParametersInfos parametersInfos) {

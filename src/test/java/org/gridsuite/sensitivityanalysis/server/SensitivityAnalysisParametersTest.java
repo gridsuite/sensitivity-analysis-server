@@ -18,7 +18,6 @@ import org.gridsuite.sensitivityanalysis.server.entities.parameters.SensitivityA
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisParametersRepository;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisParametersService;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -34,7 +33,6 @@ import java.util.UUID;
 
 import static org.gridsuite.sensitivityanalysis.server.util.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -51,21 +49,16 @@ public class SensitivityAnalysisParametersTest {
     private static final String URI_PARAMETERS_GET_PUT = URI_PARAMETERS_BASE + "/";
 
     @Autowired
-    protected MockMvc mockMvc;
+    MockMvc mockMvc;
 
     @Autowired
-    protected ObjectMapper mapper;
+    ObjectMapper mapper;
 
     @Autowired
     SensitivityAnalysisParametersService parametersService;
 
     @Autowired
-    private SensitivityAnalysisParametersRepository parametersRepository;
-
-    @BeforeEach
-    public void setup() {
-        parametersRepository.deleteAll();
-    }
+    SensitivityAnalysisParametersRepository parametersRepository;
 
     @AfterEach
     public void tearOff() {
@@ -145,7 +138,7 @@ public class SensitivityAnalysisParametersTest {
 
         List<SensitivityAnalysisParametersEntity> storedParameters = parametersRepository.findAll();
 
-        assertTrue(storedParameters.isEmpty());
+        assertThat(storedParameters).isEmpty();
     }
 
     @Test
@@ -177,12 +170,10 @@ public class SensitivityAnalysisParametersTest {
             .andExpect(status().isOk()).andReturn();
         SensitivityAnalysisParametersInfos createdParameters = parametersRepository.findAll().get(0).toInfos();
 
-        mockMvc.perform(post(URI_PARAMETERS_BASE)
-                .param("duplicateFrom", UUID.randomUUID().toString()))
+        mockMvc.perform(post(URI_PARAMETERS_BASE + "/" + UUID.randomUUID()))
             .andExpect(status().isNotFound());
 
-        mockMvc.perform(post(URI_PARAMETERS_BASE)
-                .param("duplicateFrom", createdParameters.getUuid().toString()))
+        mockMvc.perform(post(URI_PARAMETERS_BASE + "/" + createdParameters.getUuid()))
             .andExpect(status().isOk());
 
         SensitivityAnalysisParametersInfos duplicatedParameters = parametersRepository.findAll().get(1).toInfos();
@@ -202,7 +193,7 @@ public class SensitivityAnalysisParametersTest {
 
         // now we check that each field contains the good value
         SensitivityAnalysisParameters sensitivityAnalysisParameters = inputData.getParameters();
-        assertThat(sensitivityAnalysisParameters.getLoadFlowParameters()).recursivelyEquals(loadFlowParametersValues.getCommonParameters());
+        assertThat(sensitivityAnalysisParameters.getLoadFlowParameters()).recursivelyEquals(loadFlowParametersValues.commonParameters());
         assertThat(sensitivityAnalysisParameters)
             .extracting(
                 SensitivityAnalysisParameters::getAngleFlowSensitivityValueThreshold,
@@ -213,7 +204,7 @@ public class SensitivityAnalysisParametersTest {
                 parametersInfos.getFlowFlowSensitivityValueThreshold(),
                 parametersInfos.getFlowVoltageSensitivityValueThreshold());
 
-        assertEquals(inputData.getLoadFlowSpecificParameters(), loadFlowParametersValues.getSpecificParameters());
+        assertEquals(inputData.getLoadFlowSpecificParameters(), loadFlowParametersValues.specificParameters());
 
         assertEquals(inputData.getSensitivityInjections().size(), parametersInfos.getSensitivityInjection().size());
         assertThat(inputData.getSensitivityInjections().get(0)).recursivelyEquals(parametersInfos.getSensitivityInjection().get(0));
