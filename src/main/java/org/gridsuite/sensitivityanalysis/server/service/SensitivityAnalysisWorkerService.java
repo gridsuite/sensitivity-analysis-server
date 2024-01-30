@@ -34,7 +34,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -74,13 +77,16 @@ public class SensitivityAnalysisWorkerService {
 
     private final SensitivityAnalysisInputBuilderService sensitivityAnalysisInputBuilderService;
 
+    private final SensitivityAnalysisObserver sensitivityAnalysisObserver;
+
     private Function<String, SensitivityAnalysis.Runner> sensitivityAnalysisFactorySupplier;
 
     public SensitivityAnalysisWorkerService(NetworkStoreService networkStoreService, ReportService reportService, NotificationService notificationService,
                                             SensitivityAnalysisInputBuilderService sensitivityAnalysisInputBuilderService,
                                             SensitivityAnalysisExecutionService sensitivityAnalysisExecutionService,
                                             SensitivityAnalysisResultRepository resultRepository, ObjectMapper objectMapper,
-                                            SensitivityAnalysisRunnerSupplier sensitivityAnalysisRunnerSupplier) {
+                                            SensitivityAnalysisRunnerSupplier sensitivityAnalysisRunnerSupplier,
+                                            SensitivityAnalysisObserver sensitivityAnalysisObserver) {
         this.networkStoreService = Objects.requireNonNull(networkStoreService);
         this.reportService = Objects.requireNonNull(reportService);
         this.notificationService = notificationService;
@@ -89,6 +95,7 @@ public class SensitivityAnalysisWorkerService {
         this.resultRepository = Objects.requireNonNull(resultRepository);
         this.objectMapper = Objects.requireNonNull(objectMapper);
         sensitivityAnalysisFactorySupplier = sensitivityAnalysisRunnerSupplier::getRunner;
+        this.sensitivityAnalysisObserver = sensitivityAnalysisObserver;
     }
 
     public void setSensitivityAnalysisFactorySupplier(Function<String, SensitivityAnalysis.Runner> sensitivityAnalysisFactorySupplier) {
@@ -119,29 +126,31 @@ public class SensitivityAnalysisWorkerService {
         }
     }
 
-    private SensitivityAnalysisResult run(SensitivityAnalysisRunContext context, UUID resultUuid) throws ExecutionException, InterruptedException {
+    private SensitivityAnalysisResult run(SensitivityAnalysisRunContext context, UUID resultUuid) throws Exception {
         Objects.requireNonNull(context);
 
         LOGGER.info("Run sensitivity analysis");
 
         SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(context.getProvider());
 
-        Reporter rootReporter = Reporter.NO_OP;
+        AtomicReference<Reporter> rootReporter = new AtomicReference<>(Reporter.NO_OP);
         Reporter reporter = Reporter.NO_OP;
         if (context.getReportUuid() != null) {
             final String reportType = context.getReportType();
             String rootReporterId = context.getReporterId() == null ? reportType : context.getReporterId() + "@" + reportType;
-            rootReporter = new ReporterModel(rootReporterId, rootReporterId);
-            reporter = rootReporter.createSubReporter(reportType, reportType + " (${providerToUse})", "providerToUse", sensitivityAnalysisRunner.getName());
+            rootReporter.set(new ReporterModel(rootReporterId, rootReporterId));
+            reporter = rootReporter.get().createSubReporter(reportType, reportType + " (${providerToUse})", "providerToUse", sensitivityAnalysisRunner.getName());
             // Delete any previous sensi computation logs
-            reportService.deleteReport(context.getReportUuid(), reportType);
+            sensitivityAnalysisObserver.observe("report.delete", context, () ->
+                reportService.deleteReport(context.getReportUuid(), reportType));
         }
 
         CompletableFuture<SensitivityAnalysisResult> future = runSensitivityAnalysisAsync(context, sensitivityAnalysisRunner, reporter, resultUuid);
 
-        SensitivityAnalysisResult result = future == null ? null : future.get();
+        SensitivityAnalysisResult result = future == null ? null : sensitivityAnalysisObserver.observeRun("run", context, future::get);
         if (context.getReportUuid() != null) {
-            reportService.sendReport(context.getReportUuid(), rootReporter);
+            sensitivityAnalysisObserver.observe("report.send", context, () ->
+                reportService.sendReport(context.getReportUuid(), rootReporter.get()));
         }
         return result;
     }
@@ -211,7 +220,7 @@ public class SensitivityAnalysisWorkerService {
 
     private void cleanSensitivityAnalysisResultsAndPublishCancel(UUID resultUuid, String receiver) {
         resultRepository.delete(resultUuid);
-        notificationService.publishStop(resultUuid, receiver);
+        notificationService.publishSensitivityAnalysisStop(resultUuid, receiver);
         LOGGER.info(CANCEL_MESSAGE + " (resultUuid='{}')", resultUuid);
     }
 
@@ -228,12 +237,13 @@ public class SensitivityAnalysisWorkerService {
                 long nanoTime = System.nanoTime();
                 LOGGER.info("Just run in {}s", TimeUnit.NANOSECONDS.toSeconds(nanoTime - startTime.getAndSet(nanoTime)));
 
-                resultRepository.insert(resultContext.getResultUuid(), result, SensitivityAnalysisStatus.COMPLETED.name());
+                sensitivityAnalysisObserver.observe("results.save", resultContext.getRunContext(), () ->
+                    resultRepository.insert(resultContext.getResultUuid(), result, SensitivityAnalysisStatus.COMPLETED.name()));
                 long finalNanoTime = System.nanoTime();
                 LOGGER.info("Stored in {}s", TimeUnit.NANOSECONDS.toSeconds(finalNanoTime - startTime.getAndSet(finalNanoTime)));
 
                 if (result != null) {  // result available
-                    notificationService.sendResultMessage(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver());
+                    notificationService.sendSensitivityAnalysisResultMessage(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver());
                     LOGGER.info("Sensitivity analysis complete (resultUuid='{}')", resultContext.getResultUuid());
                 } else {  // result not available : stop computation request
                     if (cancelComputationRequests.get(resultContext.getResultUuid()) != null) {
@@ -245,7 +255,8 @@ public class SensitivityAnalysisWorkerService {
             } catch (Exception | OutOfMemoryError e) {
                 if (!(e instanceof CancellationException)) {
                     LOGGER.error(FAIL_MESSAGE, e);
-                    notificationService.publishFail(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver(), e.getMessage());
+                    notificationService.publishSensitivityAnalysisFail(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver(),
+                            e.getMessage(), resultContext.getRunContext().getUserId());
                     resultRepository.delete(resultContext.getResultUuid());
                     resultRepository.insertStatus(List.of(resultContext.getResultUuid()), SensitivityAnalysisStatus.FAILED.name());
                 }
@@ -260,9 +271,5 @@ public class SensitivityAnalysisWorkerService {
     @Bean
     public Consumer<Message<String>> consumeCancel() {
         return message -> cancelSensitivityAnalysisAsync(SensitivityAnalysisCancelContext.fromMessage(message));
-    }
-
-    public Long getFactorsCount(Map<String, List<UUID>> ids, UUID networkUuid, String variantId, Boolean isInjectionsSet) {
-        return sensitivityAnalysisInputBuilderService.getFactorsCount(ids, networkUuid, variantId, isInjectionsSet);
     }
 }

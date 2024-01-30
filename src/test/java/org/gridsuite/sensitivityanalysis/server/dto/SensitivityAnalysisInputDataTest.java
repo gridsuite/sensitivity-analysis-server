@@ -113,7 +113,7 @@ public class SensitivityAnalysisInputDataTest {
     @Test
     public void testEmptyInputTranslation() {
         SensitivityAnalysisInputBuilderService inputBuilderService;
-        given(filterService.getIdentifiablesFromFilter(any(), any(), any())).willThrow(new RuntimeException("FilterException"));
+        given(filterService.getIdentifiablesFromFilters(any(), any(), any())).willThrow(new RuntimeException("FilterException"));
         given(actionsService.getContingencyList(any(), any(), any())).willThrow(new RuntimeException("ContingencyException"));
         inputBuilderService = new SensitivityAnalysisInputBuilderService(actionsService, filterService);
         SensitivityAnalysisInputData.SensitivityAnalysisInputDataBuilder<?, ?> inputBuilder = SensitivityAnalysisInputData.builder();
@@ -127,7 +127,7 @@ public class SensitivityAnalysisInputDataTest {
             .build();
         ReporterModel reporter = new ReporterModel("a", "b");
         SensitivityAnalysisRunContext context;
-        context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, inputData, null, null, null, null, null);
+        context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, inputData, null, null, null, null, null, null);
         inputBuilderService.build(context, NETWORK, reporter);
         Collection<Report> reports;
         reports = reporter.getReports();
@@ -138,7 +138,7 @@ public class SensitivityAnalysisInputDataTest {
     @Test
     public void testFilterPbInputTranslation() {
         SensitivityAnalysisInputBuilderService inputBuilderService;
-        given(filterService.getIdentifiablesFromFilter(any(), any(), any())).willThrow(new RuntimeException("FilterException"));
+        given(filterService.getIdentifiablesFromFilters(any(), any(), any())).willThrow(new RuntimeException("FilterException"));
         given(actionsService.getContingencyList(any(), any(), any())).willThrow(new RuntimeException("ContingencyException"));
         inputBuilderService = new SensitivityAnalysisInputBuilderService(actionsService, filterService);
         SensitivityAnalysisInputData.SensitivityAnalysisInputDataBuilder<?, ?> inputBuilder = SensitivityAnalysisInputData.builder();
@@ -157,11 +157,11 @@ public class SensitivityAnalysisInputDataTest {
                 .contingencies(List.of(new EquipmentsContainer(UUID.randomUUID(), "u10"), new EquipmentsContainer(UUID.randomUUID(), "u11")))
                 .build()))
             .build();
-        context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, inputData, null, null, null, null, null);
+        context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, inputData, null, null, null, null, null, null);
         inputBuilderService.build(context, NETWORK, reporter);
         Collection<Report> reports = reporter.getReports();
         assertThat(reports, not(nullValue()));
-        assertThat(reports.size(), is(4));
+        assertThat(reports.size(), is(3));
         Set<String> reportKeys = reports.stream().map(Report::getReportKey).collect(Collectors.toSet());
         assertThat(reportKeys.size(), is(2));
         assertThat(reportKeys, contains("contingencyTranslationFailure", "filterTranslationFailure"));
@@ -177,7 +177,7 @@ public class SensitivityAnalysisInputDataTest {
 
         SensitivityAnalysisInputData inputData = inputBuilder
             .build();
-        context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, inputData, null, null, null, null, null);
+        context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, inputData, null, null, null, null, null, null);
         final ReporterModel reporter = new ReporterModel("a", "b");
         var thrown = assertThrows(NullPointerException.class, () -> inputBuilderService.build(context, NETWORK, reporter));
         assertThat(thrown, Matchers.instanceOf(NullPointerException.class));
