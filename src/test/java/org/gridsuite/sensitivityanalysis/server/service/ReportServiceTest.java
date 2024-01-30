@@ -77,6 +77,9 @@ public class ReportServiceTest {
                 } else if (requestPath.equals(String.format("/v1/reports/%s?reportTypeFilter=SensitivityAnalysis&errorOnReportNotFound=false", REPORT_UUID))) {
                     assertEquals("", request.getBody().readUtf8());
                     return new MockResponse().setResponseCode(HttpStatus.OK.value());
+                } else if (requestPath.equals(String.format("/v1/reports/%s?reportTypeFilter=NonEvacuatedEnergy&errorOnReportNotFound=false", REPORT_UUID))) {
+                    assertEquals("", request.getBody().readUtf8());
+                    return new MockResponse().setResponseCode(HttpStatus.OK.value());
                 } else if (requestPath.equals(String.format("/v1/reports/%s", REPORT_ERROR_UUID))) {
                     return new MockResponse().setResponseCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
                 } else {
@@ -100,8 +103,14 @@ public class ReportServiceTest {
     }
 
     @Test
-    public void testDeleteReport() {
+    public void testDeleteSensitivityAnalysisReport() {
         reportService.deleteReport(REPORT_UUID, "SensitivityAnalysis");
         assertThrows(RestClientException.class, () -> reportService.deleteReport(REPORT_ERROR_UUID, "SensitivityAnalysis"));
+    }
+
+    @Test
+    public void testDeleteNonEvacuatedEnergyReport() {
+        reportService.deleteReport(REPORT_UUID, "NonEvacuatedEnergy");
+        assertThrows(RestClientException.class, () -> reportService.deleteReport(REPORT_ERROR_UUID, "NonEvacuatedEnergy"));
     }
 }
