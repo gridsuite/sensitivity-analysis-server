@@ -4,20 +4,6 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.contingency.ContingencyContext;
@@ -30,14 +16,8 @@ import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import com.powsybl.sensitivity.*;
 import lombok.SneakyThrows;
 import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisCsvFileInfos;
-import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
-import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.SensitivityAnalysisApplication;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
+import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
@@ -58,6 +38,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;

@@ -17,12 +17,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisCsvFileInfos;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
+import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
@@ -30,9 +25,9 @@ import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService;
-import org.springframework.http.HttpHeaders;
 import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.NonEvacuatedEnergyRunContext;
 import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.NonEvacuatedEnergyService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,9 +36,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.HEADER_USER_ID;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM;
-import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
+import static org.springframework.http.MediaType.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
