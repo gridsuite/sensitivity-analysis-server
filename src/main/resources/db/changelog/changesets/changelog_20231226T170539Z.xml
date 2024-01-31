@@ -35,10 +35,8 @@
                 <constraints nullable="false" primaryKey="true" primaryKeyName="sensitivity_analysis_parametersPK"/>
             </column>
             <column defaultValueNumeric="0.0" name="angle_flow_sensitivity_value_threshold" type="FLOAT(53)"/>
-            <column name="date" type="TIMESTAMP(6)"/>
             <column defaultValueNumeric="0.0" name="flow_flow_sensitivity_value_threshold" type="FLOAT(53)"/>
             <column defaultValueNumeric="0.0" name="flow_voltage_sensitivity_value_threshold" type="FLOAT(53)"/>
-            <column name="name" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
     <changeSet author="millotflo (generated)" id="1703610358676-5">

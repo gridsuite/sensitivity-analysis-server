@@ -11,9 +11,6 @@ import lombok.*;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -34,12 +31,6 @@ public class SensitivityAnalysisParametersEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
     private UUID id;
-
-    @Column(name = "date")
-    private ZonedDateTime date;
-
-    @Column(name = "name")
-    private String name;
 
     @Column(name = "flowFlowSensitivityValueThreshold")
     private double flowFlowSensitivityValueThreshold = 0.0;
@@ -71,7 +62,6 @@ public class SensitivityAnalysisParametersEntity {
     private List<SensitivityFactorForNodeEntity> sensitivityNodes = new ArrayList<>();
 
     public SensitivityAnalysisParametersEntity(@NonNull SensitivityAnalysisParametersInfos parametersInfos) {
-        this.date = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
         assignAttributes(parametersInfos);
     }
 
@@ -83,8 +73,6 @@ public class SensitivityAnalysisParametersEntity {
      */
     public SensitivityAnalysisParametersEntity copy() {
         return SensitivityAnalysisParametersEntity.builder()
-            .date(ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS))
-            .name(this.name)
             .flowFlowSensitivityValueThreshold(this.flowFlowSensitivityValueThreshold)
             .angleFlowSensitivityValueThreshold(this.angleFlowSensitivityValueThreshold)
             .flowVoltageSensitivityValueThreshold(this.flowVoltageSensitivityValueThreshold)
@@ -101,7 +89,6 @@ public class SensitivityAnalysisParametersEntity {
     }
 
     public void assignAttributes(@NonNull SensitivityAnalysisParametersInfos parametersInfos) {
-        this.name = parametersInfos.getName();
         this.flowFlowSensitivityValueThreshold = parametersInfos.getFlowFlowSensitivityValueThreshold();
         this.angleFlowSensitivityValueThreshold = parametersInfos.getAngleFlowSensitivityValueThreshold();
         this.flowVoltageSensitivityValueThreshold = parametersInfos.getFlowVoltageSensitivityValueThreshold();
@@ -242,8 +229,6 @@ public class SensitivityAnalysisParametersEntity {
 
         return SensitivityAnalysisParametersInfos.builder()
             .uuid(this.id)
-            .date(this.date)
-            .name(this.name)
             .flowFlowSensitivityValueThreshold(this.flowFlowSensitivityValueThreshold)
             .angleFlowSensitivityValueThreshold(this.angleFlowSensitivityValueThreshold)
             .flowVoltageSensitivityValueThreshold(this.flowVoltageSensitivityValueThreshold)
