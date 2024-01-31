@@ -49,27 +49,14 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.HEADER_USER_ID;
-import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.*;
+import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
@@ -84,7 +71,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest
 @ContextHierarchy({@ContextConfiguration(classes = {SensitivityAnalysisApplication.class, TestChannelBinderConfiguration.class})})
-public class SensitivityAnalysisControllerTest {
+class SensitivityAnalysisControllerTest {
 
     private static final UUID NETWORK_UUID = UUID.randomUUID();
     private static final UUID NETWORK_STOP_UUID = UUID.randomUUID();
@@ -288,7 +275,7 @@ public class SensitivityAnalysisControllerTest {
 
     @BeforeEach
     @SneakyThrows
-    public void setUp() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
 
         // network store service mocking
@@ -497,13 +484,13 @@ public class SensitivityAnalysisControllerTest {
     // added for testStatus can return null, after runTest
     @SneakyThrows
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         mockMvc.perform(delete("/" + VERSION + "/results"))
             .andExpect(status().isOk());
     }
 
     @Test
-    public void runTest() throws Exception {
+    void runTest() throws Exception {
         MockitoAnnotations.openMocks(this);
 
         // run with specific variant
@@ -546,7 +533,7 @@ public class SensitivityAnalysisControllerTest {
     }
 
     @Test
-    public void runAndSaveTest() throws Exception {
+    void runAndSaveTest() throws Exception {
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
@@ -747,7 +734,7 @@ public class SensitivityAnalysisControllerTest {
 
     @SneakyThrows
     @Test
-    public void deleteResultsTest() {
+    void deleteResultsTest() {
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis", NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
@@ -769,7 +756,7 @@ public class SensitivityAnalysisControllerTest {
 
     @SneakyThrows
     @Test
-    public void testStatus() {
+    void testStatus() {
         MvcResult result = mockMvc.perform(get(
                 "/" + VERSION + "/results/{resultUuid}/status", RESULT_UUID))
             .andExpect(status().isOk())
@@ -788,7 +775,7 @@ public class SensitivityAnalysisControllerTest {
     }
 
     @Test
-    public void testGetFactorsCount() throws Exception {
+    void testGetFactorsCount() throws Exception {
         MockHttpServletRequestBuilder requestBuilder = get("/" + VERSION + "/networks/{networkUuid}/factors-count?variantId={variantId}", NETWORK_UUID, VARIANT_1_ID);
         IDS.getIds().forEach((key, list) -> requestBuilder.queryParam(String.format("ids[%s]", key), list.stream().map(UUID::toString).toArray(String[]::new)));
         MvcResult result = mockMvc.perform(requestBuilder)
@@ -799,7 +786,7 @@ public class SensitivityAnalysisControllerTest {
     }
 
     @Test
-    public void stopTest() throws Exception {
+    void stopTest() throws Exception {
         mockMvc.perform(post(
             "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_STOP_UUID)
             .contentType(MediaType.APPLICATION_JSON)
@@ -820,7 +807,7 @@ public class SensitivityAnalysisControllerTest {
 
     @SneakyThrows
     @Test
-    public void runTestWithError() {
+    void runTestWithError() {
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_1_ID, NETWORK_ERROR_UUID)
             .contentType(MediaType.APPLICATION_JSON)
@@ -844,7 +831,7 @@ public class SensitivityAnalysisControllerTest {
 
     @SneakyThrows
     @Test
-    public void runWithReportTest() {
+    void runWithReportTest() {
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/run?reportType=SensitivityAnalysis&reportUuid=" + REPORT_UUID + "&reporterId=" + UUID.randomUUID(), NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
@@ -857,7 +844,7 @@ public class SensitivityAnalysisControllerTest {
     }
 
     @Test
-    public void getProvidersTest() throws Exception {
+    void getProvidersTest() throws Exception {
         mockMvc.perform(get("/" + VERSION + "/providers"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -866,7 +853,7 @@ public class SensitivityAnalysisControllerTest {
     }
 
     @Test
-    public void getDefaultProviderTest() throws Exception {
+    void getDefaultProviderTest() throws Exception {
         mockMvc.perform(get("/" + VERSION + "/default-provider"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8)))
