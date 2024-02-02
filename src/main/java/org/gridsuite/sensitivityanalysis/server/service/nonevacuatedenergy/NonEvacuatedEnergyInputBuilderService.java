@@ -12,17 +12,8 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.contingency.ContingencyContext;
-import com.powsybl.iidm.network.Branch;
-import com.powsybl.iidm.network.CurrentLimits;
-import com.powsybl.iidm.network.EnergySource;
-import com.powsybl.iidm.network.Generator;
-import com.powsybl.iidm.network.IdentifiableType;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.sensitivity.SensitivityFactor;
-import com.powsybl.sensitivity.SensitivityFunctionType;
-import com.powsybl.sensitivity.SensitivityVariableSet;
-import com.powsybl.sensitivity.SensitivityVariableType;
-import com.powsybl.sensitivity.WeightedSensitivityVariable;
+import com.powsybl.iidm.network.*;
+import com.powsybl.sensitivity.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.sensitivityanalysis.server.dto.EquipmentsContainer;
@@ -258,7 +249,7 @@ public class NonEvacuatedEnergyInputBuilderService {
     }
 
     private boolean genFactorForPermanentLimit(Branch branch,
-                                            Branch.Side side,
+                                            TwoSides side,
                                             Optional<CurrentLimits> currentLimits,
                                             List<String> variableIds,
                                             boolean variableSet,
@@ -283,8 +274,8 @@ public class NonEvacuatedEnergyInputBuilderService {
             throw new PowsyblException("Branch '" + branch.getId() + "' has no permanent limit on side '" + side.name() + "' !!");
         }
 
-        SensitivityFunctionType functionTypeActivePower = side == Branch.Side.ONE ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1 : SensitivityFunctionType.BRANCH_ACTIVE_POWER_2;
-        SensitivityFunctionType functionTypeCurrent = side == Branch.Side.ONE ? SensitivityFunctionType.BRANCH_CURRENT_1 : SensitivityFunctionType.BRANCH_CURRENT_2;
+        SensitivityFunctionType functionTypeActivePower = side == TwoSides.ONE ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1 : SensitivityFunctionType.BRANCH_ACTIVE_POWER_2;
+        SensitivityFunctionType functionTypeCurrent = side == TwoSides.ONE ? SensitivityFunctionType.BRANCH_CURRENT_1 : SensitivityFunctionType.BRANCH_CURRENT_2;
 
         if (branches.isIstN()) {  // just one SensitivityFactor per variable id
             genSensitivityFactorPerVariableId(variableIds, variableSet ? functionTypeActivePower : functionTypeCurrent, branch.getId(), sensitivityVariableType, variableSet, result);
@@ -300,7 +291,7 @@ public class NonEvacuatedEnergyInputBuilderService {
     }
 
     private boolean genFactorForTemporaryLimit(Branch branch,
-                                            Branch.Side side,
+                                            TwoSides side,
                                             Optional<CurrentLimits> currentLimits,
                                             String limitName,
                                             boolean inN,
@@ -315,8 +306,8 @@ public class NonEvacuatedEnergyInputBuilderService {
             return false;
         }
 
-        SensitivityFunctionType functionTypeActivePower = side == Branch.Side.ONE ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1 : SensitivityFunctionType.BRANCH_ACTIVE_POWER_2;
-        SensitivityFunctionType functionTypeCurrent = side == Branch.Side.ONE ? SensitivityFunctionType.BRANCH_CURRENT_1 : SensitivityFunctionType.BRANCH_CURRENT_2;
+        SensitivityFunctionType functionTypeActivePower = side == TwoSides.ONE ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1 : SensitivityFunctionType.BRANCH_ACTIVE_POWER_2;
+        SensitivityFunctionType functionTypeCurrent = side == TwoSides.ONE ? SensitivityFunctionType.BRANCH_CURRENT_1 : SensitivityFunctionType.BRANCH_CURRENT_2;
 
         if (inN) {
             genSensitivityFactorPerVariableId(variableIds, variableSet ? functionTypeActivePower : functionTypeCurrent, branch.getId(), sensitivityVariableType, variableSet, result);
@@ -372,10 +363,10 @@ public class NonEvacuatedEnergyInputBuilderService {
 
             if (branches.isIstN() || branches.isIstNm1()) {  // Ist activated : we consider the permanent limit
                 // permanent limit on side 1
-                boolean factors1Generated = genFactorForPermanentLimit(branch, Branch.Side.ONE, currentLimits1, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
+                boolean factors1Generated = genFactorForPermanentLimit(branch, TwoSides.ONE, currentLimits1, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
 
                 // permanent limit on side 2
-                boolean factors2Generated = genFactorForPermanentLimit(branch, Branch.Side.TWO, currentLimits2, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
+                boolean factors2Generated = genFactorForPermanentLimit(branch, TwoSides.TWO, currentLimits2, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result, reporter);
 
                 if (!factors1Generated && !factors2Generated) {
                     // no temporary limit on one side : report and throw exception
@@ -391,10 +382,10 @@ public class NonEvacuatedEnergyInputBuilderService {
 
             if (!branches.isIstN() && StringUtils.isNotEmpty(branches.getLimitNameN())) {  // here we consider the temporary limits
                 // temporary limits on side 1
-                boolean factors1Generated = genFactorForTemporaryLimit(branch, Branch.Side.ONE, currentLimits1, branches.getLimitNameN(), true, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result);
+                boolean factors1Generated = genFactorForTemporaryLimit(branch, TwoSides.ONE, currentLimits1, branches.getLimitNameN(), true, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result);
 
                 // temporary limits on side 2
-                boolean factors2Generated = genFactorForTemporaryLimit(branch, Branch.Side.TWO, currentLimits2, branches.getLimitNameN(), true, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result);
+                boolean factors2Generated = genFactorForTemporaryLimit(branch, TwoSides.TWO, currentLimits2, branches.getLimitNameN(), true, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result);
 
                 if (!factors1Generated && !factors2Generated) {
                     reporter.report(Report.builder()
@@ -410,10 +401,10 @@ public class NonEvacuatedEnergyInputBuilderService {
 
             if (!branches.isIstNm1() && StringUtils.isNotEmpty(branches.getLimitNameNm1())) {  // here we consider the temporary limit
                 // temporary limits on side 1
-                boolean factors1Generated = genFactorForTemporaryLimit(branch, Branch.Side.ONE, currentLimits1, branches.getLimitNameNm1(), false, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result);
+                boolean factors1Generated = genFactorForTemporaryLimit(branch, TwoSides.ONE, currentLimits1, branches.getLimitNameNm1(), false, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result);
 
                 // temporary limits on side 2
-                boolean factors2Generated = genFactorForTemporaryLimit(branch, Branch.Side.TWO, currentLimits2, branches.getLimitNameNm1(), false, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result);
+                boolean factors2Generated = genFactorForTemporaryLimit(branch, TwoSides.TWO, currentLimits2, branches.getLimitNameNm1(), false, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result);
 
                 if (!factors1Generated && !factors2Generated) {
                     reporter.report(Report.builder()

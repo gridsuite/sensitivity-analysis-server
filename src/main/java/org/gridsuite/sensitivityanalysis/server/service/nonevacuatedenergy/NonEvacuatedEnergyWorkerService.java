@@ -20,37 +20,19 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.computation.ComputationManager;
-import com.powsybl.iidm.network.Branch;
-import com.powsybl.iidm.network.CurrentLimits;
-import com.powsybl.iidm.network.EnergySource;
-import com.powsybl.iidm.network.Generator;
-import com.powsybl.iidm.network.IdentifiableType;
-import com.powsybl.iidm.network.LoadingLimits;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.VariantManagerConstants;
+import com.powsybl.iidm.network.*;
 import com.powsybl.loadflow.LoadFlowParameters;
 import com.powsybl.loadflow.LoadFlowProvider;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import com.powsybl.sensitivity.SensitivityAnalysis;
-import com.powsybl.sensitivity.SensitivityAnalysisParameters;
-import com.powsybl.sensitivity.SensitivityAnalysisResult;
-import com.powsybl.sensitivity.SensitivityFactor;
-import com.powsybl.sensitivity.SensitivityFunctionType;
-import com.powsybl.sensitivity.SensitivityValue;
+import com.powsybl.sensitivity.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStageDefinition;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStagesSelection;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.ContingencyStageDetailResult;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.GeneratorCapping;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.MonitoredBranchDetailResult;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.NonEvacuatedEnergyResults;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.StageDetailResult;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.StageSummaryContingencyResult;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.StageSummaryResult;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.*;
 import org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy.NonEvacuatedEnergyRepository;
 import org.gridsuite.sensitivityanalysis.server.service.NotificationService;
 import org.gridsuite.sensitivityanalysis.server.service.ReportService;
@@ -66,23 +48,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
@@ -274,7 +241,7 @@ public class NonEvacuatedEnergyWorkerService {
                                      Optional<CurrentLimits> currentLimits1, Optional<CurrentLimits> currentLimits2) {
         String name = null;
         double value = Double.NaN;
-        Branch.Side side = Branch.Side.ONE;
+        TwoSides side = TwoSides.ONE;
 
         if (isIst) {
             name = "IST";
@@ -282,7 +249,7 @@ public class NonEvacuatedEnergyWorkerService {
                 value = currentLimits1.map(l -> l.getPermanentLimit() * coeff / 100).orElse(Double.NaN);
             } else if (factor.getFunctionType() == SensitivityFunctionType.BRANCH_CURRENT_2) {
                 value = currentLimits2.map(l -> l.getPermanentLimit() * coeff / 100).orElse(Double.NaN);
-                side = Branch.Side.TWO;
+                side = TwoSides.TWO;
             }
         } else if (!StringUtils.isEmpty(limitName)) {
             name = limitName;
@@ -292,7 +259,7 @@ public class NonEvacuatedEnergyWorkerService {
             } else if (factor.getFunctionType() == SensitivityFunctionType.BRANCH_CURRENT_2) {
                 Optional<LoadingLimits.TemporaryLimit> limit = currentLimits2.flatMap(currentLimits -> currentLimits.getTemporaryLimits().stream().filter(l -> l.getName().equals(limitName)).findFirst());
                 value = limit.map(temporaryLimit -> temporaryLimit.getValue() * coeff / 100).orElse(Double.NaN);
-                side = Branch.Side.TWO;
+                side = TwoSides.TWO;
             }
         }
         return new LimitInfos(name, value, side);
