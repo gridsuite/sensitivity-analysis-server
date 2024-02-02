@@ -317,19 +317,10 @@ public class SensitivityAnalysisResultRepository {
     }
 
     private Pageable addDefaultSort(Pageable pageable, String defaultSortColumn) {
-        if (pageable.isPaged()) {
-            if (pageable.getSort().equals(Sort.unsorted())) {
-                //if there is no sort on the original request we just add the default one
-                return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(DEFAULT_SORT_DIRECTION, defaultSortColumn));
-            } else {
-                //else we restore the original sort, and then we add the default sort on top of it to ensure there is a deterministic result
-                if (pageable.getSort().getOrderFor(defaultSortColumn) == null) {
-                    //if it's already sorted by our defaultColumn we don't add another sort by the same column
-                    Sort additionalSort = Sort.by(new Sort.Order(DEFAULT_SORT_DIRECTION, defaultSortColumn));
-                    Sort finalSort = pageable.getSort().and(additionalSort);
-                    return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), finalSort);
-                }
-            }
+        if (pageable.isPaged() && pageable.getSort().getOrderFor(defaultSortColumn) == null) {
+            //if it's already sorted by our defaultColumn we don't add another sort by the same column
+            Sort finalSort = pageable.getSort().and(Sort.by(new Sort.Order(DEFAULT_SORT_DIRECTION, defaultSortColumn)));
+            return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), finalSort);
         }
         //nothing to do if the request is not paged
         return pageable;
