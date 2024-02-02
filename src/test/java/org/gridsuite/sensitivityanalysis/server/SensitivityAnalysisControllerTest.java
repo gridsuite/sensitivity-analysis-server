@@ -77,6 +77,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -89,6 +91,7 @@ import static java.util.Comparator.comparing;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.HEADER_USER_ID;
+import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -632,6 +635,43 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(6, (long) resNK.getTotalSensitivitiesCount());
         assertEquals(2, resNK.getSensitivities().size());
 
+        // export results as csv
+        SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos = SensitivityAnalysisCsvFileInfos.builder()
+                .sensitivityFunctionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+                .resultTab(ResultTab.N)
+                .csvHeaders(List.of("functionId", "variableId", "functionReference", "value"))
+                .build();
+
+        UUID randomUuid = UUID.randomUUID();
+        mockMvc.perform(post("/" + VERSION + "/results/{resultUuid}/csv", randomUuid)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(sensitivityAnalysisCsvFileInfos)))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(post("/" + VERSION + "/results/{resultUuid}/csv", RESULT_UUID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(SensitivityAnalysisCsvFileInfos.builder().build())))
+                .andExpect(status().isBadRequest());
+
+        result = mockMvc.perform(post("/" + VERSION + "/results/{resultUuid}/csv", RESULT_UUID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(sensitivityAnalysisCsvFileInfos)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        byte[] zipFile = result.getResponse().getContentAsByteArray();
+        byte[] csvFile = unzip(zipFile);
+        String csvFileAsString = new String(csvFile, StandardCharsets.UTF_8);
+        List<String> actualCsvLines = Arrays.asList(csvFileAsString.split("\n"));
+        List<String> expectedCsvLines = new ArrayList<>(List.of("functionId,variableId,functionReference,value",
+                "l1,GEN,2.9,500.1",
+                "l2,GEN,2.8,500.2"));
+
+        actualCsvLines.sort(String::compareTo);
+        expectedCsvLines.sort(String::compareTo);
+        assertEquals(expectedCsvLines, actualCsvLines);
+
+        // test filter options
         ResultsSelector filterOptionsSelector = ResultsSelector.builder().tabSelection(ResultTab.N_K)
                 .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1).build();
         result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}/filter-options?selector={selector}", RESULT_UUID,
@@ -897,7 +937,7 @@ public class SensitivityAnalysisControllerTest {
         mockMvc.perform(get("/" + VERSION + "/providers"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("[\"OpenLoadFlow\",\"Hades2\"]"))
+                .andExpect(content().string("[\"OpenLoadFlow\"]"))
                 .andReturn();
     }
 
