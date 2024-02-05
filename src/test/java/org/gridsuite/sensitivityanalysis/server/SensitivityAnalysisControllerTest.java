@@ -806,19 +806,23 @@ public class SensitivityAnalysisControllerTest {
         //contingency.id and resultUuid (in that order) comparator
         Comparator<SensitivityEntity> comparatorByContingencyIdAndSensiId = comparing(SensitivityEntity::getContingency, comparatorByContingencyId).thenComparing(comparatorBySensiId);
 
-        List<SensitivityOfTo> sortedSensitivityList = (List<SensitivityOfTo>) sensitivityRepository.findAll().stream().filter(s -> s.getContingency() != null)
-                .sorted(comparatorByContingencyIdAndSensiId).map(sensitivityEntity ->
-                        SensitivityOfTo.builder().funcId(sensitivityEntity.getFactor().getFunctionId())
-                                .varId(sensitivityEntity.getFactor().getVariableId())
-                                .varIsAFilter(sensitivityEntity.getFactor().isVariableSet())
-                                .value(sensitivityEntity.getValue())
-                .functionReference(sensitivityEntity.getFunctionReference())
-                .build()).toList();
+        List<SensitivityOfTo> sortedSensitivityList = createSortedSensitivityList(comparatorByContingencyIdAndSensiId);
         SensitivityRunQueryResult resNK = mapper.readValue(bodyText, new TypeReference<>() { });
         assertEquals(6, (long) resNK.getTotalSensitivitiesCount());
         assertEquals(6, resNK.getSensitivities().size());
 
         assertEquals(sortedSensitivityList, resNK.getSensitivities());
+    }
+
+    private List<SensitivityOfTo> createSortedSensitivityList(Comparator<SensitivityEntity> comparator) {
+        return (List<SensitivityOfTo>) sensitivityRepository.findAll().stream().filter(s -> s.getContingency() != null)
+                .sorted(comparator).map(sensitivityEntity ->
+                        SensitivityOfTo.builder().funcId(sensitivityEntity.getFactor().getFunctionId())
+                                .varId(sensitivityEntity.getFactor().getVariableId())
+                                .varIsAFilter(sensitivityEntity.getFactor().isVariableSet())
+                                .value(sensitivityEntity.getValue())
+                                .functionReference(sensitivityEntity.getFunctionReference())
+                                .build()).toList();
     }
 
     @SneakyThrows
