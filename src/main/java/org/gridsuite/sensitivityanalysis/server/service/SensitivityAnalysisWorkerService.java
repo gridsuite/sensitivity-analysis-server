@@ -160,7 +160,10 @@ public class SensitivityAnalysisWorkerService {
 
         CompletableFuture<SensitivityAnalysisResult> future = runSensitivityAnalysisAsync(context, sensitivityAnalysisRunner, reporter, resultUuid);
 
-        SensitivityAnalysisResult result = future == null ? null : sensitivityAnalysisObserver.observeRun("run", context, future::get);
+        SensitivityAnalysisResult result = null;
+        if (future != null) {
+            result = sensitivityAnalysisObserver.observeRun("run", context, future::get);
+        }
         if (context.getReportUuid() != null) {
             sensitivityAnalysisObserver.observe("report.send", context, () ->
                 reportService.sendReport(context.getReportUuid(), rootReporter.get()));
