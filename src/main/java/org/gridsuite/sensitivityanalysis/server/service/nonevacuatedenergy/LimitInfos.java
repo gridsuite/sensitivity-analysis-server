@@ -6,7 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy;
 
-import com.powsybl.iidm.network.Branch;
+import com.powsybl.iidm.network.TwoSides;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,5 +24,5 @@ public class LimitInfos {
 
     double value;
 
-    Branch.Side side;
+    TwoSides side;
 }

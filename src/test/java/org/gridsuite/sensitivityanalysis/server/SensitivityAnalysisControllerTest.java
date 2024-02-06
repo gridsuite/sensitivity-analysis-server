@@ -26,10 +26,13 @@ import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParameter
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
+import org.gridsuite.sensitivityanalysis.server.entities.ContingencyEmbeddable;
+import org.gridsuite.sensitivityanalysis.server.entities.SensitivityEntity;
+import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityRepository;
 import org.gridsuite.sensitivityanalysis.server.service.*;
+import org.junit.Test;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +58,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
+import static java.util.Comparator.comparing;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.*;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
 import static org.junit.Assert.*;
@@ -266,6 +270,9 @@ class SensitivityAnalysisControllerTest {
 
     @Value("${sensitivity-analysis.default-provider}")
     String defaultSensitivityAnalysisProvider;
+
+    @Autowired
+    SensitivityRepository sensitivityRepository;
 
     private final RestTemplateConfig restTemplateConfig = new RestTemplateConfig();
     private final ObjectMapper mapper = restTemplateConfig.objectMapper();
@@ -732,6 +739,65 @@ class SensitivityAnalysisControllerTest {
             .andExpect(status().isNotFound());
     }
 
+    @Test
+    public void testDeterministicResult() throws Exception {
+        MvcResult result = mockMvc.perform(post(
+                        "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_UUID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HEADER_USER_ID, "testUserId")
+                        .content(SENSITIVITY_INPUT_1))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        assertEquals(RESULT_UUID, mapper.readValue(result.getResponse().getContentAsString(), UUID.class));
+
+        Message<byte[]> resultMessage = output.receive(TIMEOUT, "sensitivityanalysis.result");
+        assertEquals(RESULT_UUID.toString(), resultMessage.getHeaders().get("resultUuid"));
+        assertEquals("me", resultMessage.getHeaders().get("receiver"));
+
+        // check that the results is deterministic while the sort by contingency id is not (there are 2 results with the same id)
+        //so the results should be sorted by
+        ResultsSelector selectorNK = ResultsSelector.builder()
+                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+                .tabSelection(ResultTab.N_K)
+                .sortKeysWithWeightAndDirection(Map.of(
+                        SortKey.CONTINGENCY, 1))
+                .pageSize(10)
+                .pageNumber(0)
+                .build();
+
+        result = mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}?selector={selector}", RESULT_UUID, mapper.writeValueAsString(selectorNK)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        String bodyText = result.getResponse().getContentAsString();
+
+        //contingency.id comparator
+        Comparator<ContingencyEmbeddable> comparatorByContingencyId = comparing(ContingencyEmbeddable::getContingencyId, Comparator.comparing(String::toString));
+        //sensitivityId comparator (the toString is needed because UUID comparator is not the same as the string one)
+        Comparator<SensitivityEntity> comparatorBySensiId = comparing(s -> s.getSensitivityId().toString());
+        //contingency.id and resultUuid (in that order) comparator
+        Comparator<SensitivityEntity> comparatorByContingencyIdAndSensiId = comparing(SensitivityEntity::getContingency, comparatorByContingencyId).thenComparing(comparatorBySensiId);
+
+        List<SensitivityOfTo> sortedSensitivityList = createSortedSensitivityList(comparatorByContingencyIdAndSensiId);
+        SensitivityRunQueryResult resNK = mapper.readValue(bodyText, new TypeReference<>() { });
+        assertEquals(6, (long) resNK.getTotalSensitivitiesCount());
+        assertEquals(6, resNK.getSensitivities().size());
+
+        assertEquals(sortedSensitivityList, resNK.getSensitivities());
+    }
+
+    private List<SensitivityOfTo> createSortedSensitivityList(Comparator<SensitivityEntity> comparator) {
+        return (List<SensitivityOfTo>) sensitivityRepository.findAll().stream().filter(s -> s.getContingency() != null)
+                .sorted(comparator).map(sensitivityEntity ->
+                        SensitivityOfTo.builder().funcId(sensitivityEntity.getFactor().getFunctionId())
+                                .varId(sensitivityEntity.getFactor().getVariableId())
+                                .varIsAFilter(sensitivityEntity.getFactor().isVariableSet())
+                                .value(sensitivityEntity.getValue())
+                                .functionReference(sensitivityEntity.getFunctionReference())
+                                .build()).toList();
+    }
+
     @SneakyThrows
     @Test
     void deleteResultsTest() {
@@ -848,7 +914,7 @@ class SensitivityAnalysisControllerTest {
         mockMvc.perform(get("/" + VERSION + "/providers"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("[\"OpenLoadFlow\",\"Hades2\"]"))
+                .andExpect(content().string("[\"OpenLoadFlow\"]"))
                 .andReturn();
     }
 

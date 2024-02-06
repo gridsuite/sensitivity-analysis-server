@@ -47,7 +47,7 @@ powsybl-ws:
   database:
     name: sensitivityanalysis
 
-# default values for loadflow providers "Hades2" or "OpenLoadFlow"
+# default value for loadflow provider "OpenLoadFlow"
 sensitivity-analysis:
   default-provider: OpenLoadFlow
 

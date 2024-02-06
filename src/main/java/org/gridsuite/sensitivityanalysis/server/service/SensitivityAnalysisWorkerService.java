@@ -272,7 +272,6 @@ public class SensitivityAnalysisWorkerService {
                     notificationService.publishSensitivityAnalysisFail(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver(),
                             e.getMessage(), resultContext.getRunContext().getUserId());
                     resultRepository.delete(resultContext.getResultUuid());
-                    resultRepository.insertStatus(List.of(resultContext.getResultUuid()), SensitivityAnalysisStatus.FAILED.name());
                 }
             } finally {
                 futures.remove(resultContext.getResultUuid());
