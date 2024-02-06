@@ -58,6 +58,10 @@ public class SensitivityAnalysisResultRepository {
 
     private final SensitivityRepository sensitivityRepository;
 
+    private static final String DEFAULT_SENSITIVITY_SORT_COLUMN = "sensitivityId";
+
+    private static final Sort.Direction DEFAULT_SORT_DIRECTION = Sort.Direction.ASC;
+
     public SensitivityAnalysisResultRepository(GlobalStatusRepository globalStatusRepository,
                                                AnalysisResultRepository analysisResultRepository,
                                                SensitivityRepository sensitivityRepository) {
@@ -220,8 +224,7 @@ public class SensitivityAnalysisResultRepository {
         }
         Pageable pageable = sortListFiltered.isEmpty() ? PageRequest.of(pageNumber, pageSize) :
                 PageRequest.of(pageNumber, pageSize, Sort.by(sortListFiltered));
-
-        Page<SensitivityEntity> sensiResults = sensitivityRepository.findAll(specification, pageable);
+        Page<SensitivityEntity> sensiResults = sensitivityRepository.findAll(specification, addDefaultSort(pageable, DEFAULT_SENSITIVITY_SORT_COLUMN));
         return sensiResults.getContent();
     }
 
@@ -310,5 +313,15 @@ public class SensitivityAnalysisResultRepository {
             case POST_REFERENCE -> "functionReferenceAfter";
             case POST_SENSITIVITY -> "valueAfter";
         };
+    }
+
+    private Pageable addDefaultSort(Pageable pageable, String defaultSortColumn) {
+        if (pageable.isPaged() && pageable.getSort().getOrderFor(defaultSortColumn) == null) {
+            //if it's already sorted by our defaultColumn we don't add another sort by the same column
+            Sort finalSort = pageable.getSort().and(Sort.by(DEFAULT_SORT_DIRECTION, defaultSortColumn));
+            return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), finalSort);
+        }
+        //nothing to do if the request is not paged
+        return pageable;
     }
 }
