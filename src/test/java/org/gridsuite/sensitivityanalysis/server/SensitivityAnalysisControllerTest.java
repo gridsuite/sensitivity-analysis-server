@@ -30,9 +30,9 @@ import org.gridsuite.sensitivityanalysis.server.entities.ContingencyEmbeddable;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityEntity;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityRepository;
 import org.gridsuite.sensitivityanalysis.server.service.*;
-import org.junit.Test;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -744,8 +744,7 @@ class SensitivityAnalysisControllerTest {
         MvcResult result = mockMvc.perform(post(
                         "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_UUID)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header(HEADER_USER_ID, "testUserId")
-                        .content(SENSITIVITY_INPUT_1))
+                        .header(HEADER_USER_ID, "testUserId"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
