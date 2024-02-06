@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
+import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
@@ -76,7 +77,7 @@ public class SensitivityAnalysisResultContext {
         String reporterId = headers.containsKey(REPORTER_ID_HEADER) ? (String) headers.get(REPORTER_ID_HEADER) : null;
         String reportType = headers.containsKey(REPORT_TYPE_HEADER) ? (String) headers.get(REPORT_TYPE_HEADER) : null;
         SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid,
-            variantId, sensitivityAnalysisInputData, receiver, provider, reportUuid, reporterId, reportType, userId);
+            variantId, sensitivityAnalysisInputData, receiver, provider, new ReportInfos(reportUuid, reporterId, reportType), userId);
         return new SensitivityAnalysisResultContext(resultUuid, runContext);
     }
 

@@ -80,11 +80,11 @@ public class SensitivityAnalysisService {
         this.objectMapper = Objects.requireNonNull(objectMapper);
     }
 
-    public UUID runAndSaveResult(UUID networkUuid, String variantId, String receiver, String provider, UUID reportUuid, String reporterId, String reportType, String userId, UUID parametersUuid, LoadFlowParametersValues loadFlowParametersValues) {
+    public UUID runAndSaveResult(UUID networkUuid, String variantId, String receiver, String provider, ReportInfos reportInfos, String userId, UUID parametersUuid, LoadFlowParametersValues loadFlowParametersValues) {
 
         SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersUuid, loadFlowParametersValues);
 
-        SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid, variantId, inputData, receiver, provider, reportUuid, reporterId, reportType, userId);
+        SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid, variantId, inputData, receiver, provider, reportInfos, userId);
 
         Objects.requireNonNull(runContext);
         var resultUuid = uuidGeneratorService.generate();

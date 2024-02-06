@@ -22,6 +22,7 @@ import com.powsybl.sensitivity.SensitivityAnalysis;
 import com.powsybl.sensitivity.SensitivityAnalysisParameters;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import org.apache.commons.lang3.StringUtils;
+import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
@@ -123,11 +124,11 @@ public class SensitivityAnalysisWorkerService {
         return network;
     }
 
-    public SensitivityAnalysisResult run(UUID networkUuid, String variantId, String provider, UUID reportUuid, String reporterId, String reportType, String userId, UUID parametersUuid, LoadFlowParametersValues loadFlowParametersValues) {
+    public SensitivityAnalysisResult run(UUID networkUuid, String variantId, String provider, ReportInfos reportInfos, String userId, UUID parametersUuid, LoadFlowParametersValues loadFlowParametersValues) {
 
         SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersUuid, loadFlowParametersValues);
 
-        SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid, variantId, inputData, null, provider, reportUuid, reporterId, reportType, userId);
+        SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid, variantId, inputData, null, provider, reportInfos, userId);
         try {
             return run(runContext, null);
         } catch (InterruptedException e) {

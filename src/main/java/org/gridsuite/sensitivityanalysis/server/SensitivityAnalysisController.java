@@ -83,7 +83,7 @@ public class SensitivityAnalysisController {
                                                          @Parameter(description = "parametersUuid") @RequestParam(name = "parametersUuid", required = false) UUID parametersUuid,
                                                          @RequestBody LoadFlowParametersValues loadFlowParametersValues,
                                                          @RequestHeader(HEADER_USER_ID) String userId) {
-        SensitivityAnalysisResult result = workerService.run(networkUuid, variantId, provider, reportUuid, reporterId, reportType, userId, parametersUuid, loadFlowParametersValues);
+        SensitivityAnalysisResult result = workerService.run(networkUuid, variantId, provider, new ReportInfos(reportUuid, reporterId, reportType), userId, parametersUuid, loadFlowParametersValues);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result);
     }
 
@@ -103,7 +103,7 @@ public class SensitivityAnalysisController {
                                            @Parameter(description = "parametersUuid") @RequestParam(name = "parametersUuid", required = false) UUID parametersUuid,
                                            @RequestBody LoadFlowParametersValues loadFlowParametersValues,
                                            @RequestHeader(HEADER_USER_ID) String userId) {
-        UUID resultUuid = service.runAndSaveResult(networkUuid, variantId, receiver, provider, reportUuid, reporterId, reportType, userId, parametersUuid, loadFlowParametersValues);
+        UUID resultUuid = service.runAndSaveResult(networkUuid, variantId, receiver, provider, new ReportInfos(reportUuid, reporterId, reportType), userId, parametersUuid, loadFlowParametersValues);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
