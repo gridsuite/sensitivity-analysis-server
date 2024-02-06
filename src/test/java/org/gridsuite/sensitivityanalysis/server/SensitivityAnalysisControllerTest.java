@@ -744,7 +744,9 @@ class SensitivityAnalysisControllerTest {
         MvcResult result = mockMvc.perform(post(
                         "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_UUID)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header(HEADER_USER_ID, "testUserId"))
+                        .header(HEADER_USER_ID, "testUserId")
+                        .content(DEFAULT_LOADFLOW_PARAMS))
+
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
