@@ -72,16 +72,7 @@ public class SensitivityAnalysisParametersEntity {
      * @return a copy of the entity
      */
     public SensitivityAnalysisParametersEntity copy() {
-        return SensitivityAnalysisParametersEntity.builder()
-            .flowFlowSensitivityValueThreshold(this.flowFlowSensitivityValueThreshold)
-            .angleFlowSensitivityValueThreshold(this.angleFlowSensitivityValueThreshold)
-            .flowVoltageSensitivityValueThreshold(this.flowVoltageSensitivityValueThreshold)
-            .sensitivityInjectionsSets(new ArrayList<>(this.sensitivityInjectionsSets))
-            .sensitivityInjections(new ArrayList<>(this.sensitivityInjections))
-            .sensitivityHVDCs(new ArrayList<>(this.sensitivityHVDCs))
-            .sensitivityPSTs(new ArrayList<>(this.sensitivityPSTs))
-            .sensitivityNodes(new ArrayList<>(this.sensitivityNodes))
-            .build();
+        return this.toInfos().toEntity();
     }
 
     public void update(@NonNull SensitivityAnalysisParametersInfos parametersInfos) {
