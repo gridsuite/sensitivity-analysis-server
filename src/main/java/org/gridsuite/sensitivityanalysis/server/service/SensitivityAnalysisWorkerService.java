@@ -22,7 +22,10 @@ import com.powsybl.sensitivity.SensitivityAnalysis;
 import com.powsybl.sensitivity.SensitivityAnalysisParameters;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import org.apache.commons.lang3.StringUtils;
+import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
 import org.slf4j.Logger;
@@ -77,14 +80,20 @@ public class SensitivityAnalysisWorkerService {
 
     private final SensitivityAnalysisInputBuilderService sensitivityAnalysisInputBuilderService;
 
+    private final SensitivityAnalysisParametersService parametersService;
+
     private final SensitivityAnalysisObserver sensitivityAnalysisObserver;
 
     private Function<String, SensitivityAnalysis.Runner> sensitivityAnalysisFactorySupplier;
 
-    public SensitivityAnalysisWorkerService(NetworkStoreService networkStoreService, ReportService reportService, NotificationService notificationService,
+    public SensitivityAnalysisWorkerService(NetworkStoreService networkStoreService,
+                                            ReportService reportService,
+                                            NotificationService notificationService,
                                             SensitivityAnalysisInputBuilderService sensitivityAnalysisInputBuilderService,
                                             SensitivityAnalysisExecutionService sensitivityAnalysisExecutionService,
-                                            SensitivityAnalysisResultRepository resultRepository, ObjectMapper objectMapper,
+                                            SensitivityAnalysisResultRepository resultRepository,
+                                            ObjectMapper objectMapper,
+                                            SensitivityAnalysisParametersService parametersService,
                                             SensitivityAnalysisRunnerSupplier sensitivityAnalysisRunnerSupplier,
                                             SensitivityAnalysisObserver sensitivityAnalysisObserver) {
         this.networkStoreService = Objects.requireNonNull(networkStoreService);
@@ -94,6 +103,7 @@ public class SensitivityAnalysisWorkerService {
         this.sensitivityAnalysisInputBuilderService = sensitivityAnalysisInputBuilderService;
         this.resultRepository = Objects.requireNonNull(resultRepository);
         this.objectMapper = Objects.requireNonNull(objectMapper);
+        this.parametersService = parametersService;
         sensitivityAnalysisFactorySupplier = sensitivityAnalysisRunnerSupplier::getRunner;
         this.sensitivityAnalysisObserver = sensitivityAnalysisObserver;
     }
@@ -114,9 +124,13 @@ public class SensitivityAnalysisWorkerService {
         return network;
     }
 
-    public SensitivityAnalysisResult run(SensitivityAnalysisRunContext context) {
+    public SensitivityAnalysisResult run(UUID networkUuid, String variantId, String provider, ReportInfos reportInfos, String userId, UUID parametersUuid, LoadFlowParametersValues loadFlowParametersValues) {
+
+        SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersUuid, loadFlowParametersValues);
+
+        SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid, variantId, inputData, null, provider, reportInfos, userId);
         try {
-            return run(context, null);
+            return run(runContext, null);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return null;

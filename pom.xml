@@ -44,7 +44,6 @@
     <properties>
         <powsybl-ws-dependencies.version>2.7.0</powsybl-ws-dependencies.version>
         <liquibase-hibernate-package>org.gridsuite.sensitivityanalysis.server</liquibase-hibernate-package>
-        <mockito-inline.version>3.11.1</mockito-inline.version>
         <db-util.version>1.0.5</db-util.version>
     </properties>
 
@@ -223,11 +222,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
@@ -246,19 +240,6 @@
             <groupId>com.vladmihalcea</groupId>
             <artifactId>db-util</artifactId>
             <version>${db-util.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <!-- Needed to mock SensitivityAnalysis.Runner (which happens to be a final class) in SensitivityAnalysisControllerTest -->
-        <!-- see "mockito-inline" in https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.testing.spring-boot-applications.mocking-beans -->
-        <!-- otherwise we get the following exception:
-            Cannot mock/spy class com.powsybl.sensitivity.SensitivityAnalysis.Runner
-             Mockito cannot mock/spy because :
-              - final class
-        -->
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-inline</artifactId>
-            <version>${mockito-inline.version}</version>
             <scope>test</scope>
         </dependency>
 

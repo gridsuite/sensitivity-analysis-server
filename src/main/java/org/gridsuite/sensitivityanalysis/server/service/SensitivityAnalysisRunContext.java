@@ -7,6 +7,7 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import lombok.Getter;
+import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 
 import java.util.Objects;
@@ -40,17 +41,17 @@ public class SensitivityAnalysisRunContext {
 
     public SensitivityAnalysisRunContext(UUID networkUuid, String variantId,
                                          SensitivityAnalysisInputData sensitivityAnalysisInputData,
-                                         String receiver, String provider, UUID reportUuid,
-                                         String reporterId, String reportType, String userId) {
+                                         String receiver, String provider,
+                                         ReportInfos reportInfos, String userId) {
         this.networkUuid = Objects.requireNonNull(networkUuid);
         this.variantId = variantId;
         this.sensitivityAnalysisInputData = Objects.requireNonNull(sensitivityAnalysisInputData);
         this.sensitivityAnalysisInputs = new SensitivityAnalysisInputs();
         this.receiver = receiver;
         this.provider = provider;
-        this.reportUuid = reportUuid;
-        this.reporterId = reporterId;
-        this.reportType = reportType;
+        this.reportUuid = reportInfos == null ? null : reportInfos.reportUuid();
+        this.reporterId = reportInfos == null ? null : reportInfos.reporterId();
+        this.reportType = reportInfos == null ? null : reportInfos.reportType();
         this.userId = userId;
     }
 }

@@ -14,11 +14,9 @@ import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisCsvFileInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
+import org.gridsuite.sensitivityanalysis.server.dto.*;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -60,6 +58,8 @@ public class SensitivityAnalysisService {
 
     private final FilterService filterService;
 
+    private final SensitivityAnalysisParametersService parametersService;
+
     private final ObjectMapper objectMapper;
 
     public SensitivityAnalysisService(@Value("${sensitivity-analysis.default-provider}") String defaultProvider,
@@ -68,6 +68,7 @@ public class SensitivityAnalysisService {
                                       NotificationService notificationService,
                                       ActionsService actionsService,
                                       FilterService filterService,
+                                      SensitivityAnalysisParametersService parametersService,
                                       ObjectMapper objectMapper) {
         this.defaultProvider = defaultProvider;
         this.resultRepository = Objects.requireNonNull(resultRepository);
@@ -75,10 +76,16 @@ public class SensitivityAnalysisService {
         this.notificationService = notificationService;
         this.actionsService = actionsService;
         this.filterService = filterService;
+        this.parametersService = parametersService;
         this.objectMapper = Objects.requireNonNull(objectMapper);
     }
 
-    public UUID runAndSaveResult(SensitivityAnalysisRunContext runContext) {
+    public UUID runAndSaveResult(UUID networkUuid, String variantId, String receiver, String provider, ReportInfos reportInfos, String userId, UUID parametersUuid, LoadFlowParametersValues loadFlowParametersValues) {
+
+        SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersUuid, loadFlowParametersValues);
+
+        SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid, variantId, inputData, receiver, provider, reportInfos, userId);
+
         Objects.requireNonNull(runContext);
         var resultUuid = uuidGeneratorService.generate();
 
