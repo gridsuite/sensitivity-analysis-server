@@ -338,7 +338,9 @@ public class SensitivityAnalysisServiceTest {
         byte[] csv = unzip(zip);
         String csvStr = new String(csv, StandardCharsets.UTF_8);
         List<String> actualLines = Arrays.asList(csvStr.split("\n"));
-        List<String> expectedLines = new ArrayList<>(List.of("functionId,variableId,functionReference,value",
+
+        // Including "\uFEFF" indicates the UTF-8 BOM at the start.
+        List<String> expectedLines = new ArrayList<>(List.of("\uFEFFfunctionId,variableId,functionReference,value",
                 "l1,GEN,2.9,500.1",
                 "l2,GEN,2.8,500.2",
                 "l3,LOAD,2.1,500.9"));
@@ -357,7 +359,9 @@ public class SensitivityAnalysisServiceTest {
         byte[] csv2 = unzip(zip2);
         String csvStr2 = new String(csv2, StandardCharsets.UTF_8);
         List<String> actualLines2 = Arrays.asList(csvStr2.split("\n"));
-        List<String> expectedLines2 = new ArrayList<>(List.of("functionId,variableId,contingencyId,functionReference,value,functionReferenceAfter,valueAfter"));
+
+        // Including "\uFEFF" indicates the UTF-8 BOM at the start.
+        List<String> expectedLines2 = new ArrayList<>(List.of("\uFEFFfunctionId,variableId,contingencyId,functionReference,value,functionReferenceAfter,valueAfter"));
 
         actualLines2.sort(String::compareTo);
         expectedLines2.sort(String::compareTo);
@@ -446,7 +450,9 @@ public class SensitivityAnalysisServiceTest {
         byte[] csv = unzip(zip);
         String csvStr = new String(csv, StandardCharsets.UTF_8);
         List<String> actualLines = Arrays.asList(csvStr.split("\n"));
-        List<String> expectedLines = new ArrayList<>(List.of("functionId,variableId,contingencyId,functionReference,value,functionReferenceAfter,valueAfter",
+
+        // Including "\uFEFF" indicates the UTF-8 BOM at the start.
+        List<String> expectedLines = new ArrayList<>(List.of("\uFEFFfunctionId,variableId,contingencyId,functionReference,value,functionReferenceAfter,valueAfter",
                 "l1,GEN,a1,0.0,0.0,2.7,500.3",
                 "l1,GEN,a2,0.0,0.0,2.6,500.4",
                 "l1,GEN,a3,0.0,0.0,2.5,500.5",
