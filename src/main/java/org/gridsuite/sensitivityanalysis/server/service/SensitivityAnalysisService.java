@@ -24,6 +24,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -190,8 +191,10 @@ public class SensitivityAnalysisService {
             ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
             zipOutputStream.putNextEntry(new ZipEntry("sensitivity_result.csv"));
 
+            // We add a BOM to indicate that the file is encoded in UTF-8.
+            writeUTF8Bom(zipOutputStream);
             CsvWriterSettings settings = new CsvWriterSettings();
-            CsvWriter csvWriter = new CsvWriter(zipOutputStream, settings);
+            CsvWriter csvWriter = new CsvWriter(zipOutputStream, StandardCharsets.UTF_8, settings);
             csvWriter.writeHeaders(sensitivityAnalysisCsvFileInfos.getCsvHeaders());
             if (selector.getTabSelection() == ResultTab.N) {
                 result.getSensitivities()
@@ -221,6 +224,12 @@ public class SensitivityAnalysisService {
         } catch (IOException e) {
             throw new SensibilityAnalysisException(FILE_EXPORT_ERROR, e.getMessage());
         }
+    }
+
+    private static void writeUTF8Bom(OutputStream outputStream) throws IOException {
+        outputStream.write(0xef);
+        outputStream.write(0xbb);
+        outputStream.write(0xbf);
     }
 
     private static Double nullIfNan(double d) {
