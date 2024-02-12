@@ -192,7 +192,7 @@ public class SensitivityAnalysisService {
             ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
             zipOutputStream.putNextEntry(new ZipEntry("sensitivity_result.csv"));
 
-            // We add a BOM to indicate that the file is encoded in UTF-8.
+            // adding BOM to the beginning of file to help excel in some versions to detect this is UTF-8 encoding bytes
             writeUTF8Bom(zipOutputStream);
             CsvWriterSettings settings = new CsvWriterSettings();
             CsvWriter csvWriter = new CsvWriter(zipOutputStream, StandardCharsets.UTF_8, settings);
