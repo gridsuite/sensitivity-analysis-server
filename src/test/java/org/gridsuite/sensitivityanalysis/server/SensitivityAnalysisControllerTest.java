@@ -636,7 +636,9 @@ class SensitivityAnalysisControllerTest {
         byte[] csvFile = unzip(zipFile);
         String csvFileAsString = new String(csvFile, StandardCharsets.UTF_8);
         List<String> actualCsvLines = Arrays.asList(csvFileAsString.split("\n"));
-        List<String> expectedCsvLines = new ArrayList<>(List.of("functionId,variableId,functionReference,value",
+
+        // Including "\uFEFF" indicates the UTF-8 BOM at the start.
+        List<String> expectedCsvLines = new ArrayList<>(List.of("\uFEFFfunctionId,variableId,functionReference,value",
                 "l1,GEN,2.9,500.1",
                 "l2,GEN,2.8,500.2"));
 
