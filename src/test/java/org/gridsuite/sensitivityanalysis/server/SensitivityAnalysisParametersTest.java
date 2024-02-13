@@ -8,6 +8,10 @@ package org.gridsuite.sensitivityanalysis.server;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import com.powsybl.loadflow.LoadFlowParameters;
 import com.powsybl.sensitivity.SensitivityAnalysisParameters;
 import org.assertj.core.api.Assertions;
@@ -19,12 +23,12 @@ import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysis
 import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisParametersService;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -37,8 +41,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.sensitivityanalysis.server.util.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -62,6 +64,8 @@ public class SensitivityAnalysisParametersTest {
     @Autowired
     MockMvc mockMvc;
 
+    private WireMockServer wireMockServer;
+
     @Autowired
     ObjectMapper mapper;
 
@@ -71,8 +75,15 @@ public class SensitivityAnalysisParametersTest {
     @Autowired
     SensitivityAnalysisParametersRepository parametersRepository;
 
-    @SpyBean
+    @Autowired
     LoadFlowService loadFlowService;
+
+    @BeforeEach
+    public void setUp() {
+        wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
+        wireMockServer.start();
+        loadFlowService.setLoadFlowServiceBaseUri(wireMockServer.baseUrl());
+    }
 
     @AfterEach
     public void tearOff() {
@@ -139,6 +150,16 @@ public class SensitivityAnalysisParametersTest {
         SensitivityAnalysisParametersInfos updatedParameters = parametersRepository.findById(parametersUuid).get().toInfos();
 
         assertThat(updatedParameters).recursivelyEquals(parametersToUpdate);
+
+        // reset parameters
+        SensitivityAnalysisParametersInfos defaultParameters = SensitivityAnalysisParametersInfos.builder().provider(defaultSensitivityAnalysisProvider).build();
+
+        mockMvc.perform(put(URI_PARAMETERS_GET_PUT + parametersUuid).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+
+        updatedParameters = parametersRepository.findById(parametersUuid).get().toInfos();
+
+        assertThat(updatedParameters).recursivelyEquals(defaultParameters);
     }
 
     @Test
@@ -195,15 +216,18 @@ public class SensitivityAnalysisParametersTest {
     }
 
     @Test
-    void buildInputDataTest() {
+    void buildInputDataTest() throws Exception {
         SensitivityAnalysisParametersInfos parametersInfos = buildParameters();
         UUID parametersUuid = saveAndReturnId(parametersInfos);
+
+        // load flow parameters mock
         LoadFlowParametersValues loadFlowParametersValues = LoadFlowParametersValues.builder()
             .commonParameters(LoadFlowParameters.load())
             .specificParameters(Map.of("reactiveRangeCheckMode", "TARGET_P", "plausibleActivePowerLimit", "5000.0"))
             .build();
+        wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/parameters/.*/values\\?provider=.*"))
+            .willReturn(WireMock.ok().withHeader("Content-Type", "application/json").withBody(mapper.writeValueAsString(loadFlowParametersValues))));
 
-        doReturn(loadFlowParametersValues).when(loadFlowService).getLoadFlowParameters(any(), any());
         SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersUuid, UUID.randomUUID());
 
         // now we check that each field contains the good value

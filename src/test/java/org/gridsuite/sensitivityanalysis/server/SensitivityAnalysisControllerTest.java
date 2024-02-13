@@ -268,7 +268,7 @@ class SensitivityAnalysisControllerTest {
     @SpyBean
     private SensitivityAnalysisParametersService parametersService;
 
-    @SpyBean
+    @MockBean
     private LoadFlowService loadflowService;
 
     @Value("${sensitivity-analysis.default-provider}")
