@@ -32,6 +32,9 @@ public class SensitivityAnalysisParametersEntity {
     @Column(name = "id")
     private UUID id;
 
+    @Column(name = "provider")
+    private String provider;
+
     @Column(name = "flowFlowSensitivityValueThreshold")
     private double flowFlowSensitivityValueThreshold = 0.0;
 
@@ -80,6 +83,7 @@ public class SensitivityAnalysisParametersEntity {
     }
 
     public void assignAttributes(@NonNull SensitivityAnalysisParametersInfos parametersInfos) {
+        this.provider = parametersInfos.getProvider();
         this.flowFlowSensitivityValueThreshold = parametersInfos.getFlowFlowSensitivityValueThreshold();
         this.angleFlowSensitivityValueThreshold = parametersInfos.getAngleFlowSensitivityValueThreshold();
         this.flowVoltageSensitivityValueThreshold = parametersInfos.getFlowVoltageSensitivityValueThreshold();
@@ -220,6 +224,7 @@ public class SensitivityAnalysisParametersEntity {
 
         return SensitivityAnalysisParametersInfos.builder()
             .uuid(this.id)
+            .provider(this.provider)
             .flowFlowSensitivityValueThreshold(this.flowFlowSensitivityValueThreshold)
             .angleFlowSensitivityValueThreshold(this.angleFlowSensitivityValueThreshold)
             .flowVoltageSensitivityValueThreshold(this.flowVoltageSensitivityValueThreshold)

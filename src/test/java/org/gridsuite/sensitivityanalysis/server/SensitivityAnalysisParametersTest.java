@@ -16,12 +16,15 @@ import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParameter
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.entities.parameters.SensitivityAnalysisParametersEntity;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisParametersRepository;
+import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisParametersService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -31,8 +34,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.sensitivityanalysis.server.util.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -48,6 +54,11 @@ public class SensitivityAnalysisParametersTest {
 
     private static final String URI_PARAMETERS_GET_PUT = URI_PARAMETERS_BASE + "/";
 
+    private static final String PROVIDER = "provider";
+
+    @Value("${sensitivity-analysis.default-provider}")
+    private String defaultSensitivityAnalysisProvider;
+
     @Autowired
     MockMvc mockMvc;
 
@@ -59,6 +70,9 @@ public class SensitivityAnalysisParametersTest {
 
     @Autowired
     SensitivityAnalysisParametersRepository parametersRepository;
+
+    @SpyBean
+    LoadFlowService loadFlowService;
 
     @AfterEach
     public void tearOff() {
@@ -82,7 +96,7 @@ public class SensitivityAnalysisParametersTest {
     @Test
     void testCreateDefaultValues() throws Exception {
 
-        SensitivityAnalysisParametersInfos defaultParameters = SensitivityAnalysisParametersInfos.builder().build();
+        SensitivityAnalysisParametersInfos defaultParameters = SensitivityAnalysisParametersInfos.builder().provider(defaultSensitivityAnalysisProvider).build();
 
         mockMvc.perform(post(URI_PARAMETERS_BASE + "/default"))
             .andExpect(status().isOk()).andReturn();
@@ -189,7 +203,8 @@ public class SensitivityAnalysisParametersTest {
             .specificParameters(Map.of("reactiveRangeCheckMode", "TARGET_P", "plausibleActivePowerLimit", "5000.0"))
             .build();
 
-        SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersUuid, loadFlowParametersValues);
+        doReturn(loadFlowParametersValues).when(loadFlowService).getLoadFlowParameters(any(), any());
+        SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersUuid, UUID.randomUUID());
 
         // now we check that each field contains the good value
         SensitivityAnalysisParameters sensitivityAnalysisParameters = inputData.getParameters();
@@ -236,6 +251,7 @@ public class SensitivityAnalysisParametersTest {
         SensitivityNodes nodes = new SensitivityNodes(List.of(equipments1), List.of(equipments2), List.of(equipments3), true);
 
         return SensitivityAnalysisParametersInfos.builder()
+            .provider(PROVIDER)
             .flowFlowSensitivityValueThreshold(90)
             .angleFlowSensitivityValueThreshold(0.6)
             .flowVoltageSensitivityValueThreshold(0.1)
@@ -249,6 +265,7 @@ public class SensitivityAnalysisParametersTest {
 
     protected SensitivityAnalysisParametersInfos buildParametersUpdate() {
         return SensitivityAnalysisParametersInfos.builder()
+            .provider(PROVIDER)
             .flowFlowSensitivityValueThreshold(91)
             .angleFlowSensitivityValueThreshold(0.7)
             .flowVoltageSensitivityValueThreshold(0.2)

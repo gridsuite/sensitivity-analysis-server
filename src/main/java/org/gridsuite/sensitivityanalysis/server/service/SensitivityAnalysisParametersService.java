@@ -13,6 +13,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParameter
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.entities.parameters.SensitivityAnalysisParametersEntity;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisParametersRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,12 +31,20 @@ public class SensitivityAnalysisParametersService {
 
     private final SensitivityAnalysisParametersRepository sensitivityAnalysisParametersRepository;
 
-    public SensitivityAnalysisParametersService(SensitivityAnalysisParametersRepository sensitivityAnalysisParametersRepository) {
+    private final LoadFlowService loadFlowService;
+
+    private final String defaultProvider;
+
+    public SensitivityAnalysisParametersService(@Value("${sensitivity-analysis.default-provider}") String defaultProvider,
+                                                SensitivityAnalysisParametersRepository sensitivityAnalysisParametersRepository,
+                                                LoadFlowService loadFlowService) {
+        this.defaultProvider = defaultProvider;
         this.sensitivityAnalysisParametersRepository = sensitivityAnalysisParametersRepository;
+        this.loadFlowService = loadFlowService;
     }
 
     public UUID createDefaultParameters() {
-        return createParameters(SensitivityAnalysisParametersInfos.builder().build());
+        return createParameters(getDefauSensitivityAnalysisParametersInfos());
     }
 
     public UUID createParameters(SensitivityAnalysisParametersInfos parametersInfos) {
@@ -60,16 +69,22 @@ public class SensitivityAnalysisParametersService {
 
     @Transactional
     public void updateParameters(UUID parametersUuid, SensitivityAnalysisParametersInfos parametersInfos) {
-        sensitivityAnalysisParametersRepository.findById(parametersUuid).orElseThrow().update(parametersInfos);
+        SensitivityAnalysisParametersEntity sensitivityAnalysisParametersEntity = sensitivityAnalysisParametersRepository.findById(parametersUuid).orElseThrow();
+        //if the parameters is null it means it's a reset to defaultValues
+        if (parametersInfos == null) {
+            sensitivityAnalysisParametersEntity.update(getDefauSensitivityAnalysisParametersInfos());
+        } else {
+            sensitivityAnalysisParametersEntity.update(parametersInfos);
+        }
     }
 
     public void deleteParameters(UUID parametersUuid) {
         sensitivityAnalysisParametersRepository.deleteById(parametersUuid);
     }
 
-    public SensitivityAnalysisInputData buildInputData(UUID parametersUuid, LoadFlowParametersValues loadFlowParametersValues) {
+    public SensitivityAnalysisInputData buildInputData(UUID parametersUuid, UUID loadFlowParametersUuid) {
 
-        Objects.requireNonNull(loadFlowParametersValues);
+        Objects.requireNonNull(loadFlowParametersUuid);
 
         SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersUuid != null ?
             sensitivityAnalysisParametersRepository.findById(parametersUuid)
@@ -78,6 +93,7 @@ public class SensitivityAnalysisParametersService {
             :
             SensitivityAnalysisParametersInfos.builder().build();
 
+        LoadFlowParametersValues loadFlowParametersValues = loadFlowService.getLoadFlowParameters(loadFlowParametersUuid, sensitivityAnalysisParametersInfos.getProvider());
         SensitivityAnalysisParameters sensitivityAnalysisParameters = SensitivityAnalysisParameters.load();
         sensitivityAnalysisParameters.setAngleFlowSensitivityValueThreshold(sensitivityAnalysisParametersInfos.getAngleFlowSensitivityValueThreshold());
         sensitivityAnalysisParameters.setFlowFlowSensitivityValueThreshold(sensitivityAnalysisParametersInfos.getFlowFlowSensitivityValueThreshold());
@@ -109,5 +125,9 @@ public class SensitivityAnalysisParametersService {
             .collect(Collectors.toList()));
 
         return sensitivityAnalysisInputData;
+    }
+
+    private SensitivityAnalysisParametersInfos getDefauSensitivityAnalysisParametersInfos() {
+        return SensitivityAnalysisParametersInfos.builder().provider(defaultProvider).build();
     }
 }

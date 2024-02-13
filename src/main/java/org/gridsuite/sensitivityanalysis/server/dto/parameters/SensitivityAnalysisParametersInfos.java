@@ -27,6 +27,9 @@ import java.util.UUID;
 @Schema(description = "Sensitivity analysis parameters")
 public class SensitivityAnalysisParametersInfos {
 
+    @Schema(description = "Provider")
+    private String provider;
+
     @Schema(description = "Parameters ID")
     private UUID uuid;
 

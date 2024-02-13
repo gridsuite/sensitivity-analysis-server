@@ -268,6 +268,9 @@ class SensitivityAnalysisControllerTest {
     @SpyBean
     private SensitivityAnalysisParametersService parametersService;
 
+    @SpyBean
+    private LoadFlowService loadflowService;
+
     @Value("${sensitivity-analysis.default-provider}")
     String defaultSensitivityAnalysisProvider;
 
@@ -310,6 +313,7 @@ class SensitivityAnalysisControllerTest {
             .specificParameters(Map.of())
             .build();
         DEFAULT_LOADFLOW_PARAMS = mapper.writeValueAsString(loadFlowParametersValues);
+        doReturn(loadFlowParametersValues).when(loadflowService).getLoadFlowParameters(any(), any());
 
         SensitivityAnalysisInputData sensitivityAnalysisInputData1 = SensitivityAnalysisInputData.builder()
             .sensitivityInjectionsSets(List.of(SensitivityInjectionsSet.builder()
@@ -503,7 +507,7 @@ class SensitivityAnalysisControllerTest {
         // run with specific variant
         doReturn(SENSITIVITY_INPUT_1).when(parametersService).buildInputData(any(), any());
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run?reportType=SensitivityAnalysis&variantId=" + VARIANT_3_ID, NETWORK_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/run?reportType=SensitivityAnalysis&variantId=" + VARIANT_3_ID + "&loadFlowParametersUuid=" + UUID.randomUUID(), NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "testUserId")
             .content(DEFAULT_LOADFLOW_PARAMS))
@@ -516,7 +520,7 @@ class SensitivityAnalysisControllerTest {
         for (SensitivityAnalysisInputData sensitivityInput : List.of(SENSITIVITY_INPUT_1, SENSITIVITY_INPUT_2, SENSITIVITY_INPUT_3, SENSITIVITY_INPUT_4, SENSITIVITY_INPUT_5, SENSITIVITY_INPUT_6, SENSITIVITY_INPUT_LOAD_PROPORTIONAL_MAXP, SENSITIVITY_INPUT_VENTILATION)) {
             doReturn(sensitivityInput).when(parametersService).buildInputData(any(), any());
             result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run?reportType=SensitivityAnalysis", NETWORK_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/run?reportType=SensitivityAnalysis" + "&loadFlowParametersUuid=" + UUID.randomUUID(), NETWORK_UUID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .header(HEADER_USER_ID, "testUserId")
                 .content(DEFAULT_LOADFLOW_PARAMS))
@@ -529,7 +533,7 @@ class SensitivityAnalysisControllerTest {
         // run with OpenLoadFlow provider and sensitivityType DELTA_A for HVDC
         doReturn(SENSITIVITY_INPUT_HVDC_DELTA_A).when(parametersService).buildInputData(any(), any());
         result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run?reportType=SensitivityAnalysis&provider=OpenLoadFlow", NETWORK_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/run?reportType=SensitivityAnalysis&provider=OpenLoadFlow" + "&loadFlowParametersUuid=" + UUID.randomUUID(), NETWORK_UUID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .header(HEADER_USER_ID, "testUserId")
                 .content(DEFAULT_LOADFLOW_PARAMS))
@@ -542,7 +546,7 @@ class SensitivityAnalysisControllerTest {
     @Test
     void runAndSaveTest() throws Exception {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_2_ID + "&loadFlowParametersUuid=" + UUID.randomUUID(), NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "testUserId")
             .content(DEFAULT_LOADFLOW_PARAMS))
@@ -742,7 +746,7 @@ class SensitivityAnalysisControllerTest {
     @Test
     public void testDeterministicResult() throws Exception {
         MvcResult result = mockMvc.perform(post(
-                        "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_UUID)
+                        "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_2_ID + "&loadFlowParametersUuid=" + UUID.randomUUID(), NETWORK_UUID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(HEADER_USER_ID, "testUserId")
                         .content(DEFAULT_LOADFLOW_PARAMS))
@@ -803,7 +807,7 @@ class SensitivityAnalysisControllerTest {
     @Test
     void deleteResultsTest() {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis", NETWORK_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis" + "&loadFlowParametersUuid=" + UUID.randomUUID(), NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "testUserId")
             .content(DEFAULT_LOADFLOW_PARAMS))
@@ -855,7 +859,7 @@ class SensitivityAnalysisControllerTest {
     @Test
     void stopTest() throws Exception {
         mockMvc.perform(post(
-            "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_2_ID, NETWORK_STOP_UUID)
+            "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_2_ID + "&loadFlowParametersUuid=" + UUID.randomUUID(), NETWORK_STOP_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "testUserId")
             .content(DEFAULT_LOADFLOW_PARAMS))
@@ -876,7 +880,7 @@ class SensitivityAnalysisControllerTest {
     @Test
     void runTestWithError() {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_1_ID, NETWORK_ERROR_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/run-and-save?reportType=SensitivityAnalysis&receiver=me&variantId=" + VARIANT_1_ID + "&loadFlowParametersUuid=" + UUID.randomUUID(), NETWORK_ERROR_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "testUserId")
             .content(DEFAULT_LOADFLOW_PARAMS))
@@ -900,7 +904,7 @@ class SensitivityAnalysisControllerTest {
     @Test
     void runWithReportTest() {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/run?reportType=SensitivityAnalysis&reportUuid=" + REPORT_UUID + "&reporterId=" + UUID.randomUUID(), NETWORK_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/run?reportType=SensitivityAnalysis&reportUuid=" + REPORT_UUID + "&reporterId=" + UUID.randomUUID() + "&loadFlowParametersUuid=" + UUID.randomUUID(), NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "testUserId")
             .content(DEFAULT_LOADFLOW_PARAMS))
