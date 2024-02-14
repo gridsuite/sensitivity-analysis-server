@@ -11,10 +11,9 @@ import com.powsybl.sensitivity.SensitivityAnalysisProvider;
 import com.univocity.parsers.csv.CsvWriter;
 import com.univocity.parsers.csv.CsvWriterSettings;
 import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisCsvFileInfos;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -79,11 +78,16 @@ public class SensitivityAnalysisService {
         this.objectMapper = Objects.requireNonNull(objectMapper);
     }
 
-    public UUID runAndSaveResult(UUID networkUuid, String variantId, String receiver, String provider, ReportInfos reportInfos, String userId, UUID parametersUuid, UUID loadFlowParametersUuid) {
+    public UUID runAndSaveResult(UUID networkUuid, String variantId, String receiver, ReportInfos reportInfos, String userId, UUID parametersUuid, UUID loadFlowParametersUuid) {
 
-        SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersUuid, loadFlowParametersUuid);
+        SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersUuid != null
+                ? parametersService.getParameters(parametersUuid)
+                        .orElse(parametersService.getDefauSensitivityAnalysisParametersInfos())
+                : parametersService.getDefauSensitivityAnalysisParametersInfos();
 
-        SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid, variantId, inputData, receiver, provider, reportInfos, userId);
+        SensitivityAnalysisInputData inputData = parametersService.buildInputData(sensitivityAnalysisParametersInfos, loadFlowParametersUuid);
+
+        SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid, variantId, inputData, receiver, sensitivityAnalysisParametersInfos.getProvider(), reportInfos, userId);
 
         Objects.requireNonNull(runContext);
         var resultUuid = uuidGeneratorService.generate();

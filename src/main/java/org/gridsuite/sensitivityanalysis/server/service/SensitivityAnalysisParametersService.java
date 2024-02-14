@@ -82,16 +82,9 @@ public class SensitivityAnalysisParametersService {
         sensitivityAnalysisParametersRepository.deleteById(parametersUuid);
     }
 
-    public SensitivityAnalysisInputData buildInputData(UUID parametersUuid, UUID loadFlowParametersUuid) {
+    public SensitivityAnalysisInputData buildInputData(SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos, UUID loadFlowParametersUuid) {
 
         Objects.requireNonNull(loadFlowParametersUuid);
-
-        SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersUuid != null ?
-            sensitivityAnalysisParametersRepository.findById(parametersUuid)
-            .map(SensitivityAnalysisParametersEntity::toInfos)
-            .orElse(SensitivityAnalysisParametersInfos.builder().build())
-            :
-            SensitivityAnalysisParametersInfos.builder().build();
 
         LoadFlowParametersValues loadFlowParametersValues = loadFlowService.getLoadFlowParameters(loadFlowParametersUuid, sensitivityAnalysisParametersInfos.getProvider());
         SensitivityAnalysisParameters sensitivityAnalysisParameters = SensitivityAnalysisParameters.load();
@@ -127,7 +120,7 @@ public class SensitivityAnalysisParametersService {
         return sensitivityAnalysisInputData;
     }
 
-    private SensitivityAnalysisParametersInfos getDefauSensitivityAnalysisParametersInfos() {
+    public SensitivityAnalysisParametersInfos getDefauSensitivityAnalysisParametersInfos() {
         return SensitivityAnalysisParametersInfos.builder().provider(defaultProvider).build();
     }
 }

@@ -218,7 +218,6 @@ public class SensitivityAnalysisParametersTest {
     @Test
     void buildInputDataTest() throws Exception {
         SensitivityAnalysisParametersInfos parametersInfos = buildParameters();
-        UUID parametersUuid = saveAndReturnId(parametersInfos);
 
         // load flow parameters mock
         LoadFlowParametersValues loadFlowParametersValues = LoadFlowParametersValues.builder()
@@ -228,7 +227,7 @@ public class SensitivityAnalysisParametersTest {
         wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/parameters/.*/values\\?provider=.*"))
             .willReturn(WireMock.ok().withHeader("Content-Type", "application/json").withBody(mapper.writeValueAsString(loadFlowParametersValues))));
 
-        SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersUuid, UUID.randomUUID());
+        SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersInfos, UUID.randomUUID());
 
         // now we check that each field contains the good value
         SensitivityAnalysisParameters sensitivityAnalysisParameters = inputData.getParameters();
