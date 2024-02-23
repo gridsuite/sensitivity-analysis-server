@@ -25,7 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
-import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
 import org.slf4j.Logger;
@@ -124,11 +124,16 @@ public class SensitivityAnalysisWorkerService {
         return network;
     }
 
-    public SensitivityAnalysisResult run(UUID networkUuid, String variantId, String provider, ReportInfos reportInfos, String userId, UUID parametersUuid, LoadFlowParametersValues loadFlowParametersValues) {
+    public SensitivityAnalysisResult run(UUID networkUuid, String variantId, ReportInfos reportInfos, String userId, UUID parametersUuid, UUID loadFlowParametersUuid) {
 
-        SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersUuid, loadFlowParametersValues);
+        SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersUuid != null
+                ? parametersService.getParameters(parametersUuid)
+                        .orElse(parametersService.getDefauSensitivityAnalysisParametersInfos())
+                : parametersService.getDefauSensitivityAnalysisParametersInfos();
 
-        SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid, variantId, inputData, null, provider, reportInfos, userId);
+        SensitivityAnalysisInputData inputData = parametersService.buildInputData(sensitivityAnalysisParametersInfos, loadFlowParametersUuid);
+
+        SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid, variantId, inputData, null, sensitivityAnalysisParametersInfos.getProvider(), reportInfos, userId);
         try {
             return run(runContext, null);
         } catch (InterruptedException e) {

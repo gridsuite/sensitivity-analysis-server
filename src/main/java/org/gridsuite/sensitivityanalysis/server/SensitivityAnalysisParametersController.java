@@ -80,7 +80,7 @@ public class SensitivityAnalysisParametersController {
     @ApiResponse(responseCode = "200", description = "parameters were updated")
     public ResponseEntity<Void> updateParameters(
             @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid,
-            @RequestBody SensitivityAnalysisParametersInfos parametersInfos) {
+            @RequestBody(required = false) SensitivityAnalysisParametersInfos parametersInfos) {
         parametersService.updateParameters(parametersUuid, parametersInfos);
         return ResponseEntity.ok().build();
     }

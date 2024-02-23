@@ -17,6 +17,7 @@ import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
+import com.powsybl.loadflow.LoadFlowParameters;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.sensitivity.SensitivityAnalysis;
@@ -39,8 +40,10 @@ import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacua
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStageDefinition;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStagesSelection;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
+import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
 import org.gridsuite.sensitivityanalysis.server.service.ReportService;
 import org.gridsuite.sensitivityanalysis.server.service.UuidGeneratorService;
 import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.NonEvacuatedEnergyWorkerService;
@@ -70,6 +73,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -89,6 +93,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -199,6 +204,9 @@ public class NonEvacuatedEnergyTest {
 
     @MockBean
     private UuidGeneratorService uuidGeneratorService;
+
+    @SpyBean
+    private LoadFlowService loadFlowService;
 
     @SpyBean
     private NonEvacuatedEnergyWorkerService nonEvacuatedEnergyWorkerService;
@@ -721,6 +729,13 @@ public class NonEvacuatedEnergyTest {
             .willReturn(CompletableFuture.completedFuture(result4));
         nonEvacuatedEnergyWorkerService.setSensitivityAnalysisFactorySupplier(provider -> runner);
 
+        // mock loadFlow parameters
+        LoadFlowParametersValues loadFlowParametersValues = LoadFlowParametersValues.builder()
+            .commonParameters(LoadFlowParameters.load())
+            .specificParameters(Map.of())
+            .build();
+        doReturn(loadFlowParametersValues).when(loadFlowService).getLoadFlowParameters(any(), any());
+
         // purge messages
         while (output.receive(1000, "nonEvacuatedEnergy.result") != null) {
         }
@@ -744,7 +759,7 @@ public class NonEvacuatedEnergyTest {
     @Test
     public void runTest() throws Exception {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy/run-and-save?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID, NETWORK_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy/run-and-save?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID + "&loadFlowParametersUuid=" + UUID.randomUUID(), NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "userId")
             .content(INPUT))
@@ -800,7 +815,7 @@ public class NonEvacuatedEnergyTest {
     @Test
     public void stopTest() throws Exception {
         mockMvc.perform(post(
-            "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy/run-and-save?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID, NETWORK_UUID)
+            "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy/run-and-save?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID + "&loadFlowParametersUuid=" + UUID.randomUUID(), NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "userId")
             .content(INPUT))
@@ -822,7 +837,7 @@ public class NonEvacuatedEnergyTest {
     @Test
     public void testWithBadNetworkError() {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy/run-and-save?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID, NETWORK_ERROR_UUID)
+                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy/run-and-save?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID + "&loadFlowParametersUuid=" + UUID.randomUUID(), NETWORK_ERROR_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "userId")
             .content(INPUT))
@@ -844,7 +859,7 @@ public class NonEvacuatedEnergyTest {
 
     private void testLimitError(String inputData, String variantId, UUID networkUuid, String messageExpected) throws Exception {
         MvcResult result = mockMvc.perform(post(
-                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy/run-and-save?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + variantId, networkUuid)
+                "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy/run-and-save?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + variantId + "&loadFlowParametersUuid=" + UUID.randomUUID(), networkUuid)
                 .contentType(MediaType.APPLICATION_JSON)
                 .header(HEADER_USER_ID, "userId")
                 .content(inputData))

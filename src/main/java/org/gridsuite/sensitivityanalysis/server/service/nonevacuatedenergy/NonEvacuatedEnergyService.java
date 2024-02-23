@@ -8,7 +8,9 @@ package org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
 import org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy.NonEvacuatedEnergyRepository;
+import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
 import org.gridsuite.sensitivityanalysis.server.service.NotificationService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisCancelContext;
 import org.gridsuite.sensitivityanalysis.server.service.UuidGeneratorService;
@@ -32,22 +34,28 @@ public class NonEvacuatedEnergyService {
 
     private final NotificationService notificationService;
 
+    private final LoadFlowService loadFlowService;
+
     private final ObjectMapper objectMapper;
 
     public NonEvacuatedEnergyService(@Value("${non-evacuated-energy.default-provider}") String defaultProvider,
                                      NonEvacuatedEnergyRepository nonEvacuatedEnergyRepository,
                                      UuidGeneratorService uuidGeneratorService,
                                      NotificationService notificationService,
+                                     LoadFlowService loadFlowService,
                                      ObjectMapper objectMapper) {
         this.defaultProvider = defaultProvider;
         this.nonEvacuatedEnergyRepository = Objects.requireNonNull(nonEvacuatedEnergyRepository);
         this.uuidGeneratorService = Objects.requireNonNull(uuidGeneratorService);
         this.notificationService = notificationService;
+        this.loadFlowService = loadFlowService;
         this.objectMapper = Objects.requireNonNull(objectMapper);
     }
 
-    public UUID runAndSaveResult(NonEvacuatedEnergyRunContext nonEvacuatedEnergyRunContext) {
+    public UUID runAndSaveResult(NonEvacuatedEnergyRunContext nonEvacuatedEnergyRunContext, UUID loadFlowParametersUuid) {
         Objects.requireNonNull(nonEvacuatedEnergyRunContext);
+        // complete nonEvacuatedEnergyRunContext with loadFlowParameters
+        completeNonEvacuatedEnergyRunContext(nonEvacuatedEnergyRunContext, loadFlowParametersUuid);
         var resultUuid = uuidGeneratorService.generate();
 
         // update status to running status
@@ -83,5 +91,11 @@ public class NonEvacuatedEnergyService {
 
     public String getDefaultProvider() {
         return defaultProvider;
+    }
+
+    private void completeNonEvacuatedEnergyRunContext(NonEvacuatedEnergyRunContext nonEvacuatedEnergyRunContext, UUID loadFlowParametersUuid) {
+        LoadFlowParametersValues loadFlowParametersValues = loadFlowService.getLoadFlowParameters(loadFlowParametersUuid, nonEvacuatedEnergyRunContext.getProvider());
+        nonEvacuatedEnergyRunContext.getNonEvacuatedEnergyInputData().setLoadFlowSpecificParameters(loadFlowParametersValues.specificParameters());
+        nonEvacuatedEnergyRunContext.getNonEvacuatedEnergyInputData().getParameters().setLoadFlowParameters(loadFlowParametersValues.commonParameters());
     }
 }
