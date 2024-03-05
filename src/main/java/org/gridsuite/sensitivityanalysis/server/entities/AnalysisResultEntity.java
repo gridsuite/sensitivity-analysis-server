@@ -6,15 +6,10 @@
  */
 package org.gridsuite.sensitivityanalysis.server.entities;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -36,6 +31,14 @@ public class AnalysisResultEntity {
 
     @OneToMany(mappedBy = "result", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SensitivityEntity> sensitivities;
+
+    @OneToMany(mappedBy = "result", cascade = CascadeType.ALL)
+    private List<SensitivityResultEntity> newSensitivities;
+
+    public AnalysisResultEntity(UUID resultUuid, LocalDateTime writeTimeStamp) {
+        this.resultUuid = resultUuid;
+        this.writeTimeStamp = writeTimeStamp;
+    }
 
     public AnalysisResultEntity(UUID resultUuid, LocalDateTime writeTimeStamp, List<SensitivityEntity> sensitivities) {
         this.resultUuid = resultUuid;

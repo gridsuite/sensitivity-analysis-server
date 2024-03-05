@@ -6,20 +6,18 @@
  */
 package org.gridsuite.sensitivityanalysis.server.repositories;
 
+import com.powsybl.contingency.Contingency;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
+import com.powsybl.sensitivity.SensitivityFactor;
 import com.powsybl.sensitivity.SensitivityValue;
-import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
-import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
-import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
-import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
-import org.gridsuite.sensitivityanalysis.server.entities.ContingencyEmbeddable;
-import org.gridsuite.sensitivityanalysis.server.entities.GlobalStatusEntity;
-import org.gridsuite.sensitivityanalysis.server.entities.SensitivityEntity;
-import org.gridsuite.sensitivityanalysis.server.entities.SensitivityFactorEmbeddable;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
+import org.gridsuite.sensitivityanalysis.server.entities.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -32,16 +30,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -58,16 +52,25 @@ public class SensitivityAnalysisResultRepository {
 
     private final SensitivityRepository sensitivityRepository;
 
+    private final SensitivityResultRepository sensitivityResultRepository;
+
+    private final SensitivityFactorRepository sensitivityFactorRepository;
+
+    private final ContingencyResultRepository contingencyResultRepository;
+
     private static final String DEFAULT_SENSITIVITY_SORT_COLUMN = "sensitivityId";
 
     private static final Sort.Direction DEFAULT_SORT_DIRECTION = Sort.Direction.ASC;
 
     public SensitivityAnalysisResultRepository(GlobalStatusRepository globalStatusRepository,
                                                AnalysisResultRepository analysisResultRepository,
-                                               SensitivityRepository sensitivityRepository) {
+                                               SensitivityRepository sensitivityRepository, SensitivityResultRepository sensitivityResultRepository, SensitivityFactorRepository sensitivityFactorRepository, ContingencyResultRepository contingencyResultRepository) {
         this.globalStatusRepository = globalStatusRepository;
         this.analysisResultRepository = analysisResultRepository;
         this.sensitivityRepository = sensitivityRepository;
+        this.sensitivityResultRepository = sensitivityResultRepository;
+        this.sensitivityFactorRepository = sensitivityFactorRepository;
+        this.contingencyResultRepository = contingencyResultRepository;
     }
 
     private static AnalysisResultEntity toAnalysisResultEntity(UUID resultUuid, SensitivityAnalysisResult result) {
@@ -115,6 +118,54 @@ public class SensitivityAnalysisResultRepository {
         return new GlobalStatusEntity(resultUuid, status);
     }
 
+    public AnalysisResultEntity insertAnalysisResult(UUID resultUuid) {
+        return analysisResultRepository.save(new AnalysisResultEntity(resultUuid, LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)));
+    }
+
+    private void insertNewResults(UUID resultUuid, SensitivityAnalysisResult result) {
+        result.getValues().forEach(s -> {
+            AnalysisResultEntity analysisResult = analysisResultRepository.findByResultUuid(resultUuid);
+            ContingencyResultEntity contingencyResult = contingencyResultRepository.findByAnalysisResultAndIndex(analysisResult, s.getContingencyIndex());
+            Optional.ofNullable(contingencyResult).ifPresent(r -> r.setStatus(result.getContingencyStatus(r.getContingencyId())));
+            SensitivityFactorEntity sensitivityFactor = sensitivityFactorRepository.findByAnalysisResultAndIndex(analysisResult, s.getFactorIndex());
+            sensitivityResultRepository.save(new SensitivityResultEntity(analysisResult, sensitivityFactor, s.getValue(), s.getFunctionReference(), contingencyResult));
+        });
+    }
+
+    @Transactional
+    public void insertFactorsAndContingencies(List<SensitivityFactor> factors, List<Contingency> contingencies, AnalysisResultEntity analysisResult) {
+        insertFactors(factors, analysisResult);
+        insertContingencies(contingencies, analysisResult);
+    }
+
+    private void insertFactors(List<SensitivityFactor> factors, AnalysisResultEntity analysisResult) {
+        List<SensitivityFactorEntity> sensitivityFactorEntities = IntStream.range(0, factors.size())
+            .mapToObj(i -> {
+                SensitivityFactor f = factors.get(i);
+                return new SensitivityFactorEntity(
+                    i,
+                    f.getFunctionType(),
+                    f.getFunctionId(),
+                    f.getVariableType(),
+                    f.getVariableId(),
+                    f.isVariableSet(),
+                    analysisResult
+                );
+            })
+            .toList();
+        sensitivityFactorRepository.saveAll(sensitivityFactorEntities);
+    }
+
+    private void insertContingencies(List<Contingency> contingencies, AnalysisResultEntity analysisResult) {
+        List<ContingencyResultEntity> contingencyResultEntities = IntStream.range(0, contingencies.size())
+            .mapToObj(i -> {
+                Contingency c = contingencies.get(i);
+                return new ContingencyResultEntity(i, c.getId(), analysisResult);
+            })
+            .toList();
+        contingencyResultRepository.saveAll(contingencyResultEntities);
+    }
+
     @Transactional
     public void insertStatus(List<UUID> resultUuids, String status) {
         Objects.requireNonNull(resultUuids);
@@ -127,6 +178,7 @@ public class SensitivityAnalysisResultRepository {
         Objects.requireNonNull(resultUuid);
         if (result != null) {
             analysisResultRepository.save(toAnalysisResultEntity(resultUuid, result));
+            insertNewResults(resultUuid, result);
         }
         globalStatusRepository.save(toStatusEntity(resultUuid, status));
     }
@@ -138,6 +190,8 @@ public class SensitivityAnalysisResultRepository {
         startTime.set(System.nanoTime());
         globalStatusRepository.deleteByResultUuid(resultUuid);
         sensitivityRepository.deleteSensitivityBySensitivityAnalysisResultUUid(resultUuid);
+        contingencyResultRepository.deleteAllByAnalysisResultUuid(resultUuid);
+        sensitivityFactorRepository.deleteAllByAnalysisResultUuid(resultUuid);
         analysisResultRepository.deleteByResultUuid(resultUuid);
         LOGGER.info("Sensitivity analysis result '{}' has been deleted in {}ms", resultUuid, TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime.get()));
     }
