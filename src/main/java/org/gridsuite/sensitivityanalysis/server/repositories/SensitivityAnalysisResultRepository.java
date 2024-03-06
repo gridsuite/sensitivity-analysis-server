@@ -33,6 +33,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -75,11 +76,11 @@ public class SensitivityAnalysisResultRepository {
 
     private static AnalysisResultEntity toAnalysisResultEntity(UUID resultUuid, SensitivityAnalysisResult result) {
         List<SensitivityFactorEmbeddable> factors = result.getFactors().stream().map(f ->
-                new SensitivityFactorEmbeddable(f.getFunctionType(), f.getFunctionId(),
-                        f.getVariableType(), f.getVariableId(), f.isVariableSet(),
-                        f.getContingencyContext().getContextType(), f.getContingencyContext().getContingencyId())).toList();
+            new SensitivityFactorEmbeddable(f.getFunctionType(), f.getFunctionId(),
+                f.getVariableType(), f.getVariableId(), f.isVariableSet(),
+                f.getContingencyContext().getContextType(), f.getContingencyContext().getContingencyId())).toList();
         List<ContingencyEmbeddable> contingencies = result.getContingencyStatuses().stream().map(cs ->
-                new ContingencyEmbeddable(cs.getContingencyId(), cs.getStatus())).toList();
+            new ContingencyEmbeddable(cs.getContingencyId(), cs.getStatus())).toList();
         Supplier<Stream<SensitivityValue>> sensitivityWithoutContingency = () -> result.getValues().stream().filter(s -> s.getContingencyIndex() < 0);
         List<SensitivityEntity> sensitivities = result.getValues().stream()
             .filter(v -> !Double.isNaN(v.getValue()))
@@ -102,16 +103,16 @@ public class SensitivityAnalysisResultRepository {
                 return Objects.equals(factor.getFunctionId(), funcId) && Objects.equals(factor.getVariableId(), varId);
             }).findFirst().orElse(null);
             return new SensitivityEntity(factors.get(sensitivityValue.getFactorIndex()),
-                                                     sensitivityValue.getContingencyIndex() < 0 ? null : contingencies.get(sensitivityValue.getContingencyIndex()),
-                                                     base == null ? 0 : base.getValue(),
-                                                     base == null ? 0 : base.getFunctionReference(),
-                                                     sensitivityValue.getValue(),
-                                                     sensitivityValue.getFunctionReference());
+                sensitivityValue.getContingencyIndex() < 0 ? null : contingencies.get(sensitivityValue.getContingencyIndex()),
+                base == null ? 0 : base.getValue(),
+                base == null ? 0 : base.getFunctionReference(),
+                sensitivityValue.getValue(),
+                sensitivityValue.getFunctionReference());
         }
         return new SensitivityEntity(factors.get(sensitivityValue.getFactorIndex()),
-                                     sensitivityValue.getContingencyIndex() < 0 ? null : contingencies.get(sensitivityValue.getContingencyIndex()),
-                                     sensitivityValue.getValue(),
-                                     sensitivityValue.getFunctionReference());
+            null,
+            sensitivityValue.getValue(),
+            sensitivityValue.getFunctionReference());
     }
 
     private static GlobalStatusEntity toStatusEntity(UUID resultUuid, String status) {
@@ -190,6 +191,7 @@ public class SensitivityAnalysisResultRepository {
         startTime.set(System.nanoTime());
         globalStatusRepository.deleteByResultUuid(resultUuid);
         sensitivityRepository.deleteSensitivityBySensitivityAnalysisResultUUid(resultUuid);
+        sensitivityResultRepository.deleteAllByAnalysisResultUuid(resultUuid);
         contingencyResultRepository.deleteAllByAnalysisResultUuid(resultUuid);
         sensitivityFactorRepository.deleteAllByAnalysisResultUuid(resultUuid);
         analysisResultRepository.deleteByResultUuid(resultUuid);
@@ -215,24 +217,25 @@ public class SensitivityAnalysisResultRepository {
 
     @Transactional(readOnly = true)
     public SensitivityResultFilterOptions getSensitivityResultFilterOptions(UUID resultUuid, ResultsSelector selector) {
-        AnalysisResultEntity sas = analysisResultRepository.findByResultUuid(resultUuid);
-        if (sas == null) {
-            return null;
-        }
-
-        boolean withContingency = selector.getTabSelection() == ResultTab.N_K;
-        SensitivityResultFilterOptions.SensitivityResultFilterOptionsBuilder sensitivityResultOptionsBuilder = SensitivityResultFilterOptions.builder()
-                .allFunctionIds(sensitivityRepository.getDistinctFunctionIds(sas.getResultUuid(), selector.getFunctionType(), withContingency))
-                .allVariableIds(sensitivityRepository.getDistinctVariableIds(sas.getResultUuid(), selector.getFunctionType(), withContingency));
-
-        if (withContingency) {
-            sensitivityResultOptionsBuilder.allContingencyIds(sensitivityRepository.getDistinctContingencyIds(sas.getResultUuid(), selector.getFunctionType())
-                            .stream()
-                            .filter(Objects::nonNull)
-                            .collect(Collectors.toList()));
-        }
-
-        return sensitivityResultOptionsBuilder.build();
+        return SensitivityResultFilterOptions.builder().build();
+//        AnalysisResultEntity sas = analysisResultRepository.findByResultUuid(resultUuid);
+//        if (sas == null) {
+//            return null;
+//        }
+//
+//        boolean withContingency = selector.getTabSelection() == ResultTab.N_K;
+//        SensitivityResultFilterOptions.SensitivityResultFilterOptionsBuilder sensitivityResultOptionsBuilder = SensitivityResultFilterOptions.builder()
+//            .allFunctionIds(sensitivityRepository.getDistinctFunctionIds(sas.getResultUuid(), selector.getFunctionType(), withContingency))
+//            .allVariableIds(sensitivityRepository.getDistinctVariableIds(sas.getResultUuid(), selector.getFunctionType(), withContingency));
+//
+//        if (withContingency) {
+//            sensitivityResultOptionsBuilder.allContingencyIds(sensitivityRepository.getDistinctContingencyIds(sas.getResultUuid(), selector.getFunctionType())
+//                .stream()
+//                .filter(Objects::nonNull)
+//                .collect(Collectors.toList()));
+//        }
+//
+//        return sensitivityResultOptionsBuilder.build();
     }
 
     @Transactional(readOnly = true)
@@ -242,48 +245,61 @@ public class SensitivityAnalysisResultRepository {
             return null;
         }
 
-        Specification<SensitivityEntity> specification = SensitivityRepository.getSpecification(sas,
+        Specification<SensitivityResultEntity> specification = selector.getTabSelection() == ResultTab.N_K ?
+            SensitivityResultRepository.getSpecification(sas,
                 selector.getFunctionType(),
                 selector.getFunctionIds(),
                 selector.getVariableIds(),
-                selector.getContingencyIds(),
-                selector.getTabSelection() == ResultTab.N_K);
+                selector.getContingencyIds()) :
+            SensitivityResultRepository.getSpecification(sas,
+                selector.getFunctionType(),
+                selector.getFunctionIds(),
+                selector.getVariableIds());
 
-        List<SensitivityEntity> sensitivityEntities = getSensitivityEntities(selector, specification);
-        long filteredSensitivitiesCount = sensitivityRepository.count(specification);
+        List<SensitivityResultEntity> sensitivityEntities = getSensitivityEntities(selector, specification);
+
+        sensitivityEntities.stream().map(s -> s.getFactor().getFunctionId()).distinct()
+        long filteredSensitivitiesCount = sensitivityResultRepository.count(specification);
         return getSensitivityRunQueryResult(selector, sas, sensitivityEntities, filteredSensitivitiesCount);
     }
 
-    private List<SensitivityEntity> getSensitivityEntities(ResultsSelector selector, Specification<SensitivityEntity> specification) {
-        int pageNumber = 0;
-        int pageSize = Integer.MAX_VALUE;
-        if (selector.getPageSize() != null &&
-                selector.getPageSize() > 0 &&
-                selector.getPageNumber() != null) {
-            pageNumber = selector.getPageNumber();
-            pageSize = selector.getPageSize();
-        }
-
-        Map<SortKey, Integer> sortKeysWithWeightAndDirection = selector.getSortKeysWithWeightAndDirection();
-        List<Sort.Order> sortListFiltered = new ArrayList<>();
-        if (sortKeysWithWeightAndDirection != null && !sortKeysWithWeightAndDirection.isEmpty()) {
-            List<Sort.Order> sortList = new ArrayList<>(Collections.nCopies(
-                    sortKeysWithWeightAndDirection.size(), null));
-            sortKeysWithWeightAndDirection.keySet().forEach(sortKey -> {
-                int index = Math.abs(sortKeysWithWeightAndDirection.get(sortKey)) - 1;
-                sortList.add(index, sortKeysWithWeightAndDirection.get(sortKey) > 0 ? Sort.Order.asc(Objects.requireNonNull(getSort(sortKey))) :
-                        Sort.Order.desc(Objects.requireNonNull(getSort(sortKey))));
-            });
-            sortListFiltered = sortList.stream().filter(Objects::nonNull).toList();
-        }
-        Pageable pageable = sortListFiltered.isEmpty() ? PageRequest.of(pageNumber, pageSize) :
-                PageRequest.of(pageNumber, pageSize, Sort.by(sortListFiltered));
-        Page<SensitivityEntity> sensiResults = sensitivityRepository.findAll(specification, addDefaultSort(pageable, DEFAULT_SENSITIVITY_SORT_COLUMN));
+    private List<SensitivityResultEntity> getSensitivityEntities(ResultsSelector selector, Specification<SensitivityResultEntity> specification) {
+        Page<SensitivityResultEntity> sensiResults = sensitivityResultRepository.findAll(specification, getPageable(selector));
         return sensiResults.getContent();
     }
 
+    private static Pageable getPageable(ResultsSelector selector) {
+        int pageNumber = 0;
+        int pageSize = Integer.MAX_VALUE;
+        if (selector.getPageSize() != null &&
+            selector.getPageSize() > 0 &&
+            selector.getPageNumber() != null) {
+            pageNumber = selector.getPageNumber();
+            pageSize = selector.getPageSize();
+        }
+        List<Sort.Order> sortListFiltered = getOrders(selector);
+        Pageable pageable = sortListFiltered.isEmpty() ? PageRequest.of(pageNumber, pageSize) :
+            PageRequest.of(pageNumber, pageSize, Sort.by(sortListFiltered));
+        return addDefaultSort(pageable, DEFAULT_SENSITIVITY_SORT_COLUMN);
+    }
+
+    private static List<Sort.Order> getOrders(ResultsSelector selector) {
+        Map<SortKey, Integer> sortKeysWithWeightAndDirection = selector.getSortKeysWithWeightAndDirection();
+        if (sortKeysWithWeightAndDirection != null && !sortKeysWithWeightAndDirection.isEmpty()) {
+            List<Sort.Order> sortList = new ArrayList<>(Collections.nCopies(
+                sortKeysWithWeightAndDirection.size(), null));
+            sortKeysWithWeightAndDirection.keySet().forEach(sortKey -> {
+                int index = Math.abs(sortKeysWithWeightAndDirection.get(sortKey)) - 1;
+                sortList.add(index, sortKeysWithWeightAndDirection.get(sortKey) > 0 ? Sort.Order.asc(Objects.requireNonNull(getSort(sortKey))) :
+                    Sort.Order.desc(Objects.requireNonNull(getSort(sortKey))));
+            });
+            return sortList.stream().filter(Objects::nonNull).toList();
+        }
+        return Collections.emptyList();
+    }
+
     private SensitivityRunQueryResult getSensitivityRunQueryResult(ResultsSelector selector, AnalysisResultEntity sas,
-                                                                   List<SensitivityEntity> sensitivityEntities,
+                                                                   List<SensitivityResultEntity> sensitivityEntities,
                                                                    long filteredSensitivitiesCount) {
         if (sas == null) {
             return null;
@@ -304,72 +320,78 @@ public class SensitivityAnalysisResultRepository {
         }
 
         var totalSensitivitiesCountSpec = SensitivityRepository.getSpecification(sas,
-                selector.getFunctionType(),
-                null,
-                null,
-                null,
-                withContingency);
+            selector.getFunctionType(),
+            null,
+            null,
+            null,
+            withContingency);
 
         long count = sensitivityRepository.count(totalSensitivitiesCountSpec);
         if (!withContingency) {
-            List<SensitivityOfTo> befores = new ArrayList<>();
-            sensitivityEntities.forEach(sensitivityEntity -> {
-                SensitivityFactorEmbeddable factorEmbeddable = sensitivityEntity.getFactor();
-                befores.add(SensitivityOfTo.builder()
-                        .funcId(factorEmbeddable.getFunctionId())
-                        .varId(factorEmbeddable.getVariableId())
-                        .varIsAFilter(factorEmbeddable.isVariableSet())
-                        .value(sensitivityEntity.getValue())
-                        .functionReference(sensitivityEntity.getFunctionReference())
-                        .build());
-            });
+            List<SensitivityOfTo> befores = sensitivityEntities
+                .stream()
+                .map(sensitivityEntity -> (SensitivityOfTo) SensitivityOfTo.builder()
+                    .funcId(sensitivityEntity.getFactor().getFunctionId())
+                    .varId(sensitivityEntity.getFactor().getVariableId())
+                    .varIsAFilter(sensitivityEntity.getFactor().isVariableSet())
+                    .value(sensitivityEntity.getValue())
+                    .functionReference(sensitivityEntity.getFunctionReference())
+                    .build())
+                .toList();
             complete(retBuilder, filteredSensitivitiesCount, count, befores);
         } else {
-            List<SensitivityWithContingency> after = new ArrayList<>();
-            sensitivityEntities.forEach(sensitivityEntity -> {
-                SensitivityFactorEmbeddable factorEmbeddable = sensitivityEntity.getFactor();
-                SensitivityWithContingency r = SensitivityWithContingency.builder()
-                        .funcId(factorEmbeddable.getFunctionId())
-                        .varId(factorEmbeddable.getVariableId())
-                        .varIsAFilter(factorEmbeddable.isVariableSet())
-                        .contingencyId(sensitivityEntity.getContingency().getContingencyId())
-                        .value(sensitivityEntity.getValue())
-                        .functionReference(sensitivityEntity.getFunctionReference())
-                        .valueAfter(sensitivityEntity.getValueAfter())
-                        .functionReferenceAfter(sensitivityEntity.getFunctionReferenceAfter())
-                        .build();
+            Map<UUID, List<SensitivityResultEntity>> sensitivityResultsByFactorId = sensitivityEntities.stream()
+                .collect(
+                    Collectors.groupingBy(
+                        f -> f.getFactor().getId(),
+                        Collectors.mapping(Function.identity(), Collectors.toList())));
 
-                after.add(r);
-            });
+            List<SensitivityWithContingency> after = sensitivityResultsByFactorId.values()
+                .stream()
+                .map(sensitivityResultEntities -> {
+                    SensitivityResultEntity preContingencySensitivityResult = sensitivityResultEntities.stream().filter(s -> Objects.isNull(s.getContingencyResult())).findFirst().orElseThrow();
+                    SensitivityResultEntity postContingencySensitivityResult = sensitivityResultEntities.stream().filter(s -> !Objects.isNull(s.getContingencyResult())).findFirst().orElseThrow();
+                    SensitivityFactorEntity factor = preContingencySensitivityResult.getFactor();
+                    return (SensitivityWithContingency) SensitivityWithContingency.builder()
+                        .funcId(factor.getFunctionId())
+                        .varId(factor.getVariableId())
+                        .varIsAFilter(factor.isVariableSet())
+                        .contingencyId(postContingencySensitivityResult.getContingencyResult().getContingencyId())
+                        .value(preContingencySensitivityResult.getValue())
+                        .functionReference(preContingencySensitivityResult.getFunctionReference())
+                        .valueAfter(postContingencySensitivityResult.getValue())
+                        .functionReferenceAfter(postContingencySensitivityResult.getFunctionReference())
+                        .build();
+                })
+                .toList();
+
             complete(retBuilder, filteredSensitivitiesCount, count, after);
         }
         return retBuilder.build();
     }
 
     private void complete(SensitivityRunQueryResult.SensitivityRunQueryResultBuilder retBuilder,
-            long filteredSensitivitiesCount,
-            long count,
-            List<? extends SensitivityOfTo> filtered
-
+                          long filteredSensitivitiesCount,
+                          long count,
+                          List<? extends SensitivityOfTo> filtered
     ) {
         retBuilder.filteredSensitivitiesCount(filteredSensitivitiesCount);
         retBuilder.sensitivities(filtered);
         retBuilder.totalSensitivitiesCount(count);
     }
 
-    private String getSort(SortKey sortKey) {
+    private static String getSort(SortKey sortKey) {
         return switch (sortKey) {
             case FUNCTION -> "factor.functionId";
-            case SENSITIVITY -> "value";
+            case SENSITIVITY, POST_SENSITIVITY -> "value";
             case REFERENCE -> "functionReference";
             case VARIABLE -> "factor.variableId";
             case CONTINGENCY -> "contingency.contingencyId";
             case POST_REFERENCE -> "functionReferenceAfter";
-            case POST_SENSITIVITY -> "valueAfter";
         };
     }
 
-    private Pageable addDefaultSort(Pageable pageable, String defaultSortColumn) {
+    private static Pageable addDefaultSort(Pageable pageable, String defaultSortColumn) {
         if (pageable.isPaged() && pageable.getSort().getOrderFor(defaultSortColumn) == null) {
             //if it's already sorted by our defaultColumn we don't add another sort by the same column
             Sort finalSort = pageable.getSort().and(Sort.by(DEFAULT_SORT_DIRECTION, defaultSortColumn));

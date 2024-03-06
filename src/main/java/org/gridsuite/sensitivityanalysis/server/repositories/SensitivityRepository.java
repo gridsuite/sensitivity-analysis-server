@@ -8,6 +8,7 @@
 package org.gridsuite.sensitivityanalysis.server.repositories;
 
 import com.powsybl.sensitivity.SensitivityFunctionType;
+import jakarta.persistence.criteria.*;
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityEntity;
 import org.springframework.data.domain.Page;
@@ -19,10 +20,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.util.CollectionUtils;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -36,8 +33,6 @@ public interface SensitivityRepository extends JpaRepository<SensitivityEntity, 
 
     String FACTOR = "factor";
     String CONTINGENCY = "contingency";
-
-    Page<SensitivityEntity> findAll(Specification<SensitivityEntity> specification, Pageable pageable);
 
     @Query(value = "SELECT distinct s.factor.functionId from SensitivityEntity as s " +
             "where s.result.resultUuid = :resultUuid " +
