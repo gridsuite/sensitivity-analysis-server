@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -48,8 +47,8 @@ public class SensitivityFactorEntity {
     @JoinColumn(name = "analysis_result_id")
     private AnalysisResultEntity analysisResult;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "factor")
-    private List<SensitivityResultEntity> sensitivityResultEntities;
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "factor")
+    private SensitivityResultEntity sensitivityResult;
 
     public SensitivityFactorEntity(int index, SensitivityFunctionType functionType, String functionId, SensitivityVariableType variableType, String variableId, AnalysisResultEntity analysisResult) {
         this(index, functionType, functionId, variableType, variableId, false, analysisResult);

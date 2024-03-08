@@ -205,17 +205,18 @@ public class SensitivityAnalysisWorkerService {
             Network network = getNetwork(context.getNetworkUuid(), context.getVariantId());
             sensitivityAnalysisInputBuilderService.build(context, network, reporter);
 
-            List<SensitivityFactor> factors = context.getSensitivityAnalysisInputs().getFactors();
+            List<List<SensitivityFactor>> factors = context.getSensitivityAnalysisInputs().getFactors();
             List<Contingency> contingencies = new ArrayList<>(context.getSensitivityAnalysisInputs().getContingencies());
 
-            var analysisResult = resultRepository.insertAnalysisResult(resultUuid);
-
-            resultRepository.insertFactorsAndContingencies(factors, contingencies, analysisResult);
+            resultRepository.delete(resultUuid);
+            // WARNING : we're sure order is maintained because InputBuilderService creates List<(preContingency, contingency1, contingency2, etc...)>
+            // That's why it works but if this changes we should set up a much more complicated mechanism
+            resultRepository.createResults(factors, resultUuid);
 
             CompletableFuture<SensitivityAnalysisResult> future = sensitivityAnalysisRunner.runAsync(
                 network,
                 context.getVariantId() != null ? context.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
-                factors,
+                factors.stream().flatMap(Collection::stream).toList(),
                 contingencies,
                 context.getSensitivityAnalysisInputs().getVariablesSets(),
                 sensitivityAnalysisParameters,

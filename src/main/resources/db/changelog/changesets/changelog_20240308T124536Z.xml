@@ -1,0 +1,80 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="mancinijor (generated)" id="1709901949781-1">
+        <createTable tableName="contingency_result">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="contingency_resultPK"/>
+            </column>
+            <column name="contingency_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="index" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="mancinijor (generated)" id="1709901949781-2">
+        <createTable tableName="sensitivity_factor">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="sensitivity_factorPK"/>
+            </column>
+            <column name="function_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="function_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="index" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="variable_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="variable_set" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="variable_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="analysis_result_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="mancinijor (generated)" id="1709901949781-3">
+        <createTable tableName="sensitivity_result">
+            <column name="sensitivity_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="sensitivity_resultPK"/>
+            </column>
+            <column name="function_reference" type="FLOAT(53)"/>
+            <column name="value" type="FLOAT(53)"/>
+            <column name="contingency_id" type="UUID"/>
+            <column name="factor_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pre_contingency_sensitivity_result_id" type="UUID"/>
+            <column name="result_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="mancinijor (generated)" id="1709901949781-4">
+        <addUniqueConstraint columnNames="index, analysis_result_id" constraintName="unique_factor_index_analysis" tableName="sensitivity_factor"/>
+    </changeSet>
+    <changeSet author="mancinijor (generated)" id="1709901949781-5">
+        <addForeignKeyConstraint baseColumnNames="contingency_id" baseTableName="sensitivity_result" constraintName="FK20vyei58je9vvtoohrjdxlct3" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="contingency_result" validate="true"/>
+    </changeSet>
+    <changeSet author="mancinijor (generated)" id="1709901949781-9">
+        <addForeignKeyConstraint baseColumnNames="factor_id" baseTableName="sensitivity_result" constraintName="FKfbgh3d2y3rnca95j7yumy23fy" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="sensitivity_factor" validate="true"/>
+    </changeSet>
+    <changeSet author="mancinijor (generated)" id="1709901949781-10">
+        <addForeignKeyConstraint baseColumnNames="analysis_result_id" baseTableName="sensitivity_factor" constraintName="FKi08hbobf8jraqtfwaivjaa9j8" deferrable="false" initiallyDeferred="false" referencedColumnNames="result_uuid" referencedTableName="analysis_result" validate="true"/>
+    </changeSet>
+    <changeSet author="mancinijor (generated)" id="1709901949781-11">
+        <addForeignKeyConstraint baseColumnNames="result_id" baseTableName="sensitivity_result" constraintName="FKio4m1d2d2x2tw2y4mm23sn22l" deferrable="false" initiallyDeferred="false" referencedColumnNames="result_uuid" referencedTableName="analysis_result" validate="true"/>
+    </changeSet>
+    <changeSet author="mancinijor (generated)" id="1709901949781-12">
+        <addForeignKeyConstraint baseColumnNames="pre_contingency_sensitivity_result_id" baseTableName="sensitivity_result" constraintName="FKurqhy4qbyudkm1alhjjrq4ey" deferrable="false" initiallyDeferred="false" referencedColumnNames="sensitivity_id" referencedTableName="sensitivity_result" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

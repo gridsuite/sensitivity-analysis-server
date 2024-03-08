@@ -6,10 +6,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
-import org.gridsuite.sensitivityanalysis.server.entities.SensitivityEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -17,7 +14,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -41,7 +37,7 @@ public interface SensitivityResultRepository extends JpaRepository<SensitivityRe
                 orPredicate(criteriaBuilder, root, List.of(functionType), FACTOR, "functionType"),
                 orPredicate(criteriaBuilder, root, functionIds, FACTOR, "functionId"),
                 orPredicate(criteriaBuilder, root, variableIds, FACTOR, "variableId"),
-                orPredicate(criteriaBuilder, root, contingencyIds, CONTINGENCY, "contingencyId")
+                criteriaBuilder.and(criteriaBuilder.isNotNull(root.get(CONTINGENCY)), orPredicate(criteriaBuilder, root, contingencyIds, CONTINGENCY, "contingencyId"))
             );
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };

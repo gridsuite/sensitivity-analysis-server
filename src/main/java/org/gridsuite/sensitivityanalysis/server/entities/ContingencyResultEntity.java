@@ -14,11 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Entity
 @Table(
-    name = "contingency_result",
-    indexes = {
-        @Index(name = "unique_contingency_analysis", columnList = "contingency_id, analysis_result_id", unique = true),
-        @Index(name = "unique_contingency_index_analysis", columnList = "index, analysis_result_id", unique = true)
-    }
+    name = "contingency_result"
 )
 public class ContingencyResultEntity {
 
@@ -36,17 +32,12 @@ public class ContingencyResultEntity {
     @Enumerated(EnumType.STRING)
     SensitivityAnalysisResult.Status status;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "analysis_result_id")
-    private AnalysisResultEntity analysisResult;
-
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "contingencyResult")
     private List<SensitivityResultEntity> sensitivityResults;
 
-    public ContingencyResultEntity(int index, String contingencyId, AnalysisResultEntity analysisResult) {
+    public ContingencyResultEntity(int index, String contingencyId) {
         this.index = index;
         this.contingencyId = contingencyId;
-        this.analysisResult = analysisResult;
     }
 
     public ContingencyResultEntity(int index, String contingencyId, SensitivityAnalysisResult.Status status) {
