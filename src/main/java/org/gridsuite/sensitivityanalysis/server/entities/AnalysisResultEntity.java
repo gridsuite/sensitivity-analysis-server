@@ -11,7 +11,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -29,27 +28,8 @@ public class AnalysisResultEntity {
     @Column
     private LocalDateTime writeTimeStamp;
 
-    @OneToMany(mappedBy = "result", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SensitivityEntity> sensitivities;
-
-    @OneToMany(mappedBy = "result", cascade = CascadeType.ALL)
-    private List<SensitivityResultEntity> newSensitivities;
-
     public AnalysisResultEntity(UUID resultUuid, LocalDateTime writeTimeStamp) {
         this.resultUuid = resultUuid;
         this.writeTimeStamp = writeTimeStamp;
-    }
-
-    public AnalysisResultEntity(UUID resultUuid, LocalDateTime writeTimeStamp, List<SensitivityEntity> sensitivities) {
-        this.resultUuid = resultUuid;
-        this.writeTimeStamp = writeTimeStamp;
-        addSensitivities(sensitivities);
-    }
-
-    private void addSensitivities(List<SensitivityEntity> sensitivities) {
-        if (sensitivities != null) {
-            sensitivities.forEach(s -> s.setResult(this));
-            this.sensitivities = sensitivities;
-        }
     }
 }

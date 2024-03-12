@@ -89,7 +89,7 @@ public class SensitivityAnalysisResultRepositoryTest {
         final SensitivityAnalysisResult result = new SensitivityAnalysisResult(sensitivityFactors,
             contingenciesStatuses,
             sensitivityValues);
-        sensitivityAnalysisResultRepository.insert(RESULT_UUID, result, "OK");
+        sensitivityAnalysisResultRepository.saveGlobalStatus(RESULT_UUID, "OK");
         SQLStatementCountValidator.reset();
 
         sensitivityAnalysisResultRepository.delete(RESULT_UUID);

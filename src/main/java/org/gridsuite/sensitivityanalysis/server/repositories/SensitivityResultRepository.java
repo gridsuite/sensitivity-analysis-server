@@ -23,8 +23,28 @@ public interface SensitivityResultRepository extends JpaRepository<SensitivityRe
     String CONTINGENCY = "contingencyResult";
 
     @Modifying
-    @Query(value = "DELETE FROM SensitivityResultEntity f WHERE f.result.resultUuid = :analysisResultUuid")
+    @Query(value = "DELETE FROM SensitivityResultEntity s WHERE s.result.resultUuid = :analysisResultUuid AND s.preContingencySensitivityResult is not null")
+    void deleteAllPostContingenciesByAnalysisResultUuid(UUID analysisResultUuid);
+
+    @Modifying
+    @Query(value = "DELETE FROM SensitivityResultEntity s WHERE s.result.resultUuid = :analysisResultUuid")
     void deleteAllByAnalysisResultUuid(UUID analysisResultUuid);
+
+    @Query(value = "SELECT distinct s.factor.functionId from SensitivityResultEntity as s " +
+        "where s.result.resultUuid = :resultUuid " +
+        "and s.factor.functionType = :sensitivityFunctionType " +
+        "and ((:withContingency = true and s.contingencyResult is not null ) or (:withContingency = false and s.contingencyResult is null ))")
+    List<String> getDistinctFunctionIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType, boolean withContingency);
+
+    @Query(value = "SELECT distinct s.factor.variableId from SensitivityResultEntity as s " +
+        "where s.result.resultUuid = :resultUuid " +
+        "and s.factor.functionType = :sensitivityFunctionType " +
+        "and ((:withContingency = true and s.contingencyResult is not null ) or (:withContingency = false and s.contingencyResult is null ))")
+    List<String> getDistinctVariableIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType, boolean withContingency);
+
+    @Query(value = "SELECT distinct s.contingencyResult.contingencyId from SensitivityResultEntity as s " +
+        "where s.result.resultUuid = :resultUuid and s.factor.functionType = :sensitivityFunctionType")
+    List<String> getDistinctContingencyIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
 
     static Specification<SensitivityResultEntity> getSpecification(AnalysisResultEntity sas,
                                                                    SensitivityFunctionType functionType,

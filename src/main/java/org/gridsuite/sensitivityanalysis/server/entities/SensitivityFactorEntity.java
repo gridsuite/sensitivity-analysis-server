@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2024, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 package org.gridsuite.sensitivityanalysis.server.entities;
 
 import com.powsybl.sensitivity.SensitivityFunctionType;
@@ -9,6 +15,9 @@ import lombok.Setter;
 
 import java.util.UUID;
 
+/**
+ * @author Joris Mancini <joris.mancini_externe at rte-france.com>
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -43,16 +52,12 @@ public class SensitivityFactorEntity {
     @Column(name = "variable_set", nullable = false)
     private boolean variableSet;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "analysis_result_id")
     private AnalysisResultEntity analysisResult;
 
-    @OneToOne(cascade = CascadeType.ALL, mappedBy = "factor")
+    @OneToOne(mappedBy = "factor") // Let eager on purpose to improve performance
     private SensitivityResultEntity sensitivityResult;
-
-    public SensitivityFactorEntity(int index, SensitivityFunctionType functionType, String functionId, SensitivityVariableType variableType, String variableId, AnalysisResultEntity analysisResult) {
-        this(index, functionType, functionId, variableType, variableId, false, analysisResult);
-    }
 
     public SensitivityFactorEntity(int index, SensitivityFunctionType functionType, String functionId, SensitivityVariableType variableType, String variableId, boolean variableSet, AnalysisResultEntity analysisResult) {
         this.index = index;
