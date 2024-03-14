@@ -43,7 +43,7 @@ public class SensitivityResultEntity {
     @JoinColumn(name = "factor_id")
     private SensitivityFactorEntity factor;
 
-    @Column(name = "value")
+    @Column(name = "value_")
     private double value;
 
     @Column(name = "function_reference")

@@ -33,13 +33,13 @@ public class ResultsSelector {
     @Schema(description = "sorting by [{key, rank * (ascending ? 1 : -1) }], with rank > 0 and exclusive")
     private Map<SortKey, Integer> sortKeysWithWeightAndDirection;
 
-    @Schema(description = "ids of the functions (branches) to limit to")
+    @Schema(description = "ids of the functions (branches) to limit to", nullable = true)
     private Collection<String> functionIds;
 
-    @Schema(description = "ids of the variables to limit to")
+    @Schema(description = "ids of the variables to limit to", nullable = true)
     private Collection<String> variableIds;
 
-    @Schema(description = "ids of the contingencies to limit to")
+    @Schema(description = "ids of the contingencies to limit to", nullable = true)
     private Collection<String> contingencyIds;
 
     @Schema(description = "page number")

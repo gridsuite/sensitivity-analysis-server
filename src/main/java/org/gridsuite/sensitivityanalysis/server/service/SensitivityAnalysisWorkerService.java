@@ -20,7 +20,6 @@ import com.powsybl.loadflow.LoadFlowProvider;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.sensitivity.*;
-import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
@@ -152,18 +151,24 @@ public class SensitivityAnalysisWorkerService {
         return run(
             context,
             null,
-            new SensitivityResultModelWriter(Lists.newArrayList(context.getSensitivityAnalysisInputs().getContingencies().iterator())),
-            (factors, writer) -> new SensitivityAnalysisResult(factors, ((SensitivityResultModelWriter) writer).getContingencyStatuses(), ((SensitivityResultModelWriter) writer).getValues())
+            (factors, writer) -> new SensitivityAnalysisResult(factors, ((SensitivityResultModelWriter) writer).getContingencyStatuses(), ((SensitivityResultModelWriter) writer).getValues()),
+            true
         );
     }
 
     private void runWithPersistence(SensitivityAnalysisRunContext context, UUID resultUuid) throws Exception {
         SensitivityResultWriterPersisted sensitivityResultWriter = (SensitivityResultWriterPersisted) applicationContext.getBean("sensitivityResultWriterPersisted");
         sensitivityResultWriter.init(resultUuid);
-        run(context, resultUuid, sensitivityResultWriter, (factors, writer) -> null);
+        run(context, resultUuid, (factors, writer) -> null, false);
     }
 
-    private <T> T run(SensitivityAnalysisRunContext context, UUID resultUuid, SensitivityResultWriter writer, ResultConverter<T> converter) throws Exception {
+    private SensitivityResultWriter getPersistedSensitivityWriter(UUID resultUuid) {
+        SensitivityResultWriterPersisted sensitivityResultWriter = (SensitivityResultWriterPersisted) applicationContext.getBean("sensitivityResultWriterPersisted");
+        sensitivityResultWriter.init(resultUuid);
+        return sensitivityResultWriter;
+    }
+
+    private <T> T run(SensitivityAnalysisRunContext context, UUID resultUuid, ResultConverter<T> converter, boolean isInMemory) throws Exception {
         Objects.requireNonNull(context);
 
         LOGGER.info("Run sensitivity analysis");
@@ -182,7 +187,7 @@ public class SensitivityAnalysisWorkerService {
                 reportService.deleteReport(context.getReportUuid(), reportType));
         }
 
-        CompletableFuture<T> future = runSensitivityAnalysisAsync(context, sensitivityAnalysisRunner, writer, reporter, resultUuid, converter);
+        CompletableFuture<T> future = runSensitivityAnalysisAsync(context, sensitivityAnalysisRunner, reporter, resultUuid, converter, isInMemory);
 
         T result = future == null ? null : sensitivityAnalysisObserver.observeRun("run", context, future::get);
         if (context.getReportUuid() != null) {
@@ -215,10 +220,10 @@ public class SensitivityAnalysisWorkerService {
 
     private <T> CompletableFuture<T> runSensitivityAnalysisAsync(SensitivityAnalysisRunContext context,
                                                                  SensitivityAnalysis.Runner sensitivityAnalysisRunner,
-                                                                 SensitivityResultWriter sensitivityResultWriter,
                                                                  Reporter reporter,
                                                                  UUID resultUuid,
-                                                                 ResultConverter<T> converter) {
+                                                                 ResultConverter<T> converter,
+                                                                 boolean isInMemory) {
         lockRunAndCancelSensitivityAnalysis.lock();
         try {
             if (resultUuid != null && cancelComputationRequests.get(resultUuid) != null) {
@@ -233,7 +238,11 @@ public class SensitivityAnalysisWorkerService {
 
             // WARNING : we're sure order is maintained because InputBuilderService creates List<(preContingency, contingency1, contingency2, etc...)>
             // That's why it works but if this changes we should set up a much more complicated mechanism
-            resultRepository.createResults(factors, contingencies, resultUuid);
+            Optional.ofNullable(resultUuid).ifPresent(r -> resultRepository.createResults(factors, contingencies, r));
+
+            SensitivityResultWriter sensitivityResultWriter = isInMemory
+                ? new SensitivityResultModelWriter(contingencies)
+                : getPersistedSensitivityWriter(resultUuid);
 
             List<SensitivityFactor> orderedFactors = factors.stream().flatMap(Collection::stream).toList();
             SensitivityFactorReader sensitivityFactorReader = new SensitivityFactorModelReader(orderedFactors, network);

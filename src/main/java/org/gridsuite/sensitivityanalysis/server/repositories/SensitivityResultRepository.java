@@ -30,6 +30,14 @@ public interface SensitivityResultRepository extends JpaRepository<SensitivityRe
     @Query(value = "DELETE FROM SensitivityResultEntity s WHERE s.result.resultUuid = :analysisResultUuid")
     void deleteAllByAnalysisResultUuid(UUID analysisResultUuid);
 
+    @Modifying
+    @Query(value = "DELETE FROM SensitivityResultEntity s WHERE s.preContingencySensitivityResult is not null")
+    void deleteAllPostContingencies();
+
+    @Modifying
+    @Query(value = "DELETE FROM SensitivityResultEntity")
+    void deleteAll();
+
     @Query(value = "SELECT distinct s.factor.functionId from SensitivityResultEntity as s " +
         "where s.result.resultUuid = :resultUuid " +
         "and s.factor.functionType = :sensitivityFunctionType " +

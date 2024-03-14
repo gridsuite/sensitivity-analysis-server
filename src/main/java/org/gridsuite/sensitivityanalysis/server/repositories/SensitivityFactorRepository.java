@@ -14,5 +14,9 @@ public interface SensitivityFactorRepository extends JpaRepository<SensitivityFa
     @Query(value = "DELETE FROM SensitivityFactorEntity f WHERE f.analysisResult.resultUuid = :analysisResultUuid")
     void deleteAllByAnalysisResultUuid(UUID analysisResultUuid);
 
+    @Modifying
+    @Query(value = "DELETE FROM SensitivityFactorEntity")
+    void deleteAll();
+
     SensitivityFactorEntity findByAnalysisResultAndIndex(AnalysisResultEntity analysisResult, int index);
 }

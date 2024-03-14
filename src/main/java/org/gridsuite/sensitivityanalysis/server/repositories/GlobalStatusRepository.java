@@ -8,6 +8,8 @@ package org.gridsuite.sensitivityanalysis.server.repositories;
 
 import org.gridsuite.sensitivityanalysis.server.entities.GlobalStatusEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
@@ -17,6 +19,10 @@ import java.util.UUID;
  */
 @Repository
 public interface GlobalStatusRepository extends JpaRepository<GlobalStatusEntity, UUID> {
+    @Modifying
+    @Query(value = "DELETE FROM GlobalStatusEntity")
+    void deleteAll();
+
     GlobalStatusEntity findByResultUuid(UUID resultUuid);
 
     void deleteByResultUuid(UUID resultUuid);

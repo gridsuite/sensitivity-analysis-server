@@ -171,6 +171,10 @@ public class SensitivityAnalysisResultRepository {
     @Transactional
     public void deleteAll() {
         globalStatusRepository.deleteAll();
+        sensitivityResultRepository.deleteAllPostContingencies();
+        sensitivityResultRepository.deleteAll();
+        sensitivityFactorRepository.deleteAll();
+        contingencyResultRepository.deleteAll();
         analysisResultRepository.deleteAll();
     }
 
@@ -327,10 +331,9 @@ public class SensitivityAnalysisResultRepository {
         return switch (sortKey) {
             case FUNCTION -> "factor.functionId";
             case SENSITIVITY, POST_SENSITIVITY -> "value";
-            case REFERENCE -> "functionReference";
+            case REFERENCE, POST_REFERENCE -> "functionReference";
             case VARIABLE -> "factor.variableId";
             case CONTINGENCY -> "contingencyResult.contingencyId";
-            case POST_REFERENCE -> "functionReferenceAfter";
         };
     }
 
