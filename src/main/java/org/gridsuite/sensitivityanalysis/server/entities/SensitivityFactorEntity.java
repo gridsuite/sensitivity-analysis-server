@@ -24,16 +24,20 @@ import java.util.UUID;
 @Entity
 @Table(
     name = "sensitivity_factor",
-    indexes = {
-        @Index(name = "unique_factor_index_analysis", columnList = "index, analysis_result_id", unique = true),
-        @Index(name = "sensitivity_factor_search_index", columnList = "function_id, function_type, variable_id, variable_type")
-    }
+    indexes = {@Index(name = "sensitivity_factor_search_index", columnList = "function_id, function_type, variable_id, variable_type")}
 )
 public class SensitivityFactorEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
+
+    @OneToOne
+    @JoinColumns(value = {
+        @JoinColumn(name = "analysis_result_id", referencedColumnName = "analysis_result_id", updatable = false, insertable = false),
+        @JoinColumn(name = "index", referencedColumnName = "factor_index", updatable = false, insertable = false)
+    })
+    private RawSensitivityResultEntity rawSensitivityResult;
 
     @Column(name = "index", nullable = false)
     private int index;
@@ -59,7 +63,7 @@ public class SensitivityFactorEntity {
     @JoinColumn(name = "analysis_result_id")
     private AnalysisResultEntity analysisResult;
 
-    @OneToOne(mappedBy = "factor") // Let eager on purpose to improve performance
+    @OneToOne(mappedBy = "factor")
     private SensitivityResultEntity sensitivityResult;
 
     public SensitivityFactorEntity(int index, SensitivityFunctionType functionType, String functionId, SensitivityVariableType variableType, String variableId, boolean variableSet, AnalysisResultEntity analysisResult) {

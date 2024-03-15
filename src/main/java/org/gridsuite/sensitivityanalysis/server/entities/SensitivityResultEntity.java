@@ -39,15 +39,9 @@ public class SensitivityResultEntity {
     @JoinColumn(name = "result_id")
     private AnalysisResultEntity result;
 
-    @OneToOne(cascade = CascadeType.PERSIST)
+    @OneToOne(cascade = CascadeType.PERSIST) // Let eager on purpose to improve performance
     @JoinColumn(name = "factor_id")
     private SensitivityFactorEntity factor;
-
-    @Column(name = "value_")
-    private double value;
-
-    @Column(name = "function_reference")
-    private double functionReference;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "contingency_id")

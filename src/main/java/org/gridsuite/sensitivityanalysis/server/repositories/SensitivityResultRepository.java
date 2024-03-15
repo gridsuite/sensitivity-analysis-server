@@ -43,6 +43,9 @@ public interface SensitivityResultRepository extends JpaRepository<SensitivityRe
     @Query(value = "DELETE FROM SensitivityResultEntity s WHERE s.preContingencySensitivityResult is not null")
     void deleteAllPostContingencies();
 
+//    @Query(value = "SELECT s FROM SensitivityResultEntity s WHERE s.factor.index = :factorIndex AND s.result = :resultEntity")
+    SensitivityResultEntity findByResultAndFactorIndex(AnalysisResultEntity resultEntity, int factorIndex);
+
     @Modifying
     @Query(value = "DELETE FROM SensitivityResultEntity")
     void deleteAll();

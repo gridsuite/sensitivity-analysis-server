@@ -103,7 +103,7 @@
         <addForeignKeyConstraint baseColumnNames="pre_contingency_sensitivity_result_id" baseTableName="sensitivity_result" constraintName="FKurqhy4qbyudkm1alhjjrq4ey" deferrable="false" initiallyDeferred="false" referencedColumnNames="sensitivity_id" referencedTableName="sensitivity_result" validate="true"/>
     </changeSet>
     <changeSet author="mancinijor (generated)" id="1710495064279-20">
-        <dropForeignKeyConstraint baseTableName="SENSITIVITY" constraintName="FK19PDO1XU6PT1LUC2KJ41F8FWC"/>
+        <dropForeignKeyConstraint baseTableName="SENSITIVITY" constraintName="FK19pdo1xu6pt1luc2kj41f8fwc"/>
     </changeSet>
     <changeSet author="mancinijor (generated)" id="1710495064279-21">
         <dropTable tableName="SENSITIVITY"/>

@@ -157,14 +157,12 @@ public class SensitivityAnalysisWorkerService {
     }
 
     private void runWithPersistence(SensitivityAnalysisRunContext context, UUID resultUuid) throws Exception {
-        SensitivityResultWriterPersisted sensitivityResultWriter = (SensitivityResultWriterPersisted) applicationContext.getBean("sensitivityResultWriterPersisted");
-        sensitivityResultWriter.init(resultUuid);
         run(context, resultUuid, (factors, writer) -> null, false);
     }
 
     private SensitivityResultWriter getPersistedSensitivityWriter(UUID resultUuid) {
         SensitivityResultWriterPersisted sensitivityResultWriter = (SensitivityResultWriterPersisted) applicationContext.getBean("sensitivityResultWriterPersisted");
-        sensitivityResultWriter.init(resultUuid);
+        sensitivityResultWriter.start(resultUuid);
         return sensitivityResultWriter;
     }
 
@@ -260,7 +258,16 @@ public class SensitivityAnalysisWorkerService {
             if (resultUuid != null) {
                 futures.put(resultUuid, future);
             }
-            return future.thenApply(r -> converter.convert(orderedFactors, sensitivityResultWriter));
+            return future.thenApply(r -> converter.convert(orderedFactors, sensitivityResultWriter))
+                .thenApply(r -> {
+                    if (sensitivityResultWriter instanceof SensitivityResultWriterPersisted persisted) {
+                        while (persisted.isWorking()) {
+                            // Nothing to do
+                        }
+                        persisted.close();
+                    }
+                    return r;
+                });
         } finally {
             lockRunAndCancelSensitivityAnalysis.unlock();
         }

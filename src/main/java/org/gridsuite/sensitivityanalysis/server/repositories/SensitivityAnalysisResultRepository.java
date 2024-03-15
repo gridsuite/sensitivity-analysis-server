@@ -58,17 +58,20 @@ public class SensitivityAnalysisResultRepository {
     private static final String DEFAULT_SENSITIVITY_SORT_COLUMN = "sensitivityId";
 
     private static final Sort.Direction DEFAULT_SORT_DIRECTION = Sort.Direction.ASC;
+    private final RawSensitivityResultRepository rawSensitivityResultRepository;
 
     public SensitivityAnalysisResultRepository(GlobalStatusRepository globalStatusRepository,
                                                AnalysisResultRepository analysisResultRepository,
                                                SensitivityResultRepository sensitivityResultRepository,
                                                SensitivityFactorRepository sensitivityFactorRepository,
-                                               ContingencyResultRepository contingencyResultRepository) {
+                                               ContingencyResultRepository contingencyResultRepository,
+                                               RawSensitivityResultRepository rawSensitivityResultRepository) {
         this.globalStatusRepository = globalStatusRepository;
         this.analysisResultRepository = analysisResultRepository;
         this.sensitivityResultRepository = sensitivityResultRepository;
         this.sensitivityFactorRepository = sensitivityFactorRepository;
         this.contingencyResultRepository = contingencyResultRepository;
+        this.rawSensitivityResultRepository = rawSensitivityResultRepository;
     }
 
     private static GlobalStatusEntity toStatusEntity(UUID resultUuid, String status) {
@@ -141,6 +144,31 @@ public class SensitivityAnalysisResultRepository {
         );
     }
 
+    public record ContingencyResult(int contingencyIndex, SensitivityAnalysisResult.Status status) { }
+
+    @Transactional
+    public void writeSensitivityValues(UUID resultUuid, List<SensitivityValue> sensitivityValues) {
+        AnalysisResultEntity analysisResult = analysisResultRepository.findByResultUuid(resultUuid);
+        var rawSensitivityResults = sensitivityValues.stream().map(s -> {
+            return new RawSensitivityResultEntity(
+                analysisResult,
+                s.getFactorIndex(),
+                s.getValue(),
+                s.getFunctionReference()
+            );
+        }).collect(Collectors.toSet());
+        rawSensitivityResultRepository.saveAllAndFlush(rawSensitivityResults);
+    }
+
+    @Transactional
+    public void writeContingenciesStatus(UUID resultUuid, List<ContingencyResult> contingencies) {
+        contingencies.forEach(c -> {
+            AnalysisResultEntity analysisResult = analysisResultRepository.findByResultUuid(resultUuid);
+            ContingencyResultEntity contingencyResult = contingencyResultRepository.findByAnalysisResultAndIndex(analysisResult, c.contingencyIndex());
+            contingencyResult.setStatus(c.status());
+        });
+    }
+
     @Transactional
     public void insertStatus(List<UUID> resultUuids, String status) {
         Objects.requireNonNull(resultUuids);
@@ -163,6 +191,7 @@ public class SensitivityAnalysisResultRepository {
         sensitivityResultRepository.deleteAllPostContingenciesByAnalysisResultUuid(resultUuid);
         sensitivityResultRepository.deleteAllByAnalysisResultUuid(resultUuid);
         sensitivityFactorRepository.deleteAllByAnalysisResultUuid(resultUuid);
+        rawSensitivityResultRepository.deleteAllByAnalysisResultUuid(resultUuid);
         contingencyResultRepository.deleteAllByAnalysisResultUuid(resultUuid);
         analysisResultRepository.deleteById(resultUuid);
         LOGGER.info("Sensitivity analysis result '{}' has been deleted in {}ms", resultUuid, TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime.get()));
@@ -174,6 +203,7 @@ public class SensitivityAnalysisResultRepository {
         sensitivityResultRepository.deleteAllPostContingencies();
         sensitivityResultRepository.deleteAll();
         sensitivityFactorRepository.deleteAll();
+        rawSensitivityResultRepository.deleteAll();
         contingencyResultRepository.deleteAll();
         analysisResultRepository.deleteAll();
     }
@@ -291,8 +321,8 @@ public class SensitivityAnalysisResultRepository {
                     .funcId(sensitivityEntity.getFactor().getFunctionId())
                     .varId(sensitivityEntity.getFactor().getVariableId())
                     .varIsAFilter(sensitivityEntity.getFactor().isVariableSet())
-                    .value(sensitivityEntity.getValue())
-                    .functionReference(sensitivityEntity.getFunctionReference())
+                    .value(sensitivityEntity.getFactor().getRawSensitivityResult().getValue())
+                    .functionReference(sensitivityEntity.getFactor().getRawSensitivityResult().getFunctionReference())
                     .build())
                 .toList();
         } else {
@@ -305,10 +335,10 @@ public class SensitivityAnalysisResultRepository {
                         .varId(factor.getVariableId())
                         .varIsAFilter(factor.isVariableSet())
                         .contingencyId(sensitivityResultEntity.getContingencyResult().getContingencyId())
-                        .value(sensitivityResultEntity.getPreContingencySensitivityResult().getValue())
-                        .functionReference(sensitivityResultEntity.getPreContingencySensitivityResult().getFunctionReference())
-                        .valueAfter(sensitivityResultEntity.getValue())
-                        .functionReferenceAfter(sensitivityResultEntity.getFunctionReference())
+                        .value(sensitivityResultEntity.getPreContingencySensitivityResult().getFactor().getRawSensitivityResult().getValue())
+                        .functionReference(sensitivityResultEntity.getPreContingencySensitivityResult().getFactor().getRawSensitivityResult().getFunctionReference())
+                        .valueAfter(sensitivityResultEntity.getFactor().getRawSensitivityResult().getValue())
+                        .functionReferenceAfter(sensitivityResultEntity.getFactor().getRawSensitivityResult().getFunctionReference())
                         .build();
                 })
                 .toList();
@@ -330,8 +360,8 @@ public class SensitivityAnalysisResultRepository {
     private static String getSort(SortKey sortKey) {
         return switch (sortKey) {
             case FUNCTION -> "factor.functionId";
-            case SENSITIVITY, POST_SENSITIVITY -> "value";
-            case REFERENCE, POST_REFERENCE -> "functionReference";
+            case SENSITIVITY, POST_SENSITIVITY -> "factor.rawSensitivityResult.value";
+            case REFERENCE, POST_REFERENCE -> "factor.rawSensitivityResult.functionReference";
             case VARIABLE -> "factor.variableId";
             case CONTINGENCY -> "contingencyResult.contingencyId";
         };
