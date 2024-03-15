@@ -24,7 +24,10 @@ import java.util.UUID;
 @Entity
 @Table(
     name = "sensitivity_factor",
-    indexes = {@Index(name = "unique_factor_index_analysis", columnList = "index, analysis_result_id", unique = true)}
+    indexes = {
+        @Index(name = "unique_factor_index_analysis", columnList = "index, analysis_result_id", unique = true),
+        @Index(name = "sensitivity_factor_search_index", columnList = "function_id, function_type, variable_id, variable_type")
+    }
 )
 public class SensitivityFactorEntity {
 
