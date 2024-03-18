@@ -15,6 +15,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
 import org.gridsuite.sensitivityanalysis.server.entities.*;
+import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -179,12 +180,12 @@ public class SensitivityAnalysisResultRepository {
         }
 
         Specification<SensitivityResultEntity> specification = selector.getTabSelection() == ResultTab.N_K ?
-            SensitivityResultRepository.getSpecification(sas,
+            SensitivityResultSpecification.postContingencies(sas,
                 selector.getFunctionType(),
                 selector.getFunctionIds(),
                 selector.getVariableIds(),
                 selector.getContingencyIds()) :
-            SensitivityResultRepository.getSpecification(sas,
+            SensitivityResultSpecification.preContingency(sas,
                 selector.getFunctionType(),
                 selector.getFunctionIds(),
                 selector.getVariableIds());
