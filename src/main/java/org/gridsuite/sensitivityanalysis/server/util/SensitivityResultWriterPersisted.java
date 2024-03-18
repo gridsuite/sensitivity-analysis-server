@@ -18,85 +18,65 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
  */
-public class SensitivityResultWriterPersisted implements SensitivityResultWriter, AutoCloseable {
+public class SensitivityResultWriterPersisted implements SensitivityResultWriter {
     public static final Logger LOGGER = LoggerFactory.getLogger(SensitivityResultWriterPersisted.class);
 
-    public static final int BUFFER_SIZE = 256;
+    public static final int BUFFER_SIZE = 512;
 
     private final SensitivityAnalysisResultRepository sensitivityAnalysisResultRepository;
 
+    private final BlockingQueue<SensitivityValue> sensitivityValuesQueue;
+
+    private final BlockingQueue<SensitivityAnalysisResultRepository.ContingencyResult> contingencyResultsQueue;
+
+    private final Thread sensitivityValuesThread;
+
+    private final Thread contingencyResultsThread;
+
+    private final AtomicBoolean sensitivityValuesWorking;
+
+    private final AtomicBoolean contingencyResultsWorking;
+
     private UUID resultUuid;
-
-    BlockingQueue<SensitivityValue> sensitivityValuesQueue = new LinkedBlockingQueue<>();
-
-    BlockingQueue<SensitivityAnalysisResultRepository.ContingencyResult> contingencyResultsQueue = new LinkedBlockingQueue<>();
-    Thread sensitivityValuesThread;
-
-    Thread contingencyResultsThread;
-
-    boolean sensitivityValuesWorking = false;
-
-    boolean contingencyResultsWorking = false;
 
     public SensitivityResultWriterPersisted(SensitivityAnalysisResultRepository sensitivityAnalysisResultRepository) {
         this.sensitivityAnalysisResultRepository = sensitivityAnalysisResultRepository;
+        sensitivityValuesQueue= new LinkedBlockingQueue<>();
+        contingencyResultsQueue = new LinkedBlockingQueue<>();
+        sensitivityValuesThread = new Thread(sensitivityValuesBatchedHandling(), "sensitivityWriterThread");
+        sensitivityValuesThread.setDaemon(true);
+        contingencyResultsThread = new Thread(contingencyResultsBatchedHandling(), "contingencyWriterThread");
+        contingencyResultsThread.setDaemon(true);
+        sensitivityValuesWorking = new AtomicBoolean(false);
+        contingencyResultsWorking = new AtomicBoolean(false);
     }
 
     public void start(UUID resultUuid) {
         this.resultUuid = resultUuid;
-        sensitivityValuesThread = new Thread(sensitivityValuesBatchedHandling());
-        sensitivityValuesThread.setDaemon(true);
         sensitivityValuesThread.start();
-        contingencyResultsThread = new Thread(contingencyResultsBatchedHandling());
-        contingencyResultsThread.setDaemon(true);
         contingencyResultsThread.start();
     }
 
-    private Runnable sensitivityValuesBatchedHandling() {
-        return () -> {
-            while (!sensitivityValuesThread.isInterrupted()) {
-                List<SensitivityValue> tasks = new ArrayList<>(BUFFER_SIZE);
-                while (sensitivityValuesQueue.drainTo(tasks, BUFFER_SIZE) == 0) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        sensitivityValuesThread.interrupt();
-                    }
-                }
-                LOGGER.info("Remaining {} elements in the queue", sensitivityValuesQueue.size());
-                LOGGER.info("Treating {} elements in the batch", tasks.size());
-                sensitivityValuesWorking = true;
-                sensitivityAnalysisResultRepository.writeSensitivityValues(resultUuid, tasks);
-                sensitivityValuesWorking = false;
-            }
-        };
+    public void interrupt() {
+        sensitivityValuesThread.interrupt();
+        contingencyResultsThread.interrupt();
     }
 
-    private Runnable contingencyResultsBatchedHandling() {
-        return () -> {
-            while (!contingencyResultsThread.isInterrupted()) {
-                List<SensitivityAnalysisResultRepository.ContingencyResult> tasks = new ArrayList<>(BUFFER_SIZE);
-                while (contingencyResultsQueue.drainTo(tasks, BUFFER_SIZE) == 0) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        contingencyResultsThread.interrupt();
-                    }
-                }
-                contingencyResultsWorking = true;
-                sensitivityAnalysisResultRepository.writeContingenciesStatus(resultUuid, tasks);
-                contingencyResultsWorking = false;
-            }
-        };
+    public boolean isWorking() {
+        return !sensitivityValuesQueue.isEmpty()
+            || !contingencyResultsQueue.isEmpty()
+            || sensitivityValuesWorking.get()
+            || contingencyResultsWorking.get();
     }
 
     @Override
     public void writeSensitivityValue(int factorIndex, int contingencyIndex, double value, double functionReference) {
-        if (Double.isNaN(value) || Double.isNaN(functionReference)) {
+        if (Double.isNaN(functionReference) || Double.isNaN(value)) {
             return;
         }
         sensitivityValuesQueue.add(new SensitivityValue(factorIndex, contingencyIndex, value, functionReference));
@@ -107,16 +87,44 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
         contingencyResultsQueue.add(new SensitivityAnalysisResultRepository.ContingencyResult(contingencyIndex, status));
     }
 
-    public boolean isWorking() {
-        return !sensitivityValuesQueue.isEmpty()
-            || !contingencyResultsQueue.isEmpty()
-            || sensitivityValuesWorking
-            || contingencyResultsWorking;
+    private Runnable sensitivityValuesBatchedHandling() {
+        return () -> run(
+            sensitivityValuesThread,
+            sensitivityValuesWorking,
+            sensitivityValuesQueue,
+            sensitivityAnalysisResultRepository::writeSensitivityValues
+        );
     }
 
-    @Override
-    public void close() {
-        sensitivityValuesThread.interrupt();
-        contingencyResultsThread.interrupt();
+    private Runnable contingencyResultsBatchedHandling() {
+        return () -> run(
+            contingencyResultsThread,
+            contingencyResultsWorking,
+            contingencyResultsQueue,
+            sensitivityAnalysisResultRepository::writeContingenciesStatus
+        );
+    }
+
+    private interface BatchedRunnable<T> {
+        void run(UUID resultUuid, List<T> tasks);
+    }
+
+    private <T> void run(Thread thread, AtomicBoolean isWorking, BlockingQueue<T> queue, BatchedRunnable<T> runnable) {
+        while (!thread.isInterrupted()) {
+            List<T> tasks = new ArrayList<>(BUFFER_SIZE);
+            while (queue.drainTo(tasks, BUFFER_SIZE) == 0) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    thread.interrupt();
+                    break;
+                }
+            }
+            LOGGER.debug("{} - Remaining {} elements in the queue", thread.getName(), queue.size());
+            LOGGER.debug("{} - Treating {} elements in the batch", thread.getName(), tasks.size());
+            isWorking.set(true);
+            runnable.run(resultUuid, tasks);
+            isWorking.set(false);
+        }
     }
 }

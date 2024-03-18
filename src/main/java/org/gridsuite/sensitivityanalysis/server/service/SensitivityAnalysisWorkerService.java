@@ -269,7 +269,7 @@ public class SensitivityAnalysisWorkerService {
                         while (persisted.isWorking()) {
                             // Nothing to do
                         }
-                        persisted.close();
+                        persisted.interrupt();
                     }
                     return r;
                 });
