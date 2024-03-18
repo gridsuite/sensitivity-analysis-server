@@ -20,7 +20,6 @@ import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
-import org.gridsuite.sensitivityanalysis.server.entities.SensitivityFactorEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService.createResults;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.assertRequestsCount;
 
 /**
@@ -227,7 +227,7 @@ class SensitivityAnalysisResultRepositoryTest {
             Contingency.builder(CONTINGENCY_ID2).build()
         );
         List<List<SensitivityFactor>> factors = createFactors(List.of(BRANCH_ID1, BRANCH_ID2), List.of(GEN_ID1, GEN_ID2), contingencies);
-        sensitivityAnalysisResultRepository.createResults(factors, contingencies, resultUuid);
+        createResults(factors, contingencies, resultUuid);
     }
 
     private void fillResult(UUID resultUuid) {

@@ -96,6 +96,9 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
 
     @Override
     public void writeSensitivityValue(int factorIndex, int contingencyIndex, double value, double functionReference) {
+        if (Double.isNaN(value) || Double.isNaN(functionReference)) {
+            return;
+        }
         sensitivityValuesQueue.add(new SensitivityValue(factorIndex, contingencyIndex, value, functionReference));
     }
 

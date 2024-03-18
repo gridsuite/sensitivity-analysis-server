@@ -32,11 +32,11 @@ public interface SensitivityResultRepository extends JpaRepository<SensitivityRe
     String CONTINGENCY = "contingencyResult";
 
     @Modifying
-    @Query(value = "DELETE FROM SensitivityResultEntity s WHERE s.result.resultUuid = :analysisResultUuid AND s.preContingencySensitivityResult is not null")
+    @Query(value = "DELETE FROM SensitivityResultEntity s WHERE s.analysisResult.resultUuid = :analysisResultUuid AND s.preContingencySensitivityResult is not null")
     void deleteAllPostContingenciesByAnalysisResultUuid(UUID analysisResultUuid);
 
     @Modifying
-    @Query(value = "DELETE FROM SensitivityResultEntity s WHERE s.result.resultUuid = :analysisResultUuid")
+    @Query(value = "DELETE FROM SensitivityResultEntity s WHERE s.analysisResult.resultUuid = :analysisResultUuid")
     void deleteAllByAnalysisResultUuid(UUID analysisResultUuid);
 
     @Modifying
@@ -44,26 +44,26 @@ public interface SensitivityResultRepository extends JpaRepository<SensitivityRe
     void deleteAllPostContingencies();
 
 //    @Query(value = "SELECT s FROM SensitivityResultEntity s WHERE s.factor.index = :factorIndex AND s.result = :resultEntity")
-    SensitivityResultEntity findByResultAndFactorIndex(AnalysisResultEntity resultEntity, int factorIndex);
+    SensitivityResultEntity findByAnalysisResultAndFactorIndex(AnalysisResultEntity resultEntity, int factorIndex);
 
     @Modifying
     @Query(value = "DELETE FROM SensitivityResultEntity")
     void deleteAll();
 
-    @Query(value = "SELECT distinct s.factor.functionId from SensitivityResultEntity as s " +
-        "where s.result.resultUuid = :resultUuid " +
-        "and s.factor.functionType = :sensitivityFunctionType " +
+    @Query(value = "SELECT distinct s.functionId from SensitivityResultEntity as s " +
+        "where s.analysisResult.resultUuid = :resultUuid " +
+        "and s.functionType = :sensitivityFunctionType " +
         "and ((:withContingency = true and s.contingencyResult is not null ) or (:withContingency = false and s.contingencyResult is null ))")
     List<String> getDistinctFunctionIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType, boolean withContingency);
 
-    @Query(value = "SELECT distinct s.factor.variableId from SensitivityResultEntity as s " +
-        "where s.result.resultUuid = :resultUuid " +
-        "and s.factor.functionType = :sensitivityFunctionType " +
+    @Query(value = "SELECT distinct s.variableId from SensitivityResultEntity as s " +
+        "where s.analysisResult.resultUuid = :resultUuid " +
+        "and s.functionType = :sensitivityFunctionType " +
         "and ((:withContingency = true and s.contingencyResult is not null ) or (:withContingency = false and s.contingencyResult is null ))")
     List<String> getDistinctVariableIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType, boolean withContingency);
 
     @Query(value = "SELECT distinct s.contingencyResult.contingencyId from SensitivityResultEntity as s " +
-        "where s.result.resultUuid = :resultUuid and s.factor.functionType = :sensitivityFunctionType")
+        "where s.analysisResult.resultUuid = :resultUuid and s.functionType = :sensitivityFunctionType")
     List<String> getDistinctContingencyIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
 
     static Specification<SensitivityResultEntity> getSpecification(AnalysisResultEntity sas,
@@ -73,10 +73,11 @@ public interface SensitivityResultRepository extends JpaRepository<SensitivityRe
                                                                    Collection<String> contingencyIds) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = List.of(
-                orPredicate(criteriaBuilder, root, List.of(sas.getResultUuid()), "result", "resultUuid"),
-                orPredicate(criteriaBuilder, root, List.of(functionType), FACTOR, "functionType"),
-                orPredicate(criteriaBuilder, root, functionIds, FACTOR, "functionId"),
-                orPredicate(criteriaBuilder, root, variableIds, FACTOR, "variableId"),
+                orPredicate(criteriaBuilder, root, List.of(sas.getResultUuid()), "analysisResult", "resultUuid"),
+                orPredicate(criteriaBuilder, root, List.of(functionType), "functionType", null),
+                orPredicate(criteriaBuilder, root, functionIds, "functionId", null),
+                orPredicate(criteriaBuilder, root, variableIds, "variableId", null),
+                criteriaBuilder.isNotNull(root.get("rawSensitivityResult")),
                 criteriaBuilder.and(criteriaBuilder.isNotNull(root.get(CONTINGENCY)), orPredicate(criteriaBuilder, root, contingencyIds, CONTINGENCY, "contingencyId"))
             );
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
@@ -89,10 +90,11 @@ public interface SensitivityResultRepository extends JpaRepository<SensitivityRe
                                                                    Collection<String> variableIds) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = List.of(
-                orPredicate(criteriaBuilder, root, List.of(sas.getResultUuid()), "result", "resultUuid"),
-                orPredicate(criteriaBuilder, root, List.of(functionType), FACTOR, "functionType"),
-                orPredicate(criteriaBuilder, root, functionIds, FACTOR, "functionId"),
-                orPredicate(criteriaBuilder, root, variableIds, FACTOR, "variableId"),
+                orPredicate(criteriaBuilder, root, List.of(sas.getResultUuid()), "analysisResult", "resultUuid"),
+                orPredicate(criteriaBuilder, root, List.of(functionType), "functionType", null),
+                orPredicate(criteriaBuilder, root, functionIds, "functionId", null),
+                orPredicate(criteriaBuilder, root, variableIds, "variableId", null),
+                criteriaBuilder.isNotNull(root.get("rawSensitivityResult")),
                 criteriaBuilder.isNull(root.get(CONTINGENCY))
             );
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

@@ -6,12 +6,13 @@
  */
 package org.gridsuite.sensitivityanalysis.server.entities;
 
+import com.powsybl.sensitivity.SensitivityFunctionType;
+import com.powsybl.sensitivity.SensitivityVariableType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -24,26 +25,24 @@ import java.util.UUID;
 @Table(
     name = "sensitivity_result",
     indexes = {
-        @Index(name = "sensitivity_result_analysis_result_idx", columnList = "result_id"),
+        @Index(name = "sensitivity_result_analysis_result_idx", columnList = "analysis_result_id"),
+        @Index(name = "sensitivity_result_analysis_result_factor_index_idx", columnList = "analysis_result_id, factor_index"),
+        @Index(name = "sensitivity_result_analysis_result_factor_index_search_idx", columnList = "analysis_result_id, factor_index, function_type, variable_type, function_id, variable_id"),
         // Greatly helps during deletion as it references itself as a foreign key
-        @Index(name = "sensitivity_result_pre_contingency_sensitivity_result_id_index", columnList = "pre_contingency_sensitivity_result_id")
+        @Index(name = "sensitivity_result_pre_contingency_sensitivity_result_id_idx", columnList = "pre_contingency_sensitivity_result_id")
     }
 )
 public class SensitivityResultEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID sensitivityId;
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "result_id")
-    private AnalysisResultEntity result;
+    @JoinColumn(name = "analysis_result_id")
+    private AnalysisResultEntity analysisResult;
 
-    @OneToOne(cascade = CascadeType.PERSIST) // Let eager on purpose to improve performance
-    @JoinColumn(name = "factor_id")
-    private SensitivityFactorEntity factor;
-
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "contingency_id")
     private ContingencyResultEntity contingencyResult;
 
@@ -51,13 +50,50 @@ public class SensitivityResultEntity {
     @JoinColumn(name = "pre_contingency_sensitivity_result_id")
     private SensitivityResultEntity preContingencySensitivityResult;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "preContingencySensitivityResult")
-    private Set<SensitivityResultEntity> postContingencySensitivityResults;
+    @OneToOne
+    @JoinColumns(value = {
+        @JoinColumn(name = "analysis_result_id", referencedColumnName = "analysis_result_id", updatable = false, insertable = false),
+        @JoinColumn(name = "factor_index", referencedColumnName = "factor_index", updatable = false, insertable = false)
+    })
+    private RawSensitivityResultEntity rawSensitivityResult;
 
-    public SensitivityResultEntity(AnalysisResultEntity result, SensitivityFactorEntity factor, ContingencyResultEntity contingencyResult, SensitivityResultEntity preContingencySensitivityResult) {
-        this.result = result;
-        this.factor = factor;
+    @Column(name = "factor_index", nullable = false)
+    private int factorIndex;
+
+    @Column(name = "function_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private SensitivityFunctionType functionType;
+
+    @Column(name = "function_id", nullable = false)
+    private String functionId;
+
+    @Column(name = "variable_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private SensitivityVariableType variableType;
+
+    @Column(name = "variable_id", nullable = false)
+    private String variableId;
+
+    @Column(name = "variable_set", nullable = false)
+    private boolean variableSet;
+
+    public SensitivityResultEntity(AnalysisResultEntity analysisResult,
+                                   ContingencyResultEntity contingencyResult,
+                                   SensitivityResultEntity preContingencySensitivityResult,
+                                   int factorIndex,
+                                   SensitivityFunctionType functionType,
+                                   String functionId,
+                                   SensitivityVariableType variableType,
+                                   String variableId,
+                                   boolean variableSet) {
+        this.analysisResult = analysisResult;
         this.contingencyResult = contingencyResult;
         this.preContingencySensitivityResult = preContingencySensitivityResult;
+        this.factorIndex = factorIndex;
+        this.functionType = functionType;
+        this.functionId = functionId;
+        this.variableType = variableType;
+        this.variableId = variableId;
+        this.variableSet = variableSet;
     }
 }

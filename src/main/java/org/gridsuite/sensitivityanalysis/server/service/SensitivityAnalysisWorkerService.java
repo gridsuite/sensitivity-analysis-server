@@ -25,6 +25,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
+import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultWriterPersisted;
@@ -47,6 +48,7 @@ import java.util.function.Function;
 
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
+import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder.buildResults;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -236,7 +238,10 @@ public class SensitivityAnalysisWorkerService {
 
             // WARNING : we're sure order is maintained because InputBuilderService creates List<(preContingency, contingency1, contingency2, etc...)>
             // That's why it works but if this changes we should set up a much more complicated mechanism
-            Optional.ofNullable(resultUuid).ifPresent(r -> resultRepository.createResults(factors, contingencies, r));
+            Optional.ofNullable(resultUuid).ifPresent(r -> {
+                AnalysisResultEntity analysisResult = resultRepository.insertAnalysisResult(r);
+                resultRepository.saveAllAndFlush(buildResults(analysisResult, factors, contingencies));
+            });
 
             SensitivityResultWriter sensitivityResultWriter = isInMemory
                 ? new SensitivityResultModelWriter(contingencies)
