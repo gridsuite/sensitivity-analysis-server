@@ -51,10 +51,13 @@ public class SensitivityResultEntity {
     private SensitivityResultEntity preContingencySensitivityResult;
 
     @OneToOne
-    @JoinColumns(value = {
-        @JoinColumn(name = "analysis_result_id", referencedColumnName = "analysis_result_id", updatable = false, insertable = false),
-        @JoinColumn(name = "factor_index", referencedColumnName = "factor_index", updatable = false, insertable = false)
-    })
+    @JoinColumns(
+        value = {
+            @JoinColumn(name = "analysis_result_id", referencedColumnName = "analysis_result_id", updatable = false, insertable = false),
+            @JoinColumn(name = "factor_index", referencedColumnName = "factor_index", updatable = false, insertable = false)
+        },
+        foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT)
+    )
     private RawSensitivityResultEntity rawSensitivityResult;
 
     @Column(name = "factor_index", nullable = false)

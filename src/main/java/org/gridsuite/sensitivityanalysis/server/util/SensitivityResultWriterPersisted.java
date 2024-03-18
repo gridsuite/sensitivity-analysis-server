@@ -46,7 +46,7 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
 
     public SensitivityResultWriterPersisted(SensitivityAnalysisResultRepository sensitivityAnalysisResultRepository) {
         this.sensitivityAnalysisResultRepository = sensitivityAnalysisResultRepository;
-        sensitivityValuesQueue= new LinkedBlockingQueue<>();
+        sensitivityValuesQueue = new LinkedBlockingQueue<>();
         contingencyResultsQueue = new LinkedBlockingQueue<>();
         sensitivityValuesThread = new Thread(sensitivityValuesBatchedHandling(), "sensitivityWriterThread");
         sensitivityValuesThread.setDaemon(true);
