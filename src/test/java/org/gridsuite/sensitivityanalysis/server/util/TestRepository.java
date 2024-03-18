@@ -36,19 +36,19 @@ public class TestRepository {
         //contingency.id comparator
         Comparator<ContingencyResultEntity> comparatorByContingencyId = comparing(ContingencyResultEntity::getContingencyId, Comparator.comparing(String::toString));
         //sensitivityId comparator (the toString is needed because UUID comparator is not the same as the string one)
-        Comparator<SensitivityResultEntity> comparatorBySensiId = comparing(s -> s.getSensitivityId().toString());
+        Comparator<SensitivityResultEntity> comparatorBySensiId = comparing(s -> s.getId().toString());
         //contingency.id and resultUuid (in that order) comparator
         Comparator<SensitivityResultEntity> comparatorByContingencyIdAndSensiId = comparing(SensitivityResultEntity::getContingencyResult, comparatorByContingencyId).thenComparing(comparatorBySensiId);
         return sensitivityResultRepository.findAll().stream()
             .filter(s -> s.getContingencyResult() != null)
             .sorted(comparatorByContingencyIdAndSensiId)
             .map(sensitivityEntity ->
-                (SensitivityWithContingency) SensitivityWithContingency.builder().funcId(sensitivityEntity.getFactor().getFunctionId())
+                (SensitivityWithContingency) SensitivityWithContingency.builder().funcId(sensitivityEntity.getFunctionId())
                     .contingencyId(sensitivityEntity.getContingencyResult().getContingencyId())
-                    .varId(sensitivityEntity.getFactor().getVariableId())
-                    .varIsAFilter(sensitivityEntity.getFactor().isVariableSet())
-                    .value(sensitivityEntity.getValue())
-                    .functionReference(sensitivityEntity.getFunctionReference())
+                    .varId(sensitivityEntity.getVariableId())
+                    .varIsAFilter(sensitivityEntity.isVariableSet())
+                    .value(sensitivityEntity.getRawSensitivityResult().getValue())
+                    .functionReference(sensitivityEntity.getRawSensitivityResult().getFunctionReference())
                     .build())
             .toList();
     }

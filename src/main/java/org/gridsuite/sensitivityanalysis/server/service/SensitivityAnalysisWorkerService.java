@@ -239,7 +239,7 @@ public class SensitivityAnalysisWorkerService {
             network,
             context.getVariantId() != null ? context.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
             sensitivityFactorReader,
-            new SensitivityResultModelWriter(contingencies),
+            writer,
             contingencies,
             context.getSensitivityAnalysisInputs().getVariablesSets(),
             parameters,
