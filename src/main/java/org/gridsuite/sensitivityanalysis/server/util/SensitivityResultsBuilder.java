@@ -14,6 +14,7 @@ import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -22,6 +23,14 @@ import java.util.stream.Stream;
 
 /**
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
+ * <p>
+ *     It Builds the entities based on groups of factors and a list of contingencies.
+ *     Each group of factors requires a certain structure, starting with the pre-contingency sensitivity factor with
+ *     contingency context NONE, then all the contingencies for the same couple (functionId, variableId) with
+ *     contingency context SPECIFIC. This is currently the case because this is how it is built in
+ *     SensitivityAnalysisInputBuilderService. Anyway, the way the DB model is built kind of depends on this structure too.
+ *     So this should not be changed, except deep refactoring.
+ * </p>
  */
 public final class SensitivityResultsBuilder {
 
@@ -29,9 +38,9 @@ public final class SensitivityResultsBuilder {
         // Should not be instantiated
     }
 
-    public static List<SensitivityResultEntity> buildResults(AnalysisResultEntity analysisResult,
-                                                             List<List<SensitivityFactor>> factorsGroup,
-                                                             List<Contingency> contingencies) {
+    public static Set<SensitivityResultEntity> buildResults(AnalysisResultEntity analysisResult,
+                                                            List<List<SensitivityFactor>> factorsGroup,
+                                                            List<Contingency> contingencies) {
         Map<String, ContingencyResultEntity> contingenciesById = buildContingencyResults(contingencies, analysisResult);
         return buildSensitivityResults(factorsGroup, analysisResult, contingenciesById);
     }
@@ -46,7 +55,7 @@ public final class SensitivityResultsBuilder {
             ));
     }
 
-    private static List<SensitivityResultEntity> buildSensitivityResults(List<List<SensitivityFactor>> factorsGroups,
+    private static Set<SensitivityResultEntity> buildSensitivityResults(List<List<SensitivityFactor>> factorsGroups,
                                                                          AnalysisResultEntity analysisResult,
                                                                          Map<String, ContingencyResultEntity> contingenciesById) {
         AtomicInteger factorCounter = new AtomicInteger(0);
@@ -79,7 +88,7 @@ public final class SensitivityResultsBuilder {
                         contingenciesById.get(sensitivityFactor.getContingencyContext().getContingencyId()),
                         factorCounter.getAndIncrement()));
             })
-            .toList();
+            .collect(Collectors.toSet());
     }
 
     private static SensitivityResultEntity buildNSensitivityResultEntity(AnalysisResultEntity analysisResult,

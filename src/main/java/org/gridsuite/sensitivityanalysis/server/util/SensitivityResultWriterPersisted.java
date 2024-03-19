@@ -49,9 +49,7 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
         sensitivityValuesQueue = new LinkedBlockingQueue<>();
         contingencyResultsQueue = new LinkedBlockingQueue<>();
         sensitivityValuesThread = new Thread(sensitivityValuesBatchedHandling(), "sensitivityWriterThread");
-        sensitivityValuesThread.setDaemon(true);
         contingencyResultsThread = new Thread(contingencyResultsBatchedHandling(), "contingencyWriterThread");
-        contingencyResultsThread.setDaemon(true);
         sensitivityValuesWorking = new AtomicBoolean(false);
         contingencyResultsWorking = new AtomicBoolean(false);
     }
@@ -121,10 +119,12 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
                 }
             }
             LOGGER.debug("{} - Remaining {} elements in the queue", thread.getName(), queue.size());
-            LOGGER.debug("{} - Treating {} elements in the batch", thread.getName(), tasks.size());
-            isWorking.set(true);
-            runnable.run(resultUuid, tasks);
-            isWorking.set(false);
+            if (!tasks.isEmpty()) {
+                LOGGER.debug("{} - Treating {} elements in the batch", thread.getName(), tasks.size());
+                isWorking.set(true);
+                runnable.run(resultUuid, tasks);
+                isWorking.set(false);
+            }
         }
     }
 }
