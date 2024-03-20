@@ -7,7 +7,6 @@
 
 package org.gridsuite.sensitivityanalysis.server.service;
 
-import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.Observation;
@@ -45,11 +44,7 @@ public class SensitivityAnalysisObserver {
         createObservation(name, runContext).observeChecked(runnable);
     }
 
-    public <T, E extends Throwable> T observe(String name, SensitivityAnalysisRunContext runContext, Observation.CheckedCallable<T, E> callable) throws E {
-        return createObservation(name, runContext).observeChecked(callable);
-    }
-
-    public <T extends SensitivityAnalysisResult, E extends Throwable> T observeRun(String name, SensitivityAnalysisRunContext runContext, Observation.CheckedCallable<T, E> callable) throws E {
+    public <T, E extends Throwable> T observeRun(String name, SensitivityAnalysisRunContext runContext, Observation.CheckedCallable<T, E> callable) throws E {
         T result = createObservation(name, runContext).observeChecked(callable);
         incrementCount(runContext, result);
         return result;
@@ -62,7 +57,7 @@ public class SensitivityAnalysisObserver {
             .lowCardinalityKeyValue(TYPE_TAG_NAME, COMPUTATION_TYPE);
     }
 
-    private void incrementCount(SensitivityAnalysisRunContext runContext, SensitivityAnalysisResult result) {
+    private <T> void incrementCount(SensitivityAnalysisRunContext runContext, T result) {
         String provider = runContext.getProvider() != null ? runContext.getProvider() : defaultProvider;
         Counter.builder(COMPUTATION_COUNTER_NAME)
             .tag(PROVIDER_TAG_NAME, provider)

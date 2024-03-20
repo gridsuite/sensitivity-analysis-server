@@ -14,7 +14,7 @@ import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
-import org.gridsuite.sensitivityanalysis.server.RestTemplateConfig;
+import org.gridsuite.sensitivityanalysis.server.configuration.RestTemplateConfig;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

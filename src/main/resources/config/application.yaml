@@ -43,8 +43,17 @@ spring:
 
       output-bindings: publishRun-out-0;publishResult-out-0;publishCancel-out-0;publishStopped-out-0;publishFailed-out-0;publishNonEvacuatedEnergyRun-out-0;publishNonEvacuatedEnergyResult-out-0;publishNonEvacuatedEnergyCancel-out-0;publishNonEvacuatedEnergyStopped-out-0;publishNonEvacuatedEnergyFailed-out-0
 
+  jpa:
+    properties:
+      hibernate:
+        order_inserts: true
+        jdbc:
+          batch_size: 128
+
 powsybl-ws:
   database:
+    queryBegin: '&'
+    customQuery: ${powsybl-ws.database.customQueryBegin}reWriteBatchedInserts=true
     name: sensitivityanalysis
 
 # default value for loadflow provider "OpenLoadFlow"
