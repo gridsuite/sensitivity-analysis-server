@@ -84,7 +84,7 @@ class SensitivityAnalysisResultRepositoryTest {
     void testDeleteResult() {
         UUID resultUuid = UUID.randomUUID();
         createResult(resultUuid);
-        sensitivityAnalysisResultRepository.saveGlobalStatus(resultUuid, "SUCCESS");
+        sensitivityAnalysisResultRepository.insertStatus(List.of(resultUuid), "SUCCESS");
 
         SQLStatementCountValidator.reset();
         sensitivityAnalysisResultRepository.delete(resultUuid);
@@ -101,7 +101,7 @@ class SensitivityAnalysisResultRepositoryTest {
         IntStream.range(0, 10).forEach(i -> {
             UUID resultUuid = UUID.randomUUID();
             createResult(resultUuid);
-            sensitivityAnalysisResultRepository.saveGlobalStatus(resultUuid, "SUCCESS");
+            sensitivityAnalysisResultRepository.insertStatus(List.of(resultUuid), "SUCCESS");
         });
 
         SQLStatementCountValidator.reset();
@@ -221,7 +221,7 @@ class SensitivityAnalysisResultRepositoryTest {
         );
         List<List<SensitivityFactor>> factors = createFactors(List.of(BRANCH_ID1, BRANCH_ID2), List.of(GEN_ID1, GEN_ID2), contingencies);
         var analysisResult = sensitivityAnalysisResultRepository.insertAnalysisResult(resultUuid);
-        sensitivityAnalysisResultRepository.saveAllAndFlush(SensitivityResultsBuilder.buildResults(analysisResult, factors, contingencies));
+        sensitivityAnalysisResultRepository.saveAllResultsAndFlush(SensitivityResultsBuilder.buildResults(analysisResult, factors, contingencies));
     }
 
     private void fillResult(UUID resultUuid) {

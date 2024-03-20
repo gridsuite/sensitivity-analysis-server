@@ -32,7 +32,7 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
 
     private final BlockingQueue<SensitivityValue> sensitivityValuesQueue;
 
-    private final BlockingQueue<SensitivityAnalysisResultRepository.ContingencyResult> contingencyResultsQueue;
+    private final BlockingQueue<ContingencyResult> contingencyResultsQueue;
 
     private final Thread sensitivityValuesThread;
 
@@ -82,7 +82,7 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
 
     @Override
     public void writeContingencyStatus(int contingencyIndex, SensitivityAnalysisResult.Status status) {
-        contingencyResultsQueue.add(new SensitivityAnalysisResultRepository.ContingencyResult(contingencyIndex, status));
+        contingencyResultsQueue.add(new ContingencyResult(contingencyIndex, status));
     }
 
     private Runnable sensitivityValuesBatchedHandling() {

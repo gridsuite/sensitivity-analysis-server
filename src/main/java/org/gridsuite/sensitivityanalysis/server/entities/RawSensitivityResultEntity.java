@@ -7,7 +7,6 @@
 package org.gridsuite.sensitivityanalysis.server.entities;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -19,33 +18,39 @@ import java.util.UUID;
  */
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "raw_sensitivity_result", indexes = {@Index(name = "raw_sensitivity_result_analysis_result_factor_index", columnList = "analysis_result_id, factor_index")})
+@Table(
+    name = "raw_sensitivity_result",
+    indexes = {
+        @Index(name = "raw_sensitivity_result_analysis_result_factor_index", columnList = "analysis_result_id, factor_index")
+    })
 public class RawSensitivityResultEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Column(name = "factor_index", nullable = false)
+    private int index;
+
+    @Column(name = "value_", nullable = false)
+    private double value;
+
+    @Column(name = "function_reference", nullable = false)
+    private double functionReference;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "analysis_result_id")
     private AnalysisResultEntity analysisResult;
 
-    @Column(name = "factor_index")
-    private int index;
-
-    @Column(name = "value_")
-    private double value;
-
-    @Column(name = "function_reference")
-    private double functionReference;
-
-    public RawSensitivityResultEntity(AnalysisResultEntity analysisResult, int index, double value, double functionReference) {
-        this.analysisResult = analysisResult;
+    public RawSensitivityResultEntity(int index,
+                                      double value,
+                                      double functionReference,
+                                      AnalysisResultEntity analysisResult) {
         this.index = index;
         this.value = value;
         this.functionReference = functionReference;
+        this.analysisResult = analysisResult;
     }
 }

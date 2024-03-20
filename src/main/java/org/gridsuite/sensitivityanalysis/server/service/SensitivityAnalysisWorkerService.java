@@ -260,7 +260,7 @@ public class SensitivityAnalysisWorkerService {
         // WARNING : we're sure order is maintained because InputBuilderService creates List<(preContingency, contingency1, contingency2, etc...)>
         // That's why it works but if this changes we should set up a much more complicated mechanism
         AnalysisResultEntity analysisResult = resultRepository.insertAnalysisResult(resultUuid);
-        resultRepository.saveAllAndFlush(buildResults(analysisResult, groupedFactors, contingencies));
+        resultRepository.saveAllResultsAndFlush(buildResults(analysisResult, groupedFactors, contingencies));
 
         SensitivityResultWriterPersisted writer = (SensitivityResultWriterPersisted) applicationContext.getBean("sensitivityResultWriterPersisted");
         writer.start(resultUuid);
@@ -325,7 +325,7 @@ public class SensitivityAnalysisWorkerService {
                 long nanoTime = System.nanoTime();
                 LOGGER.info("Just run in {}s", TimeUnit.NANOSECONDS.toSeconds(nanoTime - startTime.getAndSet(nanoTime)));
 
-                resultRepository.saveGlobalStatus(resultContext.getResultUuid(), SensitivityAnalysisStatus.COMPLETED.name());
+                resultRepository.insertStatus(List.of(resultContext.getResultUuid()), SensitivityAnalysisStatus.COMPLETED.name());
 
                 notificationService.sendSensitivityAnalysisResultMessage(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver());
                 LOGGER.info("Sensitivity analysis complete (resultUuid='{}')", resultContext.getResultUuid());

@@ -38,28 +38,6 @@ public class SensitivityResultEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "analysis_result_id")
-    private AnalysisResultEntity analysisResult;
-
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "contingency_id")
-    private ContingencyResultEntity contingencyResult;
-
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "pre_contingency_sensitivity_result_id")
-    private SensitivityResultEntity preContingencySensitivityResult;
-
-    @OneToOne
-    @JoinColumns(
-        value = {
-            @JoinColumn(name = "analysis_result_id", referencedColumnName = "analysis_result_id", updatable = false, insertable = false),
-            @JoinColumn(name = "factor_index", referencedColumnName = "factor_index", updatable = false, insertable = false)
-        },
-        foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT)
-    )
-    private RawSensitivityResultEntity rawSensitivityResult;
-
     @Column(name = "factor_index", nullable = false)
     private int factorIndex;
 
@@ -80,23 +58,45 @@ public class SensitivityResultEntity {
     @Column(name = "variable_set", nullable = false)
     private boolean variableSet;
 
-    public SensitivityResultEntity(AnalysisResultEntity analysisResult,
-                                   ContingencyResultEntity contingencyResult,
-                                   SensitivityResultEntity preContingencySensitivityResult,
-                                   int factorIndex,
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "analysis_result_id")
+    private AnalysisResultEntity analysisResult;
+
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "contingency_id")
+    private ContingencyResultEntity contingencyResult;
+
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "pre_contingency_sensitivity_result_id")
+    private SensitivityResultEntity preContingencySensitivityResult;
+
+    @OneToOne
+    @JoinColumns(
+        value = {
+            @JoinColumn(name = "analysis_result_id", referencedColumnName = "analysis_result_id", updatable = false, insertable = false),
+            @JoinColumn(name = "factor_index", referencedColumnName = "factor_index", updatable = false, insertable = false)
+        },
+        foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT)
+    )
+    private RawSensitivityResultEntity rawSensitivityResult;
+
+    public SensitivityResultEntity(int factorIndex,
                                    SensitivityFunctionType functionType,
                                    String functionId,
                                    SensitivityVariableType variableType,
                                    String variableId,
-                                   boolean variableSet) {
-        this.analysisResult = analysisResult;
-        this.contingencyResult = contingencyResult;
-        this.preContingencySensitivityResult = preContingencySensitivityResult;
+                                   boolean variableSet,
+                                   AnalysisResultEntity analysisResult,
+                                   ContingencyResultEntity contingencyResult,
+                                   SensitivityResultEntity preContingencySensitivityResult) {
         this.factorIndex = factorIndex;
         this.functionType = functionType;
         this.functionId = functionId;
         this.variableType = variableType;
         this.variableId = variableId;
         this.variableSet = variableSet;
+        this.analysisResult = analysisResult;
+        this.contingencyResult = contingencyResult;
+        this.preContingencySensitivityResult = preContingencySensitivityResult;
     }
 }

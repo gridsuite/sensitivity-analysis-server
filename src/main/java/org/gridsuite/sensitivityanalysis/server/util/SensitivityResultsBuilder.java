@@ -95,15 +95,15 @@ public final class SensitivityResultsBuilder {
                                                                          SensitivityFactor factor,
                                                                          int index) {
         return new SensitivityResultEntity(
-            analysisResult,
-            null,
-            null,
             index,
             factor.getFunctionType(),
             factor.getFunctionId(),
             factor.getVariableType(),
             factor.getVariableId(),
-            factor.isVariableSet()
+            factor.isVariableSet(),
+            analysisResult,
+            null,
+            null
         );
     }
 
@@ -112,15 +112,15 @@ public final class SensitivityResultsBuilder {
                                                                           ContingencyResultEntity contingencyResult,
                                                                           int index) {
         return new SensitivityResultEntity(
-            analysisResult,
-            contingencyResult,
-            preContingencySensitivityResult,
             index,
             preContingencySensitivityResult.getFunctionType(),
             preContingencySensitivityResult.getFunctionId(),
             preContingencySensitivityResult.getVariableType(),
             preContingencySensitivityResult.getVariableId(),
-            preContingencySensitivityResult.isVariableSet()
+            preContingencySensitivityResult.isVariableSet(),
+            analysisResult,
+            contingencyResult,
+            preContingencySensitivityResult
         );
     }
 }
