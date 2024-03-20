@@ -168,8 +168,8 @@ public class SensitivityAnalysisWorkerService {
         }
 
         CompletableFuture<T> future = runSensitivityAnalysisAsync(context, sensitivityAnalysisRunner, reporter, resultUuid, runner);
+        T result = sensitivityAnalysisObserver.observeRun("run", context, future::get);
 
-        T result = future == null ? null : sensitivityAnalysisObserver.observeRun("run", context, future::get);
         if (context.getReportUuid() != null) {
             sensitivityAnalysisObserver.observe("report.send", context, () ->
                 reportService.sendReport(context.getReportUuid(), rootReporter.get()));
@@ -211,7 +211,7 @@ public class SensitivityAnalysisWorkerService {
         lockRunAndCancelSensitivityAnalysis.lock();
         try {
             if (resultUuid != null && cancelComputationRequests.get(resultUuid) != null) {
-                return null;
+                return CompletableFuture.completedFuture(null);
             }
             SensitivityAnalysisParameters sensitivityAnalysisParameters = buildParameters(context);
             Network network = getNetwork(context.getNetworkUuid(), context.getVariantId());
