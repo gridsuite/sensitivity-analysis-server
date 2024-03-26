@@ -26,7 +26,7 @@ public class SensitivityAnalysisObserver {
     private static final String PROVIDER_TAG_NAME = "provider";
     private static final String TYPE_TAG_NAME = "type";
     private static final String STATUS_TAG_NAME = "status";
-    private static final String COMPUTATION_TYPE = "sensi";
+    private static final String COMPUTATION_TYPE = "sensitivityanalysis";
     private static final String COMPUTATION_COUNTER_NAME = OBSERVATION_PREFIX + "count";
 
     private final String defaultProvider;
