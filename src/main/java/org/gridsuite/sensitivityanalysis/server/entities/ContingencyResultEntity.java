@@ -24,6 +24,7 @@ import java.util.UUID;
 @Table(
     name = "contingency_result",
     indexes = {
+        @Index(name = "contingency_result_analysis_result_idx", columnList = "analysis_result_id"),
         @Index(name = "unique_contingency_analysis", columnList = "analysis_result_id, contingency_id", unique = true),
         @Index(name = "unique_contingency_index_analysis", columnList = "analysis_result_id, index", unique = true)
     })

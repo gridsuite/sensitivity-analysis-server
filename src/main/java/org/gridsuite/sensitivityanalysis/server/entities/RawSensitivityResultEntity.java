@@ -23,6 +23,7 @@ import java.util.UUID;
 @Table(
     name = "raw_sensitivity_result",
     indexes = {
+        @Index(name = "raw_sensitivity_result_analysis_result", columnList = "analysis_result_id"),
         @Index(name = "raw_sensitivity_result_analysis_result_factor_index", columnList = "analysis_result_id, factor_index")
     })
 public class RawSensitivityResultEntity {
