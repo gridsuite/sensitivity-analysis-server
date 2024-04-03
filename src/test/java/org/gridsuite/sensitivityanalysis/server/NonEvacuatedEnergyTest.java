@@ -81,9 +81,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.HEADER_USER_ID;
+import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.HEADER_USER_ID;
+import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.getCancelMessage;
+import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.getFailedMessage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -830,7 +830,8 @@ public class NonEvacuatedEnergyTest {
         assertNotNull(message);
         assertEquals(RESULT_UUID.toString(), message.getHeaders().get("resultUuid"));
         assertEquals("me", message.getHeaders().get("receiver"));
-        assertEquals(CANCEL_MESSAGE, message.getHeaders().get("message"));
+        assertEquals(getCancelMessage(NonEvacuatedEnergyWorkerService.COMPUTATION_TYPE),
+                message.getHeaders().get("message"));
     }
 
     @SneakyThrows
@@ -850,7 +851,8 @@ public class NonEvacuatedEnergyTest {
         Message<byte[]> failMessage = output.receive(TIMEOUT, "nonEvacuatedEnergy.failed");
         assertEquals(RESULT_UUID.toString(), failMessage.getHeaders().get("resultUuid"));
         assertEquals("me", failMessage.getHeaders().get("receiver"));
-        assertEquals(FAIL_MESSAGE + " : " + ERROR_MESSAGE, failMessage.getHeaders().get("message"));
+        assertEquals(getFailedMessage(NonEvacuatedEnergyWorkerService.COMPUTATION_TYPE) + " : " + ERROR_MESSAGE,
+                failMessage.getHeaders().get("message"));
 
         // No result available
         mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy/results/{resultUuid}", RESULT_UUID))

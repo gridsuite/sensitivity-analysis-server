@@ -19,7 +19,7 @@ import java.io.UncheckedIOException;
 import java.util.Objects;
 import java.util.UUID;
 
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.HEADER_USER_ID;
+import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.HEADER_USER_ID;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>

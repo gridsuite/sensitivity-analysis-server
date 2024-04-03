@@ -59,7 +59,7 @@ import java.util.stream.Stream;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static java.util.Comparator.comparing;
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.*;
+import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.*;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -875,7 +875,7 @@ class SensitivityAnalysisControllerTest {
         assertNotNull(message);
         assertEquals(RESULT_UUID.toString(), message.getHeaders().get("resultUuid"));
         assertEquals("me", message.getHeaders().get("receiver"));
-        assertEquals(CANCEL_MESSAGE, message.getHeaders().get("message"));
+        assertEquals(getCancelMessage(SensitivityAnalysisWorkerService.COMPUTATION_TYPE), message.getHeaders().get("message"));
     }
 
     @SneakyThrows
@@ -895,7 +895,8 @@ class SensitivityAnalysisControllerTest {
         Message<byte[]> cancelMessage = output.receive(TIMEOUT, "sensitivityanalysis.failed");
         assertEquals(RESULT_UUID.toString(), cancelMessage.getHeaders().get("resultUuid"));
         assertEquals("me", cancelMessage.getHeaders().get("receiver"));
-        assertEquals(FAIL_MESSAGE + " : " + ERROR_MESSAGE, cancelMessage.getHeaders().get("message"));
+        assertEquals(getFailedMessage(SensitivityAnalysisWorkerService.COMPUTATION_TYPE) + " : " + ERROR_MESSAGE,
+                cancelMessage.getHeaders().get("message"));
 
         // No result
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", RESULT_UUID))

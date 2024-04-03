@@ -34,7 +34,8 @@ import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacua
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.*;
 import org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy.NonEvacuatedEnergyRepository;
-import org.gridsuite.sensitivityanalysis.server.service.NotificationService;
+import org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService;
+import org.gridsuite.sensitivityanalysis.server.service.NonEvacuatedNotificationService;
 import org.gridsuite.sensitivityanalysis.server.service.ReportService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisCancelContext;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisExecutionService;
@@ -59,14 +60,13 @@ import java.util.function.Function;
 
 import static java.lang.Math.abs;
 import static java.util.stream.Collectors.toMap;
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
 public class NonEvacuatedEnergyWorkerService {
+    public static final String COMPUTATION_TYPE = "????????????"; // TODO à remplir avec ce qui a dans observer machin je suppose
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NonEvacuatedEnergyWorkerService.class);
 
@@ -86,7 +86,7 @@ public class NonEvacuatedEnergyWorkerService {
 
     private final Lock lockRunAndCancel = new ReentrantLock();
 
-    private final NotificationService notificationService;
+    private final NonEvacuatedNotificationService notificationService;
 
     private final SensitivityAnalysisExecutionService sensitivityAnalysisExecutionService;
 
@@ -116,7 +116,8 @@ public class NonEvacuatedEnergyWorkerService {
         }
     }
 
-    public NonEvacuatedEnergyWorkerService(NetworkStoreService networkStoreService, ReportService reportService, NotificationService notificationService,
+    public NonEvacuatedEnergyWorkerService(NetworkStoreService networkStoreService, ReportService reportService,
+                                           NonEvacuatedNotificationService notificationService,
                                            NonEvacuatedEnergyInputBuilderService nonEvacuatedEnergyInputBuilderService,
                                            SensitivityAnalysisExecutionService sensitivityAnalysisExecutionService,
                                            NonEvacuatedEnergyRepository nonEvacuatedEnergyRepository, ObjectMapper objectMapper,
@@ -944,10 +945,19 @@ public class NonEvacuatedEnergyWorkerService {
         }
     }
 
+    //@Override // TODO reoverride
+    protected String getComputationType() {
+        return COMPUTATION_TYPE;
+    }
+
     private void cleanResultsAndPublishCancel(UUID resultUuid, String receiver) {
         nonEvacuatedEnergyRepository.delete(resultUuid);
-        notificationService.publishNonEvacuatedEnergyStop(resultUuid, receiver);
-        LOGGER.info(CANCEL_MESSAGE + " (resultUuid='{}')", resultUuid);
+        notificationService.publishStop(resultUuid, receiver, getComputationType());
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info("{} (resultUuid='{}')",
+                    NotificationService.getCancelMessage(getComputationType()),
+                    resultUuid);
+        }
     }
 
     @Bean
@@ -968,7 +978,7 @@ public class NonEvacuatedEnergyWorkerService {
                 LOGGER.info("Stored in {}s", TimeUnit.NANOSECONDS.toSeconds(finalNanoTime - startTime.getAndSet(finalNanoTime)));
 
                 if (result != null) {  // result available
-                    notificationService.sendNonEvacuatedEnergyResultMessage(nonEvacuatedEnergyResultContext.getResultUuid(), nonEvacuatedEnergyResultContext.getRunContext().getReceiver());
+                    notificationService.sendResultMessage(nonEvacuatedEnergyResultContext.getResultUuid(), nonEvacuatedEnergyResultContext.getRunContext().getReceiver());
                     LOGGER.info("Non evacuated energy complete (resultUuid='{}')", nonEvacuatedEnergyResultContext.getResultUuid());
                 } else {  // result not available : stop computation request
                     if (cancelComputationRequests.get(nonEvacuatedEnergyResultContext.getResultUuid()) != null) {
@@ -979,8 +989,12 @@ public class NonEvacuatedEnergyWorkerService {
                 Thread.currentThread().interrupt();
             } catch (Exception | OutOfMemoryError e) {
                 if (!(e instanceof CancellationException)) {
-                    LOGGER.error(FAIL_MESSAGE, e);
-                    notificationService.publishNonEvacuatedEnergyFail(nonEvacuatedEnergyResultContext.getResultUuid(), nonEvacuatedEnergyResultContext.getRunContext().getReceiver(), e.getMessage(), nonEvacuatedEnergyResultContext.getRunContext().getUserId());
+                    LOGGER.error(NotificationService.getFailedMessage(getComputationType()), e);
+                    notificationService.publishFail(
+                            nonEvacuatedEnergyResultContext.getResultUuid(),
+                            nonEvacuatedEnergyResultContext.getRunContext().getReceiver(),
+                            e.getMessage(), nonEvacuatedEnergyResultContext.getRunContext().getUserId(),
+                            getComputationType());
                     nonEvacuatedEnergyRepository.delete(nonEvacuatedEnergyResultContext.getResultUuid());
                 }
             } finally {

@@ -11,7 +11,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacua
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
 import org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy.NonEvacuatedEnergyRepository;
 import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
-import org.gridsuite.sensitivityanalysis.server.service.NotificationService;
+import org.gridsuite.sensitivityanalysis.server.service.NonEvacuatedNotificationService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisCancelContext;
 import org.gridsuite.sensitivityanalysis.server.service.UuidGeneratorService;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +32,7 @@ public class NonEvacuatedEnergyService {
 
     private final UuidGeneratorService uuidGeneratorService;
 
-    private final NotificationService notificationService;
+    private final NonEvacuatedNotificationService notificationService;
 
     private final LoadFlowService loadFlowService;
 
@@ -41,7 +41,7 @@ public class NonEvacuatedEnergyService {
     public NonEvacuatedEnergyService(@Value("${non-evacuated-energy.default-provider}") String defaultProvider,
                                      NonEvacuatedEnergyRepository nonEvacuatedEnergyRepository,
                                      UuidGeneratorService uuidGeneratorService,
-                                     NotificationService notificationService,
+                                     NonEvacuatedNotificationService notificationService,
                                      LoadFlowService loadFlowService,
                                      ObjectMapper objectMapper) {
         this.defaultProvider = defaultProvider;
@@ -60,7 +60,7 @@ public class NonEvacuatedEnergyService {
 
         // update status to running status
         setStatus(List.of(resultUuid), NonEvacuatedEnergyStatus.RUNNING.name());
-        notificationService.sendNonEvacuatedEnergyRunMessage(new NonEvacuatedEnergyResultContext(resultUuid, nonEvacuatedEnergyRunContext).toMessage(objectMapper));
+        notificationService.sendRunMessage(new NonEvacuatedEnergyResultContext(resultUuid, nonEvacuatedEnergyRunContext).toMessage(objectMapper));
         return resultUuid;
     }
 
@@ -86,7 +86,7 @@ public class NonEvacuatedEnergyService {
     }
 
     public void stop(UUID resultUuid, String receiver) {
-        notificationService.sendNonEvacuatedEnergyCancelMessage(new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
+        notificationService.sendCancelMessage(new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
     }
 
     public String getDefaultProvider() {

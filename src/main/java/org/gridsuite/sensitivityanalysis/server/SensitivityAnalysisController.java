@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.HEADER_USER_ID;
+import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.HEADER_USER_ID;
 import static org.springframework.http.MediaType.*;
 
 /**

@@ -22,6 +22,7 @@ import com.powsybl.sensitivity.SensitivityAnalysis;
 import com.powsybl.sensitivity.SensitivityAnalysisParameters;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import org.apache.commons.lang3.StringUtils;
+import org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService;
 import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
@@ -47,14 +48,14 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
+import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.getFailedMessage;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
 public class SensitivityAnalysisWorkerService {
+    public static final String COMPUTATION_TYPE = "????????"; // TODO : copier observer j'imagine
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisWorkerService.class);
 
@@ -140,7 +141,7 @@ public class SensitivityAnalysisWorkerService {
             Thread.currentThread().interrupt();
             return null;
         } catch (Exception e) {
-            LOGGER.error(FAIL_MESSAGE, e);
+            LOGGER.error(getFailedMessage(getComputationType()), e);
             return null;
         }
     }
@@ -239,8 +240,15 @@ public class SensitivityAnalysisWorkerService {
 
     private void cleanSensitivityAnalysisResultsAndPublishCancel(UUID resultUuid, String receiver) {
         resultRepository.delete(resultUuid);
-        notificationService.publishSensitivityAnalysisStop(resultUuid, receiver);
-        LOGGER.info(CANCEL_MESSAGE + " (resultUuid='{}')", resultUuid);
+        notificationService.publishStop(resultUuid, receiver, getComputationType());
+        LOGGER.info("{} (resultUuid='{}')",
+                NotificationService.getCancelMessage(getComputationType()),
+                resultUuid);
+    }
+
+    //@Override // TODO reoverride une fois ceci arrangé
+    protected String getComputationType() {
+        return COMPUTATION_TYPE;
     }
 
     @Bean
@@ -262,7 +270,7 @@ public class SensitivityAnalysisWorkerService {
                 LOGGER.info("Stored in {}s", TimeUnit.NANOSECONDS.toSeconds(finalNanoTime - startTime.getAndSet(finalNanoTime)));
 
                 if (result != null) {  // result available
-                    notificationService.sendSensitivityAnalysisResultMessage(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver());
+                    notificationService.sendResultMessage(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver());
                     LOGGER.info("Sensitivity analysis complete (resultUuid='{}')", resultContext.getResultUuid());
                 } else {  // result not available : stop computation request
                     if (cancelComputationRequests.get(resultContext.getResultUuid()) != null) {
@@ -273,9 +281,10 @@ public class SensitivityAnalysisWorkerService {
                 Thread.currentThread().interrupt();
             } catch (Exception | OutOfMemoryError e) {
                 if (!(e instanceof CancellationException)) {
-                    LOGGER.error(FAIL_MESSAGE, e);
-                    notificationService.publishSensitivityAnalysisFail(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver(),
-                            e.getMessage(), resultContext.getRunContext().getUserId());
+                    LOGGER.error(getFailedMessage(getComputationType()), e);
+                    notificationService.publishFail(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver(),
+                            e.getMessage(), resultContext.getRunContext().getUserId(),
+                            getComputationType());
                     resultRepository.delete(resultContext.getResultUuid());
                 }
             } finally {
