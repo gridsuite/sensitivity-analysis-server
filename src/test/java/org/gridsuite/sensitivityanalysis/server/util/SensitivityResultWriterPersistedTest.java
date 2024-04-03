@@ -94,11 +94,11 @@ class SensitivityResultWriterPersistedTest {
         resultWriterPersisted.start(UUID.randomUUID());
         assertFalse(resultWriterPersisted.isWorking());
 
-        IntStream.range(0, 100).forEach(i -> resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.));
+        IntStream.range(0, 1000).forEach(i -> resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.));
         assertTrue(resultWriterPersisted.isWorking());
 
-        await().atMost(500, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
-        verify(analysisResultRepository, times(1)).writeSensitivityValues(any(), anyList());
+        await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
+        verify(analysisResultRepository, times(2)).writeSensitivityValues(any(), anyList());
     }
 
     @Test
@@ -120,11 +120,11 @@ class SensitivityResultWriterPersistedTest {
         resultWriterPersisted.start(UUID.randomUUID());
         assertFalse(resultWriterPersisted.isWorking());
 
-        IntStream.range(0, 100).forEach(i -> resultWriterPersisted.writeContingencyStatus(0, SensitivityAnalysisResult.Status.SUCCESS));
+        IntStream.range(0, 1000).forEach(i -> resultWriterPersisted.writeContingencyStatus(0, SensitivityAnalysisResult.Status.SUCCESS));
         assertTrue(resultWriterPersisted.isWorking());
 
-        await().atMost(500, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
-        verify(analysisResultRepository, times(1)).writeContingenciesStatus(any(), anyList());
+        await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
+        verify(analysisResultRepository, times(2)).writeContingenciesStatus(any(), anyList());
     }
 
     @Test
