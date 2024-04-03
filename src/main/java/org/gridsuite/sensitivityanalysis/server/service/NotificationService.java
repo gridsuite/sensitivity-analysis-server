@@ -6,7 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
-import org.gridsuite.sensitivityanalysis.server.util.annotations.PostCompletion;
+import org.gridsuite.sensitivityanalysis.server.computation.utils.annotations.PostCompletion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
