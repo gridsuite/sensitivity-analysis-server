@@ -13,7 +13,7 @@ import org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy.
 import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
 import org.gridsuite.sensitivityanalysis.server.service.NonEvacuatedNotificationService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisCancelContext;
-import org.gridsuite.sensitivityanalysis.server.service.UuidGeneratorService;
+import org.gridsuite.sensitivityanalysis.server.computation.service.UuidGeneratorService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
