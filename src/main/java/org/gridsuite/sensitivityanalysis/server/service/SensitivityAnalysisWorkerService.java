@@ -7,6 +7,7 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.extensions.Extension;
@@ -26,6 +27,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
+import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultWriterPersisted;
@@ -51,7 +53,8 @@ import java.util.function.Function;
 
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
-import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder.buildResults;
+import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder.buildContingencyResults;
+import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder.buildSensitivityResults;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -60,6 +63,8 @@ import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBu
 public class SensitivityAnalysisWorkerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisWorkerService.class);
+
+    public static final int CONTINGENCY_RESULTS_BUFFER_SIZE = 128;
 
     private final NetworkStoreService networkStoreService;
 
@@ -196,11 +201,11 @@ public class SensitivityAnalysisWorkerService {
     private interface SensitivityAnalysisRunnerWrapper<T> {
 
         CompletableFuture<T> runAsync(SensitivityAnalysisRunContext context,
-              SensitivityAnalysis.Runner sensitivityAnalysisRunner,
-              UUID resultUuid,
-              Reporter reporter,
-              Network network,
-              SensitivityAnalysisParameters parameters);
+                                      SensitivityAnalysis.Runner sensitivityAnalysisRunner,
+                                      UUID resultUuid,
+                                      Reporter reporter,
+                                      Network network,
+                                      SensitivityAnalysisParameters parameters);
     }
 
     private <T> CompletableFuture<T> runSensitivityAnalysisAsync(SensitivityAnalysisRunContext context,
@@ -260,8 +265,9 @@ public class SensitivityAnalysisWorkerService {
         // WARNING : we're sure order is maintained because InputBuilderService creates List<(preContingency, contingency1, contingency2, etc...)>
         // That's why it works but if this changes we should set up a much more complicated mechanism
         AnalysisResultEntity analysisResult = resultRepository.insertAnalysisResult(resultUuid);
-        resultRepository.saveAllResultsAndFlush(buildResults(analysisResult, groupedFactors, contingencies));
-
+        Map<String, ContingencyResultEntity> contingencyResults = buildContingencyResults(contingencies, analysisResult);
+        Lists.partition(contingencyResults.values().stream().toList(), CONTINGENCY_RESULTS_BUFFER_SIZE).parallelStream().forEach(resultRepository::saveAllContingencyResultsAndFlush);
+        buildSensitivityResults(groupedFactors, analysisResult, contingencyResults).parallelStream().forEach(resultRepository::saveAllResultsAndFlush);
         SensitivityResultWriterPersisted writer = (SensitivityResultWriterPersisted) applicationContext.getBean("sensitivityResultWriterPersisted");
         writer.start(resultUuid);
 

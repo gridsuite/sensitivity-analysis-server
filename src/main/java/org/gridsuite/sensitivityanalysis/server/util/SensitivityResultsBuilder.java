@@ -19,17 +19,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
  * <p>
- *     It Builds the entities based on groups of factors and a list of contingencies.
- *     Each group of factors requires a certain structure, starting with the pre-contingency sensitivity factor with
- *     contingency context NONE, then all the contingencies for the same couple (functionId, variableId) with
- *     contingency context SPECIFIC. This is currently the case because this is how it is built in
- *     SensitivityAnalysisInputBuilderService. Anyway, the way the DB model is built kind of depends on this structure too.
- *     So this should not be changed, except deep refactoring.
+ * It Builds the entities based on groups of factors and a list of contingencies.
+ * Each group of factors requires a certain structure, starting with the pre-contingency sensitivity factor with
+ * contingency context NONE, then all the contingencies for the same couple (functionId, variableId) with
+ * contingency context SPECIFIC. This is currently the case because this is how it is built in
+ * SensitivityAnalysisInputBuilderService. Anyway, the way the DB model is built kind of depends on this structure too.
+ * So this should not be changed, except deep refactoring.
  * </p>
  */
 public final class SensitivityResultsBuilder {
@@ -38,14 +37,7 @@ public final class SensitivityResultsBuilder {
         // Should not be instantiated
     }
 
-    public static Set<SensitivityResultEntity> buildResults(AnalysisResultEntity analysisResult,
-                                                            List<List<SensitivityFactor>> factorsGroup,
-                                                            List<Contingency> contingencies) {
-        Map<String, ContingencyResultEntity> contingenciesById = buildContingencyResults(contingencies, analysisResult);
-        return buildSensitivityResults(factorsGroup, analysisResult, contingenciesById);
-    }
-
-    private static Map<String, ContingencyResultEntity> buildContingencyResults(List<Contingency> contingencies,
+    public static Map<String, ContingencyResultEntity> buildContingencyResults(List<Contingency> contingencies,
                                                                                 AnalysisResultEntity analysisResult) {
         return IntStream.range(0, contingencies.size())
             .mapToObj(i -> new ContingencyResultEntity(i, contingencies.get(i).getId(), analysisResult))
@@ -55,14 +47,14 @@ public final class SensitivityResultsBuilder {
             ));
     }
 
-    private static Set<SensitivityResultEntity> buildSensitivityResults(List<List<SensitivityFactor>> factorsGroups,
-                                                                         AnalysisResultEntity analysisResult,
-                                                                         Map<String, ContingencyResultEntity> contingenciesById) {
+    public static Set<Set<SensitivityResultEntity>> buildSensitivityResults(List<List<SensitivityFactor>> factorsGroups,
+                                                                             AnalysisResultEntity analysisResult,
+                                                                             Map<String, ContingencyResultEntity> contingenciesById) {
         AtomicInteger factorCounter = new AtomicInteger(0);
         return factorsGroups.stream()
-            .flatMap(factorsGroup -> {
+            .map(factorsGroup -> {
                 if (factorsGroup.isEmpty()) {
-                    return Stream.of();
+                    return Set.<SensitivityResultEntity>of();
                 }
 
                 // For the information we need to create the entities, all the sensitivity factors of a group are equivalent
@@ -77,7 +69,7 @@ public final class SensitivityResultsBuilder {
                 // by JPA cascading persist operation (as it is referenced in the sensitivity results of the contingencies).
                 // But if it is the only one we should return it explicitly.
                 if (factorsGroup.size() == 1) {
-                    return Stream.of(preContingencySensitivityResult);
+                    return Set.of(preContingencySensitivityResult);
                 }
 
                 // We should skip the first element as we want to only keep contingency related factors here
@@ -86,7 +78,8 @@ public final class SensitivityResultsBuilder {
                         analysisResult,
                         preContingencySensitivityResult,
                         contingenciesById.get(sensitivityFactor.getContingencyContext().getContingencyId()),
-                        factorCounter.getAndIncrement()));
+                        factorCounter.getAndIncrement()))
+                    .collect(Collectors.toSet());
             })
             .collect(Collectors.toSet());
     }

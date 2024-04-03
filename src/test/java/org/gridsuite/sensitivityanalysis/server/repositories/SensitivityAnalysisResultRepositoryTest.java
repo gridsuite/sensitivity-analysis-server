@@ -19,6 +19,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
+import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -74,7 +75,7 @@ class SensitivityAnalysisResultRepositoryTest {
         SQLStatementCountValidator.reset();
         createResult(resultUuid);
 
-        assertRequestsCount(2, 3, 0, 0);
+        assertRequestsCount(3, 3, 0, 0);
         assertThat(analysisResultRepository.findByResultUuid(resultUuid)).isNotNull();
         assertThat(contingencyResultRepository.findAll()).hasSize(2);
         assertThat(sensitivityResultRepository.findAll()).hasSize(12);
@@ -221,7 +222,13 @@ class SensitivityAnalysisResultRepositoryTest {
         );
         List<List<SensitivityFactor>> factors = createFactors(List.of(BRANCH_ID1, BRANCH_ID2), List.of(GEN_ID1, GEN_ID2), contingencies);
         var analysisResult = sensitivityAnalysisResultRepository.insertAnalysisResult(resultUuid);
-        sensitivityAnalysisResultRepository.saveAllResultsAndFlush(SensitivityResultsBuilder.buildResults(analysisResult, factors, contingencies));
+        Map<String, ContingencyResultEntity> contingencyResultsByContingencyId = SensitivityResultsBuilder.buildContingencyResults(contingencies, analysisResult);
+        sensitivityAnalysisResultRepository.saveAllContingencyResultsAndFlush(contingencyResultsByContingencyId.values().stream().collect(Collectors.toSet()));
+        sensitivityAnalysisResultRepository.saveAllResultsAndFlush(
+            SensitivityResultsBuilder.buildSensitivityResults(factors, analysisResult, contingencyResultsByContingencyId)
+                .stream()
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet()));
     }
 
     private void fillResult(UUID resultUuid) {
