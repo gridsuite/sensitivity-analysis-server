@@ -36,7 +36,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.*
 import org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy.NonEvacuatedEnergyRepository;
 import org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService;
 import org.gridsuite.sensitivityanalysis.server.service.NonEvacuatedNotificationService;
-import org.gridsuite.sensitivityanalysis.server.service.ReportService;
+import org.gridsuite.sensitivityanalysis.server.computation.service.ReportService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisCancelContext;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisExecutionService;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;

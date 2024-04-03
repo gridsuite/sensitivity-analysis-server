@@ -17,6 +17,7 @@ import com.powsybl.sensitivity.*;
 import lombok.SneakyThrows;
 import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
 import org.gridsuite.sensitivityanalysis.server.SensitivityAnalysisApplication;
+import org.gridsuite.sensitivityanalysis.server.computation.service.ReportService;
 import org.gridsuite.sensitivityanalysis.server.computation.service.UuidGeneratorService;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;

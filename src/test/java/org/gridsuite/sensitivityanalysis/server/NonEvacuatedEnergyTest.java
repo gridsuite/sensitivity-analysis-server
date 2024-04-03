@@ -44,7 +44,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParameter
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
-import org.gridsuite.sensitivityanalysis.server.service.ReportService;
+import org.gridsuite.sensitivityanalysis.server.computation.service.ReportService;
 import org.gridsuite.sensitivityanalysis.server.computation.service.UuidGeneratorService;
 import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.NonEvacuatedEnergyWorkerService;
 import org.junit.After;
