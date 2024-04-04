@@ -5,23 +5,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.sensitivityanalysis.server.service;
+package org.gridsuite.sensitivityanalysis.server.computation.service;
 
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.computation.local.LocalComputationManager;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>
  */
 @Service
-public class SensitivityAnalysisExecutionService {
+@Getter
+public class ExecutionService {
 
     private ExecutorService executorService;
 
@@ -38,13 +41,4 @@ public class SensitivityAnalysisExecutionService {
     private void preDestroy() {
         executorService.shutdown();
     }
-
-    public ExecutorService getExecutorService() {
-        return executorService;
-    }
-
-    public ComputationManager getLocalComputationManager() {
-        return computationManager;
-    }
 }
-

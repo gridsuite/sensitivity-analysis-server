@@ -38,7 +38,7 @@ import org.gridsuite.sensitivityanalysis.server.computation.service.Notification
 import org.gridsuite.sensitivityanalysis.server.service.NonEvacuatedNotificationService;
 import org.gridsuite.sensitivityanalysis.server.computation.service.ReportService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisCancelContext;
-import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisExecutionService;
+import org.gridsuite.sensitivityanalysis.server.computation.service.ExecutionService;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +88,7 @@ public class NonEvacuatedEnergyWorkerService {
 
     private final NonEvacuatedNotificationService notificationService;
 
-    private final SensitivityAnalysisExecutionService sensitivityAnalysisExecutionService;
+    private final ExecutionService executionService;
 
     private final NonEvacuatedEnergyInputBuilderService nonEvacuatedEnergyInputBuilderService;
 
@@ -119,13 +119,13 @@ public class NonEvacuatedEnergyWorkerService {
     public NonEvacuatedEnergyWorkerService(NetworkStoreService networkStoreService, ReportService reportService,
                                            NonEvacuatedNotificationService notificationService,
                                            NonEvacuatedEnergyInputBuilderService nonEvacuatedEnergyInputBuilderService,
-                                           SensitivityAnalysisExecutionService sensitivityAnalysisExecutionService,
+                                           ExecutionService executionService,
                                            NonEvacuatedEnergyRepository nonEvacuatedEnergyRepository, ObjectMapper objectMapper,
                                            SensitivityAnalysisRunnerSupplier sensitivityAnalysisRunnerSupplier) {
         this.networkStoreService = Objects.requireNonNull(networkStoreService);
         this.reportService = Objects.requireNonNull(reportService);
         this.notificationService = notificationService;
-        this.sensitivityAnalysisExecutionService = Objects.requireNonNull(sensitivityAnalysisExecutionService);
+        this.executionService = Objects.requireNonNull(executionService);
         this.nonEvacuatedEnergyInputBuilderService = nonEvacuatedEnergyInputBuilderService;
         this.nonEvacuatedEnergyRepository = Objects.requireNonNull(nonEvacuatedEnergyRepository);
         this.objectMapper = Objects.requireNonNull(objectMapper);
@@ -914,7 +914,7 @@ public class NonEvacuatedEnergyWorkerService {
             }
 
             Network network = getNetwork(context.getNetworkUuid(), context.getVariantId());
-            ComputationManager computationManager = sensitivityAnalysisExecutionService.getLocalComputationManager();
+            ComputationManager computationManager = executionService.getComputationManager();
 
             CompletableFuture<String> future = CompletableFuture.supplyAsync(() ->
                 run(context, network, sensitivityAnalysisParameters, sensitivityAnalysisRunner, computationManager, reporter)

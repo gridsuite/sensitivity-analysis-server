@@ -24,6 +24,7 @@ import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService;
 import org.gridsuite.sensitivityanalysis.server.computation.service.ReportService;
+import org.gridsuite.sensitivityanalysis.server.computation.service.ExecutionService;
 import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
@@ -78,7 +79,7 @@ public class SensitivityAnalysisWorkerService {
 
     private final NotificationService notificationService;
 
-    private final SensitivityAnalysisExecutionService sensitivityAnalysisExecutionService;
+    private final ExecutionService executionService;
 
     private final SensitivityAnalysisInputBuilderService sensitivityAnalysisInputBuilderService;
 
@@ -92,7 +93,7 @@ public class SensitivityAnalysisWorkerService {
                                             ReportService reportService,
                                             NotificationService notificationService,
                                             SensitivityAnalysisInputBuilderService sensitivityAnalysisInputBuilderService,
-                                            SensitivityAnalysisExecutionService sensitivityAnalysisExecutionService,
+                                            ExecutionService executionService,
                                             SensitivityAnalysisResultRepository resultRepository,
                                             ObjectMapper objectMapper,
                                             SensitivityAnalysisParametersService parametersService,
@@ -101,7 +102,7 @@ public class SensitivityAnalysisWorkerService {
         this.networkStoreService = Objects.requireNonNull(networkStoreService);
         this.reportService = Objects.requireNonNull(reportService);
         this.notificationService = notificationService;
-        this.sensitivityAnalysisExecutionService = Objects.requireNonNull(sensitivityAnalysisExecutionService);
+        this.executionService = Objects.requireNonNull(executionService);
         this.sensitivityAnalysisInputBuilderService = sensitivityAnalysisInputBuilderService;
         this.resultRepository = Objects.requireNonNull(resultRepository);
         this.objectMapper = Objects.requireNonNull(objectMapper);
@@ -212,7 +213,7 @@ public class SensitivityAnalysisWorkerService {
                 new ArrayList<>(context.getSensitivityAnalysisInputs().getContingencies()),
                 context.getSensitivityAnalysisInputs().getVariablesSets(),
                 sensitivityAnalysisParameters,
-                sensitivityAnalysisExecutionService.getLocalComputationManager(),
+                executionService.getComputationManager(),
                 reporter);
             if (resultUuid != null) {
                 futures.put(resultUuid, future);
