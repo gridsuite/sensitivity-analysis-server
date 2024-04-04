@@ -11,7 +11,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.extensions.Extension;
@@ -28,6 +27,7 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.sensitivity.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.gridsuite.sensitivityanalysis.server.computation.service.CancelContext;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStageDefinition;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStagesSelection;
@@ -37,7 +37,6 @@ import org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy.
 import org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService;
 import org.gridsuite.sensitivityanalysis.server.service.NonEvacuatedNotificationService;
 import org.gridsuite.sensitivityanalysis.server.computation.service.ReportService;
-import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisCancelContext;
 import org.gridsuite.sensitivityanalysis.server.computation.service.ExecutionService;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
 import org.slf4j.Logger;
@@ -80,9 +79,7 @@ public class NonEvacuatedEnergyWorkerService {
 
     private final Map<UUID, CompletableFuture<String>> futures = new ConcurrentHashMap<>();
 
-    private final Map<UUID, SensitivityAnalysisCancelContext> cancelComputationRequests = new ConcurrentHashMap<>();
-
-    private final Set<UUID> runRequests = Sets.newConcurrentHashSet();
+    private final Map<UUID, CancelContext> cancelComputationRequests = new ConcurrentHashMap<>();
 
     private final Lock lockRunAndCancel = new ReentrantLock();
 
@@ -929,7 +926,7 @@ public class NonEvacuatedEnergyWorkerService {
         }
     }
 
-    private void cancelAsync(SensitivityAnalysisCancelContext cancelContext) {
+    private void cancelAsync(CancelContext cancelContext) {
         lockRunAndCancel.lock();
         try {
             cancelComputationRequests.put(cancelContext.getResultUuid(), cancelContext);
@@ -965,7 +962,6 @@ public class NonEvacuatedEnergyWorkerService {
         return message -> {
             NonEvacuatedEnergyResultContext nonEvacuatedEnergyResultContext = NonEvacuatedEnergyResultContext.fromMessage(message, objectMapper);
             try {
-                runRequests.add(nonEvacuatedEnergyResultContext.getResultUuid());
                 AtomicReference<Long> startTime = new AtomicReference<>();
 
                 startTime.set(System.nanoTime());
@@ -1000,13 +996,12 @@ public class NonEvacuatedEnergyWorkerService {
             } finally {
                 futures.remove(nonEvacuatedEnergyResultContext.getResultUuid());
                 cancelComputationRequests.remove(nonEvacuatedEnergyResultContext.getResultUuid());
-                runRequests.remove(nonEvacuatedEnergyResultContext.getResultUuid());
             }
         };
     }
 
     @Bean
     public Consumer<Message<String>> consumeNonEvacuatedEnergyCancel() {
-        return message -> cancelAsync(SensitivityAnalysisCancelContext.fromMessage(message));
+        return message -> cancelAsync(CancelContext.fromMessage(message));
     }
 }

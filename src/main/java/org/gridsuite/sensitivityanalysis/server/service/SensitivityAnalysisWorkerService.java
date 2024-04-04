@@ -22,6 +22,7 @@ import com.powsybl.sensitivity.SensitivityAnalysis;
 import com.powsybl.sensitivity.SensitivityAnalysisParameters;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import org.apache.commons.lang3.StringUtils;
+import org.gridsuite.sensitivityanalysis.server.computation.service.CancelContext;
 import org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService;
 import org.gridsuite.sensitivityanalysis.server.computation.service.ReportService;
 import org.gridsuite.sensitivityanalysis.server.computation.service.ExecutionService;
@@ -71,7 +72,7 @@ public class SensitivityAnalysisWorkerService {
 
     private final Map<UUID, CompletableFuture<SensitivityAnalysisResult>> futures = new ConcurrentHashMap<>();
 
-    private final Map<UUID, SensitivityAnalysisCancelContext> cancelComputationRequests = new ConcurrentHashMap<>();
+    private final Map<UUID, CancelContext> cancelComputationRequests = new ConcurrentHashMap<>();
 
     private final Set<UUID> runRequests = Sets.newConcurrentHashSet();
 
@@ -157,22 +158,22 @@ public class SensitivityAnalysisWorkerService {
 
         AtomicReference<Reporter> rootReporter = new AtomicReference<>(Reporter.NO_OP);
         Reporter reporter = Reporter.NO_OP;
-        if (context.getReportUuid() != null) {
-            final String reportType = context.getReportType();
-            String rootReporterId = context.getReporterId() == null ? reportType : context.getReporterId() + "@" + reportType;
+        if (context.getReportContext().getReportId() != null) {
+            final String reportType = context.getReportContext().getReportType();
+            String rootReporterId = context.getReportContext().getReportName() == null ? reportType : context.getReportContext().getReportName() + "@" + reportType;
             rootReporter.set(new ReporterModel(rootReporterId, rootReporterId));
             reporter = rootReporter.get().createSubReporter(reportType, reportType + " (${providerToUse})", "providerToUse", sensitivityAnalysisRunner.getName());
             // Delete any previous sensi computation logs
             sensitivityAnalysisObserver.observe("report.delete", context, () ->
-                reportService.deleteReport(context.getReportUuid(), reportType));
+                reportService.deleteReport(context.getReportContext().getReportId(), reportType));
         }
 
         CompletableFuture<SensitivityAnalysisResult> future = runSensitivityAnalysisAsync(context, sensitivityAnalysisRunner, reporter, resultUuid);
 
         SensitivityAnalysisResult result = future == null ? null : sensitivityAnalysisObserver.observeRun("run", context, future::get);
-        if (context.getReportUuid() != null) {
+        if (context.getReportContext().getReportId() != null) {
             sensitivityAnalysisObserver.observe("report.send", context, () ->
-                reportService.sendReport(context.getReportUuid(), rootReporter.get()));
+                reportService.sendReport(context.getReportContext().getReportId(), rootReporter.get()));
         }
         return result;
     }
@@ -224,7 +225,7 @@ public class SensitivityAnalysisWorkerService {
         }
     }
 
-    private void cancelSensitivityAnalysisAsync(SensitivityAnalysisCancelContext cancelContext) {
+    private void cancelSensitivityAnalysisAsync(CancelContext cancelContext) {
         lockRunAndCancelSensitivityAnalysis.lock();
         try {
             cancelComputationRequests.put(cancelContext.getResultUuid(), cancelContext);
@@ -299,6 +300,6 @@ public class SensitivityAnalysisWorkerService {
 
     @Bean
     public Consumer<Message<String>> consumeCancel() {
-        return message -> cancelSensitivityAnalysisAsync(SensitivityAnalysisCancelContext.fromMessage(message));
+        return message -> cancelSensitivityAnalysisAsync(CancelContext.fromMessage(message));
     }
 }

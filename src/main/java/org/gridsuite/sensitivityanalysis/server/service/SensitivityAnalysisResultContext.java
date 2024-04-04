@@ -94,9 +94,9 @@ public class SensitivityAnalysisResultContext {
                 .setHeader("variantId", runContext.getVariantId())
                 .setHeader("receiver", runContext.getReceiver())
                 .setHeader("provider", runContext.getProvider())
-                .setHeader(REPORT_UUID, runContext.getReportUuid())
-                .setHeader(REPORTER_ID_HEADER, runContext.getReporterId())
-                .setHeader(REPORT_TYPE_HEADER, runContext.getReportType())
+                .setHeader(REPORT_UUID, runContext.getReportContext().getReportId())
+                .setHeader(REPORTER_ID_HEADER, runContext.getReportContext().getReportName())
+                .setHeader(REPORT_TYPE_HEADER, runContext.getReportContext().getReportType())
                 .setHeader(HEADER_USER_ID, runContext.getUserId())
                 .build();
     }

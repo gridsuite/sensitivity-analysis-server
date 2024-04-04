@@ -11,6 +11,7 @@ import com.powsybl.sensitivity.SensitivityAnalysisProvider;
 import com.univocity.parsers.csv.CsvWriter;
 import com.univocity.parsers.csv.CsvWriterSettings;
 import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
+import org.gridsuite.sensitivityanalysis.server.computation.service.CancelContext;
 import org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService;
 import org.gridsuite.sensitivityanalysis.server.computation.service.UuidGeneratorService;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
@@ -126,7 +127,7 @@ public class SensitivityAnalysisService {
     }
 
     public void stop(UUID resultUuid, String receiver) {
-        notificationService.sendCancelMessage(new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
+        notificationService.sendCancelMessage(new CancelContext(resultUuid, receiver).toMessage());
     }
 
     public List<String> getProviders() {

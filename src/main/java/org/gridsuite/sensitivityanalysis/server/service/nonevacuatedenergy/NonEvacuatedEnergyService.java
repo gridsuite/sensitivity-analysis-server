@@ -7,12 +7,12 @@
 package org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.gridsuite.sensitivityanalysis.server.computation.service.CancelContext;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
 import org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy.NonEvacuatedEnergyRepository;
 import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
 import org.gridsuite.sensitivityanalysis.server.service.NonEvacuatedNotificationService;
-import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisCancelContext;
 import org.gridsuite.sensitivityanalysis.server.computation.service.UuidGeneratorService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -86,7 +86,7 @@ public class NonEvacuatedEnergyService {
     }
 
     public void stop(UUID resultUuid, String receiver) {
-        notificationService.sendCancelMessage(new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
+        notificationService.sendCancelMessage(new CancelContext(resultUuid, receiver).toMessage());
     }
 
     public String getDefaultProvider() {
