@@ -18,7 +18,6 @@ import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
-import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -50,7 +49,7 @@ public class SensitivityAnalysisService {
 
     private final String defaultProvider;
 
-    private final SensitivityAnalysisResultRepository resultRepository;
+    private final SensitivityAnalysisResultService resultRepository;
 
     private final UuidGeneratorService uuidGeneratorService;
 
@@ -65,7 +64,7 @@ public class SensitivityAnalysisService {
     private final ObjectMapper objectMapper;
 
     public SensitivityAnalysisService(@Value("${sensitivity-analysis.default-provider}") String defaultProvider,
-                                      SensitivityAnalysisResultRepository resultRepository,
+                                      SensitivityAnalysisResultService resultRepository,
                                       UuidGeneratorService uuidGeneratorService,
                                       NotificationService notificationService,
                                       ActionsService actionsService,
@@ -97,7 +96,7 @@ public class SensitivityAnalysisService {
         var resultUuid = uuidGeneratorService.generate();
 
         // update status to running status
-        setStatus(List.of(resultUuid), SensitivityAnalysisStatus.RUNNING.name());
+        setStatus(List.of(resultUuid), SensitivityAnalysisStatus.RUNNING);
         notificationService.sendRunMessage(new SensitivityAnalysisResultContext(resultUuid, runContext).toMessage(objectMapper));
         return resultUuid;
     }
@@ -118,11 +117,11 @@ public class SensitivityAnalysisService {
         resultRepository.deleteAll();
     }
 
-    public String getStatus(UUID resultUuid) {
+    public SensitivityAnalysisStatus getStatus(UUID resultUuid) {
         return resultRepository.findStatus(resultUuid);
     }
 
-    public void setStatus(List<UUID> resultUuids, String status) {
+    public void setStatus(List<UUID> resultUuids, SensitivityAnalysisStatus status) {
         resultRepository.insertStatus(resultUuids, status);
     }
 

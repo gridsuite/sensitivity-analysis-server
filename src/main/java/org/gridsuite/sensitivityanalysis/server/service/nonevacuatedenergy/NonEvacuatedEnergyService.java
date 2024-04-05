@@ -10,9 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gridsuite.sensitivityanalysis.server.computation.service.CancelContext;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
-import org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy.NonEvacuatedEnergyRepository;
 import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
-import org.gridsuite.sensitivityanalysis.server.service.NonEvacuatedNotificationService;
 import org.gridsuite.sensitivityanalysis.server.computation.service.UuidGeneratorService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,7 +26,7 @@ import java.util.UUID;
 public class NonEvacuatedEnergyService {
     private final String defaultProvider;
 
-    private final NonEvacuatedEnergyRepository nonEvacuatedEnergyRepository;
+    private final NonEvacuatedEnergyResultService resultService;
 
     private final UuidGeneratorService uuidGeneratorService;
 
@@ -39,13 +37,13 @@ public class NonEvacuatedEnergyService {
     private final ObjectMapper objectMapper;
 
     public NonEvacuatedEnergyService(@Value("${non-evacuated-energy.default-provider}") String defaultProvider,
-                                     NonEvacuatedEnergyRepository nonEvacuatedEnergyRepository,
+                                     NonEvacuatedEnergyResultService resultService,
                                      UuidGeneratorService uuidGeneratorService,
                                      NonEvacuatedNotificationService notificationService,
                                      LoadFlowService loadFlowService,
                                      ObjectMapper objectMapper) {
         this.defaultProvider = defaultProvider;
-        this.nonEvacuatedEnergyRepository = Objects.requireNonNull(nonEvacuatedEnergyRepository);
+        this.resultService = Objects.requireNonNull(resultService);
         this.uuidGeneratorService = Objects.requireNonNull(uuidGeneratorService);
         this.notificationService = notificationService;
         this.loadFlowService = loadFlowService;
@@ -59,30 +57,30 @@ public class NonEvacuatedEnergyService {
         var resultUuid = uuidGeneratorService.generate();
 
         // update status to running status
-        setStatus(List.of(resultUuid), NonEvacuatedEnergyStatus.RUNNING.name());
+        setStatus(List.of(resultUuid), NonEvacuatedEnergyStatus.RUNNING);
         notificationService.sendRunMessage(new NonEvacuatedEnergyResultContext(resultUuid, nonEvacuatedEnergyRunContext).toMessage(objectMapper));
         return resultUuid;
     }
 
     public String getRunResult(UUID resultUuid) {
-        return nonEvacuatedEnergyRepository.getRunResult(resultUuid);
+        return resultService.getRunResult(resultUuid);
     }
 
     public void deleteResult(UUID resultUuid) {
-        nonEvacuatedEnergyRepository.delete(resultUuid);
+        resultService.delete(resultUuid);
     }
 
     public void deleteResults() {
-        nonEvacuatedEnergyRepository.deleteAll();
+        resultService.deleteAll();
     }
 
-    public String getStatus(UUID resultUuid) {
-        return nonEvacuatedEnergyRepository.findStatus(resultUuid);
+    public NonEvacuatedEnergyStatus getStatus(UUID resultUuid) {
+        return resultService.findStatus(resultUuid);
     }
 
-    public void setStatus(List<UUID> resultUuids, String status) {
+    public void setStatus(List<UUID> resultUuids, NonEvacuatedEnergyStatus status) {
         Objects.requireNonNull(resultUuids);
-        nonEvacuatedEnergyRepository.insertStatus(resultUuids, status);
+        resultService.insertStatus(resultUuids, status);
     }
 
     public void stop(UUID resultUuid, String receiver) {

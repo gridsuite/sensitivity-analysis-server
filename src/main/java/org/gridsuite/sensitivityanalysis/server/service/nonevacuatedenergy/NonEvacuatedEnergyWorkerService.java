@@ -33,9 +33,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacua
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStagesSelection;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.*;
-import org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy.NonEvacuatedEnergyRepository;
 import org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService;
-import org.gridsuite.sensitivityanalysis.server.service.NonEvacuatedNotificationService;
 import org.gridsuite.sensitivityanalysis.server.computation.service.ReportService;
 import org.gridsuite.sensitivityanalysis.server.computation.service.ExecutionService;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
@@ -73,7 +71,7 @@ public class NonEvacuatedEnergyWorkerService {
 
     private final ReportService reportService;
 
-    private final NonEvacuatedEnergyRepository nonEvacuatedEnergyRepository;
+    private final NonEvacuatedEnergyResultService resultService;
 
     private final ObjectMapper objectMapper;
 
@@ -117,14 +115,14 @@ public class NonEvacuatedEnergyWorkerService {
                                            NonEvacuatedNotificationService notificationService,
                                            NonEvacuatedEnergyInputBuilderService nonEvacuatedEnergyInputBuilderService,
                                            ExecutionService executionService,
-                                           NonEvacuatedEnergyRepository nonEvacuatedEnergyRepository, ObjectMapper objectMapper,
+                                           NonEvacuatedEnergyResultService resultService, ObjectMapper objectMapper,
                                            SensitivityAnalysisRunnerSupplier sensitivityAnalysisRunnerSupplier) {
         this.networkStoreService = Objects.requireNonNull(networkStoreService);
         this.reportService = Objects.requireNonNull(reportService);
         this.notificationService = notificationService;
         this.executionService = Objects.requireNonNull(executionService);
         this.nonEvacuatedEnergyInputBuilderService = nonEvacuatedEnergyInputBuilderService;
-        this.nonEvacuatedEnergyRepository = Objects.requireNonNull(nonEvacuatedEnergyRepository);
+        this.resultService = Objects.requireNonNull(resultService);
         this.objectMapper = Objects.requireNonNull(objectMapper);
         this.objectMapper.getSerializerProvider().setNullKeySerializer(new NullKeySerializer());
         sensitivityAnalysisFactorySupplier = sensitivityAnalysisRunnerSupplier::getRunner;
@@ -155,21 +153,21 @@ public class NonEvacuatedEnergyWorkerService {
 
         Reporter rootReporter = Reporter.NO_OP;
         Reporter reporter = Reporter.NO_OP;
-        if (context.getReportUuid() != null) {
-            final String reportType = context.getReportType();
-            String rootReporterId = context.getReporterId() == null ? reportType : context.getReporterId() + "@" + reportType;
+        if (context.getReportContext().getReportId() != null) {
+            final String reportType = context.getReportContext().getReportType();
+            String rootReporterId = context.getReportContext().getReportName() == null ? reportType : context.getReportContext().getReportName() + "@" + reportType;
             rootReporter = new ReporterModel(rootReporterId, rootReporterId);
             reporter = rootReporter.createSubReporter(reportType, reportType + " (${providerToUse})", "providerToUse", sensitivityAnalysisRunner.getName());
             // Delete any previous non evacuated energy computation logs
-            reportService.deleteReport(context.getReportUuid(), reportType);
+            reportService.deleteReport(context.getReportContext().getReportId(), reportType);
         }
 
         try {
             CompletableFuture<String> future = runAsync(context, sensitivityAnalysisRunner, reporter, resultUuid);
             return future == null ? null : future.get();
         } finally {
-            if (context.getReportUuid() != null) {
-                reportService.sendReport(context.getReportUuid(), rootReporter);
+            if (context.getReportContext().getReportId() != null) {
+                reportService.sendReport(context.getReportContext().getReportId(), rootReporter);
             }
         }
     }
@@ -948,7 +946,7 @@ public class NonEvacuatedEnergyWorkerService {
     }
 
     private void cleanResultsAndPublishCancel(UUID resultUuid, String receiver) {
-        nonEvacuatedEnergyRepository.delete(resultUuid);
+        resultService.delete(resultUuid);
         notificationService.publishStop(resultUuid, receiver, getComputationType());
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("{} (resultUuid='{}')",
@@ -969,7 +967,7 @@ public class NonEvacuatedEnergyWorkerService {
                 long nanoTime = System.nanoTime();
                 LOGGER.info("Just run in {}s", TimeUnit.NANOSECONDS.toSeconds(nanoTime - startTime.getAndSet(nanoTime)));
 
-                nonEvacuatedEnergyRepository.insert(nonEvacuatedEnergyResultContext.getResultUuid(), result, NonEvacuatedEnergyStatus.COMPLETED.name());
+                resultService.insert(nonEvacuatedEnergyResultContext.getResultUuid(), result, NonEvacuatedEnergyStatus.COMPLETED.name());
                 long finalNanoTime = System.nanoTime();
                 LOGGER.info("Stored in {}s", TimeUnit.NANOSECONDS.toSeconds(finalNanoTime - startTime.getAndSet(finalNanoTime)));
 
@@ -991,7 +989,7 @@ public class NonEvacuatedEnergyWorkerService {
                             nonEvacuatedEnergyResultContext.getRunContext().getReceiver(),
                             e.getMessage(), nonEvacuatedEnergyResultContext.getRunContext().getUserId(),
                             getComputationType());
-                    nonEvacuatedEnergyRepository.delete(nonEvacuatedEnergyResultContext.getResultUuid());
+                    resultService.delete(nonEvacuatedEnergyResultContext.getResultUuid());
                 }
             } finally {
                 futures.remove(nonEvacuatedEnergyResultContext.getResultUuid());

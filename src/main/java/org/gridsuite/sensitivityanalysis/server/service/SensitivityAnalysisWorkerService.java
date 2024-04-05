@@ -30,7 +30,6 @@ import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
-import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +65,7 @@ public class SensitivityAnalysisWorkerService {
 
     private final ReportService reportService;
 
-    private final SensitivityAnalysisResultRepository resultRepository;
+    private final SensitivityAnalysisResultService resultRepository;
 
     private final ObjectMapper objectMapper;
 
@@ -95,7 +94,7 @@ public class SensitivityAnalysisWorkerService {
                                             NotificationService notificationService,
                                             SensitivityAnalysisInputBuilderService sensitivityAnalysisInputBuilderService,
                                             ExecutionService executionService,
-                                            SensitivityAnalysisResultRepository resultRepository,
+                                            SensitivityAnalysisResultService resultRepository,
                                             ObjectMapper objectMapper,
                                             SensitivityAnalysisParametersService parametersService,
                                             SensitivityAnalysisRunnerSupplier sensitivityAnalysisRunnerSupplier,
@@ -268,7 +267,7 @@ public class SensitivityAnalysisWorkerService {
                 LOGGER.info("Just run in {}s", TimeUnit.NANOSECONDS.toSeconds(nanoTime - startTime.getAndSet(nanoTime)));
 
                 sensitivityAnalysisObserver.observe("results.save", resultContext.getRunContext(), () ->
-                    resultRepository.insert(resultContext.getResultUuid(), result, SensitivityAnalysisStatus.COMPLETED.name()));
+                    resultRepository.insert(resultContext.getResultUuid(), result, SensitivityAnalysisStatus.COMPLETED));
                 long finalNanoTime = System.nanoTime();
                 LOGGER.info("Stored in {}s", TimeUnit.NANOSECONDS.toSeconds(finalNanoTime - startTime.getAndSet(finalNanoTime)));
 

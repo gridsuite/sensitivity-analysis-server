@@ -10,6 +10,8 @@ import com.powsybl.contingency.ContingencyContext;
 import com.powsybl.contingency.ContingencyContextType;
 import com.powsybl.sensitivity.*;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
+import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisResultService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,18 +30,18 @@ import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.assertRequ
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class SensitivityAnalysisResultRepositoryTest {
+public class SensitivityAnalysisResultServiceTest {
 
     private static final SensitivityFunctionType MW_FUNC_TYPE = SensitivityFunctionType.BRANCH_ACTIVE_POWER_1;
     private static final SensitivityVariableType MW_VAR_TYPE = SensitivityVariableType.INJECTION_ACTIVE_POWER;
     private static final UUID RESULT_UUID = UUID.fromString("0c8de370-3e6c-4d72-b292-d355a97e0d5d");
 
     @Autowired
-    private SensitivityAnalysisResultRepository sensitivityAnalysisResultRepository;
+    private SensitivityAnalysisResultService sensitivityAnalysisResultService;
 
     @Before
     public void setUp() {
-        sensitivityAnalysisResultRepository.deleteAll();
+        sensitivityAnalysisResultService.deleteAll();
         SQLStatementCountValidator.reset();
     }
 
@@ -89,10 +91,10 @@ public class SensitivityAnalysisResultRepositoryTest {
         final SensitivityAnalysisResult result = new SensitivityAnalysisResult(sensitivityFactors,
             contingenciesStatuses,
             sensitivityValues);
-        sensitivityAnalysisResultRepository.insert(RESULT_UUID, result, "OK");
+        sensitivityAnalysisResultService.insert(RESULT_UUID, result, SensitivityAnalysisStatus.COMPLETED);
         SQLStatementCountValidator.reset();
 
-        sensitivityAnalysisResultRepository.delete(RESULT_UUID);
+        sensitivityAnalysisResultService.delete(RESULT_UUID);
 
         // 3 deletes for one result :
         // - its global status

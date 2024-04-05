@@ -4,10 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.sensitivityanalysis.server.repositories;
+package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityValue;
+import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractComputationResultService;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
@@ -20,6 +22,9 @@ import org.gridsuite.sensitivityanalysis.server.entities.ContingencyEmbeddable;
 import org.gridsuite.sensitivityanalysis.server.entities.GlobalStatusEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityFactorEmbeddable;
+import org.gridsuite.sensitivityanalysis.server.repositories.AnalysisResultRepository;
+import org.gridsuite.sensitivityanalysis.server.repositories.GlobalStatusRepository;
+import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -27,7 +32,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -47,10 +52,10 @@ import java.util.stream.Stream;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-@Repository
-public class SensitivityAnalysisResultRepository {
+@Service
+public class SensitivityAnalysisResultService extends AbstractComputationResultService<SensitivityAnalysisStatus> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisResultRepository.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisResultService.class);
 
     private final GlobalStatusRepository globalStatusRepository;
 
@@ -62,9 +67,9 @@ public class SensitivityAnalysisResultRepository {
 
     private static final Sort.Direction DEFAULT_SORT_DIRECTION = Sort.Direction.ASC;
 
-    public SensitivityAnalysisResultRepository(GlobalStatusRepository globalStatusRepository,
-                                               AnalysisResultRepository analysisResultRepository,
-                                               SensitivityRepository sensitivityRepository) {
+    public SensitivityAnalysisResultService(GlobalStatusRepository globalStatusRepository,
+                                            AnalysisResultRepository analysisResultRepository,
+                                            SensitivityRepository sensitivityRepository) {
         this.globalStatusRepository = globalStatusRepository;
         this.analysisResultRepository = analysisResultRepository;
         this.sensitivityRepository = sensitivityRepository;
@@ -116,22 +121,24 @@ public class SensitivityAnalysisResultRepository {
     }
 
     @Transactional
-    public void insertStatus(List<UUID> resultUuids, String status) {
+    @Override
+    public void insertStatus(List<UUID> resultUuids, SensitivityAnalysisStatus status) {
         Objects.requireNonNull(resultUuids);
         globalStatusRepository.saveAll(resultUuids.stream()
-            .map(uuid -> toStatusEntity(uuid, status)).collect(Collectors.toList()));
+            .map(uuid -> toStatusEntity(uuid, status.name())).toList());
     }
 
     @Transactional
-    public void insert(UUID resultUuid, SensitivityAnalysisResult result, String status) {
+    public void insert(UUID resultUuid, SensitivityAnalysisResult result, SensitivityAnalysisStatus status) {
         Objects.requireNonNull(resultUuid);
         if (result != null) {
             analysisResultRepository.save(toAnalysisResultEntity(resultUuid, result));
         }
-        globalStatusRepository.save(toStatusEntity(resultUuid, status));
+        globalStatusRepository.save(toStatusEntity(resultUuid, status.name()));
     }
 
     @Transactional
+    @Override
     public void delete(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         AtomicReference<Long> startTime = new AtomicReference<>();
@@ -143,17 +150,19 @@ public class SensitivityAnalysisResultRepository {
     }
 
     @Transactional
+    @Override
     public void deleteAll() {
         globalStatusRepository.deleteAll();
         analysisResultRepository.deleteAll();
     }
 
     @Transactional(readOnly = true)
-    public String findStatus(UUID resultUuid) {
+    @Override
+    public SensitivityAnalysisStatus findStatus(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
         GlobalStatusEntity globalEntity = globalStatusRepository.findByResultUuid(resultUuid);
         if (globalEntity != null) {
-            return globalEntity.getStatus();
+            return SensitivityAnalysisStatus.valueOf(globalEntity.getStatus());
         } else {
             return null;
         }

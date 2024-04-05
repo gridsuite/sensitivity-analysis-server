@@ -7,47 +7,40 @@
 package org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy;
 
 import lombok.Getter;
+import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractComputationRunContext;
+import org.gridsuite.sensitivityanalysis.server.computation.service.ReportContext;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
 
-import java.util.Objects;
 import java.util.UUID;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Getter
-public class NonEvacuatedEnergyRunContext {
-
-    private final UUID networkUuid;
-
-    private final String variantId;
-
-    private final NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData;
+public class NonEvacuatedEnergyRunContext extends AbstractComputationRunContext<NonEvacuatedEnergyInputData> {
 
     private final NonEvacuatedEnergyInputs nonEvacuatedEnergyInputs;
 
-    private final String receiver;
-
-    private final String provider;
-
-    private final UUID reportUuid;
-
-    private final String reporterId;
-
-    private final String reportType;
-
-    private final String userId;
-
-    public NonEvacuatedEnergyRunContext(UUID networkUuid, String variantId, NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData, String receiver, String provider, UUID reportUuid, String reporterId, String reportType, String userId) {
-        this.networkUuid = Objects.requireNonNull(networkUuid);
-        this.variantId = variantId;
-        this.nonEvacuatedEnergyInputData = Objects.requireNonNull(nonEvacuatedEnergyInputData);
+    public NonEvacuatedEnergyRunContext(UUID networkUuid,
+                                        String variantId,
+                                        NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData,
+                                        String receiver,
+                                        String provider,
+                                        UUID reportUuid,
+                                        String reporterId,
+                                        String reportType,
+                                        String userId) {
+        super(networkUuid,
+                variantId,
+                receiver,
+                new ReportContext(reportUuid, reporterId, reportType),
+                userId,
+                provider,
+                nonEvacuatedEnergyInputData);
         this.nonEvacuatedEnergyInputs = new NonEvacuatedEnergyInputs();
-        this.receiver = receiver;
-        this.provider = provider;
-        this.reportUuid = reportUuid;
-        this.reporterId = reporterId;
-        this.reportType = reportType;
-        this.userId = userId;
+    }
+
+    NonEvacuatedEnergyInputData getNonEvacuatedEnergyInputData() {
+        return parameters;
     }
 }
