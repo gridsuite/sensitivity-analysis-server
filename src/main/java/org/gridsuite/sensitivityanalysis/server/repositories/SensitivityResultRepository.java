@@ -40,16 +40,19 @@ public interface SensitivityResultRepository extends JpaRepository<SensitivityRe
     @Query(value = "SELECT distinct s.functionId from SensitivityResultEntity as s " +
         "where s.analysisResult.resultUuid = :resultUuid " +
         "and s.functionType = :sensitivityFunctionType " +
-        "and ((:withContingency = true and s.contingencyResult is not null ) or (:withContingency = false and s.contingencyResult is null ))")
+        "and ((:withContingency = true and s.contingencyResult is not null ) or (:withContingency = false and s.contingencyResult is null ))" +
+        "order by s.functionId")
     List<String> getDistinctFunctionIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType, boolean withContingency);
 
     @Query(value = "SELECT distinct s.variableId from SensitivityResultEntity as s " +
         "where s.analysisResult.resultUuid = :resultUuid " +
         "and s.functionType = :sensitivityFunctionType " +
-        "and ((:withContingency = true and s.contingencyResult is not null ) or (:withContingency = false and s.contingencyResult is null ))")
+        "and ((:withContingency = true and s.contingencyResult is not null ) or (:withContingency = false and s.contingencyResult is null ))" +
+        "order by s.variableId")
     List<String> getDistinctVariableIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType, boolean withContingency);
 
     @Query(value = "SELECT distinct s.contingencyResult.contingencyId from SensitivityResultEntity as s " +
-        "where s.analysisResult.resultUuid = :resultUuid and s.functionType = :sensitivityFunctionType")
+        "where s.analysisResult.resultUuid = :resultUuid and s.functionType = :sensitivityFunctionType " +
+        "order by s.contingencyResult.contingencyId")
     List<String> getDistinctContingencyIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
 }
