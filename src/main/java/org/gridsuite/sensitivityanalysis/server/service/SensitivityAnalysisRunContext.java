@@ -11,6 +11,7 @@ import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractComp
 import org.gridsuite.sensitivityanalysis.server.computation.service.ReportContext;
 import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.UUID;
 
@@ -24,7 +25,8 @@ public class SensitivityAnalysisRunContext extends AbstractComputationRunContext
 
     public SensitivityAnalysisRunContext(UUID networkUuid, String variantId,
                                          SensitivityAnalysisInputData sensitivityAnalysisInputData,
-                                         String receiver, String provider,
+                                         String receiver,
+                                         @Value("${sensitivity-analysis.default-provider}") String provider,
                                          ReportInfos reportInfos, String userId) {
         super(networkUuid,
                 variantId,
