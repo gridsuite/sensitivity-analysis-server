@@ -29,7 +29,9 @@ import java.util.UUID;
         @Index(name = "sensitivity_result_analysis_result_factor_index_idx", columnList = "analysis_result_id, factor_index"),
         @Index(name = "sensitivity_result_analysis_result_factor_index_search_idx", columnList = "analysis_result_id, factor_index, function_type, variable_type, function_id, variable_id"),
         // Greatly helps during deletion as it references itself as a foreign key
-        @Index(name = "sensitivity_result_pre_contingency_sensitivity_result_id_idx", columnList = "pre_contingency_sensitivity_result_id")
+        @Index(name = "sensitivity_result_pre_contingency_sensitivity_result_id_idx", columnList = "pre_contingency_sensitivity_result_id"),
+        // Greatly helps during contingency results deletion as it references a foreign key
+        @Index(name = "sensitivity_result_contingency_result_id_idx", columnList = "contingency_id")
     }
 )
 public class SensitivityResultEntity {
