@@ -123,4 +123,26 @@ public class SensitivityAnalysisParametersService {
     public SensitivityAnalysisParametersInfos getDefauSensitivityAnalysisParametersInfos() {
         return SensitivityAnalysisParametersInfos.builder().provider(defaultProvider).build();
     }
+
+    public SensitivityAnalysisRunContext createRunContext(UUID networkUuid, String variantId,
+                                                          String receiver,
+                                                          ReportInfos reportInfos,
+                                                          String userId,
+                                                          UUID parametersUuid,
+                                                          UUID loadFlowParametersUuid) {
+        SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersUuid != null
+                ? getParameters(parametersUuid)
+                .orElse(getDefauSensitivityAnalysisParametersInfos())
+                : getDefauSensitivityAnalysisParametersInfos();
+
+        SensitivityAnalysisInputData inputData = buildInputData(sensitivityAnalysisParametersInfos, loadFlowParametersUuid);
+
+        return new SensitivityAnalysisRunContext(networkUuid,
+                variantId,
+                receiver,
+                reportInfos,
+                userId,
+                sensitivityAnalysisParametersInfos.getProvider(),
+                inputData);
+    }
 }

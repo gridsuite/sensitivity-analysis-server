@@ -201,7 +201,9 @@ public class SensitivityAnalysisServiceTest {
             any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class)))
             .willReturn(CompletableFuture.completedFuture(result));
 
-        UUID gottenResultUuid = analysisService.runAndSaveResult(NETWORK_UUID, VARIANT_ID, null, null, null, null, null);
+        UUID gottenResultUuid = analysisService.runAndSaveResult(
+                parametersService.createRunContext(NETWORK_UUID, VARIANT_ID,
+                        null, null, null, null, null));
         assertThat(gottenResultUuid, not(nullValue()));
         assertThat(gottenResultUuid, is(resultUuid));
 
@@ -294,8 +296,9 @@ public class SensitivityAnalysisServiceTest {
             .willReturn(CompletableFuture.completedFuture(result));
 
         doReturn(getDummyInputData()).when(parametersService).buildInputData(any(), any());
-        UUID gottenResultUuid = analysisService.runAndSaveResult(NETWORK_UUID, VARIANT_ID,
-                null, null, null, null, null);
+        UUID gottenResultUuid = analysisService.runAndSaveResult(
+                parametersService.createRunContext(NETWORK_UUID, VARIANT_ID,
+                        null, null, null, null, null));
         assertThat(gottenResultUuid, not(nullValue()));
         assertThat(gottenResultUuid, is(resultUuid));
 
@@ -409,8 +412,9 @@ public class SensitivityAnalysisServiceTest {
             .willReturn(CompletableFuture.completedFuture(result));
 
         doReturn(getDummyInputData()).when(parametersService).buildInputData(any(), any());
-        UUID gottenResultUuid = analysisService.runAndSaveResult(NETWORK_UUID, VARIANT_ID,
-                null, null, null, null, null);
+        UUID gottenResultUuid = analysisService.runAndSaveResult(
+                parametersService.createRunContext(NETWORK_UUID, VARIANT_ID,
+                        null, null, null, null, null));
         assertThat(gottenResultUuid, not(nullValue()));
         assertThat(gottenResultUuid, is(resultUuid));
 

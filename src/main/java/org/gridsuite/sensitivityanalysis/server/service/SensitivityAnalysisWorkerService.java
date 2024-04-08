@@ -136,7 +136,8 @@ public class SensitivityAnalysisWorkerService {
 
         SensitivityAnalysisInputData inputData = parametersService.buildInputData(sensitivityAnalysisParametersInfos, loadFlowParametersUuid);
 
-        SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid, variantId, inputData, null, sensitivityAnalysisParametersInfos.getProvider(), reportInfos, userId);
+        SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(
+                networkUuid, variantId, null, reportInfos, userId, sensitivityAnalysisParametersInfos.getProvider(), inputData);
         try {
             return run(runContext, null);
         } catch (InterruptedException e) {

@@ -23,11 +23,13 @@ public class SensitivityAnalysisRunContext extends AbstractComputationRunContext
 
     private final SensitivityAnalysisInputs sensitivityAnalysisInputs;
 
-    public SensitivityAnalysisRunContext(UUID networkUuid, String variantId,
-                                         SensitivityAnalysisInputData sensitivityAnalysisInputData,
+    public SensitivityAnalysisRunContext(UUID networkUuid,
+                                         String variantId,
                                          String receiver,
+                                         ReportInfos reportInfos,
+                                         String userId,
                                          @Value("${sensitivity-analysis.default-provider}") String provider,
-                                         ReportInfos reportInfos, String userId) {
+                                         SensitivityAnalysisInputData sensitivityAnalysisInputData) {
         super(networkUuid,
                 variantId,
                 receiver,

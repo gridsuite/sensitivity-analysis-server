@@ -22,6 +22,8 @@ import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacua
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
+import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisParametersService;
+import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisRunContext;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService;
 import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.NonEvacuatedEnergyRunContext;
@@ -47,14 +49,17 @@ public class SensitivityAnalysisController {
     private final SensitivityAnalysisService service;
 
     private final SensitivityAnalysisWorkerService workerService;
+    private final SensitivityAnalysisParametersService securityAnalysisParametersService;
 
     private final NonEvacuatedEnergyService nonEvacuatedEnergyService;
 
     public SensitivityAnalysisController(SensitivityAnalysisService service, SensitivityAnalysisWorkerService workerService,
-                                         NonEvacuatedEnergyService nonEvacuatedEnergyService) {
+                                         NonEvacuatedEnergyService nonEvacuatedEnergyService,
+                                         SensitivityAnalysisParametersService securityAnalysisParametersService) {
         this.service = service;
         this.workerService = workerService;
         this.nonEvacuatedEnergyService = nonEvacuatedEnergyService;
+        this.securityAnalysisParametersService = securityAnalysisParametersService;
     }
 
     private static ResultsSelector getSelector(String selectorJson) throws JsonProcessingException {
@@ -100,7 +105,16 @@ public class SensitivityAnalysisController {
                                            @Parameter(description = "parametersUuid") @RequestParam(name = "parametersUuid", required = false) UUID parametersUuid,
                                            @Parameter(description = "loadFlow parameters uuid") @RequestParam(name = "loadFlowParametersUuid") UUID loadFlowParametersUuid,
                                            @RequestHeader(HEADER_USER_ID) String userId) {
-        UUID resultUuid = service.runAndSaveResult(networkUuid, variantId, receiver, new ReportInfos(reportUuid, reporterId, reportType), userId, parametersUuid, loadFlowParametersUuid);
+        SensitivityAnalysisRunContext runContext = securityAnalysisParametersService.createRunContext(
+                networkUuid,
+                variantId,
+                receiver,
+                new ReportInfos(reportUuid, reporterId, reportType),
+                userId,
+                parametersUuid,
+                loadFlowParametersUuid
+        );
+        UUID resultUuid = service.runAndSaveResult(runContext);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 

@@ -50,7 +50,7 @@ public class SensitivityAnalysisResultContext extends AbstractResultContext<Sens
         String reporterId = headers.containsKey(REPORTER_ID_HEADER) ? (String) headers.get(REPORTER_ID_HEADER) : null;
         String reportType = headers.containsKey(REPORT_TYPE_HEADER) ? (String) headers.get(REPORT_TYPE_HEADER) : null;
         SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid,
-            variantId, sensitivityAnalysisInputData, receiver, provider, new ReportInfos(reportUuid, reporterId, reportType), userId);
+            variantId, receiver, new ReportInfos(reportUuid, reporterId, reportType), userId, provider, sensitivityAnalysisInputData);
         return new SensitivityAnalysisResultContext(resultUuid, runContext);
     }
 }
