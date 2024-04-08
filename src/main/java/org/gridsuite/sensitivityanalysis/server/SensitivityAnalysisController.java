@@ -248,7 +248,19 @@ public class SensitivityAnalysisController {
                                            @Parameter(description = "loadFlow parameters uuid") @RequestParam(name = "loadFlowParametersUuid") UUID loadFlowParametersUuid,
                                            @RequestBody NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData,
                                            @RequestHeader(HEADER_USER_ID) String userId) {
-        UUID resultUuid = nonEvacuatedEnergyService.runAndSaveResult(new NonEvacuatedEnergyRunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, provider, reportUuid, reporterId, reportType, userId), loadFlowParametersUuid);
+
+        NonEvacuatedEnergyRunContext runContext = securityAnalysisParametersService.createNonEvacuatedEnergyRunContext(
+                networkUuid,
+                variantId,
+                receiver,
+                new ReportInfos(reportUuid, reporterId, reportType),
+                userId,
+                provider,
+                loadFlowParametersUuid,
+                nonEvacuatedEnergyInputData
+        );
+
+        UUID resultUuid = nonEvacuatedEnergyService.runAndSaveResult(runContext);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 

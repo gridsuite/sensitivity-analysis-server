@@ -9,6 +9,7 @@ package org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy;
 import lombok.Getter;
 import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractComputationRunContext;
 import org.gridsuite.sensitivityanalysis.server.computation.service.ReportContext;
+import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
 
 import java.util.UUID;
@@ -26,21 +27,21 @@ public class NonEvacuatedEnergyRunContext extends AbstractComputationRunContext<
                                         NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData,
                                         String receiver,
                                         String provider,
-                                        UUID reportUuid,
-                                        String reporterId,
-                                        String reportType,
+                                        ReportInfos reportInfos,
                                         String userId) {
         super(networkUuid,
                 variantId,
                 receiver,
-                new ReportContext(reportUuid, reporterId, reportType),
+                new ReportContext(reportInfos == null ? null : reportInfos.reportUuid(),
+                        reportInfos == null ? null : reportInfos.reporterId(),
+                        reportInfos == null ? null : reportInfos.reportType()),
                 userId,
                 provider,
                 nonEvacuatedEnergyInputData);
         this.nonEvacuatedEnergyInputs = new NonEvacuatedEnergyInputs();
     }
 
-    NonEvacuatedEnergyInputData getNonEvacuatedEnergyInputData() {
+    public NonEvacuatedEnergyInputData getNonEvacuatedEnergyInputData() {
         return parameters;
     }
 }

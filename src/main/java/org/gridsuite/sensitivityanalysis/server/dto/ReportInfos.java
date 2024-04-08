@@ -12,7 +12,7 @@ import java.util.UUID;
 /**
  * @author Florent MILLOT <florent.millot at rte-france.com>
  */
-public record ReportInfos(
+public record ReportInfos(// TODO : remove ?? (to RepotContext ?) but as a record ?
     UUID reportUuid,
     String reporterId,
     String reportType
