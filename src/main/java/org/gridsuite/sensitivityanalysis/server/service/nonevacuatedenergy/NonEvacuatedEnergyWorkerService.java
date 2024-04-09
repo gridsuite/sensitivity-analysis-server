@@ -63,7 +63,7 @@ import static java.util.stream.Collectors.toMap;
  */
 @Service
 public class NonEvacuatedEnergyWorkerService {
-    public static final String COMPUTATION_TYPE = "????????????"; // TODO à remplir avec ce qui a dans observer machin je suppose
+    public static final String COMPUTATION_TYPE = "Non Evacuated Energy Sensitivity analysis";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NonEvacuatedEnergyWorkerService.class);
 
