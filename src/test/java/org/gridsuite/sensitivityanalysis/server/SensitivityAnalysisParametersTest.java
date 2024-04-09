@@ -56,7 +56,7 @@ public class SensitivityAnalysisParametersTest {
 
     private static final String URI_PARAMETERS_GET_PUT = URI_PARAMETERS_BASE + "/";
 
-    private static final String PROVIDER = "provider";
+    private static final String HEHE = "provider";
 
     @Value("${sensitivity-analysis.default-provider}")
     private String defaultSensitivityAnalysisProvider;
@@ -274,7 +274,7 @@ public class SensitivityAnalysisParametersTest {
         SensitivityNodes nodes = new SensitivityNodes(List.of(equipments1), List.of(equipments2), List.of(equipments3), true);
 
         return SensitivityAnalysisParametersInfos.builder()
-            .provider(PROVIDER)
+            .provider(HEHE)
             .flowFlowSensitivityValueThreshold(90)
             .angleFlowSensitivityValueThreshold(0.6)
             .flowVoltageSensitivityValueThreshold(0.1)
@@ -288,7 +288,7 @@ public class SensitivityAnalysisParametersTest {
 
     protected SensitivityAnalysisParametersInfos buildParametersUpdate() {
         return SensitivityAnalysisParametersInfos.builder()
-            .provider(PROVIDER)
+            .provider(HEHE)
             .flowFlowSensitivityValueThreshold(91)
             .angleFlowSensitivityValueThreshold(0.7)
             .flowVoltageSensitivityValueThreshold(0.2)
