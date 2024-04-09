@@ -66,6 +66,8 @@ public class SensitivityAnalysisWorkerService {
 
     public static final int CONTINGENCY_RESULTS_BUFFER_SIZE = 128;
 
+    public static final int MAX_RESULTS_BUFFER_SIZE = 128;
+
     private final NetworkStoreService networkStoreService;
 
     private final ReportService reportService;
@@ -266,8 +268,18 @@ public class SensitivityAnalysisWorkerService {
         // That's why it works but if this changes we should set up a much more complicated mechanism
         AnalysisResultEntity analysisResult = resultRepository.insertAnalysisResult(resultUuid);
         Map<String, ContingencyResultEntity> contingencyResults = buildContingencyResults(contingencies, analysisResult);
-        Lists.partition(contingencyResults.values().stream().toList(), CONTINGENCY_RESULTS_BUFFER_SIZE).parallelStream().forEach(resultRepository::saveAllContingencyResultsAndFlush);
-        buildSensitivityResults(groupedFactors, analysisResult, contingencyResults).parallelStream().forEach(resultRepository::saveAllResultsAndFlush);
+        Lists.partition(contingencyResults.values().stream().toList(), CONTINGENCY_RESULTS_BUFFER_SIZE)
+            .parallelStream()
+            .forEach(resultRepository::saveAllContingencyResultsAndFlush);
+        // We must save all the elements with the same pre-contingency in the same batch otherwise we will have JPA errors
+        // Out of buildSensitivityResults() the list is grouped by same pre-contingency
+        // So we have to chunk the savings by a multiple of contingencyResults.size() below a certain threshold
+        Lists.partition(
+                buildSensitivityResults(groupedFactors, analysisResult, contingencyResults),
+                contingencyResults.size() * Math.max(1, MAX_RESULTS_BUFFER_SIZE / contingencyResults.size())
+            )
+            .parallelStream()
+            .forEach(resultRepository::saveAllResultsAndFlush);
         SensitivityResultWriterPersisted writer = (SensitivityResultWriterPersisted) applicationContext.getBean("sensitivityResultWriterPersisted");
         writer.start(resultUuid);
 

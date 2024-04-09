@@ -16,11 +16,13 @@ import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
@@ -54,7 +56,7 @@ class SensitivityResultsBuilderTest {
         AnalysisResultEntity analysisResult = new AnalysisResultEntity(UUID.randomUUID(), LocalDateTime.now());
         Map<String, ContingencyResultEntity> contingencyResultsByContingencyId = SensitivityResultsBuilder.buildContingencyResults(contingencies, analysisResult);
 
-        Set<SensitivityResultEntity> results = SensitivityResultsBuilder.buildSensitivityResults(groupedFactors, analysisResult, contingencyResultsByContingencyId).stream().flatMap(Collection::stream).collect(Collectors.toSet());
+        List<SensitivityResultEntity> results = SensitivityResultsBuilder.buildSensitivityResults(groupedFactors, analysisResult, contingencyResultsByContingencyId);
 
         SensitivityResultEntity preContingencySensitivityResult1 = new SensitivityResultEntity(0, SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, FUNCTION_ID_1, SensitivityVariableType.INJECTION_ACTIVE_POWER, VARIABLE_ID_1, false, analysisResult, null, null);
         SensitivityResultEntity preContingencySensitivityResult2 = new SensitivityResultEntity(4, SensitivityFunctionType.BRANCH_ACTIVE_POWER_2, FUNCTION_ID_2, SensitivityVariableType.TRANSFORMER_PHASE_1, VARIABLE_ID_2, true, analysisResult, null, null);

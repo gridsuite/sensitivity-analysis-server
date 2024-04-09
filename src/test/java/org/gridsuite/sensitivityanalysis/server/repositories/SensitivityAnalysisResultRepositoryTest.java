@@ -226,9 +226,7 @@ class SensitivityAnalysisResultRepositoryTest {
         sensitivityAnalysisResultRepository.saveAllContingencyResultsAndFlush(contingencyResultsByContingencyId.values().stream().collect(Collectors.toSet()));
         sensitivityAnalysisResultRepository.saveAllResultsAndFlush(
             SensitivityResultsBuilder.buildSensitivityResults(factors, analysisResult, contingencyResultsByContingencyId)
-                .stream()
-                .flatMap(Collection::stream)
-                .collect(Collectors.toSet()));
+        );
     }
 
     private void fillResult(UUID resultUuid) {
