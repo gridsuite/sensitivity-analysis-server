@@ -66,7 +66,7 @@ public class SensitivityResultEntity {
     @JoinColumn(name = "contingency_id")
     private ContingencyResultEntity contingencyResult;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pre_contingency_sensitivity_result_id")
     private SensitivityResultEntity preContingencySensitivityResult;
 

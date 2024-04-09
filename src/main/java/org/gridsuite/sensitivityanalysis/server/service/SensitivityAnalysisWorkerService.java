@@ -22,12 +22,14 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.sensitivity.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
+import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultWriterPersisted;
@@ -264,22 +266,8 @@ public class SensitivityAnalysisWorkerService {
         List<List<SensitivityFactor>> groupedFactors = context.getSensitivityAnalysisInputs().getFactors();
         List<Contingency> contingencies = new ArrayList<>(context.getSensitivityAnalysisInputs().getContingencies());
 
-        // WARNING : we're sure order is maintained because InputBuilderService creates List<(preContingency, contingency1, contingency2, etc...)>
-        // That's why it works but if this changes we should set up a much more complicated mechanism
-        AnalysisResultEntity analysisResult = resultRepository.insertAnalysisResult(resultUuid);
-        Map<String, ContingencyResultEntity> contingencyResults = buildContingencyResults(contingencies, analysisResult);
-        Lists.partition(contingencyResults.values().stream().toList(), CONTINGENCY_RESULTS_BUFFER_SIZE)
-            .parallelStream()
-            .forEach(resultRepository::saveAllContingencyResultsAndFlush);
-        // We must save all the elements with the same pre-contingency in the same batch otherwise we will have JPA errors
-        // Out of buildSensitivityResults() the list is grouped by same pre-contingency
-        // So we have to chunk the savings by a multiple of contingencyResults.size() below a certain threshold
-        Lists.partition(
-                buildSensitivityResults(groupedFactors, analysisResult, contingencyResults),
-                contingencyResults.size() * Math.max(1, MAX_RESULTS_BUFFER_SIZE / contingencyResults.size())
-            )
-            .parallelStream()
-            .forEach(resultRepository::saveAllResultsAndFlush);
+        saveSensitivityResults(groupedFactors, resultUuid, contingencies);
+
         SensitivityResultWriterPersisted writer = (SensitivityResultWriterPersisted) applicationContext.getBean("sensitivityResultWriterPersisted");
         writer.start(resultUuid);
 
@@ -306,6 +294,23 @@ public class SensitivityAnalysisWorkerService {
                 }
                 writer.interrupt();
             });
+    }
+
+    private void saveSensitivityResults(List<List<SensitivityFactor>> groupedFactors, UUID resultUuid, List<Contingency> contingencies) {
+        AnalysisResultEntity analysisResult = resultRepository.insertAnalysisResult(resultUuid);
+
+        Map<String, ContingencyResultEntity> contingencyResults = buildContingencyResults(contingencies, analysisResult);
+        Lists.partition(contingencyResults.values().stream().toList(), CONTINGENCY_RESULTS_BUFFER_SIZE)
+            .parallelStream()
+            .forEach(resultRepository::saveAllContingencyResultsAndFlush);
+
+        Pair<List<SensitivityResultEntity>, List<SensitivityResultEntity>> sensitivityResults = buildSensitivityResults(groupedFactors, analysisResult, contingencyResults);
+        Lists.partition(sensitivityResults.getLeft(), MAX_RESULTS_BUFFER_SIZE)
+            .parallelStream()
+            .forEach(resultRepository::saveAllResultsAndFlush);
+        Lists.partition(sensitivityResults.getRight(), MAX_RESULTS_BUFFER_SIZE)
+            .parallelStream()
+            .forEach(resultRepository::saveAllResultsAndFlush);
     }
 
     private void cancelSensitivityAnalysisAsync(SensitivityAnalysisCancelContext cancelContext) {

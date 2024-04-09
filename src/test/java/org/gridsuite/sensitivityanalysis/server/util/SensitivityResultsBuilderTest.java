@@ -56,13 +56,13 @@ class SensitivityResultsBuilderTest {
         AnalysisResultEntity analysisResult = new AnalysisResultEntity(UUID.randomUUID(), LocalDateTime.now());
         Map<String, ContingencyResultEntity> contingencyResultsByContingencyId = SensitivityResultsBuilder.buildContingencyResults(contingencies, analysisResult);
 
-        List<SensitivityResultEntity> results = SensitivityResultsBuilder.buildSensitivityResults(groupedFactors, analysisResult, contingencyResultsByContingencyId);
+        var results = SensitivityResultsBuilder.buildSensitivityResults(groupedFactors, analysisResult, contingencyResultsByContingencyId);
 
         SensitivityResultEntity preContingencySensitivityResult1 = new SensitivityResultEntity(0, SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, FUNCTION_ID_1, SensitivityVariableType.INJECTION_ACTIVE_POWER, VARIABLE_ID_1, false, analysisResult, null, null);
         SensitivityResultEntity preContingencySensitivityResult2 = new SensitivityResultEntity(4, SensitivityFunctionType.BRANCH_ACTIVE_POWER_2, FUNCTION_ID_2, SensitivityVariableType.TRANSFORMER_PHASE_1, VARIABLE_ID_2, true, analysisResult, null, null);
         List<SensitivityResultEntity> expectedResults = getExpectedSensitivityResults(analysisResult, preContingencySensitivityResult1, preContingencySensitivityResult2);
 
-        List<SensitivityResultEntity> sortedResults = results.stream().sorted(Comparator.comparingDouble(SensitivityResultEntity::getFactorIndex)).toList();
+        List<SensitivityResultEntity> sortedResults = results.getRight().stream().sorted(Comparator.comparingDouble(SensitivityResultEntity::getFactorIndex)).toList();
         IntStream.range(0, sortedResults.size()).forEach(i -> compareSensitivityResultEntities(sortedResults.get(i), expectedResults.get(i)));
     }
 

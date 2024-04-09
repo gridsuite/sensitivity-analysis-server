@@ -8,17 +8,18 @@ package org.gridsuite.sensitivityanalysis.server.util;
 
 import com.powsybl.contingency.Contingency;
 import com.powsybl.sensitivity.SensitivityFactor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
@@ -38,7 +39,7 @@ public final class SensitivityResultsBuilder {
     }
 
     public static Map<String, ContingencyResultEntity> buildContingencyResults(List<Contingency> contingencies,
-                                                                                AnalysisResultEntity analysisResult) {
+                                                                               AnalysisResultEntity analysisResult) {
         return IntStream.range(0, contingencies.size())
             .mapToObj(i -> new ContingencyResultEntity(i, contingencies.get(i).getId(), analysisResult))
             .collect(Collectors.toMap(
@@ -47,40 +48,44 @@ public final class SensitivityResultsBuilder {
             ));
     }
 
-    public static List<SensitivityResultEntity> buildSensitivityResults(List<List<SensitivityFactor>> factorsGroups,
-                                                                       AnalysisResultEntity analysisResult,
-                                                                       Map<String, ContingencyResultEntity> contingenciesById) {
+    public static Pair<List<SensitivityResultEntity>, List<SensitivityResultEntity>> buildSensitivityResults(List<List<SensitivityFactor>> factorsGroups,
+                                                                                                             AnalysisResultEntity analysisResult,
+                                                                                                             Map<String, ContingencyResultEntity> contingenciesById) {
+        List<SensitivityResultEntity> preContingencySensitivityResults = new ArrayList<>();
+        List<SensitivityResultEntity> postContingencySensitivityResults = new ArrayList<>();
+
         AtomicInteger factorCounter = new AtomicInteger(0);
-        return factorsGroups.stream()
-            .flatMap(factorsGroup -> {
-                if (factorsGroup.isEmpty()) {
-                    return Stream.empty();
-                }
+        factorsGroups.forEach(factorsGroup -> {
+            if (factorsGroup.isEmpty()) {
+                return;
+            }
 
-                // For the information we need to create the entities, all the sensitivity factors of a group are equivalent
-                // So we can keep the pre-contingency sensitivity factor.
-                SensitivityFactor preContingencySensitivityfactor = factorsGroup.get(0);
-                SensitivityResultEntity preContingencySensitivityResult = buildNSensitivityResultEntity(
+            // For the information we need to create the entities, all the sensitivity factors of a group are equivalent
+            // So we can keep the pre-contingency sensitivity factor.
+            SensitivityFactor preContingencySensitivityfactor = factorsGroup.get(0);
+            SensitivityResultEntity preContingencySensitivityResult = buildNSensitivityResultEntity(
+                analysisResult,
+                preContingencySensitivityfactor,
+                factorCounter.getAndIncrement());
+
+            preContingencySensitivityResults.add(preContingencySensitivityResult);
+
+            // No need to return preContingencySensitivityResult if it's not the only result in the group because it will be saved
+            // by JPA cascading persist operation (as it is referenced in the sensitivity results of the contingencies).
+            // But if it is the only one we should return it explicitly.
+            if (factorsGroup.size() == 1) {
+                return;
+            }
+
+            // We should skip the first element as we want to only keep contingency related factors here
+            postContingencySensitivityResults.addAll(factorsGroup.subList(1, factorsGroup.size()).stream()
+                .map(sensitivityFactor -> buildNKSensitivityResultEntity(
                     analysisResult,
-                    preContingencySensitivityfactor,
-                    factorCounter.getAndIncrement());
-
-                // No need to return preContingencySensitivityResult if it's not the only result in the group because it will be saved
-                // by JPA cascading persist operation (as it is referenced in the sensitivity results of the contingencies).
-                // But if it is the only one we should return it explicitly.
-                if (factorsGroup.size() == 1) {
-                    return Stream.of(preContingencySensitivityResult);
-                }
-
-                // We should skip the first element as we want to only keep contingency related factors here
-                return factorsGroup.subList(1, factorsGroup.size()).stream()
-                    .map(sensitivityFactor -> buildNKSensitivityResultEntity(
-                        analysisResult,
-                        preContingencySensitivityResult,
-                        contingenciesById.get(sensitivityFactor.getContingencyContext().getContingencyId()),
-                        factorCounter.getAndIncrement()));
-            })
-            .toList();
+                    preContingencySensitivityResult,
+                    contingenciesById.get(sensitivityFactor.getContingencyContext().getContingencyId()),
+                    factorCounter.getAndIncrement())).toList());
+        });
+        return Pair.of(preContingencySensitivityResults, postContingencySensitivityResults);
     }
 
     private static SensitivityResultEntity buildNSensitivityResultEntity(AnalysisResultEntity analysisResult,

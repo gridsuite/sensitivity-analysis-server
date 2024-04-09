@@ -75,7 +75,7 @@ class SensitivityAnalysisResultRepositoryTest {
         SQLStatementCountValidator.reset();
         createResult(resultUuid);
 
-        assertRequestsCount(3, 3, 0, 0);
+        assertRequestsCount(4, 4, 0, 0);
         assertThat(analysisResultRepository.findByResultUuid(resultUuid)).isNotNull();
         assertThat(contingencyResultRepository.findAll()).hasSize(2);
         assertThat(sensitivityResultRepository.findAll()).hasSize(12);
@@ -224,9 +224,9 @@ class SensitivityAnalysisResultRepositoryTest {
         var analysisResult = sensitivityAnalysisResultRepository.insertAnalysisResult(resultUuid);
         Map<String, ContingencyResultEntity> contingencyResultsByContingencyId = SensitivityResultsBuilder.buildContingencyResults(contingencies, analysisResult);
         sensitivityAnalysisResultRepository.saveAllContingencyResultsAndFlush(contingencyResultsByContingencyId.values().stream().collect(Collectors.toSet()));
-        sensitivityAnalysisResultRepository.saveAllResultsAndFlush(
-            SensitivityResultsBuilder.buildSensitivityResults(factors, analysisResult, contingencyResultsByContingencyId)
-        );
+        var results = SensitivityResultsBuilder.buildSensitivityResults(factors, analysisResult, contingencyResultsByContingencyId);
+        sensitivityAnalysisResultRepository.saveAllResultsAndFlush(results.getLeft());
+        sensitivityAnalysisResultRepository.saveAllResultsAndFlush(results.getRight());
     }
 
     private void fillResult(UUID resultUuid) {
