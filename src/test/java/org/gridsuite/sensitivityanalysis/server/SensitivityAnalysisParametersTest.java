@@ -32,6 +32,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 public class SensitivityAnalysisParametersTest {
 
     private static final String URI_PARAMETERS_BASE = "/v1/parameters";
@@ -90,10 +92,14 @@ public class SensitivityAnalysisParametersTest {
 
     @Test
     void testCreate() throws Exception {
-        SensitivityAnalysisParametersInfos parametersToCreate = buildParameters();
 
-        UUID parametersUuid = postParameters(parametersToCreate);
-        SensitivityAnalysisParametersInfos createdParameters = getParameters(parametersUuid);
+        SensitivityAnalysisParametersInfos parametersToCreate = buildParameters();
+        String parametersToCreateJson = mapper.writeValueAsString(parametersToCreate);
+
+        mockMvc.perform(post(URI_PARAMETERS_BASE).content(parametersToCreateJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+
+        SensitivityAnalysisParametersInfos createdParameters = parametersRepository.findAll().get(0).toInfos();
 
         assertThat(createdParameters).recursivelyEquals(parametersToCreate);
     }
@@ -103,9 +109,10 @@ public class SensitivityAnalysisParametersTest {
 
         SensitivityAnalysisParametersInfos defaultParameters = SensitivityAnalysisParametersInfos.builder().provider(defaultSensitivityAnalysisProvider).build();
 
-        UUID parametersUuid = postParameters();
+        mockMvc.perform(post(URI_PARAMETERS_BASE + "/default"))
+            .andExpect(status().isOk()).andReturn();
 
-        SensitivityAnalysisParametersInfos createdParameters = getParameters(parametersUuid);
+        SensitivityAnalysisParametersInfos createdParameters = parametersRepository.findAll().get(0).toInfos();
 
         assertThat(createdParameters).recursivelyEquals(defaultParameters);
     }
@@ -140,7 +147,7 @@ public class SensitivityAnalysisParametersTest {
         mockMvc.perform(put(URI_PARAMETERS_GET_PUT + parametersUuid).content(parametersToUpdateJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-        SensitivityAnalysisParametersInfos updatedParameters = getParameters(parametersUuid);
+        SensitivityAnalysisParametersInfos updatedParameters = parametersRepository.findById(parametersUuid).get().toInfos();
 
         assertThat(updatedParameters).recursivelyEquals(parametersToUpdate);
 
@@ -150,7 +157,7 @@ public class SensitivityAnalysisParametersTest {
         mockMvc.perform(put(URI_PARAMETERS_GET_PUT + parametersUuid).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-        updatedParameters = getParameters(parametersUuid);
+        updatedParameters = parametersRepository.findById(parametersUuid).get().toInfos();
 
         assertThat(updatedParameters).recursivelyEquals(defaultParameters);
     }
@@ -190,16 +197,21 @@ public class SensitivityAnalysisParametersTest {
 
     @Test
     void testDuplicate() throws Exception {
+
         SensitivityAnalysisParametersInfos parametersToCreate = buildParameters();
-        UUID parametersUuid = postParameters(parametersToCreate);
-        SensitivityAnalysisParametersInfos createdParameters = getParameters(parametersUuid);
+        String parametersToCreateJson = mapper.writeValueAsString(parametersToCreate);
+
+        mockMvc.perform(post(URI_PARAMETERS_BASE).content(parametersToCreateJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        SensitivityAnalysisParametersInfos createdParameters = parametersRepository.findAll().get(0).toInfos();
 
         mockMvc.perform(post(URI_PARAMETERS_BASE + "/" + UUID.randomUUID()))
             .andExpect(status().isNotFound());
 
-        UUID duplicatedParametersUuid = duplicateParameters(createdParameters.getUuid());
+        mockMvc.perform(post(URI_PARAMETERS_BASE + "/" + createdParameters.getUuid()))
+            .andExpect(status().isOk());
 
-        SensitivityAnalysisParametersInfos duplicatedParameters = getParameters(duplicatedParametersUuid);
+        SensitivityAnalysisParametersInfos duplicatedParameters = parametersRepository.findAll().get(1).toInfos();
         assertThat(duplicatedParameters).recursivelyEquals(createdParameters);
     }
 
@@ -242,38 +254,6 @@ public class SensitivityAnalysisParametersTest {
         assertThat(inputData.getSensitivityHVDCs().get(0)).recursivelyEquals(parametersInfos.getSensitivityHVDC().get(0));
         assertEquals(inputData.getSensitivityNodes().size(), parametersInfos.getSensitivityNodes().size());
         assertThat(inputData.getSensitivityNodes().get(0)).recursivelyEquals(parametersInfos.getSensitivityNodes().get(0));
-    }
-
-    private SensitivityAnalysisParametersInfos getParameters(UUID parameterUuid) throws Exception {
-        MvcResult mvcGetResult = mockMvc.perform(get(URI_PARAMETERS_BASE + "/{parameterUuid}", parameterUuid))
-            .andExpect(status().isOk()).andReturn();
-
-        return mapper.readValue(
-            mvcGetResult.getResponse().getContentAsString(),
-            SensitivityAnalysisParametersInfos.class);
-    }
-
-    private UUID postParameters(SensitivityAnalysisParametersInfos parametersToCreate) throws Exception {
-        String parametersToCreateJson = mapper.writeValueAsString(parametersToCreate);
-
-        MvcResult mvcPostResult = mockMvc.perform(post(URI_PARAMETERS_BASE).content(parametersToCreateJson).contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isOk()).andReturn();
-
-        return mapper.readValue(mvcPostResult.getResponse().getContentAsString(), UUID.class);
-    }
-
-    private UUID postParameters() throws Exception {
-        MvcResult mvcPostResult = mockMvc.perform(post(URI_PARAMETERS_BASE + "/default"))
-            .andExpect(status().isOk()).andReturn();
-
-        return mapper.readValue(mvcPostResult.getResponse().getContentAsString(), UUID.class);
-    }
-
-    private UUID duplicateParameters(UUID parametersUuid) throws Exception {
-        MvcResult mvcPostResult = mockMvc.perform(post(URI_PARAMETERS_BASE + "/" + parametersUuid))
-            .andExpect(status().isOk()).andReturn();
-
-        return mapper.readValue(mvcPostResult.getResponse().getContentAsString(), UUID.class);
     }
 
     /**
