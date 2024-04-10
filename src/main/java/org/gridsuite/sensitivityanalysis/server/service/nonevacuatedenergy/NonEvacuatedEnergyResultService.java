@@ -50,14 +50,14 @@ public class NonEvacuatedEnergyResultService extends AbstractComputationResultSe
     }
 
     @Transactional
-    public void insert(UUID resultUuid, String result, String status) {
+    public void insert(UUID resultUuid, String result, NonEvacuatedEnergyStatus status) {
         Objects.requireNonNull(resultUuid);
         if (result != null) {
             nonEvacuatedEnergyResultRepository.save(new NonEvacuatedEnergyResultEntity(resultUuid,
                 LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
                 result));
         }
-        nonEvacuatedEnergyStatusRepository.save(toStatusEntity(resultUuid, status));
+        nonEvacuatedEnergyStatusRepository.save(toStatusEntity(resultUuid, status.name()));
     }
 
     @Transactional

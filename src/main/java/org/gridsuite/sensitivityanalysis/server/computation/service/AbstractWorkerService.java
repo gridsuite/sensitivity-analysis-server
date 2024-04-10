@@ -17,7 +17,6 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
 import org.springframework.web.server.ResponseStatusException;
@@ -114,8 +113,7 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
 
     protected abstract AbstractResultContext<R> fromMessage(Message<String> message);
 
-    @Bean
-    public Consumer<Message<String>> consumeRun() {
+    public Consumer<Message<String>> consumeRun() { // TODO Slimane : attention j'ai retiré @Bean de cette fonction pour pouvoir faire cohabiter les deux worker service => il faut une solution durable
         return message -> {
             AbstractResultContext<R> resultContext = fromMessage(message);
             try {
@@ -155,8 +153,7 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
         };
     }
 
-    @Bean
-    public Consumer<Message<String>> consumeCancel() {
+    public Consumer<Message<String>> consumeCancel() { // TODO Slimane : attention j'ai retiré @Bean de cette fonction pour pouvoir faire cohabiter les deux worker service => il faut une solution durable
         return message -> cancelAsync(CancelContext.fromMessage(message));
     }
 

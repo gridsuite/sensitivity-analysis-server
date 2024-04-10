@@ -24,11 +24,13 @@ import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
+import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.getFailedMessage;
@@ -88,6 +90,18 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Sens
             LOGGER.error(getFailedMessage(getComputationType()), e);
             return null;
         }
+    }
+
+    @Bean
+    @Override
+    public Consumer<Message<String>> consumeRun() {
+        return super.consumeRun();
+    }
+
+    @Bean
+    @Override
+    public Consumer<Message<String>> consumeCancel() {
+        return super.consumeCancel();
     }
 
     private static SensitivityAnalysisParameters buildParameters(SensitivityAnalysisRunContext context) {
