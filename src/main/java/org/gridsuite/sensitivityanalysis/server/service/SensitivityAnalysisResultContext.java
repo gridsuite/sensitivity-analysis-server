@@ -10,7 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractResultContext;
-import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
+import org.gridsuite.sensitivityanalysis.server.computation.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;

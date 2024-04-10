@@ -173,14 +173,14 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
         AtomicReference<Reporter> rootReporter = new AtomicReference<>(Reporter.NO_OP);
         Reporter reporter = Reporter.NO_OP;
 
-        if (runContext.getReportContext().getReportId() != null) {
-            final String reportType = runContext.getReportContext().getReportType();
-            String rootReporterId = runContext.getReportContext().getReportName() == null ? reportType : runContext.getReportContext().getReportName() + "@" + reportType;
+        if (runContext.getReportInfos().reportUuid() != null) {
+            final String reportType = runContext.getReportInfos().reportType();
+            String rootReporterId = runContext.getReportInfos().reporterId() == null ? reportType : runContext.getReportInfos().reporterId() + "@" + reportType;
             rootReporter.set(new ReporterModel(rootReporterId, rootReporterId));
             reporter = rootReporter.get().createSubReporter(reportType, String.format("%s (%s)", reportType, provider), "providerToUse", provider);
             // Delete any previous computation logs
             observer.observe("report.delete",
-                    runContext, () -> reportService.deleteReport(runContext.getReportContext().getReportId(), reportType));
+                    runContext, () -> reportService.deleteReport(runContext.getReportInfos().reportUuid(), reportType));
         }
 
         preRun(runContext, reporter);
@@ -188,8 +188,8 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
         S result = future == null ? null : observer.observeRun("run", runContext, future::get);
         postRun(runContext, reporter);
 
-        if (runContext.getReportContext().getReportId() != null) {
-            observer.observe("report.send", runContext, () -> reportService.sendReport(runContext.getReportContext().getReportId(), rootReporter.get()));
+        if (runContext.getReportInfos().reportUuid() != null) {
+            observer.observe("report.send", runContext, () -> reportService.sendReport(runContext.getReportInfos().reportUuid(), rootReporter.get()));
         }
         return result;
     }

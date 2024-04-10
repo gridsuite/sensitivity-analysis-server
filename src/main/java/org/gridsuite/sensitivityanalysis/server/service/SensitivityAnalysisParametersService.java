@@ -8,6 +8,7 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.powsybl.sensitivity.SensitivityAnalysisParameters;
+import org.gridsuite.sensitivityanalysis.server.computation.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;

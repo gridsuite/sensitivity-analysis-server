@@ -30,11 +30,11 @@ public class NotificationService {
     private static final String RESULT_CATEGORY_BROKER_OUTPUT = NotificationService.class.getName() + ".output-broker-messages.result";
     private static final String FAILED_CATEGORY_BROKER_OUTPUT = NotificationService.class.getName() + ".output-broker-messages.failed";
 
-    protected static final Logger RUN_MESSAGE_LOGGER = LoggerFactory.getLogger(RUN_CATEGORY_BROKER_OUTPUT);
-    protected static final Logger CANCEL_MESSAGE_LOGGER = LoggerFactory.getLogger(CANCEL_CATEGORY_BROKER_OUTPUT);
-    protected static final Logger STOP_MESSAGE_LOGGER = LoggerFactory.getLogger(STOP_CATEGORY_BROKER_OUTPUT);
-    protected static final Logger RESULT_MESSAGE_LOGGER = LoggerFactory.getLogger(RESULT_CATEGORY_BROKER_OUTPUT);
-    protected static final Logger FAILED_MESSAGE_LOGGER = LoggerFactory.getLogger(FAILED_CATEGORY_BROKER_OUTPUT);
+    private static final Logger RUN_MESSAGE_LOGGER = LoggerFactory.getLogger(RUN_CATEGORY_BROKER_OUTPUT);
+    private static final Logger CANCEL_MESSAGE_LOGGER = LoggerFactory.getLogger(CANCEL_CATEGORY_BROKER_OUTPUT);
+    private static final Logger STOP_MESSAGE_LOGGER = LoggerFactory.getLogger(STOP_CATEGORY_BROKER_OUTPUT);
+    private static final Logger RESULT_MESSAGE_LOGGER = LoggerFactory.getLogger(RESULT_CATEGORY_BROKER_OUTPUT);
+    private static final Logger FAILED_MESSAGE_LOGGER = LoggerFactory.getLogger(FAILED_CATEGORY_BROKER_OUTPUT);
 
     public static final String HEADER_RESULT_UUID = "resultUuid";
     public static final String HEADER_RECEIVER = "receiver";
@@ -44,6 +44,7 @@ public class NotificationService {
     public static final String SENDING_MESSAGE = "Sending message : {}";
 
     protected final StreamBridge publisher;
+    protected String publishPrefix = "publish";
 
     @Autowired
     public NotificationService(StreamBridge publisher) {
@@ -52,12 +53,12 @@ public class NotificationService {
 
     public void sendRunMessage(Message<String> message) {
         RUN_MESSAGE_LOGGER.debug(SENDING_MESSAGE, message);
-        publisher.send("publishRun-out-0", message);
+        publisher.send(publishPrefix + "Run-out-0", message);
     }
 
     public void sendCancelMessage(Message<String> message) {
         CANCEL_MESSAGE_LOGGER.debug(SENDING_MESSAGE, message);
-        publisher.send("publishCancel-out-0", message);
+        publisher.send(publishPrefix + "Cancel-out-0", message);
     }
 
     @PostCompletion
@@ -68,7 +69,7 @@ public class NotificationService {
                 .setHeader(HEADER_RECEIVER, receiver)
                 .build();
         RESULT_MESSAGE_LOGGER.debug(SENDING_MESSAGE, message);
-        publisher.send("publishResult-out-0", message);
+        publisher.send(publishPrefix + "Result-out-0", message);
     }
 
     @PostCompletion
@@ -80,7 +81,7 @@ public class NotificationService {
                 .setHeader(HEADER_MESSAGE, getCancelMessage(computationLabel))
                 .build();
         STOP_MESSAGE_LOGGER.debug(SENDING_MESSAGE, message);
-        publisher.send("publishStopped-out-0", message);
+        publisher.send(publishPrefix + "Stopped-out-0", message);
     }
 
     @PostCompletion
@@ -94,7 +95,7 @@ public class NotificationService {
                 .setHeader(HEADER_USER_ID, userId)
                 .build();
         FAILED_MESSAGE_LOGGER.debug(SENDING_MESSAGE, message);
-        publisher.send("publishFailed-out-0", message);
+        publisher.send(publishPrefix + "Failed-out-0", message);
     }
 
     public static String getCancelMessage(String computationLabel) {

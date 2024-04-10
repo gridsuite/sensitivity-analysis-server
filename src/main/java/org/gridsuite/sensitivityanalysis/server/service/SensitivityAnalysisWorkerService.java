@@ -19,7 +19,7 @@ import com.powsybl.sensitivity.SensitivityAnalysis;
 import com.powsybl.sensitivity.SensitivityAnalysisParameters;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import org.gridsuite.sensitivityanalysis.server.computation.service.*;
-import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
+import org.gridsuite.sensitivityanalysis.server.computation.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;

@@ -9,6 +9,7 @@ package org.gridsuite.sensitivityanalysis.server.computation.service;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.gridsuite.sensitivityanalysis.server.computation.dto.ReportInfos;
 
 import java.util.UUID;
 
@@ -22,7 +23,7 @@ public abstract class AbstractComputationRunContext<P> {
     private final UUID networkUuid;
     private final String variantId;
     private final String receiver;
-    private final ReportContext reportContext;
+    private final ReportInfos reportInfos;
     private final String userId;
     @Setter protected String provider;
     @Setter protected P parameters;

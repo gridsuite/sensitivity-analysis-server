@@ -8,8 +8,7 @@ package org.gridsuite.sensitivityanalysis.server.service;
 
 import lombok.Getter;
 import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractComputationRunContext;
-import org.gridsuite.sensitivityanalysis.server.computation.service.ReportContext;
-import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
+import org.gridsuite.sensitivityanalysis.server.computation.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -33,9 +32,9 @@ public class SensitivityAnalysisRunContext extends AbstractComputationRunContext
         super(networkUuid,
                 variantId,
                 receiver,
-                new ReportContext(reportInfos == null ? null : reportInfos.reportUuid(),
-                        reportInfos == null ? null : reportInfos.reporterId(),
-                        reportInfos == null ? null : reportInfos.reportType()),
+                reportInfos == null ?
+                        new ReportInfos(null, null, null) :
+                        reportInfos,
                 userId,
                 provider,
                 sensitivityAnalysisInputData);
