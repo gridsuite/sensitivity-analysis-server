@@ -175,36 +175,40 @@ public class SensitivityAnalysisInputBuilderService {
         });
     }
 
-    private List<SensitivityFactor> getSensitivityFactorsFromEquipments(List<String> variableIds,
-                                                                        List<IdentifiableAttributes> monitoredEquipments,
-                                                                        List<Contingency> contingencies,
-                                                                        SensitivityFunctionType sensitivityFunctionType,
-                                                                        SensitivityVariableType sensitivityVariableType,
-                                                                        boolean variableSet) {
-        List<SensitivityFactor> result = new ArrayList<>();
+    private List<List<SensitivityFactor>> getSensitivityFactorsFromEquipments(List<String> variableIds,
+                                                                              List<IdentifiableAttributes> monitoredEquipments,
+                                                                              List<Contingency> contingencies,
+                                                                              SensitivityFunctionType sensitivityFunctionType,
+                                                                              SensitivityVariableType sensitivityVariableType,
+                                                                              boolean variableSet) {
+        return monitoredEquipments
+            .stream()
+            .flatMap(monitoredEquipment -> variableIds
+                .stream()
+                .map(varId -> {
+                    List<SensitivityFactor> factors = new ArrayList<>(contingencies.size() + 1);
+                    factors.add(new SensitivityFactor(
+                        sensitivityFunctionType,
+                        monitoredEquipment.getId(),
+                        sensitivityVariableType,
+                        varId,
+                        variableSet,
+                        ContingencyContext.none())
+                    );
 
-        monitoredEquipments.forEach(monitoredEquipment -> variableIds.forEach(varId -> {
-            result.add(new SensitivityFactor(
-                sensitivityFunctionType,
-                monitoredEquipment.getId(),
-                sensitivityVariableType,
-                varId,
-                variableSet,
-                ContingencyContext.none()));
-
-            // if contingencies are given: creation, for each monitored equipment, of one sensitivity factor for each contingency
-            contingencies.forEach(contingency ->
-                result.add(new SensitivityFactor(
-                    sensitivityFunctionType,
-                    monitoredEquipment.getId(),
-                    sensitivityVariableType,
-                    varId,
-                    variableSet,
-                    ContingencyContext.specificContingency(contingency.getId())))
-            );
-        }));
-
-        return result;
+                    // if contingencies are given: creation, for each monitored equipment, of one sensitivity factor for each contingency
+                    contingencies.forEach(contingency ->
+                        factors.add(new SensitivityFactor(
+                            sensitivityFunctionType,
+                            monitoredEquipment.getId(),
+                            sensitivityVariableType,
+                            varId,
+                            variableSet,
+                            ContingencyContext.specificContingency(contingency.getId())))
+                    );
+                    return factors;
+                }))
+            .toList();
     }
 
     private List<SensitivityVariableSet> buildSensitivityVariableSets(SensitivityAnalysisRunContext context, Network network, Reporter reporter,
@@ -268,14 +272,14 @@ public class SensitivityAnalysisInputBuilderService {
         return result;
     }
 
-    private List<SensitivityFactor> buildSensitivityFactorsFromVariablesSets(SensitivityAnalysisRunContext context,
-                                                                             Network network, Reporter reporter,
-                                                                             List<IdentifiableType> monitoredEquipmentsTypesAllowed,
-                                                                             List<EquipmentsContainer> monitoredEquipmentsContainers,
-                                                                             List<SensitivityVariableSet> variablesSets,
-                                                                             List<Contingency> contingencies,
-                                                                             SensitivityFunctionType sensitivityFunctionType,
-                                                                             SensitivityVariableType sensitivityVariableType) {
+    private List<List<SensitivityFactor>> buildSensitivityFactorsFromVariablesSets(SensitivityAnalysisRunContext context,
+                                                                                   Network network, Reporter reporter,
+                                                                                   List<IdentifiableType> monitoredEquipmentsTypesAllowed,
+                                                                                   List<EquipmentsContainer> monitoredEquipmentsContainers,
+                                                                                   List<SensitivityVariableSet> variablesSets,
+                                                                                   List<Contingency> contingencies,
+                                                                                   SensitivityFunctionType sensitivityFunctionType,
+                                                                                   SensitivityVariableType sensitivityVariableType) {
         if (variablesSets.isEmpty()) {
             return List.of();
         }
@@ -286,15 +290,15 @@ public class SensitivityAnalysisInputBuilderService {
             monitoredEquipments, contingencies, sensitivityFunctionType, sensitivityVariableType, true);
     }
 
-    private List<SensitivityFactor> buildSensitivityFactorsFromEquipments(SensitivityAnalysisRunContext context,
-                                                                          Network network, Reporter reporter,
-                                                                          List<IdentifiableType> monitoredEquipmentsTypesAllowed,
-                                                                          List<EquipmentsContainer> monitoredEquipmentsContainers,
-                                                                          List<IdentifiableType> equipmentsTypesAllowed,
-                                                                          List<EquipmentsContainer> filters,
-                                                                          List<Contingency> contingencies,
-                                                                          SensitivityFunctionType sensitivityFunctionType,
-                                                                          SensitivityVariableType sensitivityVariableType) {
+    private List<List<SensitivityFactor>> buildSensitivityFactorsFromEquipments(SensitivityAnalysisRunContext context,
+                                                                                Network network, Reporter reporter,
+                                                                                List<IdentifiableType> monitoredEquipmentsTypesAllowed,
+                                                                                List<EquipmentsContainer> monitoredEquipmentsContainers,
+                                                                                List<IdentifiableType> equipmentsTypesAllowed,
+                                                                                List<EquipmentsContainer> filters,
+                                                                                List<Contingency> contingencies,
+                                                                                SensitivityFunctionType sensitivityFunctionType,
+                                                                                SensitivityVariableType sensitivityVariableType) {
 
         List<IdentifiableAttributes> equipments = getIdentifiablesFromContainers(context, filters, equipmentsTypesAllowed, reporter).toList();
 
@@ -317,7 +321,7 @@ public class SensitivityAnalysisInputBuilderService {
                 List.of(IdentifiableType.GENERATOR, IdentifiableType.LOAD),
                 sensitivityInjectionsSet.getInjections(),
                 sensitivityInjectionsSet.getDistributionType());
-            List<SensitivityFactor> fInjectionsSet = buildSensitivityFactorsFromVariablesSets(
+            List<List<SensitivityFactor>> fInjectionsSet = buildSensitivityFactorsFromVariablesSets(
                 context, network, reporter,
                 List.of(IdentifiableType.LINE, IdentifiableType.TWO_WINDINGS_TRANSFORMER),
                 sensitivityInjectionsSet.getMonitoredBranches(),
@@ -336,7 +340,7 @@ public class SensitivityAnalysisInputBuilderService {
         List<SensitivityInjection> sensitivityInjections = context.getSensitivityAnalysisInputData().getSensitivityInjections();
         sensitivityInjections.forEach(sensitivityInjection -> {
             List<Contingency> cInjections = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityInjection.getContingencies(), reporter);
-            List<SensitivityFactor> fInjections = buildSensitivityFactorsFromEquipments(
+            List<List<SensitivityFactor>> fInjections = buildSensitivityFactorsFromEquipments(
                 context, network, reporter,
                 List.of(IdentifiableType.LINE, IdentifiableType.TWO_WINDINGS_TRANSFORMER),
                 sensitivityInjection.getMonitoredBranches(),
@@ -356,8 +360,8 @@ public class SensitivityAnalysisInputBuilderService {
         sensitivityHVDCs.forEach(sensitivityHVDC -> {
             List<Contingency> cHVDC = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityHVDC.getContingencies(), reporter);
             SensitivityFunctionType sensitivityFunctionType = sensitivityHVDC.getSensitivityType() == SensitivityAnalysisInputData.SensitivityType.DELTA_MW
-                    ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1
-                    : SensitivityFunctionType.BRANCH_CURRENT_1;
+                ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1
+                : SensitivityFunctionType.BRANCH_CURRENT_1;
             // TODO : SensitivityType.DELTA_A is not yet supported with OpenLoadFlow
             // check to be removed further ...
             if (sensitivityHVDC.getSensitivityType() == SensitivityAnalysisInputData.SensitivityType.DELTA_A &&
@@ -372,7 +376,7 @@ public class SensitivityAnalysisInputBuilderService {
                 sensitivityFunctionType = SensitivityFunctionType.BRANCH_ACTIVE_POWER_1;
             }
 
-            List<SensitivityFactor> fHVDC = buildSensitivityFactorsFromEquipments(
+            List<List<SensitivityFactor>> fHVDC = buildSensitivityFactorsFromEquipments(
                 context, network, reporter,
                 List.of(IdentifiableType.LINE, IdentifiableType.TWO_WINDINGS_TRANSFORMER),
                 sensitivityHVDC.getMonitoredBranches(),
@@ -391,7 +395,7 @@ public class SensitivityAnalysisInputBuilderService {
         List<SensitivityPST> sensitivityPSTs = context.getSensitivityAnalysisInputData().getSensitivityPSTs();
         sensitivityPSTs.forEach(sensitivityPST -> {
             List<Contingency> cPST = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityPST.getContingencies(), reporter);
-            List<SensitivityFactor> fPST = buildSensitivityFactorsFromEquipments(
+            List<List<SensitivityFactor>> fPST = buildSensitivityFactorsFromEquipments(
                 context, network, reporter,
                 List.of(IdentifiableType.LINE, IdentifiableType.TWO_WINDINGS_TRANSFORMER),
                 sensitivityPST.getMonitoredBranches(),
@@ -422,7 +426,7 @@ public class SensitivityAnalysisInputBuilderService {
         }
         sensitivityNodes.forEach(sensitivityNode -> {
             List<Contingency> cNodes = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityNode.getContingencies(), reporter);
-            List<SensitivityFactor> fNodes = buildSensitivityFactorsFromEquipments(
+            List<List<SensitivityFactor>> fNodes = buildSensitivityFactorsFromEquipments(
                 context, network, reporter,
                 List.of(IdentifiableType.VOLTAGE_LEVEL),
                 sensitivityNode.getMonitoredVoltageLevels(),
