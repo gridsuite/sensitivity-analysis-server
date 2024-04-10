@@ -808,7 +808,7 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
     }
 
     @Override
-    protected CompletableFuture<NonEvacuatedEnergyResults> getCompletableFuture(Network network, NonEvacuatedEnergyRunContext runContext, String provider, Reporter reporter) {
+    protected CompletableFuture<NonEvacuatedEnergyResults> getCompletableFuture(Network network, NonEvacuatedEnergyRunContext runContext, String provider) {
 
         SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(runContext.getProvider());
 
@@ -816,7 +816,7 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
 
         if (sensitivityAnalysisParameters.getLoadFlowParameters().isDc()) {
             // loadflow in dc mode not allowed
-            reporter.report(Report.builder()
+            runContext.getReporter().report(Report.builder()
                     .withKey("NonEvacuatedEnergyLoadFlowDcNotAllowed")
                     .withDefaultMessage("Loadflow in DC mode not allowed !!")
                     .withSeverity(TypedValue.ERROR_SEVERITY)
@@ -827,7 +827,7 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
         ComputationManager computationManager = executionService.getComputationManager();
 
         return CompletableFuture.supplyAsync(() ->
-                run(runContext, network, sensitivityAnalysisParameters, sensitivityAnalysisRunner, computationManager, reporter)
+                run(runContext, network, sensitivityAnalysisParameters, sensitivityAnalysisRunner, computationManager, runContext.getReporter())
         );
     }
 

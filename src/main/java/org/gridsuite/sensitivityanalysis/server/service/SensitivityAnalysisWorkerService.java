@@ -9,7 +9,6 @@ package org.gridsuite.sensitivityanalysis.server.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.extensions.Extension;
-import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.loadflow.LoadFlowParameters;
@@ -121,12 +120,12 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Sens
     }
 
     @Override
-    protected CompletableFuture<SensitivityAnalysisResult> getCompletableFuture(Network network, SensitivityAnalysisRunContext runContext, String provider, Reporter reporter) {
+    protected CompletableFuture<SensitivityAnalysisResult> getCompletableFuture(Network network, SensitivityAnalysisRunContext runContext, String provider) {
         SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(runContext.getProvider());
         String variantId = runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID;
 
         SensitivityAnalysisParameters sensitivityAnalysisParameters = buildParameters(runContext);
-        sensitivityAnalysisInputBuilderService.build(runContext, network, reporter);
+        sensitivityAnalysisInputBuilderService.build(runContext, network, runContext.getReporter());
 
         return sensitivityAnalysisRunner.runAsync(
                 network,
@@ -136,7 +135,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Sens
                 runContext.getSensitivityAnalysisInputs().getVariablesSets(),
                 sensitivityAnalysisParameters,
                 executionService.getComputationManager(),
-                reporter);
+                runContext.getReporter());
     }
 
     @Override

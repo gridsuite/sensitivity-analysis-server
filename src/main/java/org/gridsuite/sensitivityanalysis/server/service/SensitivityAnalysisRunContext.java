@@ -37,7 +37,8 @@ public class SensitivityAnalysisRunContext extends AbstractComputationRunContext
                         reportInfos,
                 userId,
                 provider,
-                sensitivityAnalysisInputData);
+                sensitivityAnalysisInputData,
+                null);
         this.sensitivityAnalysisInputs = new SensitivityAnalysisInputs();
     }
 
