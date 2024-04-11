@@ -87,6 +87,11 @@ public class SensitivityAnalysisResultRepository {
     }
 
     @Transactional
+    public void saveAllContingencyResultsAndFlush(Iterable<ContingencyResultEntity> contingencyResultEntities) {
+        contingencyResultRepository.saveAllAndFlush(contingencyResultEntities);
+    }
+
+    @Transactional
     public void writeSensitivityValues(UUID resultUuid, List<SensitivityValue> sensitivityValues) {
         AnalysisResultEntity analysisResult = analysisResultRepository.findByResultUuid(resultUuid);
         var rawSensitivityResults = sensitivityValues.stream().map(s -> new RawSensitivityResultEntity(

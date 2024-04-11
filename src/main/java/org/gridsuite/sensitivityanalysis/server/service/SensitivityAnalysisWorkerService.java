@@ -7,6 +7,7 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.extensions.Extension;
@@ -21,11 +22,14 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.sensitivity.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
+import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
+import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultWriterPersisted;
@@ -51,7 +55,8 @@ import java.util.function.Function;
 
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
 import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
-import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder.buildResults;
+import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder.buildContingencyResults;
+import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder.buildSensitivityResults;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -60,6 +65,10 @@ import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBu
 public class SensitivityAnalysisWorkerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisWorkerService.class);
+
+    public static final int CONTINGENCY_RESULTS_BUFFER_SIZE = 128;
+
+    public static final int MAX_RESULTS_BUFFER_SIZE = 128;
 
     private final NetworkStoreService networkStoreService;
 
@@ -196,11 +205,11 @@ public class SensitivityAnalysisWorkerService {
     private interface SensitivityAnalysisRunnerWrapper<T> {
 
         CompletableFuture<T> runAsync(SensitivityAnalysisRunContext context,
-              SensitivityAnalysis.Runner sensitivityAnalysisRunner,
-              UUID resultUuid,
-              Reporter reporter,
-              Network network,
-              SensitivityAnalysisParameters parameters);
+                                      SensitivityAnalysis.Runner sensitivityAnalysisRunner,
+                                      UUID resultUuid,
+                                      Reporter reporter,
+                                      Network network,
+                                      SensitivityAnalysisParameters parameters);
     }
 
     private <T> CompletableFuture<T> runSensitivityAnalysisAsync(SensitivityAnalysisRunContext context,
@@ -257,10 +266,7 @@ public class SensitivityAnalysisWorkerService {
         List<List<SensitivityFactor>> groupedFactors = context.getSensitivityAnalysisInputs().getFactors();
         List<Contingency> contingencies = new ArrayList<>(context.getSensitivityAnalysisInputs().getContingencies());
 
-        // WARNING : we're sure order is maintained because InputBuilderService creates List<(preContingency, contingency1, contingency2, etc...)>
-        // That's why it works but if this changes we should set up a much more complicated mechanism
-        AnalysisResultEntity analysisResult = resultRepository.insertAnalysisResult(resultUuid);
-        resultRepository.saveAllResultsAndFlush(buildResults(analysisResult, groupedFactors, contingencies));
+        saveSensitivityResults(groupedFactors, resultUuid, contingencies);
 
         SensitivityResultWriterPersisted writer = (SensitivityResultWriterPersisted) applicationContext.getBean("sensitivityResultWriterPersisted");
         writer.start(resultUuid);
@@ -288,6 +294,23 @@ public class SensitivityAnalysisWorkerService {
                 }
                 writer.interrupt();
             });
+    }
+
+    private void saveSensitivityResults(List<List<SensitivityFactor>> groupedFactors, UUID resultUuid, List<Contingency> contingencies) {
+        AnalysisResultEntity analysisResult = resultRepository.insertAnalysisResult(resultUuid);
+
+        Map<String, ContingencyResultEntity> contingencyResults = buildContingencyResults(contingencies, analysisResult);
+        Lists.partition(contingencyResults.values().stream().toList(), CONTINGENCY_RESULTS_BUFFER_SIZE)
+            .parallelStream()
+            .forEach(resultRepository::saveAllContingencyResultsAndFlush);
+
+        Pair<List<SensitivityResultEntity>, List<SensitivityResultEntity>> sensitivityResults = buildSensitivityResults(groupedFactors, analysisResult, contingencyResults);
+        Lists.partition(sensitivityResults.getLeft(), MAX_RESULTS_BUFFER_SIZE)
+            .parallelStream()
+            .forEach(resultRepository::saveAllResultsAndFlush);
+        Lists.partition(sensitivityResults.getRight(), MAX_RESULTS_BUFFER_SIZE)
+            .parallelStream()
+            .forEach(resultRepository::saveAllResultsAndFlush);
     }
 
     private void cancelSensitivityAnalysisAsync(SensitivityAnalysisCancelContext cancelContext) {
