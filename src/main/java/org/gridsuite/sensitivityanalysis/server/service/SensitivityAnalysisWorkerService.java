@@ -288,6 +288,11 @@ public class SensitivityAnalysisWorkerService {
             futures.put(resultUuid, future);
         }
         return future
+            .exceptionally(e -> {
+                LOGGER.error("Error occurred during computation", e);
+                writer.interrupt();
+                return null;
+            })
             .thenRun(() -> {
                 while (writer.isWorking()) {
                     // Nothing to do
