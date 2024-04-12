@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.platform.commons.logging.Logger;
 import org.junit.platform.commons.logging.LoggerFactory;
 import org.mockito.Mockito;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +35,7 @@ class SensitivityResultWriterPersistedTest {
 
     private final SensitivityAnalysisResultRepository analysisResultRepository = Mockito.mock(SensitivityAnalysisResultRepository.class);
 
+    @SpyBean
     private SensitivityResultWriterPersisted resultWriterPersisted;
 
     @BeforeEach
@@ -60,7 +62,7 @@ class SensitivityResultWriterPersistedTest {
             return null;
         }).when(analysisResultRepository).writeContingenciesStatus(any(), anyList());
 
-        resultWriterPersisted = new SensitivityResultWriterPersisted(analysisResultRepository);
+        resultWriterPersisted = Mockito.spy(new SensitivityResultWriterPersisted(analysisResultRepository));
     }
 
     @AfterEach
@@ -134,5 +136,45 @@ class SensitivityResultWriterPersistedTest {
         resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.);
         await().atLeast(500, TimeUnit.MILLISECONDS);
         verify(analysisResultRepository, times(0)).writeSensitivityValues(any(), anyList());
+    }
+
+    @Test
+    void testIsEndingIfErrorOccursPersistingSensitivityValues() {
+        doThrow(new RuntimeException("Error persisting sensitivity values"))
+            .when(analysisResultRepository)
+            .writeSensitivityValues(any(), anyList());
+        resultWriterPersisted.start(UUID.randomUUID());
+        IntStream.range(0, 1000).forEach(i -> resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.));
+        await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
+    }
+
+    @Test
+    void testIsEndingIfErrorOccursPersistingContingencyStatuses() {
+        doThrow(new RuntimeException("Error persisting contingency statuses"))
+            .when(analysisResultRepository)
+            .writeContingenciesStatus(any(), anyList());
+        resultWriterPersisted.start(UUID.randomUUID());
+        IntStream.range(0, 1000).forEach(i -> resultWriterPersisted.writeContingencyStatus(0, SensitivityAnalysisResult.Status.SUCCESS));
+        await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
+    }
+
+    @Test
+    void testIsEndingIfErrorOccursInTheRunMethodWhileWritingSensitivityValues() {
+        doThrow(new RuntimeException("Error in threads"))
+            .when(resultWriterPersisted)
+            .run(any(), any(), any(), any(SensitivityResultWriterPersisted.BatchedRunnable.class));
+        resultWriterPersisted.start(UUID.randomUUID());
+        IntStream.range(0, 1000).forEach(i -> resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.));
+        await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
+    }
+
+    @Test
+    void testIsEndingIfErrorOccursInTheRunMethodWhileWritingContingencyResults() {
+        doThrow(new RuntimeException("Error in threads"))
+            .when(resultWriterPersisted)
+            .run(any(), any(), any(), any(SensitivityResultWriterPersisted.BatchedRunnable.class));
+        resultWriterPersisted.start(UUID.randomUUID());
+        IntStream.range(0, 1000).forEach(i -> resultWriterPersisted.writeContingencyStatus(0, SensitivityAnalysisResult.Status.SUCCESS));
+        await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
     }
 }

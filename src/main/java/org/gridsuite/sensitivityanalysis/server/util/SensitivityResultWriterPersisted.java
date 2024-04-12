@@ -86,28 +86,44 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
     }
 
     private Runnable sensitivityValuesBatchedHandling() {
-        return () -> run(
-            sensitivityValuesThread,
-            sensitivityValuesWorking,
-            sensitivityValuesQueue,
-            sensitivityAnalysisResultRepository::writeSensitivityValues
-        );
+        return () -> {
+            try {
+                run(
+                    sensitivityValuesThread,
+                    sensitivityValuesWorking,
+                    sensitivityValuesQueue,
+                    sensitivityAnalysisResultRepository::writeSensitivityValues
+                );
+            } catch (Exception e) {
+                LOGGER.error("Unexpected error occurred during sensitivity values writing", e);
+            } finally {
+                sensitivityValuesQueue.clear();
+            }
+        };
     }
 
     private Runnable contingencyResultsBatchedHandling() {
-        return () -> run(
-            contingencyResultsThread,
-            contingencyResultsWorking,
-            contingencyResultsQueue,
-            sensitivityAnalysisResultRepository::writeContingenciesStatus
-        );
+        return () -> {
+            try {
+                run(
+                    contingencyResultsThread,
+                    contingencyResultsWorking,
+                    contingencyResultsQueue,
+                    sensitivityAnalysisResultRepository::writeContingenciesStatus
+                );
+            } catch (Exception e) {
+                LOGGER.info("Unexpected error occurred during contingency statuses writing", e);
+            } finally {
+                contingencyResultsQueue.clear();
+            }
+        };
     }
 
-    private interface BatchedRunnable<T> {
+    interface BatchedRunnable<T> {
         void run(UUID resultUuid, List<T> tasks);
     }
 
-    private <T> void run(Thread thread, AtomicBoolean isWorking, BlockingQueue<T> queue, BatchedRunnable<T> runnable) {
+    <T> void run(Thread thread, AtomicBoolean isWorking, BlockingQueue<T> queue, BatchedRunnable<T> runnable) {
         while (!thread.isInterrupted()) {
             List<T> tasks = new ArrayList<>(BUFFER_SIZE);
             while (queue.drainTo(tasks, BUFFER_SIZE) == 0) {
@@ -122,7 +138,11 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
             if (!tasks.isEmpty()) {
                 LOGGER.debug("{} - Treating {} elements in the batch", thread.getName(), tasks.size());
                 isWorking.set(true);
-                runnable.run(resultUuid, tasks);
+                try {
+                    runnable.run(resultUuid, tasks);
+                } catch (Exception e) {
+                    LOGGER.warn("Error occurred persisting results, some will be missing.", e);
+                }
                 isWorking.set(false);
             }
         }
