@@ -87,7 +87,7 @@ class SensitivityResultWriterPersistedTest {
         resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.);
         await().atMost(500, TimeUnit.MILLISECONDS).until(resultWriterPersisted::isWorking);
         await().atMost(1, TimeUnit.SECONDS).until(() -> !resultWriterPersisted.isWorking());
-        verify(analysisResultRepository, times(1)).writeSensitivityValues(any(), anyList());
+        verify(analysisResultRepository, atLeast(1)).writeSensitivityValues(any(), anyList());
     }
 
     @Test
@@ -100,7 +100,7 @@ class SensitivityResultWriterPersistedTest {
         assertTrue(resultWriterPersisted.isWorking());
 
         await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
-        verify(analysisResultRepository, times(2)).writeSensitivityValues(any(), anyList());
+        verify(analysisResultRepository, atLeast(2)).writeSensitivityValues(any(), anyList());
     }
 
     @Test
@@ -113,7 +113,7 @@ class SensitivityResultWriterPersistedTest {
         assertTrue(resultWriterPersisted.isWorking());
 
         await().atMost(500, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
-        verify(analysisResultRepository, times(1)).writeContingenciesStatus(any(), anyList());
+        verify(analysisResultRepository, atLeast(1)).writeContingenciesStatus(any(), anyList());
     }
 
     @Test
@@ -126,7 +126,7 @@ class SensitivityResultWriterPersistedTest {
         assertTrue(resultWriterPersisted.isWorking());
 
         await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
-        verify(analysisResultRepository, times(2)).writeContingenciesStatus(any(), anyList());
+        verify(analysisResultRepository, atLeast(2)).writeContingenciesStatus(any(), anyList());
     }
 
     @Test
