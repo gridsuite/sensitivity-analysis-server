@@ -108,7 +108,10 @@ public class SensitivityAnalysisResultRepository {
         contingencies.forEach(c -> {
             AnalysisResultEntity analysisResult = analysisResultRepository.findByResultUuid(resultUuid);
             ContingencyResultEntity contingencyResult = contingencyResultRepository.findByAnalysisResultAndIndex(analysisResult, c.contingencyIndex());
-            contingencyResult.setStatus(c.status());
+            Optional.ofNullable(contingencyResult).ifPresentOrElse(
+                cr -> cr.setStatus(c.status()),
+                () -> LOGGER.warn("Contingency with index {} for analysis '{}' was not found. Status will not be persisted.", c.contingencyIndex(), resultUuid)
+            );
         });
     }
 
