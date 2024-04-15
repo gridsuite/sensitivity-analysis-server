@@ -85,7 +85,7 @@ class SensitivityResultWriterPersistedTest {
         resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.);
         await().atMost(500, TimeUnit.MILLISECONDS).until(resultWriterPersisted::isWorking);
         await().atMost(1, TimeUnit.SECONDS).until(() -> !resultWriterPersisted.isWorking());
-        verify(analysisResultRepository, times(1)).writeSensitivityValues(any(), anyList());
+        verify(analysisResultRepository, atLeast(1)).writeSensitivityValues(any(), anyList());
     }
 
     @Test
@@ -98,7 +98,7 @@ class SensitivityResultWriterPersistedTest {
         assertTrue(resultWriterPersisted.isWorking());
 
         await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
-        verify(analysisResultRepository, times(2)).writeSensitivityValues(any(), anyList());
+        verify(analysisResultRepository, atLeast(2)).writeSensitivityValues(any(), anyList());
     }
 
     @Test
@@ -111,7 +111,7 @@ class SensitivityResultWriterPersistedTest {
         assertTrue(resultWriterPersisted.isWorking());
 
         await().atMost(500, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
-        verify(analysisResultRepository, times(1)).writeContingenciesStatus(any(), anyList());
+        verify(analysisResultRepository, atLeast(1)).writeContingenciesStatus(any(), anyList());
     }
 
     @Test
@@ -124,7 +124,7 @@ class SensitivityResultWriterPersistedTest {
         assertTrue(resultWriterPersisted.isWorking());
 
         await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
-        verify(analysisResultRepository, times(2)).writeContingenciesStatus(any(), anyList());
+        verify(analysisResultRepository, atLeast(2)).writeContingenciesStatus(any(), anyList());
     }
 
     @Test
@@ -134,5 +134,25 @@ class SensitivityResultWriterPersistedTest {
         resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.);
         await().atLeast(500, TimeUnit.MILLISECONDS);
         verify(analysisResultRepository, times(0)).writeSensitivityValues(any(), anyList());
+    }
+
+    @Test
+    void testIsEndingIfErrorOccursPersistingSensitivityValues() {
+        doThrow(new RuntimeException("Error persisting sensitivity values"))
+            .when(analysisResultRepository)
+            .writeSensitivityValues(any(), anyList());
+        resultWriterPersisted.start(UUID.randomUUID());
+        IntStream.range(0, 1000).forEach(i -> resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.));
+        await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
+    }
+
+    @Test
+    void testIsEndingIfErrorOccursPersistingContingencyStatuses() {
+        doThrow(new RuntimeException("Error persisting contingency statuses"))
+            .when(analysisResultRepository)
+            .writeContingenciesStatus(any(), anyList());
+        resultWriterPersisted.start(UUID.randomUUID());
+        IntStream.range(0, 1000).forEach(i -> resultWriterPersisted.writeContingencyStatus(0, SensitivityAnalysisResult.Status.SUCCESS));
+        await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
     }
 }

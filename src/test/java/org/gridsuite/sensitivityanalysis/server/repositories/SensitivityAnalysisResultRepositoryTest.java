@@ -8,10 +8,7 @@ package org.gridsuite.sensitivityanalysis.server.repositories;
 
 import com.powsybl.contingency.Contingency;
 import com.powsybl.contingency.ContingencyContext;
-import com.powsybl.sensitivity.SensitivityFactor;
-import com.powsybl.sensitivity.SensitivityFunctionType;
-import com.powsybl.sensitivity.SensitivityValue;
-import com.powsybl.sensitivity.SensitivityVariableType;
+import com.powsybl.sensitivity.*;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.apache.commons.compress.utils.Lists;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
@@ -20,6 +17,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
 import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
+import org.gridsuite.sensitivityanalysis.server.util.ContingencyResult;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +32,7 @@ import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.assertRequestsCount;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 /**
  * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
@@ -213,6 +212,18 @@ class SensitivityAnalysisResultRepositoryTest {
         assertThat(result).isNotNull();
         var sensitivities = result.getSensitivities();
         assertThat(sensitivities).isEmpty();
+    }
+
+    @Test
+    void testNotFailingWhenWritingContingencyResultThatDoesNotExist() {
+        UUID resultUuid = UUID.randomUUID();
+        createResult(resultUuid);
+
+        assertDoesNotThrow(
+            () -> sensitivityAnalysisResultRepository.writeContingenciesStatus(
+                resultUuid,
+                List.of(new ContingencyResult(10, SensitivityAnalysisResult.Status.SUCCESS)))
+        );
     }
 
     private void createResult(UUID resultUuid) {

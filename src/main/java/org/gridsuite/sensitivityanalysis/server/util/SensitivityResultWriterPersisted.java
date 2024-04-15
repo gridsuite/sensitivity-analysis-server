@@ -108,23 +108,27 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
     }
 
     private <T> void run(Thread thread, AtomicBoolean isWorking, BlockingQueue<T> queue, BatchedRunnable<T> runnable) {
-        while (!thread.isInterrupted()) {
-            List<T> tasks = new ArrayList<>(BUFFER_SIZE);
-            while (queue.drainTo(tasks, BUFFER_SIZE) == 0) {
-                try {
+        try {
+            while (!thread.isInterrupted()) {
+                List<T> tasks = new ArrayList<>(BUFFER_SIZE);
+                while (queue.drainTo(tasks, BUFFER_SIZE) == 0) {
                     Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    thread.interrupt();
-                    break;
+                }
+                LOGGER.debug("{} - Remaining {} elements in the queue", thread.getName(), queue.size());
+                if (!tasks.isEmpty()) {
+                    LOGGER.debug("{} - Treating {} elements in the batch", thread.getName(), tasks.size());
+                    isWorking.set(true);
+                    runnable.run(resultUuid, tasks);
+                    isWorking.set(false);
                 }
             }
-            LOGGER.debug("{} - Remaining {} elements in the queue", thread.getName(), queue.size());
-            if (!tasks.isEmpty()) {
-                LOGGER.debug("{} - Treating {} elements in the batch", thread.getName(), tasks.size());
-                isWorking.set(true);
-                runnable.run(resultUuid, tasks);
-                isWorking.set(false);
-            }
+        } catch (InterruptedException e) {
+            LOGGER.debug("Thread {} has been interrupted", thread.getName());
+            thread.interrupt();
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error occurred during persisting results", e);
+            queue.clear();
+            isWorking.set(false);
         }
     }
 }
