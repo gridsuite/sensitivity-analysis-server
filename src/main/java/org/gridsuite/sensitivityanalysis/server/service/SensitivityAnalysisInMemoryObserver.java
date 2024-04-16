@@ -1,12 +1,6 @@
-/**
- * Copyright (c) 2023, RTE (http://www.rte-france.com)
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
-
 package org.gridsuite.sensitivityanalysis.server.service;
 
+import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.NonNull;
@@ -14,14 +8,11 @@ import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractComp
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.springframework.stereotype.Service;
 
-/**
- * @author Florent MILLOT <florent.millot at rte-france.com>
- */
 @Service
-public class SensitivityAnalysisObserver extends AbstractComputationObserver<Void, SensitivityAnalysisInputData> {
-    private static final String COMPUTATION_TYPE = "sensi";
+public class SensitivityAnalysisInMemoryObserver extends AbstractComputationObserver<SensitivityAnalysisResult, SensitivityAnalysisInputData> {
+    private static final String COMPUTATION_TYPE = "sensiInMemory";
 
-    public SensitivityAnalysisObserver(@NonNull ObservationRegistry observationRegistry,
+    public SensitivityAnalysisInMemoryObserver(@NonNull ObservationRegistry observationRegistry,
                                        @NonNull MeterRegistry meterRegistry) {
         super(observationRegistry, meterRegistry);
     }
@@ -32,7 +23,7 @@ public class SensitivityAnalysisObserver extends AbstractComputationObserver<Voi
     }
 
     @Override
-    protected String getResultStatus(Void res) {
+    protected String getResultStatus(SensitivityAnalysisResult res) {
         return res == null ? "NOK" : "OK";
     }
 }

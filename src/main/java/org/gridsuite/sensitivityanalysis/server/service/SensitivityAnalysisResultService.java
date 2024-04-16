@@ -6,30 +6,24 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
-import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityValue;
 import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractComputationResultService;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
-import com.powsybl.sensitivity.*;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityResultFilterOptions;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityRunQueryResult;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
-import org.gridsuite.sensitivityanalysis.server.entities.ContingencyEmbeddable;
 import org.gridsuite.sensitivityanalysis.server.entities.GlobalStatusEntity;
-import org.gridsuite.sensitivityanalysis.server.entities.SensitivityEntity;
-import org.gridsuite.sensitivityanalysis.server.entities.SensitivityFactorEmbeddable;
 import org.gridsuite.sensitivityanalysis.server.repositories.AnalysisResultRepository;
+import org.gridsuite.sensitivityanalysis.server.repositories.ContingencyResultRepository;
 import org.gridsuite.sensitivityanalysis.server.repositories.GlobalStatusRepository;
-import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityRepository;
-import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
-import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
-import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
 import org.gridsuite.sensitivityanalysis.server.entities.*;
+import org.gridsuite.sensitivityanalysis.server.repositories.RawSensitivityResultRepository;
+import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityResultRepository;
 import org.gridsuite.sensitivityanalysis.server.util.ContingencyResult;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultSpecification;
 import org.slf4j.Logger;
@@ -100,16 +94,6 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
     @Transactional
     public void saveAllResultsAndFlush(Iterable<SensitivityResultEntity> results) {
         sensitivityResultRepository.saveAllAndFlush(results);
-    }
-
-    // TODO : viré par Joris, à virer ?
-    @Transactional
-    public void insert(UUID resultUuid, SensitivityAnalysisResult result, SensitivityAnalysisStatus status) {
-        Objects.requireNonNull(resultUuid);
-        if (result != null) {
-            analysisResultRepository.save(toAnalysisResultEntity(resultUuid, result));
-        }
-        globalStatusRepository.save(toStatusEntity(resultUuid, status.name()));
     }
 
     @Transactional

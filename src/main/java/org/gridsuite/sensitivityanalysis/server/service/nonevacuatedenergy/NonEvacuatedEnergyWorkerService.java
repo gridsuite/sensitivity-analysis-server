@@ -808,7 +808,7 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
     }
 
     @Override
-    protected CompletableFuture<NonEvacuatedEnergyResults> getCompletableFuture(Network network, NonEvacuatedEnergyRunContext runContext, String provider) {
+    protected CompletableFuture<NonEvacuatedEnergyResults> getCompletableFuture(Network network, NonEvacuatedEnergyRunContext runContext, String provider, UUID resultUuid) {
 
         SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(runContext.getProvider());
 

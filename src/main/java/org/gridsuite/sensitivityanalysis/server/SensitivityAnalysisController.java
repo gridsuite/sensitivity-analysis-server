@@ -50,17 +50,17 @@ public class SensitivityAnalysisController {
     private final SensitivityAnalysisService service;
 
     private final SensitivityAnalysisWorkerService workerService;
-    private final SensitivityAnalysisParametersService securityAnalysisParametersService;
+    private final SensitivityAnalysisParametersService sensitivityAnalysisParametersService;
 
     private final NonEvacuatedEnergyService nonEvacuatedEnergyService;
 
     public SensitivityAnalysisController(SensitivityAnalysisService service, SensitivityAnalysisWorkerService workerService,
                                          NonEvacuatedEnergyService nonEvacuatedEnergyService,
-                                         SensitivityAnalysisParametersService securityAnalysisParametersService) {
+                                         SensitivityAnalysisParametersService sensitivityAnalysisParametersService) {
         this.service = service;
         this.workerService = workerService;
         this.nonEvacuatedEnergyService = nonEvacuatedEnergyService;
-        this.securityAnalysisParametersService = securityAnalysisParametersService;
+        this.sensitivityAnalysisParametersService = sensitivityAnalysisParametersService;
     }
 
     private static ResultsSelector getSelector(String selectorJson) throws JsonProcessingException {
@@ -106,7 +106,7 @@ public class SensitivityAnalysisController {
                                            @Parameter(description = "parametersUuid") @RequestParam(name = "parametersUuid", required = false) UUID parametersUuid,
                                            @Parameter(description = "loadFlow parameters uuid") @RequestParam(name = "loadFlowParametersUuid") UUID loadFlowParametersUuid,
                                            @RequestHeader(HEADER_USER_ID) String userId) {
-        SensitivityAnalysisRunContext runContext = securityAnalysisParametersService.createRunContext(
+        SensitivityAnalysisRunContext runContext = sensitivityAnalysisParametersService.createRunContext(
                 networkUuid,
                 variantId,
                 receiver,
@@ -250,7 +250,7 @@ public class SensitivityAnalysisController {
                                            @RequestBody NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData,
                                            @RequestHeader(HEADER_USER_ID) String userId) {
 
-        NonEvacuatedEnergyRunContext runContext = securityAnalysisParametersService.createNonEvacuatedEnergyRunContext(
+        NonEvacuatedEnergyRunContext runContext = sensitivityAnalysisParametersService.createNonEvacuatedEnergyRunContext(
                 networkUuid,
                 variantId,
                 receiver,

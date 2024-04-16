@@ -9,7 +9,7 @@ package org.gridsuite.sensitivityanalysis.server.util;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityResultWriter;
 import com.powsybl.sensitivity.SensitivityValue;
-import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
+import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisResultService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +28,7 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
 
     public static final int BUFFER_SIZE = 512;
 
-    private final SensitivityAnalysisResultRepository sensitivityAnalysisResultRepository;
+    private final SensitivityAnalysisResultService sensitivityAnalysisResultService;
 
     private final BlockingQueue<SensitivityValue> sensitivityValuesQueue;
 
@@ -44,8 +44,8 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
 
     private UUID resultUuid;
 
-    public SensitivityResultWriterPersisted(SensitivityAnalysisResultRepository sensitivityAnalysisResultRepository) {
-        this.sensitivityAnalysisResultRepository = sensitivityAnalysisResultRepository;
+    public SensitivityResultWriterPersisted(SensitivityAnalysisResultService sensitivityAnalysisResultService) {
+        this.sensitivityAnalysisResultService = sensitivityAnalysisResultService;
         sensitivityValuesQueue = new LinkedBlockingQueue<>();
         contingencyResultsQueue = new LinkedBlockingQueue<>();
         sensitivityValuesThread = new Thread(sensitivityValuesBatchedHandling(), "sensitivityWriterThread");
@@ -90,7 +90,7 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
             sensitivityValuesThread,
             sensitivityValuesWorking,
             sensitivityValuesQueue,
-            sensitivityAnalysisResultRepository::writeSensitivityValues
+            sensitivityAnalysisResultService::writeSensitivityValues
         );
     }
 
@@ -99,7 +99,7 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
             contingencyResultsThread,
             contingencyResultsWorking,
             contingencyResultsQueue,
-            sensitivityAnalysisResultRepository::writeContingenciesStatus
+            sensitivityAnalysisResultService::writeContingenciesStatus
         );
     }
 

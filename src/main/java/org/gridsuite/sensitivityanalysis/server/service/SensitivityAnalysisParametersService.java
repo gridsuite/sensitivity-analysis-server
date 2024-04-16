@@ -165,6 +165,10 @@ public class SensitivityAnalysisParametersService {
                 .orElse(getDefauSensitivityAnalysisParametersInfos())
                 : getDefauSensitivityAnalysisParametersInfos();
 
+        if (sensitivityAnalysisParametersInfos.getProvider() == null) {
+            sensitivityAnalysisParametersInfos.setProvider(getDefauSensitivityAnalysisParametersInfos().getProvider());
+        }
+
         SensitivityAnalysisInputData inputData = buildInputData(sensitivityAnalysisParametersInfos, loadFlowParametersUuid);
 
         return new SensitivityAnalysisRunContext(networkUuid,

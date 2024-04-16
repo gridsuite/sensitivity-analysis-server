@@ -42,7 +42,7 @@ import java.util.function.Consumer;
 public abstract class AbstractWorkerService<S, R extends AbstractComputationRunContext<P>, P, T extends AbstractComputationResultService<?>> {
     protected static final Logger LOGGER = LoggerFactory.getLogger(AbstractWorkerService.class);
 
-    private final Lock lockRunAndCancel = new ReentrantLock();
+    protected final Lock lockRunAndCancel = new ReentrantLock();
     protected final ObjectMapper objectMapper;
     protected final NetworkStoreService networkStoreService;
     protected final ReportService reportService;
@@ -50,7 +50,7 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
     protected final NotificationService notificationService;
     protected final AbstractComputationObserver<S, P> observer;
     protected final Map<UUID, CompletableFuture<S>> futures = new ConcurrentHashMap<>();
-    private final Map<UUID, CancelContext> cancelComputationRequests = new ConcurrentHashMap<>();
+    protected final Map<UUID, CancelContext> cancelComputationRequests = new ConcurrentHashMap<>();
     protected final T resultService;
 
     protected AbstractWorkerService(NetworkStoreService networkStoreService,
@@ -113,7 +113,7 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
 
     protected abstract AbstractResultContext<R> fromMessage(Message<String> message);
 
-    public Consumer<Message<String>> consumeRun() { // TODO Slimane : attention j'ai retiré @Bean de cette fonction pour pouvoir faire cohabiter les deux worker service => il faut une solution durable
+    public Consumer<Message<String>> consumeRun() {
         return message -> {
             AbstractResultContext<R> resultContext = fromMessage(message);
             try {
@@ -127,15 +127,13 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
                 long nanoTime = System.nanoTime();
                 LOGGER.info("Just run in {}s", TimeUnit.NANOSECONDS.toSeconds(nanoTime - startTime.getAndSet(nanoTime)));
 
-                if (result != null) {  // result available
-                    observer.observe("results.save", resultContext.getRunContext(), () -> saveResult(network, resultContext, result));
+                observer.observe("results.save", resultContext.getRunContext(), () -> saveResult(network, resultContext, result));
 
-                    long finalNanoTime = System.nanoTime();
-                    LOGGER.info("Stored in {}s", TimeUnit.NANOSECONDS.toSeconds(finalNanoTime - startTime.getAndSet(finalNanoTime)));
+                long finalNanoTime = System.nanoTime();
+                LOGGER.info("Stored in {}s", TimeUnit.NANOSECONDS.toSeconds(finalNanoTime - startTime.getAndSet(finalNanoTime)));
 
-                    notificationService.sendResultMessage(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver());
-                    LOGGER.info("{} complete (resultUuid='{}')", getComputationType(), resultContext.getResultUuid());
-                }
+                notificationService.sendResultMessage(resultContext.getResultUuid(), resultContext.getRunContext().getReceiver());
+                LOGGER.info("{} complete (resultUuid='{}')", getComputationType(), resultContext.getResultUuid());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
@@ -153,7 +151,7 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
         };
     }
 
-    public Consumer<Message<String>> consumeCancel() { // TODO Slimane : attention j'ai retiré @Bean de cette fonction pour pouvoir faire cohabiter les deux worker service => il faut une solution durable
+    public Consumer<Message<String>> consumeCancel() {
         return message -> cancelAsync(CancelContext.fromMessage(message));
     }
 
@@ -210,7 +208,7 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
             if (resultUuid != null && cancelComputationRequests.get(resultUuid) != null) {
                 return null;
             }
-            CompletableFuture<S> future = getCompletableFuture(network, runContext, provider);
+            CompletableFuture<S> future = getCompletableFuture(network, runContext, provider, resultUuid);
             if (resultUuid != null) {
                 futures.put(resultUuid, future);
             }
@@ -222,5 +220,5 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
 
     protected abstract String getComputationType();
 
-    protected abstract CompletableFuture<S> getCompletableFuture(Network network, R runContext, String provider);
+    protected abstract CompletableFuture<S> getCompletableFuture(Network network, R runContext, String provider, UUID resultUuid);
 }

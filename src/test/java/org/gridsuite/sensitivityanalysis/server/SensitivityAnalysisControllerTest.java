@@ -16,10 +16,6 @@ import com.powsybl.loadflow.LoadFlowParameters;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import com.powsybl.sensitivity.*;
-import lombok.SneakyThrows;
-import org.gridsuite.sensitivityanalysis.server.computation.service.ReportService;
-import org.gridsuite.sensitivityanalysis.server.computation.service.UuidGeneratorService;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityFunctionType;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
@@ -31,7 +27,6 @@ import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
-import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService;
 import org.gridsuite.sensitivityanalysis.server.util.TestRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,10 +52,9 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
-import static java.util.Comparator.comparing;
-import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.*;
+import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.*;
+import static org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService.COMPUTATION_TYPE;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -447,14 +441,14 @@ class SensitivityAnalysisControllerTest {
     void stopTest() throws Exception {
         UUID resultUuid = run();
         mockMvc.perform(put("/" + VERSION + "/results/{resultUuid}/stop", resultUuid).param("receiver", "me"));
-        checkComputationFailed(resultUuid, "sensitivityanalysis.stopped", getCancelMessage(SensitivityAnalysisWorkerService.COMPUTATION_TYPE));
+        checkComputationFailed(resultUuid, "sensitivityanalysis.stopped", getCancelMessage(COMPUTATION_TYPE));
         queryResultFails(resultUuid, status().isNotFound());
     }
 
     @Test
     void runTestWithError() throws Exception {
         UUID resultUuid = run(NETWORK_ERROR_UUID);
-        checkComputationFailed(resultUuid, "sensitivityanalysis.failed", getFailedMessage(SensitivityAnalysisWorkerService.COMPUTATION_TYPE) + " : " + ERROR_MESSAGE);
+        checkComputationFailed(resultUuid, "sensitivityanalysis.failed", getFailedMessage(COMPUTATION_TYPE) + " : " + ERROR_MESSAGE);
         queryResultFails(resultUuid, status().isNotFound());
     }
 
