@@ -215,7 +215,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
         SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(
                 networkUuid, variantId, null, reportInfos, userId, provider, inputData);
         try {
-            return runInMemory(runContext, null);
+            return runInMemory(runContext);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return null;
@@ -225,7 +225,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
         }
     }
 
-    private SensitivityAnalysisResult runInMemory(SensitivityAnalysisRunContext runContext, UUID resultUuid) throws Exception {
+    private SensitivityAnalysisResult runInMemory(SensitivityAnalysisRunContext runContext) throws Exception {
         Objects.requireNonNull(runContext);
 
         LOGGER.info("Run sensitivity analysis");
@@ -244,7 +244,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
                     runContext, () -> reportService.deleteReport(runContext.getReportInfos().reportUuid(), reportType));
         }
 
-        CompletableFuture<SensitivityAnalysisResult> future = runSensitivityAnalysisAsync(runContext, sensitivityAnalysisRunner, reporter, resultUuid);
+        CompletableFuture<SensitivityAnalysisResult> future = runSensitivityAnalysisAsync(runContext, sensitivityAnalysisRunner, reporter);
         SensitivityAnalysisResult result = inMemoryObserver.observeRun("run", runContext, future::get);
 
         if (runContext.getReportInfos().reportUuid() != null) {
@@ -255,18 +255,14 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
 
     private CompletableFuture<SensitivityAnalysisResult> runSensitivityAnalysisAsync(SensitivityAnalysisRunContext context,
                                                                                      SensitivityAnalysis.Runner sensitivityAnalysisRunner,
-                                                                                     Reporter reporter,
-                                                                                     UUID resultUuid) {
+                                                                                     Reporter reporter) {
         lockRunAndCancel.lock();
         try {
-            if (resultUuid != null && cancelComputationRequests.get(resultUuid) != null) {
-                return CompletableFuture.completedFuture(null);
-            }
             SensitivityAnalysisParameters sensitivityAnalysisParameters = buildParameters(context);
             Network network = getNetwork(context.getNetworkUuid(), context.getVariantId());
             sensitivityAnalysisInputBuilderService.build(context, network, reporter);
 
-            return runAsyncInMemory(context, sensitivityAnalysisRunner, resultUuid, reporter, network, sensitivityAnalysisParameters);
+            return runAsyncInMemory(context, sensitivityAnalysisRunner, reporter, network, sensitivityAnalysisParameters);
         } finally {
             lockRunAndCancel.unlock();
         }
@@ -274,7 +270,6 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
 
     private CompletableFuture<SensitivityAnalysisResult> runAsyncInMemory(SensitivityAnalysisRunContext context,
                                                                           SensitivityAnalysis.Runner sensitivityAnalysisRunner,
-                                                                          UUID resultUuid,
                                                                           Reporter reporter,
                                                                           Network network,
                                                                           SensitivityAnalysisParameters parameters) {

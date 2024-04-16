@@ -6,7 +6,6 @@
  */
 package org.gridsuite.sensitivityanalysis.server.configuration;
 
-import org.gridsuite.sensitivityanalysis.server.repositories.*;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisResultService;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultWriterPersisted;
 import org.springframework.context.annotation.Bean;
