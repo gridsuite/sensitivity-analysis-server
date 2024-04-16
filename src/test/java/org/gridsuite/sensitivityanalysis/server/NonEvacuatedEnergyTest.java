@@ -30,6 +30,7 @@ import com.powsybl.sensitivity.SensitivityVariableSet;
 import com.powsybl.sensitivity.SensitivityVariableType;
 import com.powsybl.sensitivity.WeightedSensitivityVariable;
 import lombok.SneakyThrows;
+import org.gridsuite.sensitivityanalysis.server.configuration.RestTemplateConfig;
 import org.gridsuite.sensitivityanalysis.server.dto.EquipmentsContainer;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyContingencies;
