@@ -9,7 +9,6 @@ package org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractComputationService;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
-import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
 import org.gridsuite.sensitivityanalysis.server.computation.service.UuidGeneratorService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -25,16 +24,12 @@ import java.util.UUID;
 @Service
 public class NonEvacuatedEnergyService extends AbstractComputationService<NonEvacuatedEnergyRunContext, NonEvacuatedEnergyResultService, NonEvacuatedEnergyStatus> {
 
-    private final LoadFlowService loadFlowService;
-
     public NonEvacuatedEnergyService(@Value("${non-evacuated-energy.default-provider}") String defaultProvider,
                                      NonEvacuatedEnergyResultService resultService,
                                      UuidGeneratorService uuidGeneratorService,
                                      NonEvacuatedNotificationService notificationService,
-                                     LoadFlowService loadFlowService,
                                      ObjectMapper objectMapper) {
         super(notificationService, resultService, objectMapper, uuidGeneratorService, defaultProvider);
-        this.loadFlowService = loadFlowService;
     }
 
     @Override
