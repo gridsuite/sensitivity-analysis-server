@@ -171,7 +171,7 @@ public abstract class AbstractWorkerService<S, R extends AbstractComputationRunC
         Reporter reporter = Reporter.NO_OP;
 
         if (runContext.getReportInfos().reportUuid() != null) {
-            final String reportType = runContext.getReportInfos().reportType();
+            final String reportType = runContext.getReportInfos().computationType();
             String rootReporterId = runContext.getReportInfos().reporterId() == null ? reportType : runContext.getReportInfos().reporterId() + "@" + reportType;
             rootReporter.set(new ReporterModel(rootReporterId, rootReporterId));
             reporter = rootReporter.get().createSubReporter(reportType, String.format("%s (%s)", reportType, provider), "providerToUse", provider);
