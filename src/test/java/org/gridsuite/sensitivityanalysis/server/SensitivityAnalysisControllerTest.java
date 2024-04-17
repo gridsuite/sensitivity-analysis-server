@@ -130,6 +130,7 @@ class SensitivityAnalysisControllerTest {
 
         given(actionsService.getContingencyList(eq(CONTINGENCY1_CONTAINER_UUID), any(), any())).willReturn(List.of(CONTINGENCY1));
         given(actionsService.getContingencyList(eq(CONTINGENCY2_CONTAINER_UUID), any(), any())).willReturn(List.of(CONTINGENCY2));
+        given(actionsService.getContingencyCount(eq(List.of(CONTINGENCY1_CONTAINER_UUID, CONTINGENCY2_CONTAINER_UUID)), any(), any())).willReturn(2);
         given(filterService.getIdentifiablesFromFilters(eq(List.of(GEN1_CONTAINER_UUID, GEN2_CONTAINER_UUID)), any(), any())).willReturn(List.of(GEN1, GEN2));
         given(filterService.getIdentifiablesFromFilters(eq(List.of(BRANCH1_CONTAINER_UUID, BRANCH2_CONTAINER_UUID)), any(), any())).willReturn(List.of(BRANCH1, BRANCH2));
         given(filterService.getIdentifiablesFromFilters(eq(List.of(GEN1_CONTAINER_UUID, GEN2_CONTAINER_UUID)), any(), any())).willReturn(List.of(GEN1, GEN2));
