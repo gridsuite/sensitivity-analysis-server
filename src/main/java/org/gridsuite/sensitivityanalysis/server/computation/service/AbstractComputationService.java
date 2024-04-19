@@ -9,12 +9,13 @@ package org.gridsuite.sensitivityanalysis.server.computation.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
 /**
- * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com
+ * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
  * @param <R> run context specific to a computation, including parameters
  * @param <T> run service specific to a computation
  * @param <S> enum status specific to a computation
@@ -54,7 +55,7 @@ public abstract class AbstractComputationService<R extends AbstractComputationRu
     }
 
     public void deleteResults(List<UUID> resultUuids) {
-        if (resultUuids != null && !resultUuids.isEmpty()) {
+        if (!Objects.requireNonNullElse(resultUuids, Collections.emptyList()).isEmpty()) {
             resultUuids.forEach(resultService::delete);
         } else {
             deleteResults();

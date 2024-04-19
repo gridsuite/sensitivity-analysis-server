@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.gridsuite.sensitivityanalysis.server.SensitivityAnalysisControllerTest.DEFAULT_PROVIDER;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -78,7 +79,7 @@ class SensitivityAnalysisServiceTest {
                         "me",
                         Mockito.mock(ReportInfos.class),
                         "userId",
-                        "OpenLoadFlow",
+                        DEFAULT_PROVIDER,
                         inputData
                 ));
 

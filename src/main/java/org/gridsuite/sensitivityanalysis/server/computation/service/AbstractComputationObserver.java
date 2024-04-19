@@ -13,7 +13,7 @@ import io.micrometer.observation.ObservationRegistry;
 import lombok.NonNull;
 
 /**
- * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com
+ * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
  * @param <R> powsybl Result class specific to the computation
  * @param <P> powsybl and gridsuite parameters specifics to the computation
  */

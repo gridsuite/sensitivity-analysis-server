@@ -33,7 +33,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 /**
- * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com
+ * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
  * @param <S> powsybl Result class specific to the computation
  * @param <R> Run context specific to a computation, including parameters
  * @param <P> powsybl and gridsuite Parameters specifics to the computation

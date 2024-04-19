@@ -71,12 +71,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest
 @ContextHierarchy({@ContextConfiguration(classes = {SensitivityAnalysisApplication.class, TestChannelBinderConfiguration.class})})
-class SensitivityAnalysisControllerTest {
+public class SensitivityAnalysisControllerTest {
     public static final String MONITORED_BRANCHES_KEY = "monitoredBranchs";
     public static final String INJECTIONS_KEY = "injections";
     public static final String CONTINGENCIES_KEY = "contingencies";
     private static final int TIMEOUT = 1000;
     private static final String ERROR_MESSAGE = "Error message test";
+    public static final String DEFAULT_PROVIDER = "OpenLoadFlow";
 
     private static final UUID NETWORK_UUID = UUID.randomUUID();
     private static final UUID NETWORK_ERROR_UUID = UUID.randomUUID();
@@ -466,7 +467,7 @@ class SensitivityAnalysisControllerTest {
         mockMvc.perform(get("/" + VERSION + "/default-provider"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8)))
-            .andExpect(content().string("OpenLoadFlow"))
+            .andExpect(content().string(DEFAULT_PROVIDER))
             .andReturn();
     }
 

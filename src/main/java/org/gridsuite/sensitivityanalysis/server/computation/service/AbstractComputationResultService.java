@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com
+ * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
  * @param <S> status specific to the computation
  */
 public abstract class AbstractComputationResultService<S> {

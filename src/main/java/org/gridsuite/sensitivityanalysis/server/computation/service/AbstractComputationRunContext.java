@@ -15,7 +15,7 @@ import org.gridsuite.sensitivityanalysis.server.computation.dto.ReportInfos;
 import java.util.UUID;
 
 /**
- * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com
+ * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
  * @param <P> parameters structure specific to the computation
  */
 @Getter

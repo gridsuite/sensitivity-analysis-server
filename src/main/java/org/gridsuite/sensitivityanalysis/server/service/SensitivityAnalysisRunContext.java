@@ -32,9 +32,7 @@ public class SensitivityAnalysisRunContext extends AbstractComputationRunContext
         super(networkUuid,
                 variantId,
                 receiver,
-                reportInfos == null ?
-                        new ReportInfos(null, null, null) :
-                        reportInfos,
+                reportInfos != null ? reportInfos : new ReportInfos(null, null, null),
                 userId,
                 provider,
                 sensitivityAnalysisInputData,

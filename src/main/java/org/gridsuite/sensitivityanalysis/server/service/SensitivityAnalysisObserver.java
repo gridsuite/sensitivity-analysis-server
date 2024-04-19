@@ -33,6 +33,6 @@ public class SensitivityAnalysisObserver extends AbstractComputationObserver<Voi
 
     @Override
     protected String getResultStatus(Void res) {
-        return res == null ? "NOK" : "OK";
+        return "OK";
     }
 }

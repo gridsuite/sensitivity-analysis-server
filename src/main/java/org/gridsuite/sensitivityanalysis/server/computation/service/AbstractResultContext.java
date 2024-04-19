@@ -20,7 +20,7 @@ import java.util.UUID;
 import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.*;
 
 /**
- * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com
+ * @author Mathieu Deharbe <mathieu.deharbe at rte-france.com>
  * @param <R> run context specific to a computation, including parameters
  */
 @Getter
