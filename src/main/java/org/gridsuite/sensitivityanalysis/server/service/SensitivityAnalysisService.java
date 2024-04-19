@@ -100,7 +100,7 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
         Map<String, List<UUID>> ids = factorIds.getIds();
         long contAttributesCountTemp = 1L;
         if (ids.containsKey(CONTINGENCIES) && !ids.get(CONTINGENCIES).isEmpty()) {
-            int sumContingencyListSizes = getContingenciesCount(ids.get(CONTINGENCIES), networkUuid, variantId);
+            int sumContingencyListSizes = actionsService.getContingencyCount(ids.get(CONTINGENCIES), networkUuid, variantId);
             sumContingencyListSizes = Math.max(sumContingencyListSizes, 1);
             contAttributesCountTemp *= sumContingencyListSizes;
             ids.remove(CONTINGENCIES);
