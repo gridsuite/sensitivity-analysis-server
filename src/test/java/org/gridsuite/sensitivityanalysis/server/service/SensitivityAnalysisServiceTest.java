@@ -6,10 +6,11 @@ package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.powsybl.sensitivity.SensitivityFunctionType;
 import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
+import org.gridsuite.sensitivityanalysis.server.computation.dto.ReportInfos;
+import org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
-import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -24,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.gridsuite.sensitivityanalysis.server.SensitivityAnalysisControllerTest.DEFAULT_PROVIDER;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,9 +48,9 @@ class SensitivityAnalysisServiceTest {
     private SensitivityAnalysisParametersService parametersService;
 
     @MockBean
-    private SensitivityAnalysisResultRepository sensitivityAnalysisResultRepository;
+    private SensitivityAnalysisResultService sensitivityAnalysisResultService;
 
-    @MockBean
+    @MockBean(name = "notificationService")
     private NotificationService notificationService;
 
     @BeforeEach
@@ -65,15 +67,29 @@ class SensitivityAnalysisServiceTest {
 
     @Test
     void testRunAndSave() {
-        analysisService.runAndSaveResult(UUID.randomUUID(), "variantId", "me", Mockito.mock(ReportInfos.class), "userId", UUID.randomUUID(), UUID.randomUUID());
+        SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersService.getParameters(UUID.randomUUID())
+                .orElse(parametersService.getDefauSensitivityAnalysisParametersInfos());
 
-        verify(sensitivityAnalysisResultRepository, times(1)).insertStatus(any(), eq(SensitivityAnalysisStatus.RUNNING.name()));
-        verify(notificationService, times(1)).sendSensitivityAnalysisRunMessage(any());
+        SensitivityAnalysisInputData inputData = parametersService.buildInputData(sensitivityAnalysisParametersInfos, UUID.randomUUID());
+
+        analysisService.runAndSaveResult(
+                new SensitivityAnalysisRunContext(
+                        UUID.randomUUID(),
+                        "variantId",
+                        "me",
+                        Mockito.mock(ReportInfos.class),
+                        "userId",
+                        DEFAULT_PROVIDER,
+                        inputData
+                ));
+
+        verify(sensitivityAnalysisResultService, times(1)).insertStatus(any(), eq(SensitivityAnalysisStatus.RUNNING));
+        verify(notificationService, times(1)).sendRunMessage(any());
     }
 
     @Test
     void testExportCsvInN() throws Exception {
-        given(sensitivityAnalysisResultRepository.getRunResult(any(), any())).willReturn(
+        given(sensitivityAnalysisResultService.getRunResult(any(), any())).willReturn(
             SensitivityRunQueryResult.builder()
                 .resultTab(ResultTab.N)
                 .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
@@ -114,7 +130,7 @@ class SensitivityAnalysisServiceTest {
 
     @Test
     void testExportCsvInNK() throws Exception {
-        given(sensitivityAnalysisResultRepository.getRunResult(any(), any())).willReturn(
+        given(sensitivityAnalysisResultService.getRunResult(any(), any())).willReturn(
             getDefaultQueryBuilder()
                 .resultTab(ResultTab.N_K)
                 .sensitivities(List.of(

@@ -11,84 +11,51 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.extensions.Extension;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.iidm.network.*;
 import com.powsybl.loadflow.LoadFlowParameters;
 import com.powsybl.loadflow.LoadFlowProvider;
 import com.powsybl.network.store.client.NetworkStoreService;
-import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.sensitivity.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractResultContext;
+import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractWorkerService;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStageDefinition;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStagesSelection;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.*;
-import org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy.NonEvacuatedEnergyRepository;
-import org.gridsuite.sensitivityanalysis.server.service.NotificationService;
-import org.gridsuite.sensitivityanalysis.server.service.ReportService;
-import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisCancelContext;
-import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisExecutionService;
+import org.gridsuite.sensitivityanalysis.server.computation.service.ReportService;
+import org.gridsuite.sensitivityanalysis.server.computation.service.ExecutionService;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.lang.Math.abs;
 import static java.util.stream.Collectors.toMap;
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.CANCEL_MESSAGE;
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.FAIL_MESSAGE;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
-public class NonEvacuatedEnergyWorkerService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(NonEvacuatedEnergyWorkerService.class);
-
-    private final NetworkStoreService networkStoreService;
-
-    private final ReportService reportService;
-
-    private final NonEvacuatedEnergyRepository nonEvacuatedEnergyRepository;
-
-    private final ObjectMapper objectMapper;
-
-    private final Map<UUID, CompletableFuture<String>> futures = new ConcurrentHashMap<>();
-
-    private final Map<UUID, SensitivityAnalysisCancelContext> cancelComputationRequests = new ConcurrentHashMap<>();
-
-    private final Set<UUID> runRequests = Sets.newConcurrentHashSet();
-
-    private final Lock lockRunAndCancel = new ReentrantLock();
-
-    private final NotificationService notificationService;
-
-    private final SensitivityAnalysisExecutionService sensitivityAnalysisExecutionService;
+public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEvacuatedEnergyResults, NonEvacuatedEnergyRunContext, NonEvacuatedEnergyInputData, NonEvacuatedEnergyResultService> {
+    public static final String COMPUTATION_TYPE = "Non Evacuated Energy Sensitivity analysis";
 
     private final NonEvacuatedEnergyInputBuilderService nonEvacuatedEnergyInputBuilderService;
 
@@ -116,64 +83,21 @@ public class NonEvacuatedEnergyWorkerService {
         }
     }
 
-    public NonEvacuatedEnergyWorkerService(NetworkStoreService networkStoreService, ReportService reportService, NotificationService notificationService,
+    public NonEvacuatedEnergyWorkerService(NetworkStoreService networkStoreService, ReportService reportService,
+                                           NonEvacuatedNotificationService notificationService,
                                            NonEvacuatedEnergyInputBuilderService nonEvacuatedEnergyInputBuilderService,
-                                           SensitivityAnalysisExecutionService sensitivityAnalysisExecutionService,
-                                           NonEvacuatedEnergyRepository nonEvacuatedEnergyRepository, ObjectMapper objectMapper,
-                                           SensitivityAnalysisRunnerSupplier sensitivityAnalysisRunnerSupplier) {
-        this.networkStoreService = Objects.requireNonNull(networkStoreService);
-        this.reportService = Objects.requireNonNull(reportService);
-        this.notificationService = notificationService;
-        this.sensitivityAnalysisExecutionService = Objects.requireNonNull(sensitivityAnalysisExecutionService);
+                                           ExecutionService executionService,
+                                           NonEvacuatedEnergyResultService resultService, ObjectMapper objectMapper,
+                                           SensitivityAnalysisRunnerSupplier sensitivityAnalysisRunnerSupplier,
+                                           NonEvacuatedEnergyObserver observer) {
+        super(networkStoreService, notificationService, reportService, resultService, executionService, observer, objectMapper);
         this.nonEvacuatedEnergyInputBuilderService = nonEvacuatedEnergyInputBuilderService;
-        this.nonEvacuatedEnergyRepository = Objects.requireNonNull(nonEvacuatedEnergyRepository);
-        this.objectMapper = Objects.requireNonNull(objectMapper);
         this.objectMapper.getSerializerProvider().setNullKeySerializer(new NullKeySerializer());
         sensitivityAnalysisFactorySupplier = sensitivityAnalysisRunnerSupplier::getRunner;
     }
 
     public void setSensitivityAnalysisFactorySupplier(Function<String, SensitivityAnalysis.Runner> sensitivityAnalysisFactorySupplier) {
         this.sensitivityAnalysisFactorySupplier = Objects.requireNonNull(sensitivityAnalysisFactorySupplier);
-    }
-
-    private Network getNetwork(UUID networkUuid, String variantId) {
-        Network network;
-        try {
-            network = networkStoreService.getNetwork(networkUuid, PreloadingStrategy.COLLECTION);
-            String variant = StringUtils.isBlank(variantId) ? VariantManagerConstants.INITIAL_VARIANT_ID : variantId;
-            network.getVariantManager().setWorkingVariant(variant);
-        } catch (PowsyblException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
-        return network;
-    }
-
-    private String run(NonEvacuatedEnergyRunContext context, UUID resultUuid) throws ExecutionException, InterruptedException {
-        Objects.requireNonNull(context);
-
-        LOGGER.info("Run non evacuated energy sensitivity analysis");
-
-        SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(context.getProvider());
-
-        Reporter rootReporter = Reporter.NO_OP;
-        Reporter reporter = Reporter.NO_OP;
-        if (context.getReportUuid() != null) {
-            final String reportType = context.getReportType();
-            String rootReporterId = context.getReporterId() == null ? reportType : context.getReporterId() + "@" + reportType;
-            rootReporter = new ReporterModel(rootReporterId, rootReporterId);
-            reporter = rootReporter.createSubReporter(reportType, reportType + " (${providerToUse})", "providerToUse", sensitivityAnalysisRunner.getName());
-            // Delete any previous non evacuated energy computation logs
-            reportService.deleteReport(context.getReportUuid(), reportType);
-        }
-
-        try {
-            CompletableFuture<String> future = runAsync(context, sensitivityAnalysisRunner, reporter, resultUuid);
-            return future == null ? null : future.get();
-        } finally {
-            if (context.getReportUuid() != null) {
-                reportService.sendReport(context.getReportUuid(), rootReporter);
-            }
-        }
     }
 
     private static SensitivityAnalysisParameters buildParameters(NonEvacuatedEnergyRunContext context) {
@@ -783,14 +707,12 @@ public class NonEvacuatedEnergyWorkerService {
         pInitByEnergySource.forEach((key, value) -> context.getNonEvacuatedEnergyInputs().getGeneratorsPInitByEnergySource().put(key, value.get()));
     }
 
-    private String run(NonEvacuatedEnergyRunContext context,
+    private NonEvacuatedEnergyResults run(NonEvacuatedEnergyRunContext context,
                        Network network,
                        SensitivityAnalysisParameters sensitivityAnalysisParameters,
                        SensitivityAnalysis.Runner sensitivityAnalysisRunner,
                        ComputationManager computationManager,
                        Reporter reporter) {
-        String result = null;
-
         // build the contingencies, variable sets and sensitivity factors used as input of the sensitivity analysis computation
         nonEvacuatedEnergyInputBuilderService.build(context, network, reporter);
 
@@ -882,117 +804,61 @@ public class NonEvacuatedEnergyWorkerService {
         // Build the non evacuated energy stage summary results from all stage detail results calculated
         buildSummaryResults(nonEvacuatedEnergyResults);
 
-        try {
-            result = objectMapper.writeValueAsString(nonEvacuatedEnergyResults);
-        } catch (JsonProcessingException e) {
-            LOGGER.error(e.toString());
-        }
-
-        return result;
+        return nonEvacuatedEnergyResults;
     }
 
-    private CompletableFuture<String> runAsync(NonEvacuatedEnergyRunContext context,
-                                               SensitivityAnalysis.Runner sensitivityAnalysisRunner,
-                                               Reporter reporter,
-                                               UUID resultUuid) {
-        lockRunAndCancel.lock();
-        try {
-            if (resultUuid != null && cancelComputationRequests.get(resultUuid) != null) {
-                return null;
-            }
-            SensitivityAnalysisParameters sensitivityAnalysisParameters = buildParameters(context);
+    @Override
+    protected CompletableFuture<NonEvacuatedEnergyResults> getCompletableFuture(Network network, NonEvacuatedEnergyRunContext runContext, String provider, UUID resultUuid) {
 
-            if (sensitivityAnalysisParameters.getLoadFlowParameters().isDc()) {
-                // loadflow in dc mode not allowed
-                reporter.report(Report.builder()
+        SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(runContext.getProvider());
+
+        SensitivityAnalysisParameters sensitivityAnalysisParameters = buildParameters(runContext);
+
+        if (sensitivityAnalysisParameters.getLoadFlowParameters().isDc()) {
+            // loadflow in dc mode not allowed
+            runContext.getReporter().report(Report.builder()
                     .withKey("NonEvacuatedEnergyLoadFlowDcNotAllowed")
                     .withDefaultMessage("Loadflow in DC mode not allowed !!")
                     .withSeverity(TypedValue.ERROR_SEVERITY)
                     .build());
-                throw new PowsyblException("Loadflow in DC mode not allowed !!");
-            }
-
-            Network network = getNetwork(context.getNetworkUuid(), context.getVariantId());
-            ComputationManager computationManager = sensitivityAnalysisExecutionService.getLocalComputationManager();
-
-            CompletableFuture<String> future = CompletableFuture.supplyAsync(() ->
-                run(context, network, sensitivityAnalysisParameters, sensitivityAnalysisRunner, computationManager, reporter)
-            );
-
-            if (resultUuid != null) {
-                futures.put(resultUuid, future);
-            }
-            return future;
-        } finally {
-            lockRunAndCancel.unlock();
+            throw new PowsyblException("Loadflow in DC mode not allowed !!");
         }
+
+        ComputationManager computationManager = executionService.getComputationManager();
+
+        return CompletableFuture.supplyAsync(() ->
+                run(runContext, network, sensitivityAnalysisParameters, sensitivityAnalysisRunner, computationManager, runContext.getReporter())
+        );
     }
 
-    private void cancelAsync(SensitivityAnalysisCancelContext cancelContext) {
-        lockRunAndCancel.lock();
+    @Override
+    protected String getComputationType() {
+        return COMPUTATION_TYPE;
+    }
+
+    @Override
+    protected void saveResult(Network network, AbstractResultContext<NonEvacuatedEnergyRunContext> resultContext, NonEvacuatedEnergyResults result) {
+        String resultStr = null;
         try {
-            cancelComputationRequests.put(cancelContext.getResultUuid(), cancelContext);
-
-            // find the completableFuture associated with result uuid
-            CompletableFuture<String> future = futures.get(cancelContext.getResultUuid());
-            if (future != null) {
-                future.cancel(true);  // cancel computation in progress
-            }
-            cleanResultsAndPublishCancel(cancelContext.getResultUuid(), cancelContext.getReceiver());
-        } finally {
-            lockRunAndCancel.unlock();
+            resultStr = objectMapper.writeValueAsString(result);
+        } catch (JsonProcessingException e) {
+            LOGGER.error(e.toString());
         }
+        resultService.insert(resultContext.getResultUuid(), resultStr, NonEvacuatedEnergyStatus.COMPLETED);
     }
 
-    private void cleanResultsAndPublishCancel(UUID resultUuid, String receiver) {
-        nonEvacuatedEnergyRepository.delete(resultUuid);
-        notificationService.publishNonEvacuatedEnergyStop(resultUuid, receiver);
-        LOGGER.info(CANCEL_MESSAGE + " (resultUuid='{}')", resultUuid);
+    @Override
+    protected NonEvacuatedEnergyResultContext fromMessage(Message<String> message) {
+        return NonEvacuatedEnergyResultContext.fromMessage(message, objectMapper);
     }
 
     @Bean
     public Consumer<Message<String>> consumeNonEvacuatedEnergyRun() {
-        return message -> {
-            NonEvacuatedEnergyResultContext nonEvacuatedEnergyResultContext = NonEvacuatedEnergyResultContext.fromMessage(message, objectMapper);
-            try {
-                runRequests.add(nonEvacuatedEnergyResultContext.getResultUuid());
-                AtomicReference<Long> startTime = new AtomicReference<>();
-
-                startTime.set(System.nanoTime());
-                String result = run(nonEvacuatedEnergyResultContext.getRunContext(), nonEvacuatedEnergyResultContext.getResultUuid());
-                long nanoTime = System.nanoTime();
-                LOGGER.info("Just run in {}s", TimeUnit.NANOSECONDS.toSeconds(nanoTime - startTime.getAndSet(nanoTime)));
-
-                nonEvacuatedEnergyRepository.insert(nonEvacuatedEnergyResultContext.getResultUuid(), result, NonEvacuatedEnergyStatus.COMPLETED.name());
-                long finalNanoTime = System.nanoTime();
-                LOGGER.info("Stored in {}s", TimeUnit.NANOSECONDS.toSeconds(finalNanoTime - startTime.getAndSet(finalNanoTime)));
-
-                if (result != null) {  // result available
-                    notificationService.sendNonEvacuatedEnergyResultMessage(nonEvacuatedEnergyResultContext.getResultUuid(), nonEvacuatedEnergyResultContext.getRunContext().getReceiver());
-                    LOGGER.info("Non evacuated energy complete (resultUuid='{}')", nonEvacuatedEnergyResultContext.getResultUuid());
-                } else {  // result not available : stop computation request
-                    if (cancelComputationRequests.get(nonEvacuatedEnergyResultContext.getResultUuid()) != null) {
-                        cleanResultsAndPublishCancel(nonEvacuatedEnergyResultContext.getResultUuid(), cancelComputationRequests.get(nonEvacuatedEnergyResultContext.getResultUuid()).getReceiver());
-                    }
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            } catch (Exception | OutOfMemoryError e) {
-                if (!(e instanceof CancellationException)) {
-                    LOGGER.error(FAIL_MESSAGE, e);
-                    notificationService.publishNonEvacuatedEnergyFail(nonEvacuatedEnergyResultContext.getResultUuid(), nonEvacuatedEnergyResultContext.getRunContext().getReceiver(), e.getMessage(), nonEvacuatedEnergyResultContext.getRunContext().getUserId());
-                    nonEvacuatedEnergyRepository.delete(nonEvacuatedEnergyResultContext.getResultUuid());
-                }
-            } finally {
-                futures.remove(nonEvacuatedEnergyResultContext.getResultUuid());
-                cancelComputationRequests.remove(nonEvacuatedEnergyResultContext.getResultUuid());
-                runRequests.remove(nonEvacuatedEnergyResultContext.getResultUuid());
-            }
-        };
+        return super.consumeRun();
     }
 
     @Bean
     public Consumer<Message<String>> consumeNonEvacuatedEnergyCancel() {
-        return message -> cancelAsync(SensitivityAnalysisCancelContext.fromMessage(message));
+        return super.consumeCancel();
     }
 }

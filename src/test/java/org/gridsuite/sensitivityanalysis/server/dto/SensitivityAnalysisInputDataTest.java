@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static org.gridsuite.sensitivityanalysis.server.SensitivityAnalysisControllerTest.DEFAULT_PROVIDER;
 import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -127,7 +128,7 @@ public class SensitivityAnalysisInputDataTest {
             .build();
         ReporterModel reporter = new ReporterModel("a", "b");
         SensitivityAnalysisRunContext context;
-        context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, inputData, null, null, null, null);
+        context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
         inputBuilderService.build(context, NETWORK, reporter);
         Collection<Report> reports;
         reports = reporter.getReports();
@@ -157,7 +158,7 @@ public class SensitivityAnalysisInputDataTest {
                 .contingencies(List.of(new EquipmentsContainer(UUID.randomUUID(), "u10"), new EquipmentsContainer(UUID.randomUUID(), "u11")))
                 .build()))
             .build();
-        context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, inputData, null, null, null, null);
+        context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
         inputBuilderService.build(context, NETWORK, reporter);
         Collection<Report> reports = reporter.getReports();
         assertThat(reports, not(nullValue()));
@@ -177,7 +178,7 @@ public class SensitivityAnalysisInputDataTest {
 
         SensitivityAnalysisInputData inputData = inputBuilder
             .build();
-        context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, inputData, null, null, null, null);
+        context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
         final ReporterModel reporter = new ReporterModel("a", "b");
         var thrown = assertThrows(NullPointerException.class, () -> inputBuilderService.build(context, NETWORK, reporter));
         assertThat(thrown, Matchers.instanceOf(NullPointerException.class));

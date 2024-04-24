@@ -53,7 +53,8 @@ import java.util.stream.Stream;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.*;
+import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.*;
+import static org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService.COMPUTATION_TYPE;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -70,12 +71,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest
 @ContextHierarchy({@ContextConfiguration(classes = {SensitivityAnalysisApplication.class, TestChannelBinderConfiguration.class})})
-class SensitivityAnalysisControllerTest {
+public class SensitivityAnalysisControllerTest {
     public static final String MONITORED_BRANCHES_KEY = "monitoredBranchs";
     public static final String INJECTIONS_KEY = "injections";
     public static final String CONTINGENCIES_KEY = "contingencies";
     private static final int TIMEOUT = 1000;
     private static final String ERROR_MESSAGE = "Error message test";
+    public static final String DEFAULT_PROVIDER = "OpenLoadFlow";
 
     private static final UUID NETWORK_UUID = UUID.randomUUID();
     private static final UUID NETWORK_ERROR_UUID = UUID.randomUUID();
@@ -441,14 +443,14 @@ class SensitivityAnalysisControllerTest {
     void stopTest() throws Exception {
         UUID resultUuid = run();
         mockMvc.perform(put("/" + VERSION + "/results/{resultUuid}/stop", resultUuid).param("receiver", "me"));
-        checkComputationFailed(resultUuid, "sensitivityanalysis.stopped", CANCEL_MESSAGE);
+        checkComputationFailed(resultUuid, "sensitivityanalysis.stopped", getCancelMessage(COMPUTATION_TYPE));
         queryResultFails(resultUuid, status().isNotFound());
     }
 
     @Test
     void runTestWithError() throws Exception {
         UUID resultUuid = run(NETWORK_ERROR_UUID);
-        checkComputationFailed(resultUuid, "sensitivityanalysis.failed", FAIL_MESSAGE + " : " + ERROR_MESSAGE);
+        checkComputationFailed(resultUuid, "sensitivityanalysis.failed", getFailedMessage(COMPUTATION_TYPE) + " : " + ERROR_MESSAGE);
         queryResultFails(resultUuid, status().isNotFound());
     }
 
@@ -466,7 +468,7 @@ class SensitivityAnalysisControllerTest {
         mockMvc.perform(get("/" + VERSION + "/default-provider"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8)))
-            .andExpect(content().string("OpenLoadFlow"))
+            .andExpect(content().string(DEFAULT_PROVIDER))
             .andReturn();
     }
 

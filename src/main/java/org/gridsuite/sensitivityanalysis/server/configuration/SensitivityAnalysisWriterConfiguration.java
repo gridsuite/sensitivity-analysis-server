@@ -6,7 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.configuration;
 
-import org.gridsuite.sensitivityanalysis.server.repositories.*;
+import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisResultService;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultWriterPersisted;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +21,7 @@ public class SensitivityAnalysisWriterConfiguration {
     // At each call of the bean a new instance will be created as it is a stateful bean (because of resultUuid)
     @Bean
     @Scope("prototype")
-    public SensitivityResultWriterPersisted sensitivityResultWriterPersisted(SensitivityAnalysisResultRepository sensitivityAnalysisResultRepository) {
-        return new SensitivityResultWriterPersisted(sensitivityAnalysisResultRepository);
+    public SensitivityResultWriterPersisted sensitivityResultWriterPersisted(SensitivityAnalysisResultService sensitivityAnalysisResultService) {
+        return new SensitivityResultWriterPersisted(sensitivityAnalysisResultService);
     }
 }

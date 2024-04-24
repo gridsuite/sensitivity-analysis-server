@@ -10,21 +10,23 @@ import com.powsybl.contingency.Contingency;
 import com.powsybl.contingency.ContingencyContext;
 import com.powsybl.sensitivity.*;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
+import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisResultService;
+import org.gridsuite.sensitivityanalysis.server.util.ContingencyResult;
+import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder;
+import org.junit.Test;
 import org.apache.commons.compress.utils.Lists;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
-import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
-import org.gridsuite.sensitivityanalysis.server.util.ContingencyResult;
-import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -39,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest
-class SensitivityAnalysisResultRepositoryTest {
+class SensitivityAnalysisResultServiceTest {
     public static final String BRANCH_ID1 = "branchId1";
     public static final String BRANCH_ID2 = "branchId2";
     public static final String GEN_ID1 = "genId1";
@@ -48,7 +50,7 @@ class SensitivityAnalysisResultRepositoryTest {
     public static final String CONTINGENCY_ID2 = "contingencyId2";
 
     @Autowired
-    private SensitivityAnalysisResultRepository sensitivityAnalysisResultRepository;
+    private SensitivityAnalysisResultService sensitivityAnalysisResultService;
 
     @Autowired
     private AnalysisResultRepository analysisResultRepository;
@@ -64,7 +66,7 @@ class SensitivityAnalysisResultRepositoryTest {
 
     @BeforeEach
     public void setUp() {
-        sensitivityAnalysisResultRepository.deleteAll();
+        sensitivityAnalysisResultService.deleteAll();
     }
 
     @Test
@@ -84,10 +86,10 @@ class SensitivityAnalysisResultRepositoryTest {
     void testDeleteResult() {
         UUID resultUuid = UUID.randomUUID();
         createResult(resultUuid);
-        sensitivityAnalysisResultRepository.insertStatus(List.of(resultUuid), "SUCCESS");
+        sensitivityAnalysisResultService.insertStatus(List.of(resultUuid), SensitivityAnalysisStatus.COMPLETED);
 
         SQLStatementCountValidator.reset();
-        sensitivityAnalysisResultRepository.delete(resultUuid);
+        sensitivityAnalysisResultService.delete(resultUuid);
 
         assertRequestsCount(2, 0, 0, 6);
         assertThat(analysisResultRepository.findByResultUuid(resultUuid)).isNull();
@@ -101,11 +103,11 @@ class SensitivityAnalysisResultRepositoryTest {
         IntStream.range(0, 10).forEach(i -> {
             UUID resultUuid = UUID.randomUUID();
             createResult(resultUuid);
-            sensitivityAnalysisResultRepository.insertStatus(List.of(resultUuid), "SUCCESS");
+            sensitivityAnalysisResultService.insertStatus(List.of(resultUuid), SensitivityAnalysisStatus.COMPLETED);
         });
 
         SQLStatementCountValidator.reset();
-        sensitivityAnalysisResultRepository.deleteAll();
+        sensitivityAnalysisResultService.deleteAll();
 
         assertRequestsCount(0, 0, 0, 6);
         assertThat(analysisResultRepository.findAll()).isEmpty();
@@ -125,7 +127,7 @@ class SensitivityAnalysisResultRepositoryTest {
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .sortKeysWithWeightAndDirection(Map.of(SortKey.SENSITIVITY, 1))
             .build();
-        var result = sensitivityAnalysisResultRepository.getRunResult(resultUuid, selectorN);
+        var result = sensitivityAnalysisResultService.getRunResult(resultUuid, selectorN);
         var sensitivities = result.getSensitivities();
         assertThat(sensitivities)
             .isNotNull()
@@ -146,7 +148,7 @@ class SensitivityAnalysisResultRepositoryTest {
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .sortKeysWithWeightAndDirection(Map.of(SortKey.SENSITIVITY, -1))
             .build();
-        var result = sensitivityAnalysisResultRepository.getRunResult(resultUuid, selectorN);
+        var result = sensitivityAnalysisResultService.getRunResult(resultUuid, selectorN);
         var sensitivities = result.getSensitivities();
         assertThat(sensitivities)
             .isNotNull()
@@ -167,7 +169,7 @@ class SensitivityAnalysisResultRepositoryTest {
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .sortKeysWithWeightAndDirection(Map.of(SortKey.POST_SENSITIVITY, 1))
             .build();
-        var result = sensitivityAnalysisResultRepository.getRunResult(resultUuid, selectorNK);
+        var result = sensitivityAnalysisResultService.getRunResult(resultUuid, selectorNK);
         assertThat(result).isNotNull();
         var sensitivities = result.getSensitivities();
         assertThat(sensitivities).isNotNull().hasSize(8);
@@ -188,7 +190,7 @@ class SensitivityAnalysisResultRepositoryTest {
             .pageNumber(1)
             .pageSize(3)
             .build();
-        var result = sensitivityAnalysisResultRepository.getRunResult(resultUuid, pagedSelector);
+        var result = sensitivityAnalysisResultService.getRunResult(resultUuid, pagedSelector);
         assertThat(result).isNotNull();
         var sensitivities = result.getSensitivities();
         assertThat(sensitivities).isNotNull();
@@ -208,7 +210,7 @@ class SensitivityAnalysisResultRepositoryTest {
             .pageSize(3)
             .pageNumber(3)
             .build();
-        var result = sensitivityAnalysisResultRepository.getRunResult(resultUuid, emptyPagedSelector);
+        var result = sensitivityAnalysisResultService.getRunResult(resultUuid, emptyPagedSelector);
         assertThat(result).isNotNull();
         var sensitivities = result.getSensitivities();
         assertThat(sensitivities).isEmpty();
@@ -220,7 +222,7 @@ class SensitivityAnalysisResultRepositoryTest {
         createResult(resultUuid);
 
         assertDoesNotThrow(
-            () -> sensitivityAnalysisResultRepository.writeContingenciesStatus(
+            () -> sensitivityAnalysisResultService.writeContingenciesStatus(
                 resultUuid,
                 List.of(new ContingencyResult(10, SensitivityAnalysisResult.Status.SUCCESS)))
         );
@@ -232,12 +234,12 @@ class SensitivityAnalysisResultRepositoryTest {
             Contingency.builder(CONTINGENCY_ID2).build()
         );
         List<List<SensitivityFactor>> factors = createFactors(List.of(BRANCH_ID1, BRANCH_ID2), List.of(GEN_ID1, GEN_ID2), contingencies);
-        var analysisResult = sensitivityAnalysisResultRepository.insertAnalysisResult(resultUuid);
+        var analysisResult = sensitivityAnalysisResultService.insertAnalysisResult(resultUuid);
         Map<String, ContingencyResultEntity> contingencyResultsByContingencyId = SensitivityResultsBuilder.buildContingencyResults(contingencies, analysisResult);
-        sensitivityAnalysisResultRepository.saveAllContingencyResultsAndFlush(contingencyResultsByContingencyId.values().stream().collect(Collectors.toSet()));
+        sensitivityAnalysisResultService.saveAllContingencyResultsAndFlush(contingencyResultsByContingencyId.values().stream().collect(Collectors.toSet()));
         var results = SensitivityResultsBuilder.buildSensitivityResults(factors, analysisResult, contingencyResultsByContingencyId);
-        sensitivityAnalysisResultRepository.saveAllResultsAndFlush(results.getLeft());
-        sensitivityAnalysisResultRepository.saveAllResultsAndFlush(results.getRight());
+        sensitivityAnalysisResultService.saveAllResultsAndFlush(results.getLeft());
+        sensitivityAnalysisResultService.saveAllResultsAndFlush(results.getRight());
     }
 
     private void fillResult(UUID resultUuid) {
@@ -255,7 +257,7 @@ class SensitivityAnalysisResultRepositoryTest {
             new SensitivityValue(10, 1, -1.0, 511),
             new SensitivityValue(11, 0, -0.4, 512)
         ));
-        sensitivityAnalysisResultRepository.writeSensitivityValues(resultUuid, sensitivityValues);
+        sensitivityAnalysisResultService.writeSensitivityValues(resultUuid, sensitivityValues);
     }
 
     private static List<List<SensitivityFactor>> createFactors(List<String> branchIds, List<String> variableIds, List<Contingency> contingencies) {

@@ -7,51 +7,40 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import lombok.Getter;
-import org.gridsuite.sensitivityanalysis.server.dto.ReportInfos;
+import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractComputationRunContext;
+import org.gridsuite.sensitivityanalysis.server.computation.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
+import org.springframework.beans.factory.annotation.Value;
 
-import java.util.Objects;
 import java.util.UUID;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Getter
-public class SensitivityAnalysisRunContext {
-
-    private final UUID networkUuid;
-
-    private final String variantId;
-
-    private final SensitivityAnalysisInputData sensitivityAnalysisInputData;
+public class SensitivityAnalysisRunContext extends AbstractComputationRunContext<SensitivityAnalysisInputData> {
 
     private final SensitivityAnalysisInputs sensitivityAnalysisInputs;
 
-    private final String receiver;
-
-    private final String provider;
-
-    private final UUID reportUuid;
-
-    private final String reporterId;
-
-    private final String userId;
-
-    private final String reportType;
-
-    public SensitivityAnalysisRunContext(UUID networkUuid, String variantId,
-                                         SensitivityAnalysisInputData sensitivityAnalysisInputData,
-                                         String receiver, String provider,
-                                         ReportInfos reportInfos, String userId) {
-        this.networkUuid = Objects.requireNonNull(networkUuid);
-        this.variantId = variantId;
-        this.sensitivityAnalysisInputData = Objects.requireNonNull(sensitivityAnalysisInputData);
+    public SensitivityAnalysisRunContext(UUID networkUuid,
+                                         String variantId,
+                                         String receiver,
+                                         ReportInfos reportInfos,
+                                         String userId,
+                                         @Value("${sensitivity-analysis.default-provider}") String provider,
+                                         SensitivityAnalysisInputData sensitivityAnalysisInputData) {
+        super(networkUuid,
+                variantId,
+                receiver,
+                reportInfos != null ? reportInfos : new ReportInfos(null, null, null),
+                userId,
+                provider,
+                sensitivityAnalysisInputData,
+                null);
         this.sensitivityAnalysisInputs = new SensitivityAnalysisInputs();
-        this.receiver = receiver;
-        this.provider = provider;
-        this.reportUuid = reportInfos == null ? null : reportInfos.reportUuid();
-        this.reporterId = reportInfos == null ? null : reportInfos.reporterId();
-        this.reportType = reportInfos == null ? null : reportInfos.reportType();
-        this.userId = userId;
+    }
+
+    SensitivityAnalysisInputData getSensitivityAnalysisInputData() {
+        return parameters;
     }
 }
