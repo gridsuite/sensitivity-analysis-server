@@ -11,11 +11,12 @@ import com.powsybl.sensitivity.SensitivityAnalysisProvider;
 import com.univocity.parsers.csv.CsvWriter;
 import com.univocity.parsers.csv.CsvWriterSettings;
 import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
+import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractComputationService;
+import org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService;
+import org.gridsuite.sensitivityanalysis.server.computation.service.UuidGeneratorService;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
-import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
-import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisResultRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -28,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -40,98 +40,50 @@ import static org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisExcept
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
-public class SensitivityAnalysisService {
+public class SensitivityAnalysisService extends AbstractComputationService<SensitivityAnalysisRunContext, SensitivityAnalysisResultService, SensitivityAnalysisStatus> {
 
     public static final String INJECTIONS = "injections";
 
     public static final String CONTINGENCIES = "contingencies";
 
-    private final String defaultProvider;
-
-    private final SensitivityAnalysisResultRepository resultRepository;
-
-    private final UuidGeneratorService uuidGeneratorService;
-
-    private final NotificationService notificationService;
-
     private final ActionsService actionsService;
 
     private final FilterService filterService;
 
-    private final SensitivityAnalysisParametersService parametersService;
-
-    private final ObjectMapper objectMapper;
-
     public SensitivityAnalysisService(@Value("${sensitivity-analysis.default-provider}") String defaultProvider,
-                                      SensitivityAnalysisResultRepository resultRepository,
+                                      SensitivityAnalysisResultService resultService,
                                       UuidGeneratorService uuidGeneratorService,
                                       NotificationService notificationService,
                                       ActionsService actionsService,
                                       FilterService filterService,
-                                      SensitivityAnalysisParametersService parametersService,
                                       ObjectMapper objectMapper) {
-        this.defaultProvider = defaultProvider;
-        this.resultRepository = Objects.requireNonNull(resultRepository);
-        this.uuidGeneratorService = Objects.requireNonNull(uuidGeneratorService);
-        this.notificationService = notificationService;
+        super(notificationService, resultService, objectMapper, uuidGeneratorService, defaultProvider);
         this.actionsService = actionsService;
         this.filterService = filterService;
-        this.parametersService = parametersService;
-        this.objectMapper = Objects.requireNonNull(objectMapper);
     }
 
-    public UUID runAndSaveResult(UUID networkUuid, String variantId, String receiver, ReportInfos reportInfos, String userId, UUID parametersUuid, UUID loadFlowParametersUuid) {
-
-        SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersUuid != null
-                ? parametersService.getParameters(parametersUuid)
-                        .orElse(parametersService.getDefauSensitivityAnalysisParametersInfos())
-                : parametersService.getDefauSensitivityAnalysisParametersInfos();
-
-        SensitivityAnalysisInputData inputData = parametersService.buildInputData(sensitivityAnalysisParametersInfos, loadFlowParametersUuid);
-
-        SensitivityAnalysisRunContext runContext = new SensitivityAnalysisRunContext(networkUuid, variantId, inputData, receiver, sensitivityAnalysisParametersInfos.getProvider(), reportInfos, userId);
-
+    public UUID runAndSaveResult(SensitivityAnalysisRunContext runContext) {
         Objects.requireNonNull(runContext);
         var resultUuid = uuidGeneratorService.generate();
 
         // update status to running status
-        setStatus(List.of(resultUuid), SensitivityAnalysisStatus.RUNNING.name());
-        notificationService.sendSensitivityAnalysisRunMessage(new SensitivityAnalysisResultContext(resultUuid, runContext).toMessage(objectMapper));
+        setStatus(List.of(resultUuid), SensitivityAnalysisStatus.RUNNING);
+        notificationService.sendRunMessage(new SensitivityAnalysisResultContext(resultUuid, runContext).toMessage(objectMapper));
         return resultUuid;
     }
 
     public SensitivityRunQueryResult getRunResult(UUID resultUuid, ResultsSelector selector) {
-        return resultRepository.getRunResult(resultUuid, selector);
+        return resultService.getRunResult(resultUuid, selector);
     }
 
     public SensitivityResultFilterOptions getSensitivityResultOptions(UUID resultUuid, ResultsSelector selector) {
-        return resultRepository.getSensitivityResultFilterOptions(resultUuid, selector);
-    }
-
-    public void deleteResult(UUID resultUuid) {
-        resultRepository.delete(resultUuid);
-    }
-
-    public void deleteResults() {
-        resultRepository.deleteAll();
-    }
-
-    public String getStatus(UUID resultUuid) {
-        return resultRepository.findStatus(resultUuid);
-    }
-
-    public void setStatus(List<UUID> resultUuids, String status) {
-        resultRepository.insertStatus(resultUuids, status);
-    }
-
-    public void stop(UUID resultUuid, String receiver) {
-        notificationService.sendSensitivityAnalysisCancelMessage(new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
+        return resultService.getSensitivityResultFilterOptions(resultUuid, selector);
     }
 
     public List<String> getProviders() {
         return SensitivityAnalysisProvider.findAll().stream()
                 .map(SensitivityAnalysisProvider::getName)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public Long getFactorsCount(SensitivityFactorsIdsByGroup factorIds, UUID networkUuid, String variantId, Boolean isInjectionsSet) {
@@ -148,7 +100,7 @@ public class SensitivityAnalysisService {
         Map<String, List<UUID>> ids = factorIds.getIds();
         long contAttributesCountTemp = 1L;
         if (ids.containsKey(CONTINGENCIES) && !ids.get(CONTINGENCIES).isEmpty()) {
-            int sumContingencyListSizes = getContingenciesCount(ids.get(CONTINGENCIES), networkUuid, variantId);
+            int sumContingencyListSizes = actionsService.getContingencyCount(ids.get(CONTINGENCIES), networkUuid, variantId);
             sumContingencyListSizes = Math.max(sumContingencyListSizes, 1);
             contAttributesCountTemp *= sumContingencyListSizes;
             ids.remove(CONTINGENCIES);
@@ -168,10 +120,6 @@ public class SensitivityAnalysisService {
         return ids.stream()
                 .mapToInt(uuid -> actionsService.getContingencyList(uuid, networkUuid, variantId).size())
                 .sum();
-    }
-
-    public String getDefaultProvider() {
-        return defaultProvider;
     }
 
     public byte[] exportSensitivityResultsAsCsv(UUID resultUuid, SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos) {

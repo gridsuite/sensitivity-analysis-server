@@ -6,6 +6,8 @@
  */
 package org.gridsuite.sensitivityanalysis.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -14,6 +16,13 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @EqualsAndHashCode
 @SuperBuilder(toBuilder = true)
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    property = "type"
+)
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = SensitivityWithContingency.class, name = "WITH_CONTINGENCY"),
+})
 public class SensitivityOfTo {
     @NonNull
     private String funcId;

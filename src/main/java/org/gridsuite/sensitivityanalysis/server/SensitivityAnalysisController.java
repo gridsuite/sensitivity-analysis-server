@@ -17,11 +17,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.gridsuite.sensitivityanalysis.server.computation.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
+import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisParametersService;
+import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisRunContext;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService;
 import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.NonEvacuatedEnergyRunContext;
@@ -34,7 +37,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-import static org.gridsuite.sensitivityanalysis.server.service.NotificationService.HEADER_USER_ID;
+import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.HEADER_USER_ID;
 import static org.springframework.http.MediaType.*;
 
 /**
@@ -47,14 +50,17 @@ public class SensitivityAnalysisController {
     private final SensitivityAnalysisService service;
 
     private final SensitivityAnalysisWorkerService workerService;
+    private final SensitivityAnalysisParametersService sensitivityAnalysisParametersService;
 
     private final NonEvacuatedEnergyService nonEvacuatedEnergyService;
 
     public SensitivityAnalysisController(SensitivityAnalysisService service, SensitivityAnalysisWorkerService workerService,
-                                         NonEvacuatedEnergyService nonEvacuatedEnergyService) {
+                                         NonEvacuatedEnergyService nonEvacuatedEnergyService,
+                                         SensitivityAnalysisParametersService sensitivityAnalysisParametersService) {
         this.service = service;
         this.workerService = workerService;
         this.nonEvacuatedEnergyService = nonEvacuatedEnergyService;
+        this.sensitivityAnalysisParametersService = sensitivityAnalysisParametersService;
     }
 
     private static ResultsSelector getSelector(String selectorJson) throws JsonProcessingException {
@@ -100,7 +106,16 @@ public class SensitivityAnalysisController {
                                            @Parameter(description = "parametersUuid") @RequestParam(name = "parametersUuid", required = false) UUID parametersUuid,
                                            @Parameter(description = "loadFlow parameters uuid") @RequestParam(name = "loadFlowParametersUuid") UUID loadFlowParametersUuid,
                                            @RequestHeader(HEADER_USER_ID) String userId) {
-        UUID resultUuid = service.runAndSaveResult(networkUuid, variantId, receiver, new ReportInfos(reportUuid, reporterId, reportType), userId, parametersUuid, loadFlowParametersUuid);
+        SensitivityAnalysisRunContext runContext = sensitivityAnalysisParametersService.createRunContext(
+                networkUuid,
+                variantId,
+                receiver,
+                new ReportInfos(reportUuid, reporterId, reportType),
+                userId,
+                parametersUuid,
+                loadFlowParametersUuid
+        );
+        UUID resultUuid = service.runAndSaveResult(runContext);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
@@ -171,15 +186,15 @@ public class SensitivityAnalysisController {
     @Operation(summary = "Get the sensitivity analysis status from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis status")})
     public ResponseEntity<String> getStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        String result = service.getStatus(resultUuid);
-        return ResponseEntity.ok().body(result);
+        SensitivityAnalysisStatus result = service.getStatus(resultUuid);
+        return ResponseEntity.ok().body(result == null ? null : result.name());
     }
 
     @PutMapping(value = "/results/invalidate-status", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Invalidate the sensitivity analysis status from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis status has been invalidated")})
     public ResponseEntity<Void> invalidateStatus(@Parameter(description = "Result uuids") @RequestParam(name = "resultUuid") List<UUID> resultUuids) {
-        service.setStatus(resultUuids, SensitivityAnalysisStatus.NOT_DONE.name());
+        service.setStatus(resultUuids, SensitivityAnalysisStatus.NOT_DONE);
         return ResponseEntity.ok().build();
     }
 
@@ -234,7 +249,19 @@ public class SensitivityAnalysisController {
                                            @Parameter(description = "loadFlow parameters uuid") @RequestParam(name = "loadFlowParametersUuid") UUID loadFlowParametersUuid,
                                            @RequestBody NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData,
                                            @RequestHeader(HEADER_USER_ID) String userId) {
-        UUID resultUuid = nonEvacuatedEnergyService.runAndSaveResult(new NonEvacuatedEnergyRunContext(networkUuid, variantId, nonEvacuatedEnergyInputData, receiver, provider, reportUuid, reporterId, reportType, userId), loadFlowParametersUuid);
+
+        NonEvacuatedEnergyRunContext runContext = sensitivityAnalysisParametersService.createNonEvacuatedEnergyRunContext(
+                networkUuid,
+                variantId,
+                receiver,
+                new ReportInfos(reportUuid, reporterId, reportType),
+                userId,
+                provider,
+                loadFlowParametersUuid,
+                nonEvacuatedEnergyInputData
+        );
+
+        UUID resultUuid = nonEvacuatedEnergyService.runAndSaveResult(runContext);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
@@ -269,15 +296,15 @@ public class SensitivityAnalysisController {
     @Operation(summary = "Get the non evacuated energy status from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The non evacuated energy status status")})
     public ResponseEntity<String> getNonEvacuatedEnergyStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        String result = nonEvacuatedEnergyService.getStatus(resultUuid);
-        return ResponseEntity.ok().body(result);
+        NonEvacuatedEnergyStatus result = nonEvacuatedEnergyService.getStatus(resultUuid);
+        return ResponseEntity.ok().body(result == null ? null : result.name());
     }
 
     @PutMapping(value = "/non-evacuated-energy/results/invalidate-status", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Invalidate the non evacuated energy status from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The non evacuated energy status has been invalidated")})
     public ResponseEntity<Void> invalidateNonEvacuatedEnergyStatus(@Parameter(description = "Result uuids") @RequestParam(name = "resultUuid") List<UUID> resultUuids) {
-        nonEvacuatedEnergyService.setStatus(resultUuids, NonEvacuatedEnergyStatus.NOT_DONE.name());
+        nonEvacuatedEnergyService.setStatus(resultUuids, NonEvacuatedEnergyStatus.NOT_DONE);
         return ResponseEntity.ok().build();
     }
 

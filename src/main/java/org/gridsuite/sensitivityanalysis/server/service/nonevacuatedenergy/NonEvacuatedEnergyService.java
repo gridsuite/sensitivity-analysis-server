@@ -7,16 +7,13 @@
 package org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractComputationService;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
-import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
-import org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy.NonEvacuatedEnergyRepository;
-import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
-import org.gridsuite.sensitivityanalysis.server.service.NotificationService;
-import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisCancelContext;
-import org.gridsuite.sensitivityanalysis.server.service.UuidGeneratorService;
+import org.gridsuite.sensitivityanalysis.server.computation.service.UuidGeneratorService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -25,77 +22,33 @@ import java.util.UUID;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
-public class NonEvacuatedEnergyService {
-    private final String defaultProvider;
-
-    private final NonEvacuatedEnergyRepository nonEvacuatedEnergyRepository;
-
-    private final UuidGeneratorService uuidGeneratorService;
-
-    private final NotificationService notificationService;
-
-    private final LoadFlowService loadFlowService;
-
-    private final ObjectMapper objectMapper;
+public class NonEvacuatedEnergyService extends AbstractComputationService<NonEvacuatedEnergyRunContext, NonEvacuatedEnergyResultService, NonEvacuatedEnergyStatus> {
 
     public NonEvacuatedEnergyService(@Value("${non-evacuated-energy.default-provider}") String defaultProvider,
-                                     NonEvacuatedEnergyRepository nonEvacuatedEnergyRepository,
+                                     NonEvacuatedEnergyResultService resultService,
                                      UuidGeneratorService uuidGeneratorService,
-                                     NotificationService notificationService,
-                                     LoadFlowService loadFlowService,
+                                     NonEvacuatedNotificationService notificationService,
                                      ObjectMapper objectMapper) {
-        this.defaultProvider = defaultProvider;
-        this.nonEvacuatedEnergyRepository = Objects.requireNonNull(nonEvacuatedEnergyRepository);
-        this.uuidGeneratorService = Objects.requireNonNull(uuidGeneratorService);
-        this.notificationService = notificationService;
-        this.loadFlowService = loadFlowService;
-        this.objectMapper = Objects.requireNonNull(objectMapper);
+        super(notificationService, resultService, objectMapper, uuidGeneratorService, defaultProvider);
     }
 
-    public UUID runAndSaveResult(NonEvacuatedEnergyRunContext nonEvacuatedEnergyRunContext, UUID loadFlowParametersUuid) {
-        Objects.requireNonNull(nonEvacuatedEnergyRunContext);
-        // complete nonEvacuatedEnergyRunContext with loadFlowParameters
-        completeNonEvacuatedEnergyRunContext(nonEvacuatedEnergyRunContext, loadFlowParametersUuid);
-        var resultUuid = uuidGeneratorService.generate();
+    @Override
+    public List<String> getProviders() {
+        return Collections.singletonList(defaultProvider);
+    }
 
+    @Override
+    public UUID runAndSaveResult(NonEvacuatedEnergyRunContext nonEvacuatedEnergyRunContext) {
+        Objects.requireNonNull(nonEvacuatedEnergyRunContext);
+
+        var resultUuid = uuidGeneratorService.generate();
         // update status to running status
-        setStatus(List.of(resultUuid), NonEvacuatedEnergyStatus.RUNNING.name());
-        notificationService.sendNonEvacuatedEnergyRunMessage(new NonEvacuatedEnergyResultContext(resultUuid, nonEvacuatedEnergyRunContext).toMessage(objectMapper));
+        setStatus(List.of(resultUuid), NonEvacuatedEnergyStatus.RUNNING);
+        notificationService.sendRunMessage(new NonEvacuatedEnergyResultContext(resultUuid, nonEvacuatedEnergyRunContext).toMessage(objectMapper));
         return resultUuid;
     }
 
     public String getRunResult(UUID resultUuid) {
-        return nonEvacuatedEnergyRepository.getRunResult(resultUuid);
-    }
-
-    public void deleteResult(UUID resultUuid) {
-        nonEvacuatedEnergyRepository.delete(resultUuid);
-    }
-
-    public void deleteResults() {
-        nonEvacuatedEnergyRepository.deleteAll();
-    }
-
-    public String getStatus(UUID resultUuid) {
-        return nonEvacuatedEnergyRepository.findStatus(resultUuid);
-    }
-
-    public void setStatus(List<UUID> resultUuids, String status) {
-        Objects.requireNonNull(resultUuids);
-        nonEvacuatedEnergyRepository.insertStatus(resultUuids, status);
-    }
-
-    public void stop(UUID resultUuid, String receiver) {
-        notificationService.sendNonEvacuatedEnergyCancelMessage(new SensitivityAnalysisCancelContext(resultUuid, receiver).toMessage());
-    }
-
-    public String getDefaultProvider() {
-        return defaultProvider;
-    }
-
-    private void completeNonEvacuatedEnergyRunContext(NonEvacuatedEnergyRunContext nonEvacuatedEnergyRunContext, UUID loadFlowParametersUuid) {
-        LoadFlowParametersValues loadFlowParametersValues = loadFlowService.getLoadFlowParameters(loadFlowParametersUuid, nonEvacuatedEnergyRunContext.getProvider());
-        nonEvacuatedEnergyRunContext.getNonEvacuatedEnergyInputData().setLoadFlowSpecificParameters(loadFlowParametersValues.specificParameters());
-        nonEvacuatedEnergyRunContext.getNonEvacuatedEnergyInputData().getParameters().setLoadFlowParameters(loadFlowParametersValues.commonParameters());
+        return resultService.getRunResult(resultUuid);
     }
 }

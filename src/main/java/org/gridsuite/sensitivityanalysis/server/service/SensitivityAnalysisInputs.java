@@ -19,7 +19,7 @@ import java.util.*;
 public class SensitivityAnalysisInputs {
     private Set<Contingency> contingencies = new HashSet<>();
 
-    private List<SensitivityFactor> factors = new ArrayList<>();
+    private List<List<SensitivityFactor>> factors = new ArrayList<>();
 
     private List<SensitivityVariableSet> variablesSets = new ArrayList<>();
 
@@ -27,7 +27,7 @@ public class SensitivityAnalysisInputs {
         this.contingencies.addAll(contingencies);
     }
 
-    void addSensitivityFactors(List<SensitivityFactor> factors) {
+    void addSensitivityFactors(List<List<SensitivityFactor>> factors) {
         this.factors.addAll(factors);
     }
 

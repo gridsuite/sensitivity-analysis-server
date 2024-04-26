@@ -14,7 +14,7 @@ import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
-import org.gridsuite.sensitivityanalysis.server.RestTemplateConfig;
+import org.gridsuite.sensitivityanalysis.server.configuration.RestTemplateConfig;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,6 +49,8 @@ public class ActionsServiceTest {
     private static final String VARIANT_ID = "variant_id";
 
     private static final UUID LIST_UUID = UUID.randomUUID();
+    private static final UUID LIST2_UUID = UUID.randomUUID();
+    private static final String CONTINGENCY_COUNT = "7";
 
     private static final UUID VERY_LARGE_LIST_UUID = UUID.randomUUID();
 
@@ -103,6 +105,11 @@ public class ActionsServiceTest {
                     return new MockResponse().setResponseCode(HttpStatus.OK.value())
                             .setBody(veryLargeJsonExpected)
                             .addHeader("Content-Type", "application/json; charset=utf-8");
+                } else if (requestPath.equals(String.format("/v1/contingency-lists/count?ids=%s&ids=%s&networkUuid=%s&variantId=%s", LIST_UUID, LIST2_UUID, NETWORK_UUID, VARIANT_ID))
+                        || requestPath.equals(String.format("/v1/contingency-lists/count?ids=%s&ids=%s&networkUuid=%s", LIST_UUID, LIST2_UUID, NETWORK_UUID))) {
+                    return new MockResponse().setResponseCode(HttpStatus.OK.value())
+                            .setBody(CONTINGENCY_COUNT)
+                            .addHeader("Content-Type", "application/json; charset=utf-8");
                 } else {
                     return new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value()).setBody("Path not supported: " + request.getPath());
                 }
@@ -121,7 +128,7 @@ public class ActionsServiceTest {
     }
 
     @Test
-    public void test() {
+    public void testGetContingencyList() {
         List<Contingency> list = actionsService.getContingencyList(LIST_UUID, UUID.fromString(NETWORK_UUID), null);
         assertEquals(List.of(CONTINGENCY), list);
         list = actionsService.getContingencyList(LIST_UUID, UUID.fromString(NETWORK_UUID), VARIANT_ID);
@@ -135,5 +142,13 @@ public class ActionsServiceTest {
         assertEquals(createVeryLargeList(), list);
         list = actionsService.getContingencyList(VERY_LARGE_LIST_UUID, UUID.fromString(NETWORK_UUID), VARIANT_ID);
         assertEquals(createVeryLargeList(), list);
+    }
+
+    @Test
+    public void testGetContingencyCount() {
+        Integer count = actionsService.getContingencyCount(List.of(LIST_UUID, LIST2_UUID), UUID.fromString(NETWORK_UUID), null);
+        assertEquals(CONTINGENCY_COUNT, count.toString());
+        count = actionsService.getContingencyCount(List.of(LIST_UUID, LIST2_UUID), UUID.fromString(NETWORK_UUID), VARIANT_ID);
+        assertEquals(CONTINGENCY_COUNT, count.toString());
     }
 }

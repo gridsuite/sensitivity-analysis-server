@@ -8,11 +8,14 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.powsybl.sensitivity.SensitivityAnalysisParameters;
+import org.gridsuite.sensitivityanalysis.server.computation.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.entities.parameters.SensitivityAnalysisParametersEntity;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisParametersRepository;
+import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.NonEvacuatedEnergyRunContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -122,5 +125,58 @@ public class SensitivityAnalysisParametersService {
 
     public SensitivityAnalysisParametersInfos getDefauSensitivityAnalysisParametersInfos() {
         return SensitivityAnalysisParametersInfos.builder().provider(defaultProvider).build();
+    }
+
+    public NonEvacuatedEnergyRunContext createNonEvacuatedEnergyRunContext(UUID networkUuid, String variantId,
+                                                          String receiver,
+                                                          ReportInfos reportInfos,
+                                                          String userId,
+                                                          String provider,
+                                                          UUID loadFlowParametersUuid,
+                                                          NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData) {
+        NonEvacuatedEnergyRunContext nonEvacuatedEnergyRunContext = new NonEvacuatedEnergyRunContext(networkUuid,
+                variantId,
+                nonEvacuatedEnergyInputData,
+                receiver,
+                provider,
+                reportInfos,
+                userId);
+
+        // complete nonEvacuatedEnergyRunContext with loadFlowParameters
+        completeNonEvacuatedEnergyRunContext(nonEvacuatedEnergyRunContext, loadFlowParametersUuid);
+
+        return nonEvacuatedEnergyRunContext;
+    }
+
+    private void completeNonEvacuatedEnergyRunContext(NonEvacuatedEnergyRunContext nonEvacuatedEnergyRunContext, UUID loadFlowParametersUuid) {
+        LoadFlowParametersValues loadFlowParametersValues = loadFlowService.getLoadFlowParameters(loadFlowParametersUuid, nonEvacuatedEnergyRunContext.getProvider());
+        nonEvacuatedEnergyRunContext.getNonEvacuatedEnergyInputData().setLoadFlowSpecificParameters(loadFlowParametersValues.specificParameters());
+        nonEvacuatedEnergyRunContext.getNonEvacuatedEnergyInputData().getParameters().setLoadFlowParameters(loadFlowParametersValues.commonParameters());
+    }
+
+    public SensitivityAnalysisRunContext createRunContext(UUID networkUuid, String variantId,
+                                                          String receiver,
+                                                          ReportInfos reportInfos,
+                                                          String userId,
+                                                          UUID parametersUuid,
+                                                          UUID loadFlowParametersUuid) {
+        SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersUuid != null
+                ? getParameters(parametersUuid)
+                .orElse(getDefauSensitivityAnalysisParametersInfos())
+                : getDefauSensitivityAnalysisParametersInfos();
+
+        if (sensitivityAnalysisParametersInfos.getProvider() == null) {
+            sensitivityAnalysisParametersInfos.setProvider(getDefauSensitivityAnalysisParametersInfos().getProvider());
+        }
+
+        SensitivityAnalysisInputData inputData = buildInputData(sensitivityAnalysisParametersInfos, loadFlowParametersUuid);
+
+        return new SensitivityAnalysisRunContext(networkUuid,
+                variantId,
+                receiver,
+                reportInfos,
+                userId,
+                sensitivityAnalysisParametersInfos.getProvider(),
+                inputData);
     }
 }

@@ -1,17 +1,17 @@
 /**
- * Copyright (c) 2022, RTE (http://www.rte-france.com)
+ * Copyright (c) 2020, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.sensitivityanalysis.server.service;
+package org.gridsuite.sensitivityanalysis.server.computation.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModelJsonModule;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -25,7 +25,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
+ * @author Anis Touri <anis.touri at rte-france.com>
  */
 @Service
 public class ReportService {
@@ -34,24 +34,21 @@ public class ReportService {
     private static final String DELIMITER = "/";
     private static final String QUERY_PARAM_REPORT_TYPE_FILTER = "reportTypeFilter";
     private static final String QUERY_PARAM_REPORT_THROW_ERROR = "errorOnReportNotFound";
+    @Setter
     private String reportServerBaseUri;
 
-    @Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
 
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
-    @Autowired
     public ReportService(ObjectMapper objectMapper,
-                         @Value("${gridsuite.services.report-server.base-uri:http://report-server/}") String reportServerBaseUri) {
+                         @Value("${gridsuite.services.report-server.base-uri:http://report-server/}") String reportServerBaseUri,
+                         RestTemplate restTemplate) {
         this.reportServerBaseUri = reportServerBaseUri;
         this.objectMapper = objectMapper;
+        this.restTemplate = restTemplate;
         ReporterModelJsonModule reporterModelJsonModule = new ReporterModelJsonModule();
         objectMapper.registerModule(reporterModelJsonModule);
-    }
-
-    public void setReportServerBaseUri(String reportServerBaseUri) {
-        this.reportServerBaseUri = reportServerBaseUri;
     }
 
     private String getReportServerURI() {
@@ -62,8 +59,8 @@ public class ReportService {
         Objects.requireNonNull(reportUuid);
 
         var path = UriComponentsBuilder.fromPath("{reportUuid}")
-            .buildAndExpand(reportUuid)
-            .toUriString();
+                .buildAndExpand(reportUuid)
+                .toUriString();
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 

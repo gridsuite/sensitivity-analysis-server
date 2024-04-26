@@ -29,18 +29,32 @@ public class ActionsService {
     static final String ACTIONS_API_VERSION = "v1";
     private static final String DELIMITER = "/";
     private String actionsServerBaseUri;
+    private static final String NETWORK_UUID = "networkUuid";
     private static final String QUERY_PARAM_VARIANT_ID = "variantId";
+    private static final String CONTINGENCY_LIST_IDS = "ids";
+
+    private final RestTemplate restTemplate;
 
     @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    public ActionsService(@Value("${gridsuite.services.actions-server.base-uri:http://actions-server/}") String actionsServerBaseUri) {
+    public ActionsService(@Value("${gridsuite.services.actions-server.base-uri:http://actions-server/}") String actionsServerBaseUri, RestTemplate restTemplate) {
         this.actionsServerBaseUri = actionsServerBaseUri;
+        this.restTemplate = restTemplate;
     }
 
     public void setActionsServerBaseUri(String actionsServerBaseUri) {
         this.actionsServerBaseUri = actionsServerBaseUri;
+    }
+
+    public Integer getContingencyCount(List<UUID> uuids, UUID networkUuid, String variantId) {
+        var uriComponentsBuilder = UriComponentsBuilder
+                .fromPath(DELIMITER + ACTIONS_API_VERSION + "/contingency-lists/count")
+                .queryParam(CONTINGENCY_LIST_IDS, uuids)
+                .queryParam(NETWORK_UUID, networkUuid);
+        if (!StringUtils.isBlank(variantId)) {
+            uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);
+        }
+        var path = uriComponentsBuilder.toUriString();
+        return restTemplate.exchange(actionsServerBaseUri + path, HttpMethod.GET, null, Integer.class).getBody();
     }
 
     public List<Contingency> getContingencyList(UUID uuid, UUID networkUuid, String variantId) {
@@ -49,7 +63,7 @@ public class ActionsService {
 
         var uriComponentsBuilder = UriComponentsBuilder
                     .fromPath(DELIMITER + ACTIONS_API_VERSION + "/contingency-lists/{name}/export")
-                    .queryParam("networkUuid", networkUuid.toString());
+                    .queryParam(NETWORK_UUID, networkUuid.toString());
         if (!StringUtils.isBlank(variantId)) {
             uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);
         }
