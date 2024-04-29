@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class SensitivityAnalysisObserver extends AbstractComputationObserver<Void, SensitivityAnalysisInputData> {
-    private static final String COMPUTATION_TYPE = "sensi";
+    private static final String COMPUTATION_TYPE = "sensitivityanalysis";
 
     public SensitivityAnalysisObserver(@NonNull ObservationRegistry observationRegistry,
                                        @NonNull MeterRegistry meterRegistry) {
