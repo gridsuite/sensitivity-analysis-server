@@ -270,7 +270,7 @@ public class SensitivityAnalysisParametersTest {
     }
 
     private UUID duplicateParameters(UUID parametersUuid) throws Exception {
-        MvcResult mvcPostResult = mockMvc.perform(post(URI_PARAMETERS_BASE + "/" + parametersUuid))
+        MvcResult mvcPostResult = mockMvc.perform(post(URI_PARAMETERS_BASE).queryParam("duplicateFrom", parametersUuid.toString()))
             .andExpect(status().isOk()).andReturn();
 
         return mapper.readValue(mvcPostResult.getResponse().getContentAsString(), UUID.class);
