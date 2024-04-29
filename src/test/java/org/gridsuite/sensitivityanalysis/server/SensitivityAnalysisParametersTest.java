@@ -194,7 +194,7 @@ public class SensitivityAnalysisParametersTest {
         UUID parametersUuid = postParameters(parametersToCreate);
         SensitivityAnalysisParametersInfos createdParameters = getParameters(parametersUuid);
 
-        mockMvc.perform(post(URI_PARAMETERS_BASE + "/" + UUID.randomUUID()))
+        mockMvc.perform(post(URI_PARAMETERS_BASE).queryParam("duplicateFrom", UUID.randomUUID().toString()))
             .andExpect(status().isNotFound());
 
         UUID duplicatedParametersUuid = duplicateParameters(createdParameters.getUuid());
