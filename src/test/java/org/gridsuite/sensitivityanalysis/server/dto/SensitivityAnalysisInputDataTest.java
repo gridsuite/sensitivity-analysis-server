@@ -9,8 +9,7 @@ package org.gridsuite.sensitivityanalysis.server.dto;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
@@ -126,12 +125,12 @@ public class SensitivityAnalysisInputDataTest {
             .sensitivityNodes(List.of())
             .parameters(SensitivityAnalysisParameters.load())
             .build();
-        ReporterModel reporter = new ReporterModel("a", "b");
+        ReportNode reporter = ReportNode.newRootReportNode().withMessageTemplate("a", "b").build();
         SensitivityAnalysisRunContext context;
         context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
         inputBuilderService.build(context, NETWORK, reporter);
-        Collection<Report> reports;
-        reports = reporter.getReports();
+        Collection<ReportNode> reports;
+        reports = reporter.getChildren();
         assertThat(reports, not(nullValue()));
         assertThat(reports.size(), is(0));
     }
@@ -143,7 +142,7 @@ public class SensitivityAnalysisInputDataTest {
         given(actionsService.getContingencyList(any(), any(), any())).willThrow(new RuntimeException("ContingencyException"));
         inputBuilderService = new SensitivityAnalysisInputBuilderService(actionsService, filterService);
         SensitivityAnalysisInputData.SensitivityAnalysisInputDataBuilder<?, ?> inputBuilder = SensitivityAnalysisInputData.builder();
-        ReporterModel reporter = new ReporterModel("a", "b");
+        ReportNode reporter = ReportNode.newRootReportNode().withMessageTemplate("a", "b").build();
         SensitivityAnalysisRunContext context;
 
         SensitivityAnalysisInputData inputData = inputBuilder
@@ -160,10 +159,10 @@ public class SensitivityAnalysisInputDataTest {
             .build();
         context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
         inputBuilderService.build(context, NETWORK, reporter);
-        Collection<Report> reports = reporter.getReports();
+        Collection<ReportNode> reports = reporter.getChildren();
         assertThat(reports, not(nullValue()));
         assertThat(reports.size(), is(3));
-        Set<String> reportKeys = reports.stream().map(Report::getReportKey).collect(Collectors.toSet());
+        Set<String> reportKeys = reports.stream().map(ReportNode::getMessageKey).collect(Collectors.toSet());
         assertThat(reportKeys.size(), is(2));
         assertThat(reportKeys, contains("contingencyTranslationFailure", "filterTranslationFailure"));
     }
@@ -179,14 +178,14 @@ public class SensitivityAnalysisInputDataTest {
         SensitivityAnalysisInputData inputData = inputBuilder
             .build();
         context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
-        final ReporterModel reporter = new ReporterModel("a", "b");
+        final ReportNode reporter = ReportNode.newRootReportNode().withMessageTemplate("a", "b").build();
         var thrown = assertThrows(NullPointerException.class, () -> inputBuilderService.build(context, NETWORK, reporter));
         assertThat(thrown, Matchers.instanceOf(NullPointerException.class));
 
-        Collection<Report> reports = reporter.getReports();
+        Collection<ReportNode> reports = reporter.getChildren();
         assertThat(reports, not(nullValue()));
         assertThat(reports.size(), is(1));
-        Set<String> reportKeys = reports.stream().map(Report::getReportKey).collect(Collectors.toSet());
+        Set<String> reportKeys = reports.stream().map(ReportNode::getMessageKey).collect(Collectors.toSet());
         assertThat(reportKeys.size(), is(1));
         assertThat(reportKeys, contains("sensitivityInputParametersTranslationFailure"));
     }
