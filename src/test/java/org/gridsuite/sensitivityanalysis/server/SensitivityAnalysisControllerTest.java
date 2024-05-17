@@ -350,12 +350,10 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     void noEquipmentTest() throws Exception {
+        // Run without allowed injections
         UUID resultUuid = run(PARAMETERS_UUID2);
         checkComputationSucceeded(resultUuid);
 
-        // check results can be retrieved for the without contingencies side
-        // and that they can be filtered by function IDs, variable IDs
-        // and sorted according to multiple criteria
         ResultsSelector selectorN = ResultsSelector.builder()
                 .tabSelection(ResultTab.N)
                 .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
@@ -370,7 +368,7 @@ public class SensitivityAnalysisControllerTest {
         SensitivityRunQueryResult resN = queryResult(resultUuid, selectorN);
         assertEquals(0, (long) resN.getTotalSensitivitiesCount());
 
-        // Run without allowed injections
+        // Run without allowed branches
         resultUuid = run(PARAMETERS_UUID3);
         checkComputationSucceeded(resultUuid);
 
@@ -531,7 +529,7 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     void runTestWithError() throws Exception {
-        UUID resultUuid = run(NETWORK_ERROR_UUID);
+        UUID resultUuid = run(NETWORK_ERROR_UUID, PARAMETERS_UUID);
         checkComputationFailed(resultUuid, "sensitivityanalysis.failed", getFailedMessage(COMPUTATION_TYPE) + " : " + ERROR_MESSAGE);
         queryResultFails(resultUuid, status().isNotFound());
     }
