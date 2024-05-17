@@ -63,7 +63,7 @@ public class NonEvacuatedEnergyInputBuilderService {
                     "Could not get contingencies from contingencyListIdent ${name} : ${exception}",
                     Map.of("exception", ex.getMessage(), "name", contingencyListIdent.getContainerName()),
                     TypedValue.ERROR_SEVERITY
-                    );
+            );
             return List.of();
         }
     }
