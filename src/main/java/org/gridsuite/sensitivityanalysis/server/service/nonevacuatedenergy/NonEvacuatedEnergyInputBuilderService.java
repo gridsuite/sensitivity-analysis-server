@@ -7,9 +7,9 @@
 package org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy;
 
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.ReportNodeAdder;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.contingency.ContingencyContext;
 import com.powsybl.iidm.network.*;
@@ -28,10 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -50,23 +47,28 @@ public class NonEvacuatedEnergyInputBuilderService {
         this.filterService = filterService;
     }
 
-    private List<Contingency> goGetContingencies(EquipmentsContainer contingencyListIdent, UUID networkUuid, String variantId, Reporter reporter) {
+    private static void addReport(ReportNode parent, String messageKey, String messageTemplate, Map<String, String> values, TypedValue severity) {
+        ReportNodeAdder adder = parent.newReportNode().withMessageTemplate(messageKey, messageTemplate);
+        values.entrySet().forEach(v -> adder.withUntypedValue(v.getKey(), v.getValue()));
+        adder.withSeverity(TypedValue.ERROR_SEVERITY).add();
+    }
+
+    private List<Contingency> goGetContingencies(EquipmentsContainer contingencyListIdent, UUID networkUuid, String variantId, ReportNode reporter) {
         try {
             return actionsService.getContingencyList(contingencyListIdent.getContainerId(), networkUuid, variantId);
         } catch (Exception ex) {
             LOGGER.error("Could not get contingencies from " + contingencyListIdent.getContainerName(), ex);
-            reporter.report(Report.builder()
-                .withKey("contingencyTranslationFailure")
-                .withDefaultMessage("Could not get contingencies from contingencyListIdent ${name} : ${exception}")
-                .withSeverity(TypedValue.ERROR_SEVERITY)
-                .withValue("exception", ex.getMessage())
-                .withValue("name", contingencyListIdent.getContainerName())
-                .build());
+            addReport(reporter,
+                    "contingencyTranslationFailure",
+                    "Could not get contingencies from contingencyListIdent ${name} : ${exception}",
+                    Map.of("exception", ex.getMessage(), "name", contingencyListIdent.getContainerName()),
+                    TypedValue.ERROR_SEVERITY
+            );
             return List.of();
         }
     }
 
-    public List<Contingency> buildContingencies(UUID networkUuid, String variantId, List<EquipmentsContainer> contingencyListsContainerIdents, Reporter reporter) {
+    public List<Contingency> buildContingencies(UUID networkUuid, String variantId, List<EquipmentsContainer> contingencyListsContainerIdents, ReportNode reporter) {
         return contingencyListsContainerIdents.stream()
             .flatMap(contingencyListIdent -> goGetContingencies(contingencyListIdent, networkUuid, variantId, reporter).stream())
             .collect(Collectors.toList());
@@ -90,61 +92,58 @@ public class NonEvacuatedEnergyInputBuilderService {
         }
     }
 
-    private List<IdentifiableAttributes> goGetIdentifiables(EquipmentsContainer filter, UUID networkUuid, String variantId, Reporter reporter) {
+    private List<IdentifiableAttributes> goGetIdentifiables(EquipmentsContainer filter, UUID networkUuid, String variantId, ReportNode reporter) {
         try {
             return filterService.getIdentifiablesFromFilter(filter.getContainerId(), networkUuid, variantId);
         } catch (Exception ex) {
             LOGGER.error("Could not get identifiables from filter " + filter.getContainerName(), ex);
-            reporter.report(Report.builder()
-                .withKey("filterTranslationFailure")
-                .withDefaultMessage("Could not get identifiables from filter ${name} : ${exception}")
-                .withSeverity(TypedValue.ERROR_SEVERITY)
-                .withValue("exception", ex.getMessage())
-                .withValue("name", filter.getContainerName())
-                .build());
+            addReport(reporter,
+                    "filterTranslationFailure",
+                    "Could not get identifiables from filter ${name} : ${exception}",
+                    Map.of("exception", ex.getMessage(), "name", filter.getContainerName()),
+                    TypedValue.ERROR_SEVERITY
+            );
             return List.of();
         }
     }
 
     public Stream<IdentifiableAttributes> getIdentifiablesFromContainer(UUID networkUuid, String variantId, EquipmentsContainer filter,
-                                                                        List<IdentifiableType> equipmentsTypesAllowed, Reporter reporter) {
+                                                                        List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter) {
 
         List<IdentifiableAttributes> listIdentAttributes = goGetIdentifiables(filter, networkUuid, variantId, reporter);
 
         // check that monitored equipments type is allowed
         if (!listIdentAttributes.stream().allMatch(i -> equipmentsTypesAllowed.contains(i.getType()))) {
-            reporter.report(Report.builder()
-                .withKey("badEquipmentType")
-                .withDefaultMessage("Equipments type in filter with name=${name} should be ${expectedType} : filter is ignored")
-                .withValue("name", filter.getContainerName())
-                .withValue(EXPECTED_TYPE, equipmentsTypesAllowed.toString())
-                .withSeverity(TypedValue.WARN_SEVERITY)
-                .build());
+            addReport(reporter,
+                    "badEquipmentType",
+                    "Equipments type in filter with name=${name} should be ${expectedType} : filter is ignored",
+                    Map.of("name", filter.getContainerName(), EXPECTED_TYPE, equipmentsTypesAllowed.toString()),
+                    TypedValue.WARN_SEVERITY
+            );
             return Stream.empty();
         }
 
         return listIdentAttributes.stream();
     }
 
-    private Stream<IdentifiableAttributes> getMonitoredIdentifiablesFromContainer(UUID networkUuid, String variantId, EquipmentsContainer filter, List<IdentifiableType> equipmentsTypesAllowed, Reporter reporter) {
+    private Stream<IdentifiableAttributes> getMonitoredIdentifiablesFromContainer(UUID networkUuid, String variantId, EquipmentsContainer filter, List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter) {
         List<IdentifiableAttributes> listIdentAttributes = goGetIdentifiables(filter, networkUuid, variantId, reporter);
 
         // check that monitored equipments type is allowed
         if (!listIdentAttributes.stream().allMatch(i -> equipmentsTypesAllowed.contains(i.getType()))) {
-            reporter.report(Report.builder()
-                .withKey("badMonitoredEquipmentType")
-                .withDefaultMessage("Monitored equipments type in filter with name=${name} should be ${expectedType} : filter is ignored")
-                .withValue("name", filter.getContainerName())
-                .withValue(EXPECTED_TYPE, equipmentsTypesAllowed.toString())
-                .withSeverity(TypedValue.WARN_SEVERITY)
-                .build());
+            addReport(reporter,
+                    "badMonitoredEquipmentType",
+                    "Monitored equipments type in filter with name=${name} should be ${expectedType} : filter is ignored",
+                    Map.of("name", filter.getContainerName(), EXPECTED_TYPE, equipmentsTypesAllowed.toString()),
+                    TypedValue.WARN_SEVERITY
+            );
             return Stream.empty();
         }
 
         return listIdentAttributes.stream();
     }
 
-    private List<SensitivityVariableSet> buildSensitivityVariableSets(UUID networkUuid, String variantId, Network network, Reporter reporter,
+    private List<SensitivityVariableSet> buildSensitivityVariableSets(UUID networkUuid, String variantId, Network network, ReportNode reporter,
                                                                       List<IdentifiableType> variablesTypesAllowed,
                                                                       List<EquipmentsContainer> filters,
                                                                       EnergySource energySource,
@@ -164,13 +163,12 @@ public class NonEvacuatedEnergyInputBuilderService {
                         throw new PowsyblException("Generator '" + identifiableAttributes.getId() + "' not found !!");
                     }
                     if (generator.getEnergySource() != energySource) {
-                        reporter.report(Report.builder()
-                            .withKey("BadGeneratorEnergySource")
-                            .withDefaultMessage("Generator ${generatorId} is not of the required energy source : ${energySource}")
-                            .withSeverity(TypedValue.WARN_SEVERITY)
-                            .withValue("generatorId", generator.getId())
-                            .withValue("energySource", energySource.name())
-                            .build());
+                        addReport(reporter,
+                                "BadGeneratorEnergySource",
+                                "Generator ${generatorId} is not of the required energy source : ${energySource}",
+                                Map.of("generatorId", generator.getId(), "energySource", energySource.name()),
+                                TypedValue.WARN_SEVERITY
+                        );
                     } else {
                         double weight = getGeneratorWeight(generator, distributionType, identifiableAttributes.getDistributionKey());
                         variables.add(new WeightedSensitivityVariable(identifiableAttributes.getId(), weight));
@@ -185,7 +183,7 @@ public class NonEvacuatedEnergyInputBuilderService {
 
     private List<SensitivityFactor> buildSensitivityFactorsFromVariablesSets(NonEvacuatedEnergyRunContext context,
                                                                              Network network,
-                                                                             Reporter reporter,
+                                                                             ReportNode reporter,
                                                                              List<IdentifiableType> monitoredEquipmentsTypesAllowed,
                                                                              NonEvacuatedEnergyMonitoredBranches branches,
                                                                              List<SensitivityVariableSet> variablesSets,
@@ -205,7 +203,7 @@ public class NonEvacuatedEnergyInputBuilderService {
 
     private List<SensitivityFactor> buildSensitivityFactors(NonEvacuatedEnergyRunContext context,
                                                             Network network,
-                                                            Reporter reporter,
+                                                            ReportNode reporter,
                                                             List<IdentifiableType> monitoredEquipmentsTypesAllowed,
                                                             NonEvacuatedEnergyMonitoredBranches branches,
                                                             List<EquipmentsContainer> injectionsFilters,
@@ -258,19 +256,18 @@ public class NonEvacuatedEnergyInputBuilderService {
                                             MonitoredBranchThreshold monitoredBranchThreshold,
                                             List<Contingency> contingencies,
                                             List<SensitivityFactor> result,
-                                            Reporter reporter) {
+                                               ReportNode reporter) {
         if (currentLimits.isEmpty()) {
             return false;
         }
         if (Double.isNaN(currentLimits.get().getPermanentLimit())) {
             // no permanent limit on side found : report and throw exception
-            reporter.report(Report.builder()
-                .withKey("monitoredBranchNoCurrentOrPermanentLimitsOnSide")
-                .withDefaultMessage("No permanent limit for the monitored branch ${id} on side ${side}")
-                .withSeverity(TypedValue.ERROR_SEVERITY)
-                .withValue("id", branch.getId())
-                .withValue("side", side.name())
-                .build());
+            addReport(reporter,
+                    "monitoredBranchNoCurrentOrPermanentLimitsOnSide",
+                    "No permanent limit for the monitored branch ${id} on side ${side}",
+                    Map.of("id", branch.getId(), "side", side.name()),
+                    TypedValue.ERROR_SEVERITY
+            );
             throw new PowsyblException("Branch '" + branch.getId() + "' has no permanent limit on side '" + side.name() + "' !!");
         }
 
@@ -330,7 +327,7 @@ public class NonEvacuatedEnergyInputBuilderService {
                                                                         NonEvacuatedEnergyMonitoredBranches branches,
                                                                         List<Contingency> contingencies,
                                                                         SensitivityVariableType sensitivityVariableType,
-                                                                        Reporter reporter,
+                                                                        ReportNode reporter,
                                                                         boolean variableSet) {
         List<SensitivityFactor> result = new ArrayList<>();
 
@@ -338,24 +335,24 @@ public class NonEvacuatedEnergyInputBuilderService {
             // get branch from network
             Branch branch = network.getBranch(monitoredEquipment.getId());
             if (branch == null) {  // branch not found : just report and ignore the branch
-                reporter.report(Report.builder()
-                    .withKey("monitoredBranchNotFound")
-                    .withDefaultMessage("Could not find the monitored branch ${id}")
-                    .withSeverity(TypedValue.ERROR_SEVERITY)
-                    .withValue("id", monitoredEquipment.getId())
-                    .build());
+                addReport(reporter,
+                        "monitoredBranchNotFound",
+                        "Could not find the monitored branch ${id}",
+                        Map.of("id", monitoredEquipment.getId()),
+                        TypedValue.ERROR_SEVERITY
+                );
                 return;
             }
             Optional<CurrentLimits> currentLimits1 = branch.getCurrentLimits1();
             Optional<CurrentLimits> currentLimits2 = branch.getCurrentLimits2();
             if (currentLimits1.isEmpty() && currentLimits2.isEmpty()) {
                 // no current limits on both sides found : report and throw exception
-                reporter.report(Report.builder()
-                    .withKey("monitoredBranchNoCurrentLimits")
-                    .withDefaultMessage("No current limits for the monitored branch ${id}")
-                    .withSeverity(TypedValue.ERROR_SEVERITY)
-                    .withValue("id", monitoredEquipment.getId())
-                    .build());
+                addReport(reporter,
+                        "monitoredBranchNoCurrentLimits",
+                        "No current limits for the monitored branch ${id}",
+                        Map.of("id", monitoredEquipment.getId()),
+                        TypedValue.ERROR_SEVERITY
+                );
                 throw new PowsyblException("Branch '" + branch.getId() + "' has no current limits !!");
             }
 
@@ -370,12 +367,12 @@ public class NonEvacuatedEnergyInputBuilderService {
 
                 if (!factors1Generated && !factors2Generated) {
                     // no temporary limit on one side : report and throw exception
-                    reporter.report(Report.builder()
-                        .withKey("monitoredBranchNoPermanentLimits")
-                        .withDefaultMessage("No permanent limits for the monitored branch ${id}")
-                        .withSeverity(TypedValue.ERROR_SEVERITY)
-                        .withValue("id", monitoredEquipment.getId())
-                        .build());
+                    addReport(reporter,
+                            "monitoredBranchNoPermanentLimits",
+                            "No permanent limits for the monitored branch ${id}",
+                            Map.of("id", monitoredEquipment.getId()),
+                            TypedValue.ERROR_SEVERITY
+                    );
                     throw new PowsyblException("Branch '" + branch.getId() + "' has no permanent limits !!");
                 }
             }
@@ -388,13 +385,12 @@ public class NonEvacuatedEnergyInputBuilderService {
                 boolean factors2Generated = genFactorForTemporaryLimit(branch, TwoSides.TWO, currentLimits2, branches.getLimitNameN(), true, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result);
 
                 if (!factors1Generated && !factors2Generated) {
-                    reporter.report(Report.builder()
-                        .withKey("monitoredBranchTemporaryLimitNotFound")
-                        .withDefaultMessage("Temporary limit ${limitName} not found for the monitored branch ${id}")
-                        .withSeverity(TypedValue.ERROR_SEVERITY)
-                        .withValue("limitName", branches.getLimitNameN())
-                        .withValue("id", branch.getId())
-                        .build());
+                    addReport(reporter,
+                            "monitoredBranchTemporaryLimitNotFound",
+                            "Temporary limit ${limitName} not found for the monitored branch ${id}",
+                            Map.of("limitName", branches.getLimitNameN(), "id", branch.getId()),
+                            TypedValue.ERROR_SEVERITY
+                    );
                     throw new PowsyblException("Temporary limit '" + branches.getLimitNameN() + "' not found for branch '" + branch.getId() + "' !!");
                 }
             }
@@ -407,13 +403,12 @@ public class NonEvacuatedEnergyInputBuilderService {
                 boolean factors2Generated = genFactorForTemporaryLimit(branch, TwoSides.TWO, currentLimits2, branches.getLimitNameNm1(), false, variableIds, variableSet, sensitivityVariableType, branches, monitoredBranchThreshold, contingencies, result);
 
                 if (!factors1Generated && !factors2Generated) {
-                    reporter.report(Report.builder()
-                        .withKey("monitoredBranchTemporaryLimitNotFound")
-                        .withDefaultMessage("Temporary limit ${limitName} not found for the monitored branch ${id}")
-                        .withSeverity(TypedValue.ERROR_SEVERITY)
-                        .withValue("limitName", branches.getLimitNameNm1())
-                        .withValue("id", branch.getId())
-                        .build());
+                    addReport(reporter,
+                            "monitoredBranchTemporaryLimitNotFound",
+                            "Temporary limit ${limitName} not found for the monitored branch ${id}",
+                            Map.of("limitName", branches.getLimitNameNm1(), "id", branch.getId()),
+                            TypedValue.ERROR_SEVERITY
+                    );
                     throw new PowsyblException("Temporary limit '" + branches.getLimitNameNm1() + "' not found for branch '" + branch.getId() + "' !!");
                 }
             }
@@ -428,7 +423,7 @@ public class NonEvacuatedEnergyInputBuilderService {
 
     private void buildSensitivityFactorsAndVariableSets(NonEvacuatedEnergyRunContext context,
                                                         Network network,
-                                                        Reporter reporter) {
+                                                        ReportNode reporter) {
         List<NonEvacuatedEnergyMonitoredBranches> monitoredBranches = context.getNonEvacuatedEnergyInputData().getNonEvacuatedEnergyMonitoredBranches();
         List<NonEvacuatedEnergyGeneratorsCappingsByType> generatorsCappingsByType = context.getNonEvacuatedEnergyInputData().getNonEvacuatedEnergyGeneratorsCappings().getGenerators();
 
@@ -485,7 +480,7 @@ public class NonEvacuatedEnergyInputBuilderService {
             });
     }
 
-    public void build(NonEvacuatedEnergyRunContext context, Network network, Reporter reporter) {
+    public void build(NonEvacuatedEnergyRunContext context, Network network, ReportNode reporter) {
         try {
             // build all contingencies from the input data
             context.getNonEvacuatedEnergyInputs().addContingencies(buildContingencies(context.getNetworkUuid(),
@@ -504,12 +499,12 @@ public class NonEvacuatedEnergyInputBuilderService {
             if (msg == null) {
                 msg = ex.getClass().getName();
             }
-            reporter.report(Report.builder()
-                .withKey("NonEvacuatedEnergyInputParametersTranslationFailure")
-                .withDefaultMessage("Failure while building inputs, exception : ${exception}")
-                .withSeverity(TypedValue.ERROR_SEVERITY)
-                .withValue("exception", msg)
-                .build());
+            addReport(reporter,
+                    "NonEvacuatedEnergyInputParametersTranslationFailure",
+                    "Failure while building inputs, exception : ${exception}",
+                    Map.of("exception", msg),
+                    TypedValue.ERROR_SEVERITY
+            );
             LOGGER.error("Running non evacuated energy context translation failure, report added");
             throw ex;
         }

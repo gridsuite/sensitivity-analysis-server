@@ -10,8 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.extensions.Extension;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
@@ -122,7 +121,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
         String variantId = runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID;
 
         SensitivityAnalysisParameters sensitivityAnalysisParameters = buildParameters(runContext);
-        sensitivityAnalysisInputBuilderService.build(runContext, network, runContext.getReporter());
+        sensitivityAnalysisInputBuilderService.build(runContext, network, runContext.getReportNode());
 
         List<List<SensitivityFactor>> groupedFactors = runContext.getSensitivityAnalysisInputs().getFactors();
         List<Contingency> contingencies = new ArrayList<>(runContext.getSensitivityAnalysisInputs().getContingencies());
@@ -144,7 +143,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
                 runContext.getSensitivityAnalysisInputs().getVariablesSets(),
                 sensitivityAnalysisParameters,
                 executionService.getComputationManager(),
-                runContext.getReporter());
+                runContext.getReportNode());
 
         if (resultUuid != null) {
             futures.put(resultUuid, future);
@@ -232,13 +231,14 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
 
         SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(runContext.getProvider());
 
-        AtomicReference<Reporter> rootReporter = new AtomicReference<>(Reporter.NO_OP);
-        Reporter reporter = Reporter.NO_OP;
+        AtomicReference<ReportNode> rootReporter = new AtomicReference<>(ReportNode.NO_OP);
+        ReportNode reporter = ReportNode.NO_OP;
         if (runContext.getReportInfos().reportUuid() != null) {
             final String reportType = runContext.getReportInfos().computationType();
             String rootReporterId = runContext.getReportInfos().reporterId() == null ? reportType : runContext.getReportInfos().reporterId() + "@" + reportType;
-            rootReporter.set(new ReporterModel(rootReporterId, rootReporterId));
-            reporter = rootReporter.get().createSubReporter(reportType, reportType + " (${providerToUse})", "providerToUse", sensitivityAnalysisRunner.getName());
+            rootReporter.set(ReportNode.newRootReportNode().withMessageTemplate(rootReporterId, rootReporterId).build());
+            reporter = rootReporter.get().newReportNode().withMessageTemplate(reportType, reportType + " (${providerToUse})")
+                    .withUntypedValue("providerToUse", sensitivityAnalysisRunner.getName()).add();
             // Delete any previous sensi computation logs
             inMemoryObserver.observe("report.delete",
                     runContext, () -> reportService.deleteReport(runContext.getReportInfos().reportUuid(), reportType));
@@ -255,7 +255,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
 
     private CompletableFuture<SensitivityAnalysisResult> runSensitivityAnalysisAsync(SensitivityAnalysisRunContext context,
                                                                                      SensitivityAnalysis.Runner sensitivityAnalysisRunner,
-                                                                                     Reporter reporter) {
+                                                                                     ReportNode reporter) {
         lockRunAndCancel.lock();
         try {
             SensitivityAnalysisParameters sensitivityAnalysisParameters = buildParameters(context);
@@ -270,7 +270,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
 
     private CompletableFuture<SensitivityAnalysisResult> runAsyncInMemory(SensitivityAnalysisRunContext context,
                                                                           SensitivityAnalysis.Runner sensitivityAnalysisRunner,
-                                                                          Reporter reporter,
+                                                                          ReportNode reporter,
                                                                           Network network,
                                                                           SensitivityAnalysisParameters parameters) {
         List<SensitivityFactor> factors = context.getSensitivityAnalysisInputs().getFactors().stream().flatMap(Collection::stream).toList();

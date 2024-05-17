@@ -82,6 +82,8 @@ public class SensitivityAnalysisControllerTest {
     private static final UUID NETWORK_UUID = UUID.randomUUID();
     private static final UUID NETWORK_ERROR_UUID = UUID.randomUUID();
     public static UUID PARAMETERS_UUID;
+    public static UUID PARAMETERS_UUID2;
+    public static UUID PARAMETERS_UUID3;
     public static final UUID LOADFLOW_PARAMETERS_UUID = UUID.randomUUID();
     private static final UUID RESULT_UUID = UUID.randomUUID();
 
@@ -143,30 +145,69 @@ public class SensitivityAnalysisControllerTest {
             .build();
         doReturn(loadFlowParametersValues).when(loadflowService).getLoadFlowParameters(eq(LOADFLOW_PARAMETERS_UUID), any());
 
-        PARAMETERS_UUID = createParameters();
+        SensitivityAnalysisParametersInfos parameters = SensitivityAnalysisParametersInfos.builder()
+                .sensitivityInjection(List.of(
+                        SensitivityInjection.builder()
+                                .monitoredBranches(List.of(
+                                        new EquipmentsContainer(BRANCH1_CONTAINER_UUID, "branch1"),
+                                        new EquipmentsContainer(BRANCH2_CONTAINER_UUID, "branch2")
+                                ))
+                                .injections(List.of(
+                                        new EquipmentsContainer(GEN1_CONTAINER_UUID, "gen1"),
+                                        new EquipmentsContainer(GEN2_CONTAINER_UUID, "gen2")
+                                ))
+                                .contingencies(List.of(
+                                        new EquipmentsContainer(CONTINGENCY1_CONTAINER_UUID, "contingency1"),
+                                        new EquipmentsContainer(CONTINGENCY2_CONTAINER_UUID, "contingency2")
+                                ))
+                                .activated(true)
+                                .build()
+                ))
+                .build();
+
+        SensitivityAnalysisParametersInfos noEquipmentAllowedParameters = SensitivityAnalysisParametersInfos.builder()
+                .sensitivityInjection(List.of(
+                        SensitivityInjection.builder()
+                                .monitoredBranches(List.of(
+                                        new EquipmentsContainer(BRANCH1_CONTAINER_UUID, "branch1")
+                                ))
+                                .injections(List.of(
+                                        new EquipmentsContainer(BRANCH1_CONTAINER_UUID, "branch1"),
+                                        new EquipmentsContainer(BRANCH2_CONTAINER_UUID, "branch2")
+                                ))
+                                .contingencies(List.of(
+                                        new EquipmentsContainer(CONTINGENCY1_CONTAINER_UUID, "contingency1")
+                                ))
+                                .activated(true)
+                                .build()
+                ))
+                .build();
+
+        SensitivityAnalysisParametersInfos noMonitoredEquipmentAllowedParameters = SensitivityAnalysisParametersInfos.builder()
+                .sensitivityInjection(List.of(
+                        SensitivityInjection.builder()
+                                .monitoredBranches(List.of(
+                                        new EquipmentsContainer(GEN1_CONTAINER_UUID, "gen1"),
+                                        new EquipmentsContainer(GEN2_CONTAINER_UUID, "gen2")
+                                ))
+                                .injections(List.of(
+                                        new EquipmentsContainer(GEN1_CONTAINER_UUID, "gen1"),
+                                        new EquipmentsContainer(GEN2_CONTAINER_UUID, "gen2")
+                                ))
+                                .contingencies(List.of(
+                                        new EquipmentsContainer(CONTINGENCY1_CONTAINER_UUID, "contingency1")
+                                ))
+                                .activated(true)
+                                .build()
+                ))
+                .build();
+
+        PARAMETERS_UUID = createParameters(parameters);
+        PARAMETERS_UUID2 = createParameters(noEquipmentAllowedParameters);
+        PARAMETERS_UUID3 = createParameters(noMonitoredEquipmentAllowedParameters);
     }
 
-    private UUID createParameters() throws Exception {
-        SensitivityAnalysisParametersInfos parameters = SensitivityAnalysisParametersInfos.builder()
-            .sensitivityInjection(List.of(
-                SensitivityInjection.builder()
-                    .monitoredBranches(List.of(
-                        new EquipmentsContainer(BRANCH1_CONTAINER_UUID, "branch1"),
-                        new EquipmentsContainer(BRANCH2_CONTAINER_UUID, "branch2")
-                    ))
-                    .injections(List.of(
-                        new EquipmentsContainer(GEN1_CONTAINER_UUID, "gen1"),
-                        new EquipmentsContainer(GEN2_CONTAINER_UUID, "gen2")
-                    ))
-                    .contingencies(List.of(
-                        new EquipmentsContainer(CONTINGENCY1_CONTAINER_UUID, "contingency1"),
-                        new EquipmentsContainer(CONTINGENCY2_CONTAINER_UUID, "contingency2")
-                    ))
-                    .activated(true)
-                    .build()
-            ))
-            .build();
-
+    private UUID createParameters(SensitivityAnalysisParametersInfos parameters) throws Exception {
         MvcResult result = mockMvc.perform(
                 post("/" + VERSION + "/parameters")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -195,7 +236,7 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     void filterOptionsTest() throws Exception {
-        UUID resultUuid = run();
+        UUID resultUuid = run(PARAMETERS_UUID);
         checkComputationSucceeded(resultUuid);
 
         // test filter options
@@ -220,7 +261,7 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     void queryResultTest() throws Exception {
-        UUID resultUuid = run();
+        UUID resultUuid = run(PARAMETERS_UUID);
         checkComputationSucceeded(resultUuid);
 
         // check results can be retrieved for the without contingencies side
@@ -308,8 +349,47 @@ public class SensitivityAnalysisControllerTest {
     }
 
     @Test
+    void noEquipmentTest() throws Exception {
+        // Run without allowed injections
+        UUID resultUuid = run(PARAMETERS_UUID2);
+        checkComputationSucceeded(resultUuid);
+
+        ResultsSelector selectorN = ResultsSelector.builder()
+                .tabSelection(ResultTab.N)
+                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+                .functionIds(Stream.of(BRANCH1, BRANCH2).map(IdentifiableAttributes::getId).toList())
+                .variableIds(Stream.of(GEN1, GEN2).map(IdentifiableAttributes::getId).toList())
+                .sortKeysWithWeightAndDirection(Map.of(
+                        SortKey.SENSITIVITY, -1,
+                        SortKey.REFERENCE, 2,
+                        SortKey.VARIABLE, 3,
+                        SortKey.FUNCTION, 4))
+                .build();
+        SensitivityRunQueryResult resN = queryResult(resultUuid, selectorN);
+        assertEquals(0, (long) resN.getTotalSensitivitiesCount());
+
+        // Run without allowed branches
+        resultUuid = run(PARAMETERS_UUID3);
+        checkComputationSucceeded(resultUuid);
+
+        selectorN = ResultsSelector.builder()
+                .tabSelection(ResultTab.N)
+                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+                .functionIds(Stream.of(BRANCH1, BRANCH2).map(IdentifiableAttributes::getId).toList())
+                .variableIds(Stream.of(GEN1, GEN2).map(IdentifiableAttributes::getId).toList())
+                .sortKeysWithWeightAndDirection(Map.of(
+                        SortKey.SENSITIVITY, -1,
+                        SortKey.REFERENCE, 2,
+                        SortKey.VARIABLE, 3,
+                        SortKey.FUNCTION, 4))
+                .build();
+        resN = queryResult(resultUuid, selectorN);
+        assertEquals(0, (long) resN.getTotalSensitivitiesCount());
+    }
+
+    @Test
     void testDeterministicResult() throws Exception {
-        UUID resultUuid = run();
+        UUID resultUuid = run(PARAMETERS_UUID);
         checkComputationSucceeded(resultUuid);
 
         // check that the results is deterministic while the sort by contingency id is not (there are 2 results with the same id)
@@ -336,7 +416,7 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     void csvExportTest() throws Exception {
-        UUID resultUuid = run();
+        UUID resultUuid = run(PARAMETERS_UUID);
         checkComputationSucceeded(resultUuid);
 
         // export results as csv
@@ -370,7 +450,7 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     void deleteResultTest() throws Exception {
-        UUID resultUuid = run();
+        UUID resultUuid = run(PARAMETERS_UUID);
         checkComputationSucceeded(resultUuid);
 
         mockMvc.perform(delete("/" + VERSION + "/results/{resultUuid}", resultUuid))
@@ -381,7 +461,7 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     void deleteResultsTest() throws Exception {
-        UUID resultUuid = run();
+        UUID resultUuid = run(PARAMETERS_UUID);
         checkComputationSucceeded(resultUuid);
 
         mockMvc.perform(delete("/" + VERSION + "/results", resultUuid))
@@ -441,7 +521,7 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     void stopTest() throws Exception {
-        UUID resultUuid = run();
+        UUID resultUuid = run(PARAMETERS_UUID);
         mockMvc.perform(put("/" + VERSION + "/results/{resultUuid}/stop", resultUuid).param("receiver", "me"));
         checkComputationFailed(resultUuid, "sensitivityanalysis.stopped", getCancelMessage(COMPUTATION_TYPE));
         queryResultFails(resultUuid, status().isNotFound());
@@ -449,7 +529,7 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     void runTestWithError() throws Exception {
-        UUID resultUuid = run(NETWORK_ERROR_UUID);
+        UUID resultUuid = run(NETWORK_ERROR_UUID, PARAMETERS_UUID);
         checkComputationFailed(resultUuid, "sensitivityanalysis.failed", getFailedMessage(COMPUTATION_TYPE) + " : " + ERROR_MESSAGE);
         queryResultFails(resultUuid, status().isNotFound());
     }
@@ -484,15 +564,15 @@ public class SensitivityAnalysisControllerTest {
         return mapper.readValue(result.getResponse().getContentAsString(), SensitivityAnalysisResult.class);
     }
 
-    private UUID run() throws Exception {
-        return run(NETWORK_UUID);
+    private UUID run(UUID parametersUuid) throws Exception {
+        return run(NETWORK_UUID, parametersUuid);
     }
 
-    private UUID run(UUID networkUuid) throws Exception {
+    private UUID run(UUID networkUuid, UUID parametersUuid) throws Exception {
         MockHttpServletRequestBuilder req = post("/" + VERSION + "/networks/{networkUuid}/run-and-save", networkUuid)
             .param("reportType", "SensitivityAnalysis")
             .param("receiver", "me")
-            .param("parametersUuid", PARAMETERS_UUID.toString())
+            .param("parametersUuid", parametersUuid.toString())
             .param("loadFlowParametersUuid", LOADFLOW_PARAMETERS_UUID.toString());
         MvcResult result = mockMvc.perform(req.contentType(MediaType.APPLICATION_JSON).header(HEADER_USER_ID, "testUserId"))
             .andExpect(status().isOk())

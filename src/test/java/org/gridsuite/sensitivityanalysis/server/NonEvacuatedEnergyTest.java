@@ -8,7 +8,7 @@ package org.gridsuite.sensitivityanalysis.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
-import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.contingency.BranchContingency;
 import com.powsybl.contingency.Contingency;
@@ -723,7 +723,7 @@ public class NonEvacuatedEnergyTest {
         SensitivityAnalysis.Runner runner = mock(SensitivityAnalysis.Runner.class);
         given(runner.getName()).willReturn(defaultSensitivityAnalysisProvider);
         given(runner.runAsync(eq(network), anyString(), anyList(), anyList(), anyList(),
-            any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(Reporter.class)))
+            any(SensitivityAnalysisParameters.class), any(ComputationManager.class), any(ReportNode.class)))
             .willReturn(CompletableFuture.completedFuture(result1))
             .willReturn(CompletableFuture.completedFuture(result2))
             .willReturn(CompletableFuture.completedFuture(result3))
