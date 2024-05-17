@@ -355,18 +355,6 @@ public class SensitivityAnalysisInputBuilderService {
             SensitivityFunctionType sensitivityFunctionType = sensitivityHVDC.getSensitivityType() == SensitivityAnalysisInputData.SensitivityType.DELTA_MW
                 ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1
                 : SensitivityFunctionType.BRANCH_CURRENT_1;
-            // TODO : SensitivityType.DELTA_A is not yet supported with OpenLoadFlow
-            // check to be removed further ...
-            if (sensitivityHVDC.getSensitivityType() == SensitivityAnalysisInputData.SensitivityType.DELTA_A &&
-                StringUtils.equals("OpenLoadFlow", context.getProvider())) {
-                reporter.newReportNode()
-                    .withMessageTemplate("sensitivityTypeNotYetSupported", "Sensitivity type ${sensitivityType} is not yet supported with OpenLoadFlow : type forced to ${replacingSensitivityType}")
-                    .withUntypedValue("sensitivityType", sensitivityHVDC.getSensitivityType().name())
-                    .withUntypedValue("replacingSensitivityType", SensitivityAnalysisInputData.SensitivityType.DELTA_MW.name())
-                    .withSeverity(TypedValue.WARN_SEVERITY)
-                    .add();
-                sensitivityFunctionType = SensitivityFunctionType.BRANCH_ACTIVE_POWER_1;
-            }
 
             List<List<SensitivityFactor>> fHVDC = buildSensitivityFactorsFromEquipments(
                 context, network, reporter,
