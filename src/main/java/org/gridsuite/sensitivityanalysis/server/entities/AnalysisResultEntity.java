@@ -10,7 +10,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 /**
@@ -25,10 +25,10 @@ public class AnalysisResultEntity {
     @Id
     private UUID resultUuid;
 
-    @Column
-    private LocalDateTime writeTimeStamp;
+    @Column(columnDefinition = "timestamptz")
+    private ZonedDateTime writeTimeStamp;
 
-    public AnalysisResultEntity(UUID resultUuid, LocalDateTime writeTimeStamp) {
+    public AnalysisResultEntity(UUID resultUuid, ZonedDateTime writeTimeStamp) {
         this.resultUuid = resultUuid;
         this.writeTimeStamp = writeTimeStamp;
     }

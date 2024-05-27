@@ -15,7 +15,8 @@ import org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy.
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
@@ -54,7 +55,7 @@ public class NonEvacuatedEnergyResultService extends AbstractComputationResultSe
         Objects.requireNonNull(resultUuid);
         if (result != null) {
             nonEvacuatedEnergyResultRepository.save(new NonEvacuatedEnergyResultEntity(resultUuid,
-                LocalDateTime.now().truncatedTo(ChronoUnit.MICROS),
+                ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS),
                 result));
         }
         nonEvacuatedEnergyStatusRepository.save(toStatusEntity(resultUuid, status.name()));

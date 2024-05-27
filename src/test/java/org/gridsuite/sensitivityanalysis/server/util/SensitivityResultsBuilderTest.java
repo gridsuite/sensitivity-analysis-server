@@ -15,7 +15,8 @@ import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +40,7 @@ class SensitivityResultsBuilderTest {
     @Test
     void testBuildContingencyResults() {
         List<Contingency> contingencies = getContingencies();
-        AnalysisResultEntity analysisResult = new AnalysisResultEntity(UUID.randomUUID(), LocalDateTime.now());
+        AnalysisResultEntity analysisResult = new AnalysisResultEntity(UUID.randomUUID(), ZonedDateTime.now(ZoneOffset.UTC));
 
         Map<String, ContingencyResultEntity> contingencyResultsByContingencyId = SensitivityResultsBuilder.buildContingencyResults(contingencies, analysisResult);
 
@@ -53,7 +54,7 @@ class SensitivityResultsBuilderTest {
     void testBuildResults() {
         List<List<SensitivityFactor>> groupedFactors = getGroupedFactors();
         List<Contingency> contingencies = getContingencies();
-        AnalysisResultEntity analysisResult = new AnalysisResultEntity(UUID.randomUUID(), LocalDateTime.now());
+        AnalysisResultEntity analysisResult = new AnalysisResultEntity(UUID.randomUUID(), ZonedDateTime.now(ZoneOffset.UTC));
         Map<String, ContingencyResultEntity> contingencyResultsByContingencyId = SensitivityResultsBuilder.buildContingencyResults(contingencies, analysisResult);
 
         var results = SensitivityResultsBuilder.buildSensitivityResults(groupedFactors, analysisResult, contingencyResultsByContingencyId);
