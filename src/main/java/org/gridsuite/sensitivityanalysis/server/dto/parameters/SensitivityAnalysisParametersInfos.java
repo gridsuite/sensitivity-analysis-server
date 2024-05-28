@@ -12,7 +12,7 @@ import lombok.*;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.entities.parameters.SensitivityAnalysisParametersEntity;
 
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,7 +34,7 @@ public class SensitivityAnalysisParametersInfos {
     private UUID uuid;
 
     @Schema(description = "Parameters date")
-    private ZonedDateTime date;
+    private OffsetDateTime date;
 
     @Schema(description = "Parameters name")
     private String name;

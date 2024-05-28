@@ -14,7 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
@@ -29,12 +29,12 @@ public class NonEvacuatedEnergyResultEntity implements Serializable {
     private UUID resultUuid;
 
     @Column(columnDefinition = "timestamptz")
-    private ZonedDateTime writeTimeStamp;
+    private OffsetDateTime writeTimeStamp;
 
     @Column(name = "result", columnDefinition = "CLOB")
     private String result;
 
-    public NonEvacuatedEnergyResultEntity(UUID resultUuid, ZonedDateTime writeTimeStamp, String result) {
+    public NonEvacuatedEnergyResultEntity(UUID resultUuid, OffsetDateTime writeTimeStamp, String result) {
         this.resultUuid = resultUuid;
         this.writeTimeStamp = writeTimeStamp;
         this.result = result;
