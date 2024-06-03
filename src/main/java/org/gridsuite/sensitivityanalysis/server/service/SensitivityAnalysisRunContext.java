@@ -7,8 +7,8 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import lombok.Getter;
-import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractComputationRunContext;
-import org.gridsuite.sensitivityanalysis.server.computation.dto.ReportInfos;
+import com.powsybl.ws.commons.computation.service.AbstractComputationRunContext;
+import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -35,12 +35,11 @@ public class SensitivityAnalysisRunContext extends AbstractComputationRunContext
                 reportInfos != null ? reportInfos : new ReportInfos(null, null, null),
                 userId,
                 provider,
-                sensitivityAnalysisInputData,
-                null);
+                sensitivityAnalysisInputData);
         this.sensitivityAnalysisInputs = new SensitivityAnalysisInputs();
     }
 
     SensitivityAnalysisInputData getSensitivityAnalysisInputData() {
-        return parameters;
+        return getParameters();
     }
 }

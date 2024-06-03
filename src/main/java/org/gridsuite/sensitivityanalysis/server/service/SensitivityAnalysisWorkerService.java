@@ -20,8 +20,8 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sensitivity.SensitivityAnalysis;
 import com.powsybl.sensitivity.SensitivityAnalysisParameters;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
-import org.gridsuite.sensitivityanalysis.server.computation.service.*;
-import org.gridsuite.sensitivityanalysis.server.computation.dto.ReportInfos;
+import com.powsybl.ws.commons.computation.service.*;
+import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import com.powsybl.sensitivity.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
@@ -32,6 +32,8 @@ import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultWriterPersisted;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
@@ -43,7 +45,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.getFailedMessage;
+import static com.powsybl.ws.commons.computation.service.NotificationService.getFailedMessage;
 import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder.buildContingencyResults;
 import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder.buildSensitivityResults;
 
@@ -52,6 +54,7 @@ import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBu
  */
 @Service
 public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void, SensitivityAnalysisRunContext, SensitivityAnalysisInputData, SensitivityAnalysisResultService> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisWorkerService.class);
     public static final String COMPUTATION_TYPE = "Sensitivity analysis";
 
     public static final int CONTINGENCY_RESULTS_BUFFER_SIZE = 128;
@@ -87,6 +90,10 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
         this.inMemoryObserver = inMemoryObserver;
     }
 
+    protected boolean resultCanBeSaved(Void result) {
+        return true;
+    }
+
     @Bean
     @Override
     public Consumer<Message<String>> consumeRun() {
@@ -116,12 +123,12 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
     }
 
     @Override
-    protected CompletableFuture<Void> getCompletableFuture(Network network, SensitivityAnalysisRunContext runContext, String provider, UUID resultUuid) {
+    protected CompletableFuture<Void> getCompletableFuture(SensitivityAnalysisRunContext runContext, String provider, UUID resultUuid) {
         SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(runContext.getProvider());
         String variantId = runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID;
 
         SensitivityAnalysisParameters sensitivityAnalysisParameters = buildParameters(runContext);
-        sensitivityAnalysisInputBuilderService.build(runContext, network, runContext.getReportNode());
+        sensitivityAnalysisInputBuilderService.build(runContext, runContext.getNetwork(), runContext.getReportNode());
 
         List<List<SensitivityFactor>> groupedFactors = runContext.getSensitivityAnalysisInputs().getFactors();
         List<Contingency> contingencies = new ArrayList<>(runContext.getSensitivityAnalysisInputs().getContingencies());
@@ -132,10 +139,10 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
         writer.start(resultUuid);
 
         List<SensitivityFactor> factors = groupedFactors.stream().flatMap(Collection::stream).toList();
-        SensitivityFactorReader sensitivityFactorReader = new SensitivityFactorModelReader(factors, network);
+        SensitivityFactorReader sensitivityFactorReader = new SensitivityFactorModelReader(factors, runContext.getNetwork());
 
         CompletableFuture<Void> future = sensitivityAnalysisRunner.runAsync(
-                network,
+                runContext.getNetwork(),
                 variantId,
                 sensitivityFactorReader,
                 writer,

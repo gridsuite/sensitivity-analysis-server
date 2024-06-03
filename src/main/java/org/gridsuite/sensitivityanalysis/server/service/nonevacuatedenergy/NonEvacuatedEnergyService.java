@@ -7,9 +7,9 @@
 package org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractComputationService;
+import com.powsybl.ws.commons.computation.service.AbstractComputationService;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
-import org.gridsuite.sensitivityanalysis.server.computation.service.UuidGeneratorService;
+import com.powsybl.ws.commons.computation.service.UuidGeneratorService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +34,7 @@ public class NonEvacuatedEnergyService extends AbstractComputationService<NonEva
 
     @Override
     public List<String> getProviders() {
-        return Collections.singletonList(defaultProvider);
+        return Collections.singletonList(getDefaultProvider());
     }
 
     @Override

@@ -45,8 +45,8 @@ import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParameter
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
-import org.gridsuite.sensitivityanalysis.server.computation.service.ReportService;
-import org.gridsuite.sensitivityanalysis.server.computation.service.UuidGeneratorService;
+import com.powsybl.ws.commons.computation.service.ReportService;
+import com.powsybl.ws.commons.computation.service.UuidGeneratorService;
 import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.NonEvacuatedEnergyWorkerService;
 import org.junit.After;
 import org.junit.Before;
@@ -82,9 +82,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
-import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.HEADER_USER_ID;
-import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.getCancelMessage;
-import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.getFailedMessage;
+import static com.powsybl.ws.commons.computation.service.NotificationService.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
