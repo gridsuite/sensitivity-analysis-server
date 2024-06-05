@@ -9,16 +9,13 @@ package org.gridsuite.sensitivityanalysis.server;
 import com.powsybl.network.store.client.NetworkStoreService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @SuppressWarnings("checkstyle:HideUtilityClassConstructor")
-@SpringBootApplication
-@ComponentScan(basePackageClasses = {SensitivityAnalysisApplication.class, NetworkStoreService.class})
+@SpringBootApplication(scanBasePackageClasses = { SensitivityAnalysisApplication.class, NetworkStoreService.class })
 public class SensitivityAnalysisApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(SensitivityAnalysisApplication.class, args);
     }
