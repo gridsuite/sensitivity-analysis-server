@@ -10,7 +10,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -26,9 +26,9 @@ public class AnalysisResultEntity {
     private UUID resultUuid;
 
     @Column(columnDefinition = "timestamptz")
-    private OffsetDateTime writeTimeStamp;
+    private Instant writeTimeStamp;
 
-    public AnalysisResultEntity(UUID resultUuid, OffsetDateTime writeTimeStamp) {
+    public AnalysisResultEntity(UUID resultUuid, Instant writeTimeStamp) {
         this.resultUuid = resultUuid;
         this.writeTimeStamp = writeTimeStamp;
     }

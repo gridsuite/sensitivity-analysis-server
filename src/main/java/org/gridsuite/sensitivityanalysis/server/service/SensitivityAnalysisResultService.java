@@ -36,8 +36,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -89,7 +88,7 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
     @Transactional
     public AnalysisResultEntity insertAnalysisResult(UUID resultUuid) {
         Objects.requireNonNull(resultUuid);
-        return analysisResultRepository.save(new AnalysisResultEntity(resultUuid, OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS)));
+        return analysisResultRepository.save(new AnalysisResultEntity(resultUuid, Instant.now().truncatedTo(ChronoUnit.MICROS)));
     }
 
     @Transactional
