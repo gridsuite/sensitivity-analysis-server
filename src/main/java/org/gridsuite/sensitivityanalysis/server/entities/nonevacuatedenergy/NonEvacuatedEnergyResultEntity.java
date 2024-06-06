@@ -14,7 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -28,13 +28,13 @@ public class NonEvacuatedEnergyResultEntity implements Serializable {
     @Id
     private UUID resultUuid;
 
-    @Column
-    private LocalDateTime writeTimeStamp;
+    @Column(columnDefinition = "timestamptz")
+    private Instant writeTimeStamp;
 
     @Column(name = "result", columnDefinition = "CLOB")
     private String result;
 
-    public NonEvacuatedEnergyResultEntity(UUID resultUuid, LocalDateTime writeTimeStamp, String result) {
+    public NonEvacuatedEnergyResultEntity(UUID resultUuid, Instant writeTimeStamp, String result) {
         this.resultUuid = resultUuid;
         this.writeTimeStamp = writeTimeStamp;
         this.result = result;
