@@ -33,7 +33,7 @@ public class NonEvacuatedEnergyRunContext extends AbstractComputationRunContext<
                 receiver,
                 reportInfos != null ? reportInfos : new ReportInfos(null, null, null),
                 userId,
-                provider != null ? provider : "",
+                provider,
                 nonEvacuatedEnergyInputData);
         this.nonEvacuatedEnergyInputs = new NonEvacuatedEnergyInputs();
     }

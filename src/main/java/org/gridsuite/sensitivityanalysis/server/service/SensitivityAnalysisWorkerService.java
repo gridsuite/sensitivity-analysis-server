@@ -90,6 +90,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
         this.inMemoryObserver = inMemoryObserver;
     }
 
+    @Override
     protected boolean resultCanBeSaved(Void result) {
         return true;
     }
