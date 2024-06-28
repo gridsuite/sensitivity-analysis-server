@@ -24,17 +24,19 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sensitivity.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractResultContext;
-import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractWorkerService;
+import com.powsybl.ws.commons.computation.service.AbstractResultContext;
+import com.powsybl.ws.commons.computation.service.AbstractWorkerService;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStageDefinition;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStagesSelection;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.*;
-import org.gridsuite.sensitivityanalysis.server.computation.service.ReportService;
-import org.gridsuite.sensitivityanalysis.server.computation.service.ExecutionService;
+import com.powsybl.ws.commons.computation.service.ReportService;
+import com.powsybl.ws.commons.computation.service.ExecutionService;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
@@ -54,6 +56,7 @@ import static java.util.stream.Collectors.toMap;
  */
 @Service
 public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEvacuatedEnergyResults, NonEvacuatedEnergyRunContext, NonEvacuatedEnergyInputData, NonEvacuatedEnergyResultService> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(NonEvacuatedEnergyWorkerService.class);
     public static final String COMPUTATION_TYPE = "Non Evacuated Energy Sensitivity analysis";
 
     private final NonEvacuatedEnergyInputBuilderService nonEvacuatedEnergyInputBuilderService;
@@ -801,7 +804,7 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
     }
 
     @Override
-    protected CompletableFuture<NonEvacuatedEnergyResults> getCompletableFuture(Network network, NonEvacuatedEnergyRunContext runContext, String provider, UUID resultUuid) {
+    protected CompletableFuture<NonEvacuatedEnergyResults> getCompletableFuture(NonEvacuatedEnergyRunContext runContext, String provider, UUID resultUuid) {
 
         SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(runContext.getProvider());
 
@@ -819,7 +822,7 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
         ComputationManager computationManager = executionService.getComputationManager();
 
         return CompletableFuture.supplyAsync(() ->
-                run(runContext, network, sensitivityAnalysisParameters, sensitivityAnalysisRunner, computationManager, runContext.getReportNode())
+                run(runContext, runContext.getNetwork(), sensitivityAnalysisParameters, sensitivityAnalysisRunner, computationManager, runContext.getReportNode())
         );
     }
 

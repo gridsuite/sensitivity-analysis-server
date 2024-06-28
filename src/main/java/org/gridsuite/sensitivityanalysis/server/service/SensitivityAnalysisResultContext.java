@@ -9,8 +9,8 @@ package org.gridsuite.sensitivityanalysis.server.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.gridsuite.sensitivityanalysis.server.computation.service.AbstractResultContext;
-import org.gridsuite.sensitivityanalysis.server.computation.dto.ReportInfos;
+import com.powsybl.ws.commons.computation.service.AbstractResultContext;
+import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
@@ -18,8 +18,8 @@ import org.springframework.messaging.MessageHeaders;
 import java.io.UncheckedIOException;
 import java.util.*;
 
-import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.HEADER_USER_ID;
-import static org.gridsuite.sensitivityanalysis.server.computation.utils.MessageUtils.getNonNullHeader;
+import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_USER_ID;
+import static com.powsybl.ws.commons.computation.utils.MessageUtils.getNonNullHeader;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>

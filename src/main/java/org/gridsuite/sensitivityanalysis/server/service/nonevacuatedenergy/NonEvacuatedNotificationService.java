@@ -6,7 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy;
 
-import org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService;
+import com.powsybl.ws.commons.computation.service.NotificationService;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class NonEvacuatedNotificationService extends NotificationService {
     public NonEvacuatedNotificationService(StreamBridge publisher) {
-        super(publisher);
-        publishPrefix = "publishNonEvacuatedEnergy";
+        super(publisher, "publishNonEvacuatedEnergy");
     }
 }

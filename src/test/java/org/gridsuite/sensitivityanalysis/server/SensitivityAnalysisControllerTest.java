@@ -53,7 +53,7 @@ import java.util.stream.Stream;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.gridsuite.sensitivityanalysis.server.computation.service.NotificationService.*;
+import static com.powsybl.ws.commons.computation.service.NotificationService.*;
 import static org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService.COMPUTATION_TYPE;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
 import static org.junit.jupiter.api.Assertions.*;
