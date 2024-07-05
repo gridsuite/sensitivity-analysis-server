@@ -87,32 +87,34 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
     }
 
     public Long getFactorsCount(SensitivityFactorsIdsByGroup factorIds, UUID networkUuid, String variantId, Boolean isInjectionsSet) {
-        Long containersAttributesCount = 1L;
-        if (Boolean.TRUE.equals(isInjectionsSet)) {
-            containersAttributesCount *= factorIds.getIds().get(INJECTIONS).size();
+        long containersAttributesCount = 1L;
+        Map<String, List<UUID>> ids = factorIds.getIds();
+        if (Boolean.TRUE.equals(isInjectionsSet) && ids.containsKey(INJECTIONS) && !ids.get(INJECTIONS).isEmpty()) {
+            containersAttributesCount = filterService.getIdentifiablesCountForACategory(ids.get(INJECTIONS), INJECTIONS, networkUuid, null)
+                .values()
+                .stream()
+                .reduce(Long::sum)
+                .orElse(1L);
             factorIds.getIds().remove(INJECTIONS);
         }
-        containersAttributesCount *= getFactorsCount(factorIds, networkUuid, variantId);
+        containersAttributesCount *= getBranchesAndContingenciesFactorsCount(factorIds, networkUuid, variantId);
         return containersAttributesCount;
     }
 
-    private Long getFactorsCount(SensitivityFactorsIdsByGroup factorIds, UUID networkUuid, String variantId) {
+    private Long getBranchesAndContingenciesFactorsCount(SensitivityFactorsIdsByGroup factorIds, UUID networkUuid, String variantId) {
         Map<String, List<UUID>> ids = factorIds.getIds();
         long contAttributesCountTemp = 1L;
         if (ids.containsKey(CONTINGENCIES) && !ids.get(CONTINGENCIES).isEmpty()) {
-            int sumContingencyListSizes = actionsService.getContingencyCount(ids.get(CONTINGENCIES), networkUuid, variantId);
-            sumContingencyListSizes = Math.max(sumContingencyListSizes, 1);
-            contAttributesCountTemp *= sumContingencyListSizes;
+            contAttributesCountTemp *= Math.max(actionsService.getContingencyCount(ids.get(CONTINGENCIES), networkUuid, variantId), 1);
             ids.remove(CONTINGENCIES);
         }
         ids.entrySet().removeIf(entry -> Objects.isNull(entry.getValue()));
-        Map<String, Long> map = filterService.getIdentifiablesCount(factorIds, networkUuid, null);
-        for (Long count : map.values()) {
-            if (count != 0) {
-                contAttributesCountTemp *= count;
-            }
-        }
-
+        contAttributesCountTemp *= filterService.getIdentifiablesCount(factorIds, networkUuid, null)
+            .values()
+            .stream()
+            .filter(count -> count != 0)
+            .reduce((a, b) -> a * b)
+            .orElse(1L);
         return contAttributesCountTemp;
     }
 

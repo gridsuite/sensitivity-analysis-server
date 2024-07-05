@@ -18,11 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -78,14 +74,21 @@ public class FilterService {
     }
 
     public Map<String, Long> getIdentifiablesCount(SensitivityFactorsIdsByGroup factorsIds, UUID networkUuid, String variantId) {
+        return getIdentifiablesCount(factorsIds.getIds(), networkUuid, variantId);
+    }
+
+    public Map<String, Long> getIdentifiablesCountForACategory(List<UUID> factorsIds, String category, UUID networkUuid, String variantId) {
+        return getIdentifiablesCount(Collections.singletonMap(category, factorsIds), networkUuid, variantId);
+    }
+
+    private Map<String, Long> getIdentifiablesCount(Map<String, List<UUID>> identifiablesFilterIds, UUID networkUuid, String variantId) {
         var uriComponentsBuilder = UriComponentsBuilder
-                .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/identifiables-count")
-                .queryParam(NETWORK_UUID, networkUuid);
+            .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/identifiables-count")
+            .queryParam(NETWORK_UUID, networkUuid);
         if (!StringUtils.isBlank(variantId)) {
             uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);
         }
-
-        factorsIds.getIds().forEach((key, value) -> uriComponentsBuilder.queryParam(String.format("ids[%s]", key), value));
+        identifiablesFilterIds.forEach((key, value) -> uriComponentsBuilder.queryParam(String.format("ids[%s]", key), value));
 
         var path = uriComponentsBuilder.build().toUriString();
 
