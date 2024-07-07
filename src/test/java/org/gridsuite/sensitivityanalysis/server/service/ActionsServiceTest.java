@@ -15,6 +15,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.gridsuite.sensitivityanalysis.server.configuration.RestTemplateConfig;
+import org.gridsuite.sensitivityanalysis.server.dto.Contengencies;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -84,24 +85,24 @@ public class ActionsServiceTest {
         server = new MockWebServer();
         server.start();
 
-        String jsonExpected = objectMapper.writeValueAsString(List.of(CONTINGENCY));
-        String veryLargeJsonExpected = objectMapper.writeValueAsString(createVeryLargeList());
-        String jsonVariantExpected = objectMapper.writeValueAsString(List.of(CONTINGENCY_VARIANT));
+        String jsonExpected = objectMapper.writeValueAsString(new Contengencies(List.of(CONTINGENCY), null));
+        String veryLargeJsonExpected = objectMapper.writeValueAsString(new Contengencies(createVeryLargeList(), null));
+        String jsonVariantExpected = objectMapper.writeValueAsString(new Contengencies(List.of(CONTINGENCY_VARIANT), null));
 
         final Dispatcher dispatcher = new Dispatcher() {
             @Override
             public MockResponse dispatch(RecordedRequest request) {
                 String requestPath = Objects.requireNonNull(request.getPath());
-                if (requestPath.equals(String.format("/v1/contingency-lists/%s/export?networkUuid=%s&variantId=%s", LIST_UUID, NETWORK_UUID, VARIANT_ID))) {
+                if (requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&variantId=%s&ids=%s", NETWORK_UUID, VARIANT_ID, LIST_UUID))) {
                     return new MockResponse().setResponseCode(HttpStatus.OK.value())
                             .setBody(jsonVariantExpected)
                             .addHeader("Content-Type", "application/json; charset=utf-8");
-                } else if (requestPath.equals(String.format("/v1/contingency-lists/%s/export?networkUuid=%s", LIST_UUID, NETWORK_UUID))) {
+                } else if (requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&ids=%s", NETWORK_UUID, LIST_UUID))) {
                     return new MockResponse().setResponseCode(HttpStatus.OK.value())
                         .setBody(jsonExpected)
                         .addHeader("Content-Type", "application/json; charset=utf-8");
-                } else if (requestPath.equals(String.format("/v1/contingency-lists/%s/export?networkUuid=%s&variantId=%s", VERY_LARGE_LIST_UUID, NETWORK_UUID, VARIANT_ID))
-                           || requestPath.equals(String.format("/v1/contingency-lists/%s/export?networkUuid=%s", VERY_LARGE_LIST_UUID, NETWORK_UUID))) {
+                } else if (requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&variantId=%s&ids=%s", NETWORK_UUID, VARIANT_ID, VERY_LARGE_LIST_UUID))
+                           || requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&ids=%s", NETWORK_UUID, VERY_LARGE_LIST_UUID))) {
                     return new MockResponse().setResponseCode(HttpStatus.OK.value())
                             .setBody(veryLargeJsonExpected)
                             .addHeader("Content-Type", "application/json; charset=utf-8");
@@ -129,18 +130,18 @@ public class ActionsServiceTest {
 
     @Test
     public void testGetContingencyList() {
-        List<Contingency> list = actionsService.getContingencyList(LIST_UUID, UUID.fromString(NETWORK_UUID), null);
+        List<Contingency> list = actionsService.getContingencyList(List.of(LIST_UUID), UUID.fromString(NETWORK_UUID), null).getContingenciesFound();
         assertEquals(List.of(CONTINGENCY), list);
-        list = actionsService.getContingencyList(LIST_UUID, UUID.fromString(NETWORK_UUID), VARIANT_ID);
+        list = actionsService.getContingencyList(List.of(LIST_UUID), UUID.fromString(NETWORK_UUID), VARIANT_ID).getContingenciesFound();
         assertEquals(List.of(CONTINGENCY_VARIANT), list);
     }
 
     @Test
     public void testVeryLargeList() {
         // DataBufferLimitException should not be thrown with this message : "Exceeded limit on max bytes to buffer : DATA_BUFFER_LIMIT"
-        List<Contingency> list = actionsService.getContingencyList(VERY_LARGE_LIST_UUID, UUID.fromString(NETWORK_UUID), null);
+        List<Contingency> list = actionsService.getContingencyList(List.of(VERY_LARGE_LIST_UUID), UUID.fromString(NETWORK_UUID), null).getContingenciesFound();
         assertEquals(createVeryLargeList(), list);
-        list = actionsService.getContingencyList(VERY_LARGE_LIST_UUID, UUID.fromString(NETWORK_UUID), VARIANT_ID);
+        list = actionsService.getContingencyList(List.of(VERY_LARGE_LIST_UUID), UUID.fromString(NETWORK_UUID), VARIANT_ID).getContingenciesFound();
         assertEquals(createVeryLargeList(), list);
     }
 

@@ -6,8 +6,8 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
-import com.powsybl.contingency.Contingency;
 import org.apache.commons.lang3.StringUtils;
+import org.gridsuite.sensitivityanalysis.server.dto.Contengencies;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -57,20 +57,24 @@ public class ActionsService {
         return restTemplate.exchange(actionsServerBaseUri + path, HttpMethod.GET, null, Integer.class).getBody();
     }
 
-    public List<Contingency> getContingencyList(UUID uuid, UUID networkUuid, String variantId) {
-        Objects.requireNonNull(uuid);
+    public Contengencies getContingencyList(List<UUID> uuids, UUID networkUuid, String variantId) {
+        Objects.requireNonNull(uuids);
+        for (UUID uuid : uuids) {
+            Objects.requireNonNull(uuid, "UUID in the list cannot be null");
+        }
         Objects.requireNonNull(networkUuid);
 
         var uriComponentsBuilder = UriComponentsBuilder
-                    .fromPath(DELIMITER + ACTIONS_API_VERSION + "/contingency-lists/{name}/export")
-                    .queryParam(NETWORK_UUID, networkUuid.toString());
+                .fromPath(DELIMITER + ACTIONS_API_VERSION + "/contingency-lists/export")
+                .queryParam(NETWORK_UUID, networkUuid.toString());
         if (!StringUtils.isBlank(variantId)) {
             uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);
         }
-        var path = uriComponentsBuilder.buildAndExpand(uuid).toUriString();
+        uriComponentsBuilder.queryParam(CONTINGENCY_LIST_IDS, uuids);
+        var path = uriComponentsBuilder.build().toUriString();
 
         return restTemplate.exchange(actionsServerBaseUri + path, HttpMethod.GET, null,
-                    new ParameterizedTypeReference<List<Contingency>>() {
-            }).getBody();
+                new ParameterizedTypeReference<Contengencies>() {
+                }).getBody();
     }
 }

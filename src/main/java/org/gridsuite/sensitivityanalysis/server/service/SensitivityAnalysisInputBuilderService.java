@@ -41,25 +41,27 @@ public class SensitivityAnalysisInputBuilderService {
         this.filterService = filterService;
     }
 
-    private List<Contingency> goGetContingencies(EquipmentsContainer contingencyListIdent, UUID networkUuid, String variantId, ReportNode reporter) {
-        try {
-            return actionsService.getContingencyList(contingencyListIdent.getContainerId(), networkUuid, variantId);
-        } catch (Exception ex) {
-            LOGGER.error("Could not get contingencies from " + contingencyListIdent.getContainerName(), ex);
-            reporter.newReportNode()
-                .withMessageTemplate("contingencyTranslationFailure", "Could not get contingencies from contingencyListIdent ${name} : ${exception}")
-                .withUntypedValue("exception", ex.getMessage())
-                .withUntypedValue("name", contingencyListIdent.getContainerName())
-                .withSeverity(TypedValue.ERROR_SEVERITY)
-                .add();
+    private List<Contingency> goGetContingencies(List<EquipmentsContainer> contingencyListIdent, UUID networkUuid, String variantId, ReportNode reporter) {
+        List<UUID> ids = contingencyListIdent.stream().map(EquipmentsContainer::getContainerId).toList();
+        Contengencies contengencies = actionsService.getContingencyList(ids, networkUuid, variantId);
+        if (contengencies == null) {
             return List.of();
         }
+
+        contengencies.getContingenciesNotFound().forEach(id -> {
+            EquipmentsContainer container = contingencyListIdent.stream().filter(c -> c.getContainerId().equals(id)).findFirst().orElseThrow();
+            LOGGER.error("Could not get contingencies from {}", container.getContainerName());
+            reporter.newReportNode()
+                .withMessageTemplate("contingencyTranslationFailure", "Could not get contingencies from contingencyListIdent ${name} : not found")
+                .withUntypedValue("name", container.getContainerName())
+                .withSeverity(TypedValue.ERROR_SEVERITY)
+                .add();
+        });
+        return contengencies.getContingenciesFound() == null ? List.of() : contengencies.getContingenciesFound();
     }
 
     private List<Contingency> buildContingencies(UUID networkUuid, String variantId, List<EquipmentsContainer> contingencyListsContainerIdents, ReportNode reporter) {
-        return contingencyListsContainerIdents.stream()
-            .flatMap(contingencyListIdent -> goGetContingencies(contingencyListIdent, networkUuid, variantId, reporter).stream())
-            .collect(Collectors.toList());
+        return goGetContingencies(contingencyListsContainerIdents, networkUuid, variantId, reporter);
     }
 
     private double getGeneratorWeight(Generator generator, SensitivityAnalysisInputData.DistributionType distributionType, Double distributionKey) {
