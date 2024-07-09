@@ -31,7 +31,7 @@ import com.powsybl.sensitivity.SensitivityVariableType;
 import com.powsybl.sensitivity.WeightedSensitivityVariable;
 import lombok.SneakyThrows;
 import org.gridsuite.sensitivityanalysis.server.configuration.RestTemplateConfig;
-import org.gridsuite.sensitivityanalysis.server.dto.Contengencies;
+import org.gridsuite.sensitivityanalysis.server.dto.Contingencies;
 import org.gridsuite.sensitivityanalysis.server.dto.EquipmentsContainer;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyContingencies;
@@ -637,11 +637,11 @@ public class NonEvacuatedEnergyTest {
     }
 
     private void mockActions() {
-        given(actionsService.getContingencyList(eq(List.of(CONTINGENCIES_1_UUID)), any(), eq(VARIANT_ID))).willReturn(new Contengencies(CONTINGENCIES_1, null));
-        given(actionsService.getContingencyList(eq(List.of(CONTINGENCIES_2_UUID)), any(), eq(VARIANT_ID))).willReturn(new Contengencies(CONTINGENCIES_2, null));
+        given(actionsService.getContingencyList(eq(List.of(CONTINGENCIES_1_UUID)), any(), eq(VARIANT_ID))).willReturn(new Contingencies(CONTINGENCIES_1, null));
+        given(actionsService.getContingencyList(eq(List.of(CONTINGENCIES_2_UUID)), any(), eq(VARIANT_ID))).willReturn(new Contingencies(CONTINGENCIES_2, null));
         //merge 2 lists into one
         List<Contingency> contingencies = Stream.concat(CONTINGENCIES_1.stream(), CONTINGENCIES_2.stream()).toList();
-        given(actionsService.getContingencyList(eq(List.of(CONTINGENCIES_1_UUID, CONTINGENCIES_2_UUID)), any(), eq(VARIANT_ID))).willReturn(new Contengencies(contingencies, null));
+        given(actionsService.getContingencyList(eq(List.of(CONTINGENCIES_1_UUID, CONTINGENCIES_2_UUID)), any(), eq(VARIANT_ID))).willReturn(new Contingencies(contingencies, null));
     }
 
     private void mockFilters() {

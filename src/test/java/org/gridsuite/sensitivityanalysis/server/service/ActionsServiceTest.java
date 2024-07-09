@@ -15,7 +15,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.gridsuite.sensitivityanalysis.server.configuration.RestTemplateConfig;
-import org.gridsuite.sensitivityanalysis.server.dto.Contengencies;
+import org.gridsuite.sensitivityanalysis.server.dto.Contingencies;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -85,9 +85,9 @@ public class ActionsServiceTest {
         server = new MockWebServer();
         server.start();
 
-        String jsonExpected = objectMapper.writeValueAsString(new Contengencies(List.of(CONTINGENCY), null));
-        String veryLargeJsonExpected = objectMapper.writeValueAsString(new Contengencies(createVeryLargeList(), null));
-        String jsonVariantExpected = objectMapper.writeValueAsString(new Contengencies(List.of(CONTINGENCY_VARIANT), null));
+        String jsonExpected = objectMapper.writeValueAsString(new Contingencies(List.of(CONTINGENCY), null));
+        String veryLargeJsonExpected = objectMapper.writeValueAsString(new Contingencies(createVeryLargeList(), null));
+        String jsonVariantExpected = objectMapper.writeValueAsString(new Contingencies(List.of(CONTINGENCY_VARIANT), null));
 
         final Dispatcher dispatcher = new Dispatcher() {
             @Override

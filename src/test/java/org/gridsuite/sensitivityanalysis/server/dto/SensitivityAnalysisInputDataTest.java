@@ -143,7 +143,7 @@ public class SensitivityAnalysisInputDataTest {
         UUID u10Id = UUID.randomUUID();
         UUID u11Id = UUID.randomUUID();
         given(filterService.getIdentifiablesFromFilters(any(), any(), any())).willThrow(new RuntimeException("FilterException"));
-        given(actionsService.getContingencyList(anyList(), any(), any())).willReturn(new Contengencies(null, List.of(u10Id, u11Id)));
+        given(actionsService.getContingencyList(anyList(), any(), any())).willReturn(new Contingencies(null, List.of(u10Id, u11Id)));
         inputBuilderService = new SensitivityAnalysisInputBuilderService(actionsService, filterService);
         SensitivityAnalysisInputData.SensitivityAnalysisInputDataBuilder<?, ?> inputBuilder = SensitivityAnalysisInputData.builder();
         ReportNode reporter = ReportNode.newRootReportNode().withMessageTemplate("a", "b").build();

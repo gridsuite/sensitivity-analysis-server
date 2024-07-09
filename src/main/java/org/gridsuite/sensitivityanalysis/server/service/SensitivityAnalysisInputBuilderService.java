@@ -43,12 +43,12 @@ public class SensitivityAnalysisInputBuilderService {
 
     private List<Contingency> goGetContingencies(List<EquipmentsContainer> contingencyListIdent, UUID networkUuid, String variantId, ReportNode reporter) {
         List<UUID> ids = contingencyListIdent.stream().map(EquipmentsContainer::getContainerId).toList();
-        Contengencies contengencies = actionsService.getContingencyList(ids, networkUuid, variantId);
-        if (contengencies == null) {
+        Contingencies contingencies = actionsService.getContingencyList(ids, networkUuid, variantId);
+        if (contingencies == null) {
             return List.of();
         }
 
-        contengencies.getContingenciesNotFound().forEach(id -> {
+        contingencies.getContingenciesNotFound().forEach(id -> {
             EquipmentsContainer container = contingencyListIdent.stream().filter(c -> c.getContainerId().equals(id)).findFirst().orElseThrow();
             LOGGER.error("Could not get contingencies from {}", container.getContainerName());
             reporter.newReportNode()
@@ -57,7 +57,7 @@ public class SensitivityAnalysisInputBuilderService {
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .add();
         });
-        return contengencies.getContingenciesFound() == null ? List.of() : contengencies.getContingenciesFound();
+        return contingencies.getContingenciesFound() == null ? List.of() : contingencies.getContingenciesFound();
     }
 
     private List<Contingency> buildContingencies(UUID networkUuid, String variantId, List<EquipmentsContainer> contingencyListsContainerIdents, ReportNode reporter) {

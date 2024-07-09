@@ -16,7 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Builder
-public class Contengencies {
+public class Contingencies {
     List<Contingency> contingenciesFound;
     List<UUID> contingenciesNotFound;
 }

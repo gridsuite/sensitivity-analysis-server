@@ -16,7 +16,7 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.sensitivity.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.gridsuite.sensitivityanalysis.server.dto.Contengencies;
+import org.gridsuite.sensitivityanalysis.server.dto.Contingencies;
 import org.gridsuite.sensitivityanalysis.server.dto.EquipmentsContainer;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
@@ -54,30 +54,15 @@ public class NonEvacuatedEnergyInputBuilderService {
         adder.withSeverity(TypedValue.ERROR_SEVERITY).add();
     }
 
-//    private List<Contingency> goGetContingencies(EquipmentsContainer contingencyListIdent, UUID networkUuid, String variantId, ReportNode reporter) {
-//        try {
-//            return actionsService.getContingencyList(List.of(contingencyListIdent.getContainerId()), networkUuid, variantId);
-//        } catch (Exception ex) {
-//            LOGGER.error("Could not get contingencies from " + contingencyListIdent.getContainerName(), ex);
-//            addReport(reporter,
-//                    "contingencyTranslationFailure",
-//                    "Could not get contingencies from contingencyListIdent ${name} : ${exception}",
-//                    Map.of("exception", ex.getMessage(), "name", contingencyListIdent.getContainerName()),
-//                    TypedValue.ERROR_SEVERITY
-//            );
-//            return List.of();
-//        }
-//    }
-
     private List<Contingency> goGetContingencies(List<EquipmentsContainer> contingencyListIdent, UUID networkUuid, String variantId, ReportNode reporter) {
         List<UUID> ids = contingencyListIdent.stream().map(EquipmentsContainer::getContainerId).toList();
-        Contengencies contengencies = actionsService.getContingencyList(ids, networkUuid, variantId);
-        if (contengencies == null) {
+        Contingencies contingencies = actionsService.getContingencyList(ids, networkUuid, variantId);
+        if (contingencies == null) {
             return List.of();
         }
 
-        if (contengencies.getContingenciesNotFound() != null) {
-            contengencies.getContingenciesNotFound().forEach(id -> {
+        if (contingencies.getContingenciesNotFound() != null) {
+            contingencies.getContingenciesNotFound().forEach(id -> {
                 EquipmentsContainer container = contingencyListIdent.stream().filter(c -> c.getContainerId().equals(id)).findFirst().orElseThrow();
                 LOGGER.error("Could not get contingencies from {}", container.getContainerName());
                 addReport(reporter,
@@ -89,7 +74,7 @@ public class NonEvacuatedEnergyInputBuilderService {
             });
         }
 
-        return contengencies.getContingenciesFound() == null ? List.of() : contengencies.getContingenciesFound();
+        return contingencies.getContingenciesFound() == null ? List.of() : contingencies.getContingenciesFound();
     }
 
     public List<Contingency> buildContingencies(UUID networkUuid, String variantId, List<EquipmentsContainer> contingencyListsContainerIdents, ReportNode reporter) {
