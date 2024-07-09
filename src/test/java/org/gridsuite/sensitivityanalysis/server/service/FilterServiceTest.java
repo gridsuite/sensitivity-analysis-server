@@ -203,4 +203,13 @@ public class FilterServiceTest {
         List<FilterEquipments> list = filterService.getFilterEquipements(List.of(VERY_LARGE_LIST_UUID, LIST_UUID), UUID.fromString(NETWORK_UUID), null);
         assertEquals(objectMapper.writeValueAsString(createFilterEquipments()), objectMapper.writeValueAsString(list));
     }
+
+    @SneakyThrows
+    @Test
+    public void testGetIdentifiablesCountForACategory() {
+        Map<String, Long> list = filterService.getIdentifiablesCount(IDENTIFIABLES_UUID, UUID.fromString(NETWORK_UUID), null);
+        assertEquals(objectMapper.writeValueAsString(countResultMap()), objectMapper.writeValueAsString(list));
+        list = filterService.getIdentifiablesCountForACategory(IDENTIFIABLES_UUID.getIds().get("0"), "0", UUID.fromString(NETWORK_UUID), VARIANT_ID);
+        assertEquals(objectMapper.writeValueAsString(countResultMap()), objectMapper.writeValueAsString(list));
+    }
 }

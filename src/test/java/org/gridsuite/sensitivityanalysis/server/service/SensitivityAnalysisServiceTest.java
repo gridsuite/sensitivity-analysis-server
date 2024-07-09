@@ -26,6 +26,7 @@ import java.util.*;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.gridsuite.sensitivityanalysis.server.SensitivityAnalysisControllerTest.DEFAULT_PROVIDER;
+import static org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisService.INJECTIONS;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -53,6 +54,9 @@ class SensitivityAnalysisServiceTest {
     @MockBean(name = "notificationService")
     private NotificationService notificationService;
 
+    @MockBean
+    private FilterService filterService;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -63,6 +67,12 @@ class SensitivityAnalysisServiceTest {
 
         var inputData = Mockito.mock(SensitivityAnalysisInputData.class);
         given(parametersService.buildInputData(any(), any())).willReturn(inputData);
+        Map<String, Long> identifiablesCountForACategory = new HashMap<>();
+        identifiablesCountForACategory.put("test", (long) 10);
+        given(filterService.getIdentifiablesCountForACategory(any(), any(), any(), any())).willReturn(identifiablesCountForACategory);
+        Map<String, Long> identifiablesCount = new HashMap<>();
+        identifiablesCount.put("test", (long) 20);
+        given(filterService.getIdentifiablesCount(any(), any(), any())).willReturn(identifiablesCount);
     }
 
     @Test
@@ -185,5 +195,15 @@ class SensitivityAnalysisServiceTest {
             .chunkOffset(0)
             .totalSensitivitiesCount(1L)
             .filteredSensitivitiesCount(1L);
+    }
+
+    @Test
+    void testFactorCount() {
+        UUID uuid = UUID.randomUUID();
+        Map<String, List<UUID>> map = new HashMap<>();
+        map.put(INJECTIONS, Collections.singletonList(uuid));
+        SensitivityFactorsIdsByGroup sensitivityFactorsIdsByGroup = SensitivityFactorsIdsByGroup.builder().ids(map).build();
+        assertThat(analysisService.getFactorsCount(sensitivityFactorsIdsByGroup, UUID.randomUUID(), null, true))
+            .isEqualTo(200);
     }
 }
