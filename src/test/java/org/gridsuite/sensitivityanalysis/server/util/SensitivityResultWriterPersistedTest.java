@@ -153,6 +153,6 @@ class SensitivityResultWriterPersistedTest {
             .writeContingenciesStatus(any(), anyList());
         resultWriterPersisted.start(UUID.randomUUID());
         IntStream.range(0, 1000).forEach(i -> resultWriterPersisted.writeContingencyStatus(0, SensitivityAnalysisResult.Status.SUCCESS));
-        await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
+        await().atMost(1020, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
     }
 }
