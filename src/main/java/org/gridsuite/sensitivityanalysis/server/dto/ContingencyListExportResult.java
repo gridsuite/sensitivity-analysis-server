@@ -22,7 +22,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Builder
-public class Contingencies {
+public class ContingencyListExportResult {
     List<Contingency> contingenciesFound;
     List<UUID> contingenciesNotFound;
 }

@@ -43,7 +43,7 @@ public class SensitivityAnalysisInputBuilderService {
 
     private List<Contingency> goGetContingencies(List<EquipmentsContainer> contingencyListIdent, UUID networkUuid, String variantId, ReportNode reporter) {
         List<UUID> ids = contingencyListIdent.stream().map(EquipmentsContainer::getContainerId).toList();
-        Contingencies contingencies = actionsService.getContingencyList(ids, networkUuid, variantId);
+        ContingencyListExportResult contingencies = actionsService.getContingencyList(ids, networkUuid, variantId);
         if (contingencies == null) {
             return List.of();
         }

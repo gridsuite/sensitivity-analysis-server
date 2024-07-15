@@ -16,7 +16,7 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.sensitivity.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.gridsuite.sensitivityanalysis.server.dto.Contingencies;
+import org.gridsuite.sensitivityanalysis.server.dto.ContingencyListExportResult;
 import org.gridsuite.sensitivityanalysis.server.dto.EquipmentsContainer;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
@@ -56,7 +56,7 @@ public class NonEvacuatedEnergyInputBuilderService {
 
     private List<Contingency> goGetContingencies(List<EquipmentsContainer> contingencyListIdent, UUID networkUuid, String variantId, ReportNode reporter) {
         List<UUID> ids = contingencyListIdent.stream().map(EquipmentsContainer::getContainerId).toList();
-        Contingencies contingencies = actionsService.getContingencyList(ids, networkUuid, variantId);
+        ContingencyListExportResult contingencies = actionsService.getContingencyList(ids, networkUuid, variantId);
         if (contingencies == null) {
             return List.of();
         }
