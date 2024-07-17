@@ -93,16 +93,16 @@ public class ActionsServiceTest {
             @Override
             public MockResponse dispatch(RecordedRequest request) {
                 String requestPath = Objects.requireNonNull(request.getPath());
-                if (requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&variantId=%s&ids=%s", NETWORK_UUID, VARIANT_ID, LIST_UUID))) {
+                if (requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&variantId=%s&contingencyListIds=%s", NETWORK_UUID, VARIANT_ID, LIST_UUID))) {
                     return new MockResponse().setResponseCode(HttpStatus.OK.value())
                             .setBody(jsonVariantExpected)
                             .addHeader("Content-Type", "application/json; charset=utf-8");
-                } else if (requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&ids=%s", NETWORK_UUID, LIST_UUID))) {
+                } else if (requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&contingencyListIds=%s", NETWORK_UUID, LIST_UUID))) {
                     return new MockResponse().setResponseCode(HttpStatus.OK.value())
                         .setBody(jsonExpected)
                         .addHeader("Content-Type", "application/json; charset=utf-8");
-                } else if (requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&variantId=%s&ids=%s", NETWORK_UUID, VARIANT_ID, VERY_LARGE_LIST_UUID))
-                           || requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&ids=%s", NETWORK_UUID, VERY_LARGE_LIST_UUID))) {
+                } else if (requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&variantId=%s&contingencyListIds=%s", NETWORK_UUID, VARIANT_ID, VERY_LARGE_LIST_UUID))
+                           || requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&contingencyListIds=%s", NETWORK_UUID, VERY_LARGE_LIST_UUID))) {
                     return new MockResponse().setResponseCode(HttpStatus.OK.value())
                             .setBody(veryLargeJsonExpected)
                             .addHeader("Content-Type", "application/json; charset=utf-8");

@@ -31,6 +31,7 @@ public class ActionsService {
     private String actionsServerBaseUri;
     private static final String NETWORK_UUID = "networkUuid";
     private static final String QUERY_PARAM_VARIANT_ID = "variantId";
+    private static final String QUERY_PARAM_CONTINGENCY_LIST_IDS = "contingencyListIds";
     private static final String CONTINGENCY_LIST_IDS = "ids";
 
     private final RestTemplate restTemplate;
@@ -57,9 +58,9 @@ public class ActionsService {
         return restTemplate.exchange(actionsServerBaseUri + path, HttpMethod.GET, null, Integer.class).getBody();
     }
 
-    public ContingencyListExportResult getContingencyList(List<UUID> uuids, UUID networkUuid, String variantId) {
-        Objects.requireNonNull(uuids);
-        for (UUID uuid : uuids) {
+    public ContingencyListExportResult getContingencyList(List<UUID> contingencyListIds, UUID networkUuid, String variantId) {
+        Objects.requireNonNull(contingencyListIds);
+        for (UUID uuid : contingencyListIds) {
             Objects.requireNonNull(uuid, "UUID in the list cannot be null");
         }
         Objects.requireNonNull(networkUuid);
@@ -70,7 +71,7 @@ public class ActionsService {
         if (!StringUtils.isBlank(variantId)) {
             uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);
         }
-        uriComponentsBuilder.queryParam(CONTINGENCY_LIST_IDS, uuids);
+        uriComponentsBuilder.queryParam(QUERY_PARAM_CONTINGENCY_LIST_IDS, contingencyListIds);
         var path = uriComponentsBuilder.build().toUriString();
 
         return restTemplate.exchange(actionsServerBaseUri + path, HttpMethod.GET, null,
