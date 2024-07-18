@@ -74,10 +74,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -640,7 +637,8 @@ public class NonEvacuatedEnergyTest {
         given(actionsService.getContingencyList(eq(List.of(CONTINGENCIES_1_UUID)), any(), eq(VARIANT_ID))).willReturn(new ContingencyListExportResult(CONTINGENCIES_1, null));
         given(actionsService.getContingencyList(eq(List.of(CONTINGENCIES_2_UUID)), any(), eq(VARIANT_ID))).willReturn(new ContingencyListExportResult(CONTINGENCIES_2, null));
         //merge 2 lists into one
-        List<Contingency> contingencies = Stream.concat(CONTINGENCIES_1.stream(), CONTINGENCIES_2.stream()).toList();
+        List<Contingency> contingencies = new ArrayList<>(CONTINGENCIES_1);
+        contingencies.addAll(CONTINGENCIES_2);
         given(actionsService.getContingencyList(eq(List.of(CONTINGENCIES_1_UUID, CONTINGENCIES_2_UUID)), any(), eq(VARIANT_ID))).willReturn(new ContingencyListExportResult(contingencies, null));
     }
 

@@ -55,8 +55,8 @@ public class NonEvacuatedEnergyInputBuilderService {
     }
 
     private List<Contingency> goGetContingencies(List<EquipmentsContainer> contingencyListIdent, UUID networkUuid, String variantId, ReportNode reporter) {
-        List<UUID> ids = contingencyListIdent.stream().map(EquipmentsContainer::getContainerId).toList();
-        ContingencyListExportResult contingencies = actionsService.getContingencyList(ids, networkUuid, variantId);
+        List<UUID> contingencyListIds = contingencyListIdent.stream().map(EquipmentsContainer::getContainerId).toList();
+        ContingencyListExportResult contingencies = actionsService.getContingencyList(contingencyListIds, networkUuid, variantId);
         if (contingencies == null) {
             return List.of();
         }
