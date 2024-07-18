@@ -116,12 +116,6 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
         return contAttributesCountTemp;
     }
 
-    private Integer getContingenciesCount(List<UUID> ids, UUID networkUuid, String variantId) {
-        return ids.stream()
-                .mapToInt(uuid -> actionsService.getContingencyList(uuid, networkUuid, variantId).size())
-                .sum();
-    }
-
     public byte[] exportSensitivityResultsAsCsv(UUID resultUuid, SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos) {
         if (sensitivityAnalysisCsvFileInfos == null ||
                 sensitivityAnalysisCsvFileInfos.getSensitivityFunctionType() == null ||

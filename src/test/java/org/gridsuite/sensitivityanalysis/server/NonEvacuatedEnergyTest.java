@@ -31,6 +31,7 @@ import com.powsybl.sensitivity.SensitivityVariableType;
 import com.powsybl.sensitivity.WeightedSensitivityVariable;
 import lombok.SneakyThrows;
 import org.gridsuite.sensitivityanalysis.server.configuration.RestTemplateConfig;
+import org.gridsuite.sensitivityanalysis.server.dto.ContingencyListExportResult;
 import org.gridsuite.sensitivityanalysis.server.dto.EquipmentsContainer;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyContingencies;
@@ -73,10 +74,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -636,8 +634,12 @@ public class NonEvacuatedEnergyTest {
     }
 
     private void mockActions() {
-        given(actionsService.getContingencyList(eq(CONTINGENCIES_1_UUID), any(), eq(VARIANT_ID))).willReturn(CONTINGENCIES_1);
-        given(actionsService.getContingencyList(eq(CONTINGENCIES_2_UUID), any(), eq(VARIANT_ID))).willReturn(CONTINGENCIES_2);
+        given(actionsService.getContingencyList(eq(List.of(CONTINGENCIES_1_UUID)), any(), eq(VARIANT_ID))).willReturn(new ContingencyListExportResult(CONTINGENCIES_1, null));
+        given(actionsService.getContingencyList(eq(List.of(CONTINGENCIES_2_UUID)), any(), eq(VARIANT_ID))).willReturn(new ContingencyListExportResult(CONTINGENCIES_2, null));
+        //merge 2 lists into one
+        List<Contingency> contingencies = new ArrayList<>(CONTINGENCIES_1);
+        contingencies.addAll(CONTINGENCIES_2);
+        given(actionsService.getContingencyList(eq(List.of(CONTINGENCIES_1_UUID, CONTINGENCIES_2_UUID)), any(), eq(VARIANT_ID))).willReturn(new ContingencyListExportResult(contingencies, null));
     }
 
     private void mockFilters() {

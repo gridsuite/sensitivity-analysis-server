@@ -45,6 +45,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 
 /**
@@ -138,8 +139,11 @@ public class SensitivityAnalysisInputDataTest {
     @Test
     public void testFilterPbInputTranslation() {
         SensitivityAnalysisInputBuilderService inputBuilderService;
+
+        UUID u10Id = UUID.randomUUID();
+        UUID u11Id = UUID.randomUUID();
         given(filterService.getIdentifiablesFromFilters(any(), any(), any())).willThrow(new RuntimeException("FilterException"));
-        given(actionsService.getContingencyList(any(), any(), any())).willThrow(new RuntimeException("ContingencyException"));
+        given(actionsService.getContingencyList(anyList(), any(), any())).willReturn(new ContingencyListExportResult(null, List.of(u10Id, u11Id)));
         inputBuilderService = new SensitivityAnalysisInputBuilderService(actionsService, filterService);
         SensitivityAnalysisInputData.SensitivityAnalysisInputDataBuilder<?, ?> inputBuilder = SensitivityAnalysisInputData.builder();
         ReportNode reporter = ReportNode.newRootReportNode().withMessageTemplate("a", "b").build();
@@ -154,7 +158,7 @@ public class SensitivityAnalysisInputDataTest {
             .sensitivityInjections(List.of(SensitivityInjection.builder()
                 .monitoredBranches(List.of(new EquipmentsContainer(UUID.randomUUID(), "u6"), new EquipmentsContainer(UUID.randomUUID(), "u7")))
                 .injections(List.of(new EquipmentsContainer(UUID.randomUUID(), "u8"), new EquipmentsContainer(UUID.randomUUID(), "u9")))
-                .contingencies(List.of(new EquipmentsContainer(UUID.randomUUID(), "u10"), new EquipmentsContainer(UUID.randomUUID(), "u11")))
+                .contingencies(List.of(new EquipmentsContainer(u10Id, "u10"), new EquipmentsContainer(u11Id, "u11")))
                 .build()))
             .build();
         context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);

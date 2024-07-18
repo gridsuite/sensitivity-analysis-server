@@ -57,8 +57,7 @@ import static com.powsybl.ws.commons.computation.service.NotificationService.*;
 import static org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService.COMPUTATION_TYPE;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -132,8 +131,7 @@ public class SensitivityAnalysisControllerTest {
         given(networkStoreService.getNetwork(NETWORK_UUID, PreloadingStrategy.COLLECTION)).willReturn(network);
         given(networkStoreService.getNetwork(NETWORK_ERROR_UUID, PreloadingStrategy.COLLECTION)).willThrow(new RuntimeException(ERROR_MESSAGE));
 
-        given(actionsService.getContingencyList(eq(CONTINGENCY1_CONTAINER_UUID), any(), any())).willReturn(List.of(CONTINGENCY1));
-        given(actionsService.getContingencyList(eq(CONTINGENCY2_CONTAINER_UUID), any(), any())).willReturn(List.of(CONTINGENCY2));
+        given(actionsService.getContingencyList(eq(List.of(CONTINGENCY1_CONTAINER_UUID, CONTINGENCY2_CONTAINER_UUID)), any(), any())).willReturn(new ContingencyListExportResult(List.of(CONTINGENCY1, CONTINGENCY2), List.of()));
         given(actionsService.getContingencyCount(eq(List.of(CONTINGENCY1_CONTAINER_UUID, CONTINGENCY2_CONTAINER_UUID)), any(), any())).willReturn(2);
         given(filterService.getIdentifiablesFromFilters(eq(List.of(GEN1_CONTAINER_UUID, GEN2_CONTAINER_UUID)), any(), any())).willReturn(List.of(GEN1, GEN2));
         given(filterService.getIdentifiablesFromFilters(eq(List.of(BRANCH1_CONTAINER_UUID, BRANCH2_CONTAINER_UUID)), any(), any())).willReturn(List.of(BRANCH1, BRANCH2));
