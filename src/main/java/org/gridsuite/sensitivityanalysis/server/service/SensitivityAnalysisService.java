@@ -106,7 +106,7 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
             ids.remove(CONTINGENCIES);
         }
         ids.entrySet().removeIf(entry -> Objects.isNull(entry.getValue()));
-        Map<String, Long> map = filterService.getIdentifiablesCount(factorIds, networkUuid, null);
+        Map<String, Long> map = filterService.getIdentifiablesCount(factorIds, networkUuid, variantId);
         for (Long count : map.values()) {
             if (count != 0) {
                 contAttributesCountTemp *= count;
