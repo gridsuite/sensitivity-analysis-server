@@ -42,10 +42,9 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>30</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>31</gridsuite-dependencies.version>
         <liquibase-hibernate-package>org.gridsuite.sensitivityanalysis.server</liquibase-hibernate-package>
         <db-util.version>1.0.5</db-util.version>
-        <powsybl-ws-commons.version>1.11.0</powsybl-ws-commons.version><!-- should be removed once gridsuite-dependencies is upgraded-->
     </properties>
 
     <build>
@@ -132,7 +131,6 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-ws-commons</artifactId>
-            <version>${powsybl-ws-commons.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
