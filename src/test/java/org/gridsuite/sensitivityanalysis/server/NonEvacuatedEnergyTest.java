@@ -836,6 +836,8 @@ public class NonEvacuatedEnergyTest {
         assertEquals("me", message.getHeaders().get("receiver"));
         assertEquals(getCancelFailedMessage(NonEvacuatedEnergyWorkerService.COMPUTATION_TYPE),
                 message.getHeaders().get("message"));
+
+        //FIXME how to test the case when the computation is still in progress and we send a cancel request
     }
 
     @SneakyThrows
