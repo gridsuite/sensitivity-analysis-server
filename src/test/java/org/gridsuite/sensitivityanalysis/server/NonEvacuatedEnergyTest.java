@@ -748,6 +748,8 @@ public class NonEvacuatedEnergyTest {
         }
         while (output.receive(1000, "nonEvacuatedEnergy.failed") != null) {
         }
+        while (output.receive(1000, "nonEvacuatedEnergy.cancelfailed") != null) {
+        }
     }
 
     @SneakyThrows
@@ -823,16 +825,19 @@ public class NonEvacuatedEnergyTest {
             .andExpect(status().isOk());
 
         // stop non evacuated energy analysis
-        mockMvc.perform(put("/" + VERSION + "/non-evacuated-energy/results/{resultUuid}/stop" + "?receiver=me", RESULT_UUID))
+        mockMvc.perform(put("/" + VERSION + "/non-evacuated-energy/results/{resultUuid}/stop" + "?receiver=me", RESULT_UUID)
+                        .header(HEADER_USER_ID, "userId"))
             .andExpect(status().isOk());
 
         // message stopped should have been sent
-        Message<byte[]> message = output.receive(TIMEOUT, "nonEvacuatedEnergy.stopped");
+        Message<byte[]> message = output.receive(TIMEOUT, "nonEvacuatedEnergy.cancelfailed");
         assertNotNull(message);
         assertEquals(RESULT_UUID.toString(), message.getHeaders().get("resultUuid"));
         assertEquals("me", message.getHeaders().get("receiver"));
-        assertEquals(getCancelMessage(NonEvacuatedEnergyWorkerService.COMPUTATION_TYPE),
+        assertEquals(getCancelFailedMessage(NonEvacuatedEnergyWorkerService.COMPUTATION_TYPE),
                 message.getHeaders().get("message"));
+
+        //FIXME how to test the case when the computation is still in progress and we send a cancel request
     }
 
     @SneakyThrows
