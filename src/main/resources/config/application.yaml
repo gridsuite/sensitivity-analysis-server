@@ -24,6 +24,8 @@ spring:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}sensitivityanalysis.stopped
         publishFailed-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}sensitivityanalysis.failed
+        publishCancelFailed-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}sensitivityanalysis.cancelfailed
 
         consumeNonEvacuatedEnergyRun-in-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.run
@@ -40,8 +42,10 @@ spring:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.stopped
         publishNonEvacuatedEnergyFailed-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.failed
+        publishNonEvacuatedEnergyCancelFailed-out-0:
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.cancelfailed
 
-      output-bindings: publishRun-out-0;publishResult-out-0;publishCancel-out-0;publishStopped-out-0;publishFailed-out-0;publishNonEvacuatedEnergyRun-out-0;publishNonEvacuatedEnergyResult-out-0;publishNonEvacuatedEnergyCancel-out-0;publishNonEvacuatedEnergyStopped-out-0;publishNonEvacuatedEnergyFailed-out-0
+      output-bindings: publishRun-out-0;publishResult-out-0;publishCancel-out-0;publishStopped-out-0;publishFailed-out-0;publishCancelFailed-out-0;publishNonEvacuatedEnergyRun-out-0;publishNonEvacuatedEnergyResult-out-0;publishNonEvacuatedEnergyCancel-out-0;publishNonEvacuatedEnergyStopped-out-0;publishNonEvacuatedEnergyFailed-out-0;publishNonEvacuatedEnergyCancelFailed-out-0
 
   jpa:
     properties:

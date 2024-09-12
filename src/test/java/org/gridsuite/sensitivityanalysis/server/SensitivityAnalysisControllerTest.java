@@ -520,9 +520,13 @@ public class SensitivityAnalysisControllerTest {
     @Test
     void stopTest() throws Exception {
         UUID resultUuid = run(PARAMETERS_UUID);
-        mockMvc.perform(put("/" + VERSION + "/results/{resultUuid}/stop", resultUuid).param("receiver", "me"));
-        checkComputationFailed(resultUuid, "sensitivityanalysis.stopped", getCancelMessage(COMPUTATION_TYPE));
-        queryResultFails(resultUuid, status().isNotFound());
+        mockMvc.perform(put("/" + VERSION + "/results/{resultUuid}/stop", resultUuid)
+                        .header(HEADER_USER_ID, "testUserId")
+                .param("receiver", "me"));
+        checkComputationFailed(resultUuid, "sensitivityanalysis.cancelfailed", getCancelFailedMessage(COMPUTATION_TYPE));
+        queryResultFails(resultUuid, status().isOk());
+
+        //FIXME how to test the case when the computation is still in progress and we send a cancel request
     }
 
     @Test

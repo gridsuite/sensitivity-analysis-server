@@ -202,8 +202,9 @@ public class SensitivityAnalysisController {
     @Operation(summary = "Stop a sensitivity analysis computation")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis has been stopped")})
     public ResponseEntity<Void> stop(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
-                                     @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver) {
-        service.stop(resultUuid, receiver);
+                                     @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver,
+                                     @RequestHeader(HEADER_USER_ID) String userId) {
+        service.stop(resultUuid, receiver, userId);
         return ResponseEntity.ok().build();
     }
 
@@ -312,8 +313,9 @@ public class SensitivityAnalysisController {
     @Operation(summary = "Stop a non evacuated energy computation")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The non evacuated energy has been stopped")})
     public ResponseEntity<Void> stopNonEvacuatedEnergy(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
-                                     @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver) {
-        nonEvacuatedEnergyService.stop(resultUuid, receiver);
+                                                       @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver,
+                                                       @RequestHeader(HEADER_USER_ID) String userId) {
+        nonEvacuatedEnergyService.stop(resultUuid, receiver, userId);
         return ResponseEntity.ok().build();
     }
 
