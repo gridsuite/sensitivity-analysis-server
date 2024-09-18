@@ -249,7 +249,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
                     .withUntypedValue("providerToUse", sensitivityAnalysisRunner.getName()).add();
             // Delete any previous sensi computation logs
             inMemoryObserver.observe("report.delete",
-                    runContext, () -> reportService.deleteReport(runContext.getReportInfos().reportUuid(), reportType));
+                    runContext, () -> reportService.deleteReport(runContext.getReportInfos().reportUuid()));
         }
 
         CompletableFuture<SensitivityAnalysisResult> future = runSensitivityAnalysisAsync(runContext, sensitivityAnalysisRunner, reporter);
