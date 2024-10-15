@@ -10,23 +10,21 @@ import com.powsybl.contingency.Contingency;
 import com.powsybl.contingency.ContingencyContext;
 import com.powsybl.sensitivity.*;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
-import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
-import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisResultService;
-import org.gridsuite.sensitivityanalysis.server.util.ContingencyResult;
-import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder;
-import org.junit.Test;
 import org.apache.commons.compress.utils.Lists;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityOfTo;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityWithContingency;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
+import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
+import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisResultService;
+import org.gridsuite.sensitivityanalysis.server.util.ContingencyResult;
+import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -39,15 +37,14 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 /**
  * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest
 class SensitivityAnalysisResultServiceTest {
-    public static final String BRANCH_ID1 = "branchId1";
-    public static final String BRANCH_ID2 = "branchId2";
-    public static final String GEN_ID1 = "genId1";
-    public static final String GEN_ID2 = "genId2";
-    public static final String CONTINGENCY_ID1 = "contingencyId1";
-    public static final String CONTINGENCY_ID2 = "contingencyId2";
+    private static final String BRANCH_ID1 = "branchId1";
+    private static final String BRANCH_ID2 = "branchId2";
+    private static final String GEN_ID1 = "genId1";
+    private static final String GEN_ID2 = "genId2";
+    private static final String CONTINGENCY_ID1 = "contingencyId1";
+    private static final String CONTINGENCY_ID2 = "contingencyId2";
 
     @Autowired
     private SensitivityAnalysisResultService sensitivityAnalysisResultService;
@@ -65,7 +62,7 @@ class SensitivityAnalysisResultServiceTest {
     private GlobalStatusRepository globalStatusRepository;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         sensitivityAnalysisResultService.deleteAll();
     }
 

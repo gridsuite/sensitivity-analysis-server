@@ -7,28 +7,25 @@
 package org.gridsuite.sensitivityanalysis.server.util;
 
 import com.powsybl.commons.PowsyblException;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.gridsuite.sensitivityanalysis.server.SensitivityAnalysisControllerTest.DEFAULT_PROVIDER;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.DEFAULT_PROVIDER;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest
-public class SensitivityAnalysisRunnerSupplierTest {
+class SensitivityAnalysisRunnerSupplierTest {
 
     @Autowired
-    SensitivityAnalysisRunnerSupplier sensitivityAnalysisRunnerSupplier;
+    private SensitivityAnalysisRunnerSupplier sensitivityAnalysisRunnerSupplier;
 
     @Test
-    public void test() {
+    void test() {
         assertEquals(DEFAULT_PROVIDER, sensitivityAnalysisRunnerSupplier.getRunner(DEFAULT_PROVIDER).getName());
         assertEquals(DEFAULT_PROVIDER, sensitivityAnalysisRunnerSupplier.getRunner(null).getName());
 
