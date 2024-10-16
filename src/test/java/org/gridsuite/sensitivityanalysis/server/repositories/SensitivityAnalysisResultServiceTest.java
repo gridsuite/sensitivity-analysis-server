@@ -21,7 +21,7 @@ import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisResultService;
 import org.gridsuite.sensitivityanalysis.server.util.ContingencyResult;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -61,9 +61,13 @@ class SensitivityAnalysisResultServiceTest {
     @Autowired
     private GlobalStatusRepository globalStatusRepository;
 
-    @BeforeEach
-    void setUp() {
+    @AfterEach
+    void cleanDB() {
         sensitivityAnalysisResultService.deleteAll();
+        analysisResultRepository.deleteAll();
+        contingencyResultRepository.deleteAll();
+        sensitivityResultRepository.deleteAll();
+        globalStatusRepository.deleteAll();
     }
 
     @Test
