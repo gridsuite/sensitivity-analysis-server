@@ -24,10 +24,10 @@ import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalys
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
+import org.gridsuite.sensitivityanalysis.server.repositories.TestRepository;
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
-import org.gridsuite.sensitivityanalysis.server.util.TestRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,12 +52,14 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static com.powsybl.ws.commons.computation.service.NotificationService.*;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService.COMPUTATION_TYPE;
+import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.DEFAULT_PROVIDER;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -70,34 +72,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest
 @ContextHierarchy({@ContextConfiguration(classes = {SensitivityAnalysisApplication.class, TestChannelBinderConfiguration.class})})
-public class SensitivityAnalysisControllerTest {
-    public static final String MONITORED_BRANCHES_KEY = "monitoredBranchs";
-    public static final String INJECTIONS_KEY = "injections";
-    public static final String CONTINGENCIES_KEY = "contingencies";
+class SensitivityAnalysisControllerTest {
+    private static final String MONITORED_BRANCHES_KEY = "monitoredBranchs";
+    private static final String INJECTIONS_KEY = "injections";
+    private static final String CONTINGENCIES_KEY = "contingencies";
     private static final int TIMEOUT = 1000;
     private static final String ERROR_MESSAGE = "Error message test";
-    public static final String DEFAULT_PROVIDER = "OpenLoadFlow";
 
     private static final UUID NETWORK_UUID = UUID.randomUUID();
     private static final UUID NETWORK_ERROR_UUID = UUID.randomUUID();
-    public static UUID PARAMETERS_UUID;
-    public static UUID PARAMETERS_UUID2;
-    public static UUID PARAMETERS_UUID3;
-    public static final UUID LOADFLOW_PARAMETERS_UUID = UUID.randomUUID();
+    private UUID parametersUuid;
+    private UUID parametersUuid2;
+    private UUID parametersUuid3;
+    private static final UUID LOADFLOW_PARAMETERS_UUID = UUID.randomUUID();
     private static final UUID RESULT_UUID = UUID.randomUUID();
 
-    public static final IdentifiableAttributes BRANCH1 = new IdentifiableAttributes("NHV1_NHV2_1", IdentifiableType.LINE, null);
-    public static final IdentifiableAttributes BRANCH2 = new IdentifiableAttributes("NHV1_NHV2_2", IdentifiableType.LINE, null);
-    public static final IdentifiableAttributes GEN1 = new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR, null);
-    public static final IdentifiableAttributes GEN2 = new IdentifiableAttributes("GEN2", IdentifiableType.GENERATOR, null);
-    public static final Contingency CONTINGENCY1 = new Contingency("contingency1", new TwoWindingsTransformerContingency("NGEN_NHV1"));
-    public static final Contingency CONTINGENCY2 = new Contingency("contingency2", new TwoWindingsTransformerContingency("NHV2_NLOAD"));
-    public static final UUID BRANCH1_CONTAINER_UUID = UUID.randomUUID();
-    public static final UUID BRANCH2_CONTAINER_UUID = UUID.randomUUID();
-    public static final UUID GEN1_CONTAINER_UUID = UUID.randomUUID();
-    public static final UUID GEN2_CONTAINER_UUID = UUID.randomUUID();
-    public static final UUID CONTINGENCY1_CONTAINER_UUID = UUID.randomUUID();
-    public static final UUID CONTINGENCY2_CONTAINER_UUID = UUID.randomUUID();
+    private static final IdentifiableAttributes BRANCH1 = new IdentifiableAttributes("NHV1_NHV2_1", IdentifiableType.LINE, null);
+    private static final IdentifiableAttributes BRANCH2 = new IdentifiableAttributes("NHV1_NHV2_2", IdentifiableType.LINE, null);
+    private static final IdentifiableAttributes GEN1 = new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR, null);
+    private static final IdentifiableAttributes GEN2 = new IdentifiableAttributes("GEN2", IdentifiableType.GENERATOR, null);
+    private static final Contingency CONTINGENCY1 = new Contingency("contingency1", new TwoWindingsTransformerContingency("NGEN_NHV1"));
+    private static final Contingency CONTINGENCY2 = new Contingency("contingency2", new TwoWindingsTransformerContingency("NHV2_NLOAD"));
+    private static final UUID BRANCH1_CONTAINER_UUID = UUID.randomUUID();
+    private static final UUID BRANCH2_CONTAINER_UUID = UUID.randomUUID();
+    private static final UUID GEN1_CONTAINER_UUID = UUID.randomUUID();
+    private static final UUID GEN2_CONTAINER_UUID = UUID.randomUUID();
+    private static final UUID CONTINGENCY1_CONTAINER_UUID = UUID.randomUUID();
+    private static final UUID CONTINGENCY2_CONTAINER_UUID = UUID.randomUUID();
 
     @Autowired
     private OutputDestination output;
@@ -106,7 +107,7 @@ public class SensitivityAnalysisControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    TestRepository testRepository;
+    private TestRepository testRepository;
 
     @Autowired
     private ObjectMapper mapper;
@@ -200,9 +201,9 @@ public class SensitivityAnalysisControllerTest {
                 ))
                 .build();
 
-        PARAMETERS_UUID = createParameters(parameters);
-        PARAMETERS_UUID2 = createParameters(noEquipmentAllowedParameters);
-        PARAMETERS_UUID3 = createParameters(noMonitoredEquipmentAllowedParameters);
+        parametersUuid = createParameters(parameters);
+        parametersUuid2 = createParameters(noEquipmentAllowedParameters);
+        parametersUuid3 = createParameters(noMonitoredEquipmentAllowedParameters);
     }
 
     private UUID createParameters(SensitivityAnalysisParametersInfos parameters) throws Exception {
@@ -234,7 +235,7 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     void filterOptionsTest() throws Exception {
-        UUID resultUuid = run(PARAMETERS_UUID);
+        UUID resultUuid = run(parametersUuid);
         checkComputationSucceeded(resultUuid);
 
         // test filter options
@@ -259,7 +260,7 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     void queryResultTest() throws Exception {
-        UUID resultUuid = run(PARAMETERS_UUID);
+        UUID resultUuid = run(parametersUuid);
         checkComputationSucceeded(resultUuid);
 
         // check results can be retrieved for the without contingencies side
@@ -349,7 +350,7 @@ public class SensitivityAnalysisControllerTest {
     @Test
     void noEquipmentTest() throws Exception {
         // Run without allowed injections
-        UUID resultUuid = run(PARAMETERS_UUID2);
+        UUID resultUuid = run(parametersUuid2);
         checkComputationSucceeded(resultUuid);
 
         ResultsSelector selectorN = ResultsSelector.builder()
@@ -367,7 +368,7 @@ public class SensitivityAnalysisControllerTest {
         assertEquals(0, (long) resN.getTotalSensitivitiesCount());
 
         // Run without allowed branches
-        resultUuid = run(PARAMETERS_UUID3);
+        resultUuid = run(parametersUuid3);
         checkComputationSucceeded(resultUuid);
 
         selectorN = ResultsSelector.builder()
@@ -387,7 +388,7 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     void testDeterministicResult() throws Exception {
-        UUID resultUuid = run(PARAMETERS_UUID);
+        UUID resultUuid = run(parametersUuid);
         checkComputationSucceeded(resultUuid);
 
         // check that the results is deterministic while the sort by contingency id is not (there are 2 results with the same id)
@@ -414,7 +415,7 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     void csvExportTest() throws Exception {
-        UUID resultUuid = run(PARAMETERS_UUID);
+        UUID resultUuid = run(parametersUuid);
         checkComputationSucceeded(resultUuid);
 
         // export results as csv
@@ -448,7 +449,7 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     void deleteResultTest() throws Exception {
-        UUID resultUuid = run(PARAMETERS_UUID);
+        UUID resultUuid = run(parametersUuid);
         checkComputationSucceeded(resultUuid);
 
         mockMvc.perform(delete("/" + VERSION + "/results/{resultUuid}", resultUuid))
@@ -459,7 +460,7 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     void deleteResultsTest() throws Exception {
-        UUID resultUuid = run(PARAMETERS_UUID);
+        UUID resultUuid = run(parametersUuid);
         checkComputationSucceeded(resultUuid);
 
         mockMvc.perform(delete("/" + VERSION + "/results", resultUuid))
@@ -519,7 +520,7 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     void stopTest() throws Exception {
-        UUID resultUuid = run(PARAMETERS_UUID);
+        UUID resultUuid = run(parametersUuid);
         mockMvc.perform(put("/" + VERSION + "/results/{resultUuid}/stop", resultUuid)
                         .header(HEADER_USER_ID, "testUserId")
                 .param("receiver", "me"));
@@ -531,7 +532,7 @@ public class SensitivityAnalysisControllerTest {
 
     @Test
     void runTestWithError() throws Exception {
-        UUID resultUuid = run(NETWORK_ERROR_UUID, PARAMETERS_UUID);
+        UUID resultUuid = run(NETWORK_ERROR_UUID, parametersUuid);
         checkComputationFailed(resultUuid, "sensitivityanalysis.failed", getFailedMessage(COMPUTATION_TYPE) + " : " + ERROR_MESSAGE);
         queryResultFails(resultUuid, status().isNotFound());
     }
@@ -557,7 +558,7 @@ public class SensitivityAnalysisControllerTest {
     private SensitivityAnalysisResult runInMemory() throws Exception {
         MockHttpServletRequestBuilder req = post("/" + VERSION + "/networks/{networkUuid}/run", NETWORK_UUID)
             .param("reportType", "SensitivityAnalysis")
-            .param("parametersUuid", PARAMETERS_UUID.toString())
+            .param("parametersUuid", parametersUuid.toString())
             .param("loadFlowParametersUuid", LOADFLOW_PARAMETERS_UUID.toString());
         MvcResult result = mockMvc.perform(req.contentType(MediaType.APPLICATION_JSON).header(HEADER_USER_ID, "testUserId"))
             .andExpect(status().isOk())

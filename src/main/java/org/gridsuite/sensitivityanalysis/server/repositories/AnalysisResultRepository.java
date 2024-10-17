@@ -21,6 +21,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AnalysisResultRepository extends JpaRepository<AnalysisResultEntity, UUID> {
     @Modifying
+    @Override
     @Query(value = "DELETE FROM AnalysisResultEntity")
     void deleteAll();
 

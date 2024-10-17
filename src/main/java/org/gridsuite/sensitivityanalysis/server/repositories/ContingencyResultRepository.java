@@ -24,6 +24,7 @@ public interface ContingencyResultRepository extends JpaRepository<ContingencyRe
     void deleteAllByAnalysisResultUuid(UUID analysisResultUuid);
 
     @Modifying
+    @Override
     @Query(value = "DELETE FROM ContingencyResultEntity")
     void deleteAll();
 

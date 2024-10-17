@@ -17,7 +17,11 @@ import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
  */
 public final class TestUtils {
 
-    private TestUtils() { }
+    private TestUtils() {
+        throw new IllegalStateException("Utility class");
+    }
+
+    public static final String DEFAULT_PROVIDER = "OpenLoadFlow";
 
     public static void assertRequestsCount(long select, long insert, long update, long delete) {
         assertSelectCount(select);

@@ -62,6 +62,7 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
         this.filterService = filterService;
     }
 
+    @Override
     public UUID runAndSaveResult(SensitivityAnalysisRunContext runContext) {
         Objects.requireNonNull(runContext);
         var resultUuid = uuidGeneratorService.generate();
@@ -80,6 +81,7 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
         return resultService.getSensitivityResultFilterOptions(resultUuid, selector);
     }
 
+    @Override
     public List<String> getProviders() {
         return SensitivityAnalysisProvider.findAll().stream()
                 .map(SensitivityAnalysisProvider::getName)

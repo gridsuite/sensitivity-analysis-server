@@ -5,29 +5,27 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.powsybl.sensitivity.SensitivityFunctionType;
-import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import com.powsybl.ws.commons.computation.service.NotificationService;
+import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.gridsuite.sensitivityanalysis.server.SensitivityAnalysisControllerTest.DEFAULT_PROVIDER;
+import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.DEFAULT_PROVIDER;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -37,12 +35,11 @@ import static org.mockito.Mockito.verify;
 /**
  * @author Laurent Garnier <laurent.garnier at rte-france.com>
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest
 class SensitivityAnalysisServiceTest {
 
     @Autowired
-    SensitivityAnalysisService analysisService;
+    private SensitivityAnalysisService analysisService;
 
     @MockBean
     private SensitivityAnalysisParametersService parametersService;
@@ -178,7 +175,7 @@ class SensitivityAnalysisServiceTest {
         assertThrows(SensibilityAnalysisException.class, () -> analysisService.exportSensitivityResultsAsCsv(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos));
     }
 
-    private SensitivityRunQueryResult.SensitivityRunQueryResultBuilder getDefaultQueryBuilder() {
+    private static SensitivityRunQueryResult.SensitivityRunQueryResultBuilder getDefaultQueryBuilder() {
         return SensitivityRunQueryResult.builder()
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .requestedChunkSize(10)

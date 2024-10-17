@@ -7,7 +7,6 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -28,7 +27,6 @@ public class LoadFlowService {
 
     private final RestTemplate restTemplate;
 
-    @Autowired
     public LoadFlowService(@Value("${gridsuite.services.loadflow-server.base-uri:http://loadflow-server/}") String baseUri, RestTemplate restTemplate) {
         this.baseUri = baseUri;
         this.restTemplate = restTemplate;

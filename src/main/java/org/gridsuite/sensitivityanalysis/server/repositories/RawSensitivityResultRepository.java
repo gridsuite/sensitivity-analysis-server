@@ -23,6 +23,7 @@ public interface RawSensitivityResultRepository extends JpaRepository<RawSensiti
     void deleteAllByAnalysisResultUuid(UUID analysisResultUuid);
 
     @Modifying
+    @Override
     @Query(value = "DELETE FROM RawSensitivityResultEntity")
     void deleteAll();
 }

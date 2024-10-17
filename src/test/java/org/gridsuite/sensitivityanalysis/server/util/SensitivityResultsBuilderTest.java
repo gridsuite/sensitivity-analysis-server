@@ -28,13 +28,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
  */
 class SensitivityResultsBuilderTest {
-    public static final String FUNCTION_ID_1 = "functionId1";
-    public static final String FUNCTION_ID_2 = "functionId2";
-    public static final String VARIABLE_ID_1 = "variableId1";
-    public static final String VARIABLE_ID_2 = "variableId2";
-    public static final String CONTINGENCY_ID_1 = "contingencyId1";
-    public static final String CONTINGENCY_ID_2 = "contingencyId2";
-    public static final String CONTINGENCY_ID_3 = "contingencyId3";
+    private static final String FUNCTION_ID_1 = "functionId1";
+    private static final String FUNCTION_ID_2 = "functionId2";
+    private static final String VARIABLE_ID_1 = "variableId1";
+    private static final String VARIABLE_ID_2 = "variableId2";
+    private static final String CONTINGENCY_ID_1 = "contingencyId1";
+    private static final String CONTINGENCY_ID_2 = "contingencyId2";
+    private static final String CONTINGENCY_ID_3 = "contingencyId3";
 
     @Test
     void testBuildContingencyResults() {

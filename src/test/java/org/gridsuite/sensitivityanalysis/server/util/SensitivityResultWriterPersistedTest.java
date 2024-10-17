@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
  */
 class SensitivityResultWriterPersistedTest {
-    public static final Logger LOGGER = LoggerFactory.getLogger(SensitivityResultWriterPersistedTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityResultWriterPersistedTest.class);
 
     private final SensitivityAnalysisResultService analysisResultService = Mockito.mock(SensitivityAnalysisResultService.class);
 

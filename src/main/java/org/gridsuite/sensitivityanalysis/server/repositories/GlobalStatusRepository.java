@@ -20,6 +20,7 @@ import java.util.UUID;
 @Repository
 public interface GlobalStatusRepository extends JpaRepository<GlobalStatusEntity, UUID> {
     @Modifying
+    @Override
     @Query(value = "DELETE FROM GlobalStatusEntity")
     void deleteAll();
 

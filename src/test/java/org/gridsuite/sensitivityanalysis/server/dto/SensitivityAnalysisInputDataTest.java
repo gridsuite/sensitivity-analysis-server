@@ -14,21 +14,16 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import com.powsybl.sensitivity.SensitivityAnalysisParameters;
-import lombok.SneakyThrows;
-
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisInputBuilderService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisRunContext;
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Collection;
 import java.util.List;
@@ -36,14 +31,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.sensitivityanalysis.server.SensitivityAnalysisControllerTest.DEFAULT_PROVIDER;
-import static org.hamcrest.Matchers.contains;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-import static org.hamcrest.core.Is.is;
+import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.DEFAULT_PROVIDER;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
@@ -51,10 +44,8 @@ import static org.mockito.BDDMockito.given;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest
-@AutoConfigureMockMvc
-public class SensitivityAnalysisInputDataTest {
+class SensitivityAnalysisInputDataTest {
     private static final UUID NETWORK_UUID = UUID.randomUUID();
     private static final String VARIANT_ID = VariantManagerConstants.INITIAL_VARIANT_ID;
     private static final Network NETWORK = new NetworkFactoryImpl().createNetwork("ghost network", "absent format");
@@ -70,14 +61,13 @@ public class SensitivityAnalysisInputDataTest {
 
     private ObjectWriter objectWriter;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
     }
 
     @Test
-    @SneakyThrows
-    public void test() {
+    void test() throws Exception {
         SensitivityAnalysisInputData sensitivityAnalysisInputData1 = SensitivityAnalysisInputData.builder()
             .sensitivityInjectionsSets(List.of(SensitivityInjectionsSet.builder()
                 .monitoredBranches(List.of(new EquipmentsContainer(UUID.randomUUID(), "u1"), new EquipmentsContainer(UUID.randomUUID(), "u2")))
@@ -112,7 +102,7 @@ public class SensitivityAnalysisInputDataTest {
     }
 
     @Test
-    public void testEmptyInputTranslation() {
+    void testEmptyInputTranslation() {
         SensitivityAnalysisInputBuilderService inputBuilderService;
         given(filterService.getIdentifiablesFromFilters(any(), any(), any())).willThrow(new RuntimeException("FilterException"));
         given(actionsService.getContingencyList(any(), any(), any())).willThrow(new RuntimeException("ContingencyException"));
@@ -137,7 +127,7 @@ public class SensitivityAnalysisInputDataTest {
     }
 
     @Test
-    public void testFilterPbInputTranslation() {
+    void testFilterPbInputTranslation() {
         SensitivityAnalysisInputBuilderService inputBuilderService;
 
         UUID u10Id = UUID.randomUUID();
@@ -172,8 +162,7 @@ public class SensitivityAnalysisInputDataTest {
     }
 
     @Test
-    @SneakyThrows
-    public void testFilterWiderPbInputTranslation() {
+    void testFilterWiderPbInputTranslation() {
         SensitivityAnalysisInputBuilderService inputBuilderService;
         inputBuilderService = new SensitivityAnalysisInputBuilderService(actionsService, filterService);
         SensitivityAnalysisInputData.SensitivityAnalysisInputDataBuilder<?, ?> inputBuilder = SensitivityAnalysisInputData.builder();
