@@ -82,15 +82,15 @@ class ActionsServiceTest {
             public MockResponse dispatch(RecordedRequest request) {
                 String requestPath = Objects.requireNonNull(request.getPath());
                 if (requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&variantId=%s&contingencyListIds=%s", NETWORK_UUID, VARIANT_ID, LIST_UUID))) {
-                    return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE), jsonVariantExpected);
+                    return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE), jsonVariantExpected);
                 } else if (requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&contingencyListIds=%s", NETWORK_UUID, LIST_UUID))) {
-                    return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE), jsonExpected);
+                    return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE), jsonExpected);
                 } else if (requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&variantId=%s&contingencyListIds=%s", NETWORK_UUID, VARIANT_ID, VERY_LARGE_LIST_UUID))
                            || requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&contingencyListIds=%s", NETWORK_UUID, VERY_LARGE_LIST_UUID))) {
-                    return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE), veryLargeJsonExpected);
+                    return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE), veryLargeJsonExpected);
                 } else if (requestPath.equals(String.format("/v1/contingency-lists/count?ids=%s&ids=%s&networkUuid=%s&variantId=%s", LIST_UUID, LIST2_UUID, NETWORK_UUID, VARIANT_ID))
                         || requestPath.equals(String.format("/v1/contingency-lists/count?ids=%s&ids=%s&networkUuid=%s", LIST_UUID, LIST2_UUID, NETWORK_UUID))) {
-                    return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE), CONTINGENCY_COUNT);
+                    return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE), CONTINGENCY_COUNT);
                 } else {
                     return new MockResponse.Builder().code(HttpStatus.NOT_FOUND.value()).body("Path not supported: " + request.getPath()).build();
                 }
