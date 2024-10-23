@@ -8,7 +8,6 @@ package org.gridsuite.sensitivityanalysis.server.service;
 
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.sensitivityanalysis.server.dto.ContingencyListExportResult;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -36,7 +35,6 @@ public class ActionsService {
 
     private final RestTemplate restTemplate;
 
-    @Autowired
     public ActionsService(@Value("${gridsuite.services.actions-server.base-uri:http://actions-server/}") String actionsServerBaseUri, RestTemplate restTemplate) {
         this.actionsServerBaseUri = actionsServerBaseUri;
         this.restTemplate = restTemplate;
