@@ -572,9 +572,6 @@ class SensitivityAnalysisControllerTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
-        System.out.println("------------------------------------");
-        System.out.println(result.getResponse().getContentAsString());
-        System.out.println("------------------------------------");
         return mapper.readValue(result.getResponse().getContentAsString(), SensitivityAnalysisResult.class);
     }
 
