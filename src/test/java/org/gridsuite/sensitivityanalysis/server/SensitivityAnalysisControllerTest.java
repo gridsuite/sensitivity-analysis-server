@@ -225,6 +225,7 @@ class SensitivityAnalysisControllerTest {
         mockMvc.perform(delete("/" + VERSION + "/results")).andExpect(status().isOk());
     }
 
+    // TODO to fix as soon as possible
     @Disabled
     @Test
     void runTest() throws Exception {
