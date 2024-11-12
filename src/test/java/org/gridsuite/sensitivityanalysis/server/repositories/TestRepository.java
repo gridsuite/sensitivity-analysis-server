@@ -40,6 +40,7 @@ public class TestRepository {
         Comparator<SensitivityResultEntity> comparatorByContingencyIdAndSensiId = comparing(SensitivityResultEntity::getContingencyResult, comparatorByContingencyId).thenComparing(comparatorBySensiId);
         return sensitivityResultRepository.findAll().stream()
             .filter(s -> s.getContingencyResult() != null)
+            .filter(s -> s.getRawSensitivityResult() != null)
             .sorted(comparatorByContingencyIdAndSensiId)
             .map(sensitivityEntity ->
                 (SensitivityWithContingency) SensitivityWithContingency.builder().funcId(sensitivityEntity.getFunctionId())
