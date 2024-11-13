@@ -31,7 +31,6 @@ import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -225,8 +224,6 @@ class SensitivityAnalysisControllerTest {
         mockMvc.perform(delete("/" + VERSION + "/results")).andExpect(status().isOk());
     }
 
-    // TODO to fix as soon as possible
-    @Disabled
     @Test
     void runTest() throws Exception {
         SensitivityAnalysisResult result = runInMemory();
