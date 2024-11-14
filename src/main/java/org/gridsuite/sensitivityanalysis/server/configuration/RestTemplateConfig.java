@@ -52,8 +52,8 @@ public class RestTemplateConfig {
 
     private static ObjectMapper createObjectMapper() {
         var objectMapper = Jackson2ObjectMapperBuilder.json().build();
-        objectMapper.enable(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS.mappedFeature())
-            .disable(JsonWriteFeature.WRITE_NAN_AS_STRINGS.mappedFeature());
+        objectMapper.enable(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS.mappedFeature());
+        objectMapper.disable(JsonWriteFeature.WRITE_NAN_AS_STRINGS.mappedFeature());
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         objectMapper.registerModule(new ContingencyJsonModule());
         objectMapper.registerModule(new LoadFlowResultJsonModule());
