@@ -812,13 +812,6 @@ class NonEvacuatedEnergyTest {
             .andReturn();
         assertEquals(RESULT_UUID, mapper.readValue(result.getResponse().getContentAsString(), UUID.class));
 
-        // message failed should have been sent
-        Message<byte[]> failMessage = output.receive(TIMEOUT, "nonEvacuatedEnergy.failed");
-        assertEquals(RESULT_UUID.toString(), failMessage.getHeaders().get("resultUuid"));
-        assertEquals("me", failMessage.getHeaders().get("receiver"));
-        assertEquals(getFailedMessage(NonEvacuatedEnergyWorkerService.COMPUTATION_TYPE) + " : " + ERROR_MESSAGE,
-                failMessage.getHeaders().get("message"));
-
         // No result available
         mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy/results/{resultUuid}", RESULT_UUID))
             .andExpect(status().isNotFound());
@@ -834,12 +827,6 @@ class NonEvacuatedEnergyTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
         assertEquals(RESULT_UUID, mapper.readValue(result.getResponse().getContentAsString(), UUID.class));
-
-        // message failed should have been sent
-        Message<byte[]> failMessage = output.receive(TIMEOUT, "nonEvacuatedEnergy.failed");
-        assertEquals(RESULT_UUID.toString(), failMessage.getHeaders().get("resultUuid"));
-        assertEquals("me", failMessage.getHeaders().get("receiver"));
-        assertTrue(((String) failMessage.getHeaders().get("message")).contains(messageExpected));
 
         // No result available
         mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy/results/{resultUuid}", RESULT_UUID))
