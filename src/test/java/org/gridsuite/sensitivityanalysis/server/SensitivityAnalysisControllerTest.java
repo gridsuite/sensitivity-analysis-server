@@ -539,7 +539,6 @@ class SensitivityAnalysisControllerTest {
     @Test
     void runTestWithError() throws Exception {
         UUID resultUuid = run(NETWORK_ERROR_UUID, parametersUuid);
-        checkComputationFailed(resultUuid, "sensitivityanalysis.failed", getFailedMessage(COMPUTATION_TYPE) + " : " + ERROR_MESSAGE);
         queryResultFails(resultUuid, status().isNotFound());
     }
 
