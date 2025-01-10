@@ -138,7 +138,7 @@ public class SensitivityAnalysisParametersService {
                 variantId,
                 nonEvacuatedEnergyInputData,
                 receiver,
-                provider,
+                provider != null ? provider : "default-provider", // TODO : remove test on provider null when fix in powsybl-ws-commons will handle null provider
                 reportInfos,
                 userId);
 
