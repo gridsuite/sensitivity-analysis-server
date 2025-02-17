@@ -19,6 +19,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -63,6 +64,7 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
     }
 
     @Override
+    @Transactional
     public UUID runAndSaveResult(SensitivityAnalysisRunContext runContext) {
         Objects.requireNonNull(runContext);
         var resultUuid = uuidGeneratorService.generate();
