@@ -67,6 +67,7 @@ spring:
                 delivery-limit: 2
 
   jpa:
+    open-in-view: true
     properties:
       hibernate:
         order_inserts: true
