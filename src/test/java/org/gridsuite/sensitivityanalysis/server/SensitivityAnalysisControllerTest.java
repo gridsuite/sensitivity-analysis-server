@@ -451,7 +451,7 @@ public class SensitivityAnalysisControllerTest {
         UUID resultUuid = run(PARAMETERS_UUID);
         checkComputationSucceeded(resultUuid);
 
-        mockMvc.perform(delete("/" + VERSION + "/results/{resultUuid}", resultUuid))
+        mockMvc.perform(delete("/" + VERSION + "/results").queryParam("resultsUuids", resultUuid.toString()))
             .andExpect(status().isOk());
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", RESULT_UUID))
             .andExpect(status().isNotFound());
@@ -462,7 +462,7 @@ public class SensitivityAnalysisControllerTest {
         UUID resultUuid = run(PARAMETERS_UUID);
         checkComputationSucceeded(resultUuid);
 
-        mockMvc.perform(delete("/" + VERSION + "/results", resultUuid))
+        mockMvc.perform(delete("/" + VERSION + "/results").queryParam("resultsUuids", resultUuid.toString()))
             .andExpect(status().isOk());
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", RESULT_UUID))
             .andExpect(status().isNotFound());
