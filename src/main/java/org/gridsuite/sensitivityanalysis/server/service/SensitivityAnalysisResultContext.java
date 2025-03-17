@@ -16,7 +16,8 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 
 import java.io.UncheckedIOException;
-import java.util.*;
+import java.util.Objects;
+import java.util.UUID;
 
 import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_USER_ID;
 import static com.powsybl.ws.commons.computation.utils.MessageUtils.getNonNullHeader;

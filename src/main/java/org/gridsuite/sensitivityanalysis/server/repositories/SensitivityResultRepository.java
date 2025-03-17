@@ -34,6 +34,7 @@ public interface SensitivityResultRepository extends JpaRepository<SensitivityRe
     void deleteAllPostContingencies();
 
     @Modifying
+    @Override
     @Query(value = "DELETE FROM SensitivityResultEntity")
     void deleteAll();
 

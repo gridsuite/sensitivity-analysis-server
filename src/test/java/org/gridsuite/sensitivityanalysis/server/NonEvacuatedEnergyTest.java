@@ -20,39 +20,22 @@ import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.loadflow.LoadFlowParameters;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import com.powsybl.sensitivity.SensitivityAnalysis;
-import com.powsybl.sensitivity.SensitivityAnalysisParameters;
-import com.powsybl.sensitivity.SensitivityAnalysisResult;
-import com.powsybl.sensitivity.SensitivityFactor;
-import com.powsybl.sensitivity.SensitivityFunctionType;
-import com.powsybl.sensitivity.SensitivityValue;
-import com.powsybl.sensitivity.SensitivityVariableSet;
-import com.powsybl.sensitivity.SensitivityVariableType;
-import com.powsybl.sensitivity.WeightedSensitivityVariable;
-import lombok.SneakyThrows;
+import com.powsybl.sensitivity.*;
+import com.powsybl.ws.commons.computation.service.ReportService;
+import com.powsybl.ws.commons.computation.service.UuidGeneratorService;
 import org.gridsuite.sensitivityanalysis.server.configuration.RestTemplateConfig;
 import org.gridsuite.sensitivityanalysis.server.dto.ContingencyListExportResult;
 import org.gridsuite.sensitivityanalysis.server.dto.EquipmentsContainer;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyContingencies;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyGeneratorsCappingsByType;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyGeneratorsCappings;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyMonitoredBranches;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStageDefinition;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStagesSelection;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
+import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.*;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
-import com.powsybl.ws.commons.computation.service.ReportService;
-import com.powsybl.ws.commons.computation.service.UuidGeneratorService;
 import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.NonEvacuatedEnergyWorkerService;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
@@ -68,7 +51,6 @@ import org.springframework.http.MediaType;
 import org.springframework.messaging.Message;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -81,32 +63,21 @@ import java.util.stream.Stream;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
 import static com.powsybl.ws.commons.computation.service.NotificationService.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-@RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @ContextHierarchy({@ContextConfiguration(classes = {SensitivityAnalysisApplication.class, TestChannelBinderConfiguration.class})})
-public class NonEvacuatedEnergyTest {
+class NonEvacuatedEnergyTest {
 
     private static final UUID NETWORK_UUID = UUID.randomUUID();
     private static final UUID NETWORK_ERROR_UUID = UUID.randomUUID();
@@ -178,8 +149,8 @@ public class NonEvacuatedEnergyTest {
 
     private static final String ERROR_MESSAGE = "Error message test";
 
-    private static String INPUT;
-    private static String INPUT_WITH_TEMPORARY_LIMIT_NOT_FOUND;
+    private String input;
+    private String inputWithTemporaryLimitNotFound;
 
     @Autowired
     private OutputDestination output;
@@ -209,11 +180,11 @@ public class NonEvacuatedEnergyTest {
     private NonEvacuatedEnergyWorkerService nonEvacuatedEnergyWorkerService;
 
     @Value("${sensitivity-analysis.default-provider}")
-    String defaultSensitivityAnalysisProvider;
+    private String defaultSensitivityAnalysisProvider;
 
     private final ObjectMapper mapper = RestTemplateConfig.objectMapper();
 
-    private List<NonEvacuatedEnergyStageDefinition> buildStagesDefinition() {
+    private static List<NonEvacuatedEnergyStageDefinition> buildStagesDefinition() {
         return List.of(NonEvacuatedEnergyStageDefinition.builder()
                 .generators(List.of(new EquipmentsContainer(GENERATORS_WIND_FILTER_UUID, "generators_wind")))
                 .energySource(EnergySource.WIND)
@@ -228,7 +199,7 @@ public class NonEvacuatedEnergyTest {
                 .pMaxPercents(List.of(50F, 30F)).build());
     }
 
-    private List<NonEvacuatedEnergyStagesSelection> buildStagesSelection() {
+    private static List<NonEvacuatedEnergyStagesSelection> buildStagesSelection() {
         return List.of(NonEvacuatedEnergyStagesSelection.builder()
                 .name("EOL_100-PV_70-HYDRO_50")
                 .activated(true)
@@ -243,7 +214,7 @@ public class NonEvacuatedEnergyTest {
                 .build());
     }
 
-    private NonEvacuatedEnergyGeneratorsCappings buildGeneratorsCappings() {
+    private static NonEvacuatedEnergyGeneratorsCappings buildGeneratorsCappings() {
         return NonEvacuatedEnergyGeneratorsCappings.builder()
             .sensitivityThreshold(0.01)
             .generators(List.of(NonEvacuatedEnergyGeneratorsCappingsByType.builder()
@@ -264,7 +235,7 @@ public class NonEvacuatedEnergyTest {
             .build();
     }
 
-    private List<NonEvacuatedEnergyMonitoredBranches> buildMonitoredBranches() {
+    private static List<NonEvacuatedEnergyMonitoredBranches> buildMonitoredBranches() {
         return List.of(NonEvacuatedEnergyMonitoredBranches.builder()
                 .branches(List.of(new EquipmentsContainer(MONITORED_BRANCHES_1_FILTER_UUID, "branches_1")))
                 .activated(true)
@@ -298,7 +269,7 @@ public class NonEvacuatedEnergyTest {
         );
     }
 
-    private List<NonEvacuatedEnergyContingencies> buildContingencies() {
+    private static List<NonEvacuatedEnergyContingencies> buildContingencies() {
         return List.of(NonEvacuatedEnergyContingencies.builder()
                 .activated(true)
                 .contingencies(List.of(new EquipmentsContainer(CONTINGENCIES_1_UUID, "contingency_1")))
@@ -309,7 +280,7 @@ public class NonEvacuatedEnergyTest {
                 .build());
     }
 
-    private List<SensitivityFactor> buildSensitivityFactorsResults() {
+    private static List<SensitivityFactor> buildSensitivityFactorsResults() {
         // sensitivity variable set for each energy source (WIND, SOLAR, HYDRO)
         SensitivityVariableSet sensitivityVariableSet1 = new SensitivityVariableSet(CAPPING_GENERATORS_WIND_FILTER_UUID.toString(),
             CAPPING_GENERATORS_WIND.stream().map(g -> new WeightedSensitivityVariable(g.getId(), 1.)).toList());
@@ -428,11 +399,10 @@ public class NonEvacuatedEnergyTest {
             .collect(Collectors.toList());
     }
 
-    private List<List<SensitivityValue>> buildSensitivityValuesResults() {
+    private static List<List<SensitivityValue>> buildSensitivityValuesResults() {
         // stage 1 result 1 : at least, one limit violation detected
         List<SensitivityValue> sensitivityValues1 = List.of(
             // line3
-            //
             new SensitivityValue(0, -1, 0.02, 130.),  // line3, side1, GROUP3, N
             new SensitivityValue(1, -1, 0.02, 230.),   // line3, side1, newGroup2, N    ----> limit violation should be detected here
             new SensitivityValue(2, -1, 0.02, 150.),   // line3, side1, TEST1, N
@@ -471,7 +441,6 @@ public class NonEvacuatedEnergyTest {
             new SensitivityValue(46, 1, 0.02, 120.),   // line3, side2, newGroup2, c2
 
             // line2
-            //
             new SensitivityValue(54, -1, 0.02, 170.),  // line2, side2, GROUP3, N
             new SensitivityValue(55, -1, 0.02, 190.),   // line2, side2, newGroup2, N    ----> limit violation should be detected here
             new SensitivityValue(56, -1, 0.02, 120.),   // line2, side2, TEST1, N
@@ -506,7 +475,6 @@ public class NonEvacuatedEnergyTest {
         // stage 1 result 2 : no limit violation should be detected
         List<SensitivityValue> sensitivityValues2 = List.of(
             // line3
-            //
             new SensitivityValue(0, -1, 0.02, 130.),  // line3, side1, GROUP3, N
             new SensitivityValue(1, -1, 0.02, 140.),   // line3, side1, newGroup2, N
             new SensitivityValue(2, -1, 0.02, 150.),   // line3, side1, TEST1, N
@@ -524,7 +492,6 @@ public class NonEvacuatedEnergyTest {
             new SensitivityValue(46, 1, 0.02, 120.),   // line3, side2, newGroup2, c2
 
             // line2
-            //
             new SensitivityValue(54, -1, 0.02, 100.),  // line2, side2, GROUP3, N
             new SensitivityValue(56, -1, 0.02, 90.),   // line2, side2, TEST1, N
             new SensitivityValue(57, -1, 0.02, 105),   // line2, side2, newGroup1, N
@@ -537,7 +504,6 @@ public class NonEvacuatedEnergyTest {
         // stage 2 result 1 : at least, one limit violation detected
         List<SensitivityValue> sensitivityValues3 = List.of(
             // line3
-            //
             new SensitivityValue(0, -1, 0.02, 130.),  // line3, side1, GROUP3, N
             new SensitivityValue(1, -1, 0.02, 140.),   // line3, side1, newGroup2, N
             new SensitivityValue(2, -1, 0.02, 240.),   // line3, side1, TEST1, N        ----> limit violation should be detected here
@@ -573,7 +539,6 @@ public class NonEvacuatedEnergyTest {
             new SensitivityValue(46, 1, 0.02, 120.),   // line3, side2, newGroup2, c2
 
             // line2
-            //
             new SensitivityValue(54, -1, 0.02, 170.),  // line2, side2, GROUP3, N
             new SensitivityValue(55, -1, 0.02, 120.),   // line2, side2, newGroup2, N
             new SensitivityValue(56, -1, 0.02, 195.),   // line2, side2, TEST1, N        ----> limit violation should be detected here
@@ -606,7 +571,6 @@ public class NonEvacuatedEnergyTest {
         // stage 2 result 2 : no more limit violation detected
         List<SensitivityValue> sensitivityValues4 = List.of(
             // line3
-            //
             new SensitivityValue(0, -1, 0.02, 130.),  // line3, side1, GROUP3, N
             new SensitivityValue(1, -1, 0.02, 140.),   // line3, side1, newGroup2, N
             new SensitivityValue(11, -1, 0.02, 130.),   // line3, side2, TEST1, N
@@ -620,7 +584,6 @@ public class NonEvacuatedEnergyTest {
             new SensitivityValue(46, 1, 0.02, 120.),   // line3, side2, newGroup2, c2
 
             // line2
-            //
             new SensitivityValue(54, -1, 0.02, 95.),  // line2, side2, GROUP3, N
             new SensitivityValue(55, -1, 0.02, 80.),   // line2, side2, newGroup2, N
             new SensitivityValue(59, -1, 0.02, 100.),   // line2, side2, GH3, N
@@ -653,13 +616,12 @@ public class NonEvacuatedEnergyTest {
         given(filterService.getIdentifiablesFromFilter(eq(MONITORED_BRANCHES_2_FILTER_UUID), any(), eq(VARIANT_ID))).willReturn(BRANCHES_2);
     }
 
-    private String resourceToString(String resource) throws IOException {
-        return new String(ByteStreams.toByteArray(Objects.requireNonNull(getClass().getResourceAsStream(resource))), StandardCharsets.UTF_8);
+    private static String resourceToString(String resource) throws IOException {
+        return new String(ByteStreams.toByteArray(Objects.requireNonNull(NonEvacuatedEnergyTest.class.getResourceAsStream(resource))), StandardCharsets.UTF_8);
     }
 
-    @Before
-    @SneakyThrows
-    public void setUp() {
+    @BeforeEach
+    void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
         Network network = Network.read("testForNonEvacuatedEnergy.xiidm", getClass().getResourceAsStream("/testForNonEvacuatedEnergy.xiidm"));
@@ -688,11 +650,11 @@ public class NonEvacuatedEnergyTest {
             .nonEvacuatedEnergyContingencies(contingencies)
             .parameters(SensitivityAnalysisParameters.load())
             .build();
-        INPUT = mapper.writeValueAsString(nonEvacuatedEnergyInputData);
+        input = mapper.writeValueAsString(nonEvacuatedEnergyInputData);
 
         nonEvacuatedEnergyInputData.getNonEvacuatedEnergyMonitoredBranches().get(0).setIstN(false);
         nonEvacuatedEnergyInputData.getNonEvacuatedEnergyMonitoredBranches().get(0).setLimitNameN("limitNotFound");
-        INPUT_WITH_TEMPORARY_LIMIT_NOT_FOUND = mapper.writeValueAsString(nonEvacuatedEnergyInputData);
+        inputWithTemporaryLimitNotFound = mapper.writeValueAsString(nonEvacuatedEnergyInputData);
 
         // build the successive security analysis results
         // (only some sensitivity factors in results for line3 and line2)
@@ -752,20 +714,19 @@ public class NonEvacuatedEnergyTest {
         }
     }
 
-    @SneakyThrows
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() throws Exception {
         mockMvc.perform(delete("/" + VERSION + "/non-evacuated-energy/results"))
             .andExpect(status().isOk());
     }
 
     @Test
-    public void runTest() throws Exception {
+    void runTest() throws Exception {
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy/run-and-save?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID + "&loadFlowParametersUuid=" + UUID.randomUUID(), NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "userId")
-            .content(INPUT))
+            .content(input))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
@@ -795,9 +756,8 @@ public class NonEvacuatedEnergyTest {
             .andExpect(status().isNotFound());
     }
 
-    @SneakyThrows
     @Test
-    public void testStatus() {
+    void testStatus() throws Exception {
         MvcResult result = mockMvc.perform(get(
                 "/" + VERSION + "/non-evacuated-energy/results/{resultUuid}/status", RESULT_UUID))
             .andExpect(status().isOk())
@@ -816,12 +776,12 @@ public class NonEvacuatedEnergyTest {
     }
 
     @Test
-    public void stopTest() throws Exception {
+    void stopTest() throws Exception {
         mockMvc.perform(post(
             "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy/run-and-save?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID + "&loadFlowParametersUuid=" + UUID.randomUUID(), NETWORK_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "userId")
-            .content(INPUT))
+            .content(input))
             .andExpect(status().isOk());
 
         // stop non evacuated energy analysis
@@ -840,25 +800,17 @@ public class NonEvacuatedEnergyTest {
         //FIXME how to test the case when the computation is still in progress and we send a cancel request
     }
 
-    @SneakyThrows
     @Test
-    public void testWithBadNetworkError() {
+    void testWithBadNetworkError() throws Exception {
         MvcResult result = mockMvc.perform(post(
                 "/" + VERSION + "/networks/{networkUuid}/non-evacuated-energy/run-and-save?reportType=NonEvacuatedEnergy&receiver=me&variantId=" + VARIANT_ID + "&loadFlowParametersUuid=" + UUID.randomUUID(), NETWORK_ERROR_UUID)
             .contentType(MediaType.APPLICATION_JSON)
             .header(HEADER_USER_ID, "userId")
-            .content(INPUT))
+            .content(input))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
         assertEquals(RESULT_UUID, mapper.readValue(result.getResponse().getContentAsString(), UUID.class));
-
-        // message failed should have been sent
-        Message<byte[]> failMessage = output.receive(TIMEOUT, "nonEvacuatedEnergy.failed");
-        assertEquals(RESULT_UUID.toString(), failMessage.getHeaders().get("resultUuid"));
-        assertEquals("me", failMessage.getHeaders().get("receiver"));
-        assertEquals(getFailedMessage(NonEvacuatedEnergyWorkerService.COMPUTATION_TYPE) + " : " + ERROR_MESSAGE,
-                failMessage.getHeaders().get("message"));
 
         // No result available
         mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy/results/{resultUuid}", RESULT_UUID))
@@ -876,21 +828,14 @@ public class NonEvacuatedEnergyTest {
             .andReturn();
         assertEquals(RESULT_UUID, mapper.readValue(result.getResponse().getContentAsString(), UUID.class));
 
-        // message failed should have been sent
-        Message<byte[]> failMessage = output.receive(TIMEOUT, "nonEvacuatedEnergy.failed");
-        assertEquals(RESULT_UUID.toString(), failMessage.getHeaders().get("resultUuid"));
-        assertEquals("me", failMessage.getHeaders().get("receiver"));
-        assertTrue(((String) failMessage.getHeaders().get("message")).contains(messageExpected));
-
         // No result available
         mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy/results/{resultUuid}", RESULT_UUID))
             .andExpect(status().isNotFound());
     }
 
     @Test
-    public void testWithPermanentOrTemporaryLimitNotFound() throws Exception {
-        testLimitError(INPUT, VARIANT_ID, NETWORK_ERROR_PERMANENT_LIMIT_UUID, "Branch 'line2' has no current limits !!");
-
-        testLimitError(INPUT_WITH_TEMPORARY_LIMIT_NOT_FOUND, VARIANT_ID, NETWORK_UUID, "Temporary limit 'limitNotFound' not found for branch 'line3' !!");
+    void testWithPermanentOrTemporaryLimitNotFound() throws Exception {
+        testLimitError(input, VARIANT_ID, NETWORK_ERROR_PERMANENT_LIMIT_UUID, "Branch 'line2' has no current limits !!");
+        testLimitError(inputWithTemporaryLimitNotFound, VARIANT_ID, NETWORK_UUID, "Temporary limit 'limitNotFound' not found for branch 'line3' !!");
     }
 }
