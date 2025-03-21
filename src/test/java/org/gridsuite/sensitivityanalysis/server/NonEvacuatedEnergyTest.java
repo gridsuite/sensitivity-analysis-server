@@ -749,7 +749,7 @@ class NonEvacuatedEnergyTest {
             .andExpect(status().isNotFound());
 
         // test one result deletion
-        mockMvc.perform(delete("/" + VERSION + "/non-evacuated-energy/results/{resultUuid}", RESULT_UUID))
+        mockMvc.perform(delete("/" + VERSION + "/non-evacuated-energy/results").queryParam("resultsUuids", RESULT_UUID.toString()))
             .andExpect(status().isOk());
 
         mockMvc.perform(get("/" + VERSION + "/non-evacuated-energy/results/{resultUuid}", RESULT_UUID))
