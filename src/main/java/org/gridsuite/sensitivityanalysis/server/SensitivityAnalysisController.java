@@ -268,7 +268,7 @@ public class SensitivityAnalysisController {
     }
 
     @DeleteMapping(value = "/non-evacuated-energy/results", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Delete all non evacuated energy results from the database")
+    @Operation(summary = "Delete non evacuated energy results from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All non evacuated energy results have been deleted")})
     public ResponseEntity<Void> deleteNonEvacuatedEnergyResults(@Parameter(description = "Results UUID") @RequestParam(value = "resultsUuids", required = false) List<UUID> resultsUuids) {
         nonEvacuatedEnergyService.deleteResults(resultsUuids);
