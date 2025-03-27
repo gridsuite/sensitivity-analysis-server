@@ -44,7 +44,7 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
 
     private UUID resultUuid;
 
-    public SensitivityResultWriterPersisted(SensitivityAnalysisResultService sensitivityAnalysisResultService) {
+    public SensitivityResultWriterPersisted(UUID resultUuid, SensitivityAnalysisResultService sensitivityAnalysisResultService) {
         this.sensitivityAnalysisResultService = sensitivityAnalysisResultService;
         sensitivityValuesQueue = new LinkedBlockingQueue<>();
         contingencyResultsQueue = new LinkedBlockingQueue<>();
@@ -52,10 +52,10 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
         contingencyResultsThread = new Thread(contingencyResultsBatchedHandling(), "contingencyWriterThread");
         sensitivityValuesWorking = new AtomicBoolean(false);
         contingencyResultsWorking = new AtomicBoolean(false);
+        this.resultUuid = resultUuid;
     }
 
-    public void start(UUID resultUuid) {
-        this.resultUuid = resultUuid;
+    public void start() {
         sensitivityValuesThread.start();
         contingencyResultsThread.start();
     }

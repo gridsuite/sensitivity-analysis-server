@@ -17,12 +17,9 @@ import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.loadflow.LoadFlowParameters;
 import com.powsybl.loadflow.LoadFlowProvider;
 import com.powsybl.network.store.client.NetworkStoreService;
-import com.powsybl.sensitivity.SensitivityAnalysis;
-import com.powsybl.sensitivity.SensitivityAnalysisParameters;
-import com.powsybl.sensitivity.SensitivityAnalysisResult;
-import com.powsybl.ws.commons.computation.service.*;
-import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import com.powsybl.sensitivity.*;
+import com.powsybl.ws.commons.computation.dto.ReportInfos;
+import com.powsybl.ws.commons.computation.service.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
@@ -34,7 +31,6 @@ import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSu
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultWriterPersisted;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
@@ -67,7 +63,6 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
 
     private final Function<String, SensitivityAnalysis.Runner> sensitivityAnalysisFactorySupplier;
 
-    private final ApplicationContext applicationContext;
     protected final SensitivityAnalysisInMemoryObserver inMemoryObserver;
 
     public SensitivityAnalysisWorkerService(NetworkStoreService networkStoreService,
@@ -80,13 +75,11 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
                                             SensitivityAnalysisParametersService parametersService,
                                             SensitivityAnalysisRunnerSupplier sensitivityAnalysisRunnerSupplier,
                                             SensitivityAnalysisObserver observer,
-                                            SensitivityAnalysisInMemoryObserver inMemoryObserver,
-                                            ApplicationContext applicationContext) {
+                                            SensitivityAnalysisInMemoryObserver inMemoryObserver) {
         super(networkStoreService, notificationService, reportService, resultService, executionService, observer, objectMapper);
         this.sensitivityAnalysisInputBuilderService = sensitivityAnalysisInputBuilderService;
         this.parametersService = parametersService;
-        sensitivityAnalysisFactorySupplier = sensitivityAnalysisRunnerSupplier::getRunner;
-        this.applicationContext = applicationContext;
+        this.sensitivityAnalysisFactorySupplier = sensitivityAnalysisRunnerSupplier::getRunner;
         this.inMemoryObserver = inMemoryObserver;
     }
 
@@ -136,8 +129,8 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
 
         saveSensitivityResults(groupedFactors, resultUuid, contingencies);
 
-        SensitivityResultWriterPersisted writer = (SensitivityResultWriterPersisted) applicationContext.getBean("sensitivityResultWriterPersisted");
-        writer.start(resultUuid);
+        SensitivityResultWriterPersisted writer = new SensitivityResultWriterPersisted(resultUuid, resultService);
+        writer.start();
 
         List<SensitivityFactor> factors = groupedFactors.stream().flatMap(Collection::stream).toList();
         SensitivityFactorReader sensitivityFactorReader = new SensitivityFactorModelReader(factors, runContext.getNetwork());

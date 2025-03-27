@@ -60,7 +60,7 @@ class SensitivityResultWriterPersistedTest {
             return null;
         }).when(analysisResultService).writeContingenciesStatus(any(), anyList());
 
-        resultWriterPersisted = new SensitivityResultWriterPersisted(analysisResultService);
+        resultWriterPersisted = new SensitivityResultWriterPersisted(UUID.randomUUID(), analysisResultService);
     }
 
     @AfterEach
@@ -79,7 +79,7 @@ class SensitivityResultWriterPersistedTest {
     @Test
     void testWritingOneSensitivityValue() {
         verify(analysisResultService, times(0)).writeSensitivityValues(any(), anyList());
-        resultWriterPersisted.start(UUID.randomUUID());
+        resultWriterPersisted.start();
         assertFalse(resultWriterPersisted.isWorking());
 
         resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.);
@@ -91,7 +91,7 @@ class SensitivityResultWriterPersistedTest {
     @Test
     void testWritingSeveralSensitivityValuesIsBatched() {
         verify(analysisResultService, times(0)).writeSensitivityValues(any(), anyList());
-        resultWriterPersisted.start(UUID.randomUUID());
+        resultWriterPersisted.start();
         assertFalse(resultWriterPersisted.isWorking());
 
         IntStream.range(0, 1000).forEach(i -> resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.));
@@ -104,7 +104,7 @@ class SensitivityResultWriterPersistedTest {
     @Test
     void testWritingOneContingencyStatus() {
         verify(analysisResultService, times(0)).writeSensitivityValues(any(), anyList());
-        resultWriterPersisted.start(UUID.randomUUID());
+        resultWriterPersisted.start();
         assertFalse(resultWriterPersisted.isWorking());
 
         resultWriterPersisted.writeContingencyStatus(0, SensitivityAnalysisResult.Status.SUCCESS);
@@ -117,7 +117,7 @@ class SensitivityResultWriterPersistedTest {
     @Test
     void testWritingSeveralContingencyStatusesIsBatched() {
         verify(analysisResultService, times(0)).writeSensitivityValues(any(), anyList());
-        resultWriterPersisted.start(UUID.randomUUID());
+        resultWriterPersisted.start();
         assertFalse(resultWriterPersisted.isWorking());
 
         IntStream.range(0, 1000).forEach(i -> resultWriterPersisted.writeContingencyStatus(0, SensitivityAnalysisResult.Status.SUCCESS));
@@ -129,7 +129,7 @@ class SensitivityResultWriterPersistedTest {
 
     @Test
     void testNotOperatingAfterInterruption() {
-        resultWriterPersisted.start(UUID.randomUUID());
+        resultWriterPersisted.start();
         resultWriterPersisted.interrupt();
         resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.);
         await().atLeast(500, TimeUnit.MILLISECONDS);
@@ -141,7 +141,7 @@ class SensitivityResultWriterPersistedTest {
         doThrow(new RuntimeException("Error persisting sensitivity values"))
             .when(analysisResultService)
             .writeSensitivityValues(any(), anyList());
-        resultWriterPersisted.start(UUID.randomUUID());
+        resultWriterPersisted.start();
         IntStream.range(0, 1000).forEach(i -> resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.));
         await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
     }
@@ -151,7 +151,7 @@ class SensitivityResultWriterPersistedTest {
         doThrow(new RuntimeException("Error persisting contingency statuses"))
             .when(analysisResultService)
             .writeContingenciesStatus(any(), anyList());
-        resultWriterPersisted.start(UUID.randomUUID());
+        resultWriterPersisted.start();
         IntStream.range(0, 1000).forEach(i -> resultWriterPersisted.writeContingencyStatus(0, SensitivityAnalysisResult.Status.SUCCESS));
         await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
     }
