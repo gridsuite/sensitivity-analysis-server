@@ -62,10 +62,16 @@ public class SensitivityAnalysisParametersService {
             .map(SensitivityAnalysisParametersEntity::getId);
     }
 
+    @Transactional(readOnly = true)
     public Optional<SensitivityAnalysisParametersInfos> getParameters(UUID parametersUuid) {
-        return sensitivityAnalysisParametersRepository.findById(parametersUuid).map(SensitivityAnalysisParametersEntity::toInfos);
+        return getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid));
     }
 
+    private Optional<SensitivityAnalysisParametersInfos> getParameters(Optional<SensitivityAnalysisParametersEntity> parametersEntity) {
+        return parametersEntity.map(SensitivityAnalysisParametersEntity::toInfos);
+    }
+
+    @Transactional(readOnly = true)
     public List<SensitivityAnalysisParametersInfos> getAllParameters() {
         return sensitivityAnalysisParametersRepository.findAll().stream().map(SensitivityAnalysisParametersEntity::toInfos).toList();
     }
@@ -154,6 +160,7 @@ public class SensitivityAnalysisParametersService {
         nonEvacuatedEnergyRunContext.getNonEvacuatedEnergyInputData().getParameters().setLoadFlowParameters(loadFlowParametersValues.commonParameters());
     }
 
+    @Transactional(readOnly = true)
     public SensitivityAnalysisRunContext createRunContext(UUID networkUuid, String variantId,
                                                           String receiver,
                                                           ReportInfos reportInfos,
@@ -161,7 +168,7 @@ public class SensitivityAnalysisParametersService {
                                                           UUID parametersUuid,
                                                           UUID loadFlowParametersUuid) {
         SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersUuid != null
-                ? getParameters(parametersUuid)
+                ? getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid))
                 .orElse(getDefauSensitivityAnalysisParametersInfos())
                 : getDefauSensitivityAnalysisParametersInfos();
 
