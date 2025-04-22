@@ -48,8 +48,8 @@ public class NonEvacuatedEnergyInputBuilderService {
         this.filterService = filterService;
     }
 
-    private static void addReport(ReportNode parent, String messageKey, String messageTemplate, Map<String, String> values, TypedValue severity) {
-        ReportNodeAdder adder = parent.newReportNode().withMessageTemplate(messageKey, messageTemplate);
+    private static void addReport(ReportNode parent, String messageKey, Map<String, String> values, TypedValue severity) {
+        ReportNodeAdder adder = parent.newReportNode().withMessageTemplate(messageKey);
         values.entrySet().forEach(v -> adder.withUntypedValue(v.getKey(), v.getValue()));
         adder.withSeverity(TypedValue.ERROR_SEVERITY).add();
     }
@@ -66,8 +66,7 @@ public class NonEvacuatedEnergyInputBuilderService {
                 EquipmentsContainer container = contingencyListIdent.stream().filter(c -> c.getContainerId().equals(id)).findFirst().orElseThrow();
                 LOGGER.error("Could not get contingencies from {}", container.getContainerName());
                 addReport(reporter,
-                        "contingencyTranslationFailure",
-                        "Could not get contingencies from contingencyListIdent ${name} : Not found",
+                        "sensitivity.analysis.server.contingencyTranslationFailure",
                         Map.of("name", container.getContainerName()),
                         TypedValue.ERROR_SEVERITY
                 );
@@ -105,8 +104,7 @@ public class NonEvacuatedEnergyInputBuilderService {
         } catch (Exception ex) {
             LOGGER.error("Could not get identifiables from filter " + filter.getContainerName(), ex);
             addReport(reporter,
-                    "filterTranslationFailure",
-                    "Could not get identifiables from filter ${name} : ${exception}",
+                    "sensitivity.analysis.server.filterTranslationFailure",
                     Map.of("exception", ex.getMessage(), "name", filter.getContainerName()),
                     TypedValue.ERROR_SEVERITY
             );
@@ -122,8 +120,7 @@ public class NonEvacuatedEnergyInputBuilderService {
         // check that monitored equipments type is allowed
         if (!listIdentAttributes.stream().allMatch(i -> equipmentsTypesAllowed.contains(i.getType()))) {
             addReport(reporter,
-                    "badEquipmentType",
-                    "Equipments type in filter with name=${name} should be ${expectedType} : filter is ignored",
+                    "sensitivity.analysis.server.badEquipmentType",
                     Map.of("name", filter.getContainerName(), EXPECTED_TYPE, equipmentsTypesAllowed.toString()),
                     TypedValue.WARN_SEVERITY
             );
@@ -139,8 +136,7 @@ public class NonEvacuatedEnergyInputBuilderService {
         // check that monitored equipments type is allowed
         if (!listIdentAttributes.stream().allMatch(i -> equipmentsTypesAllowed.contains(i.getType()))) {
             addReport(reporter,
-                    "badMonitoredEquipmentType",
-                    "Monitored equipments type in filter with name=${name} should be ${expectedType} : filter is ignored",
+                    "sensitivity.analysis.server.badMonitoredEquipmentType",
                     Map.of("name", filter.getContainerName(), EXPECTED_TYPE, equipmentsTypesAllowed.toString()),
                     TypedValue.WARN_SEVERITY
             );
@@ -171,8 +167,7 @@ public class NonEvacuatedEnergyInputBuilderService {
                     }
                     if (generator.getEnergySource() != energySource) {
                         addReport(reporter,
-                                "BadGeneratorEnergySource",
-                                "Generator ${generatorId} is not of the required energy source : ${energySource}",
+                                "sensitivity.analysis.server.BadGeneratorEnergySource",
                                 Map.of("generatorId", generator.getId(), "energySource", energySource.name()),
                                 TypedValue.WARN_SEVERITY
                         );
@@ -270,8 +265,7 @@ public class NonEvacuatedEnergyInputBuilderService {
         if (Double.isNaN(currentLimits.get().getPermanentLimit())) {
             // no permanent limit on side found : report and throw exception
             addReport(reporter,
-                    "monitoredBranchNoCurrentOrPermanentLimitsOnSide",
-                    "No permanent limit for the monitored branch ${id} on side ${side}",
+                    "sensitivity.analysis.server.monitoredBranchNoCurrentOrPermanentLimitsOnSide",
                     Map.of("id", branch.getId(), "side", side.name()),
                     TypedValue.ERROR_SEVERITY
             );
@@ -343,8 +337,7 @@ public class NonEvacuatedEnergyInputBuilderService {
             Branch branch = network.getBranch(monitoredEquipment.getId());
             if (branch == null) {  // branch not found : just report and ignore the branch
                 addReport(reporter,
-                        "monitoredBranchNotFound",
-                        "Could not find the monitored branch ${id}",
+                        "sensitivity.analysis.server.monitoredBranchNotFound",
                         Map.of("id", monitoredEquipment.getId()),
                         TypedValue.ERROR_SEVERITY
                 );
@@ -355,8 +348,7 @@ public class NonEvacuatedEnergyInputBuilderService {
             if (currentLimits1.isEmpty() && currentLimits2.isEmpty()) {
                 // no current limits on both sides found : report and throw exception
                 addReport(reporter,
-                        "monitoredBranchNoCurrentLimits",
-                        "No current limits for the monitored branch ${id}",
+                        "sensitivity.analysis.server.monitoredBranchNoCurrentLimits",
                         Map.of("id", monitoredEquipment.getId()),
                         TypedValue.ERROR_SEVERITY
                 );
@@ -375,8 +367,7 @@ public class NonEvacuatedEnergyInputBuilderService {
                 if (!factors1Generated && !factors2Generated) {
                     // no temporary limit on one side : report and throw exception
                     addReport(reporter,
-                            "monitoredBranchNoPermanentLimits",
-                            "No permanent limits for the monitored branch ${id}",
+                            "sensitivity.analysis.server.monitoredBranchNoPermanentLimits",
                             Map.of("id", monitoredEquipment.getId()),
                             TypedValue.ERROR_SEVERITY
                     );
@@ -393,8 +384,7 @@ public class NonEvacuatedEnergyInputBuilderService {
 
                 if (!factors1Generated && !factors2Generated) {
                     addReport(reporter,
-                            "monitoredBranchTemporaryLimitNotFound",
-                            "Temporary limit ${limitName} not found for the monitored branch ${id}",
+                            "sensitivity.analysis.server.monitoredBranchTemporaryLimitNotFound",
                             Map.of("limitName", branches.getLimitNameN(), "id", branch.getId()),
                             TypedValue.ERROR_SEVERITY
                     );
@@ -411,8 +401,7 @@ public class NonEvacuatedEnergyInputBuilderService {
 
                 if (!factors1Generated && !factors2Generated) {
                     addReport(reporter,
-                            "monitoredBranchTemporaryLimitNotFound",
-                            "Temporary limit ${limitName} not found for the monitored branch ${id}",
+                            "sensitivity.analysis.server.monitoredBranchTemporaryLimitNotFound",
                             Map.of("limitName", branches.getLimitNameNm1(), "id", branch.getId()),
                             TypedValue.ERROR_SEVERITY
                     );
@@ -507,8 +496,7 @@ public class NonEvacuatedEnergyInputBuilderService {
                 msg = ex.getClass().getName();
             }
             addReport(reporter,
-                    "NonEvacuatedEnergyInputParametersTranslationFailure",
-                    "Failure while building inputs, exception : ${exception}",
+                    "sensitivity.analysis.server.NonEvacuatedEnergyInputParametersTranslationFailure",
                     Map.of("exception", msg),
                     TypedValue.ERROR_SEVERITY
             );
