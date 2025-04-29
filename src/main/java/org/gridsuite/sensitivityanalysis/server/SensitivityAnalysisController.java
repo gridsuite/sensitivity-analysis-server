@@ -164,21 +164,11 @@ public class SensitivityAnalysisController {
         }
     }
 
-    @DeleteMapping(value = "/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Delete a sensitivity analysis result from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis result has been deleted")})
-    public ResponseEntity<Void> deleteResult(
-        @Parameter(description = "Result UUID")
-        @PathVariable("resultUuid") UUID resultUuid) {
-        service.deleteResult(resultUuid);
-        return ResponseEntity.ok().build();
-    }
-
     @DeleteMapping(value = "/results", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Delete all sensitivity analysis results from the database")
+    @Operation(summary = "Delete sensitivity analysis results from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All sensitivity analysis results have been deleted")})
-    public ResponseEntity<Void> deleteResults() {
-        service.deleteResults();
+    public ResponseEntity<Void> deleteResults(@Parameter(description = "Results UUID") @RequestParam(value = "resultsUuids", required = false) List<UUID> resultsUuids) {
+        service.deleteResults(resultsUuids);
         return ResponseEntity.ok().build();
     }
 
@@ -277,19 +267,11 @@ public class SensitivityAnalysisController {
             : ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping(value = "/non-evacuated-energy/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Delete a non evacuated energy result from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The non evacuated energy result has been deleted")})
-    public ResponseEntity<Void> deleteNonEvacuatedEnergyResult(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        nonEvacuatedEnergyService.deleteResult(resultUuid);
-        return ResponseEntity.ok().build();
-    }
-
     @DeleteMapping(value = "/non-evacuated-energy/results", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Delete all non evacuated energy results from the database")
+    @Operation(summary = "Delete non evacuated energy results from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All non evacuated energy results have been deleted")})
-    public ResponseEntity<Void> deleteNonEvacuatedEnergyResults() {
-        nonEvacuatedEnergyService.deleteResults();
+    public ResponseEntity<Void> deleteNonEvacuatedEnergyResults(@Parameter(description = "Results UUID") @RequestParam(value = "resultsUuids", required = false) List<UUID> resultsUuids) {
+        nonEvacuatedEnergyService.deleteResults(resultsUuids);
         return ResponseEntity.ok().build();
     }
 
