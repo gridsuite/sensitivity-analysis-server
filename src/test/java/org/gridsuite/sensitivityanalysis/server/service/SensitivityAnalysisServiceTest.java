@@ -86,7 +86,7 @@ class SensitivityAnalysisServiceTest {
 
     @Test
     void testExportCsvInN() throws Exception {
-        given(sensitivityAnalysisResultService.getRunResult(any(), any())).willReturn(
+        given(sensitivityAnalysisResultService.getRunResult(any(), any(), any())).willReturn(
             SensitivityRunQueryResult.builder()
                 .resultTab(ResultTab.N)
                 .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
@@ -127,7 +127,7 @@ class SensitivityAnalysisServiceTest {
 
     @Test
     void testExportCsvInNK() throws Exception {
-        given(sensitivityAnalysisResultService.getRunResult(any(), any())).willReturn(
+        given(sensitivityAnalysisResultService.getRunResult(any(), any(), any())).willReturn(
             getDefaultQueryBuilder()
                 .resultTab(ResultTab.N_K)
                 .sensitivities(List.of(
