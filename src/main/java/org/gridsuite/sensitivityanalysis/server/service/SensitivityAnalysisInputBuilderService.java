@@ -34,7 +34,7 @@ public class SensitivityAnalysisInputBuilderService {
     private final ActionsService actionsService;
     private final FilterService filterService;
 
-    private static final String NAMES = "names";
+    private static final String NAME = "name";
 
     public SensitivityAnalysisInputBuilderService(ActionsService actionsService, FilterService filterService) {
         this.actionsService = actionsService;
@@ -52,8 +52,8 @@ public class SensitivityAnalysisInputBuilderService {
             EquipmentsContainer container = contingencyListIdent.stream().filter(c -> c.getContainerId().equals(id)).findFirst().orElseThrow();
             LOGGER.error("Could not get contingencies from {}", container.getContainerName());
             reporter.newReportNode()
-                .withMessageTemplate("contingencyTranslationFailure", "Could not get contingencies from contingencyListIdent ${name} : not found")
-                .withUntypedValue("name", container.getContainerName())
+                .withMessageTemplate("sensitivity.analysis.server.contingencyTranslationFailure")
+                .withUntypedValue(NAME, container.getContainerName())
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .add();
         });
@@ -108,9 +108,9 @@ public class SensitivityAnalysisInputBuilderService {
         } catch (Exception ex) {
             LOGGER.error("Could not get identifiables from filter " + containersNames, ex);
             reporter.newReportNode()
-                .withMessageTemplate("filterTranslationFailure", "Could not get identifiables from filters ${names} : ${exception}")
+                .withMessageTemplate("sensitivity.analysis.server.filterTranslationFailure")
                 .withUntypedValue("exception", ex.getMessage())
-                .withUntypedValue(NAMES, containersNames)
+                .withUntypedValue(NAME, containersNames)
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .add();
             return List.of();
@@ -125,8 +125,8 @@ public class SensitivityAnalysisInputBuilderService {
         // check that monitored equipments type is allowed
         if (!listIdentifiableAttributes.stream().allMatch(i -> equipmentsTypesAllowed.contains(i.getType()))) {
             reporter.newReportNode()
-                .withMessageTemplate("badEquipmentType", "Equipments type in filter with name=${names} should be ${expectedType} : filter is ignored")
-                .withUntypedValue(NAMES, containersNames)
+                .withMessageTemplate("sensitivity.analysis.server.badEquipmentType")
+                .withUntypedValue(NAME, containersNames)
                 .withUntypedValue(EXPECTED_TYPE, equipmentsTypesAllowed.toString())
                 .withSeverity(TypedValue.WARN_SEVERITY)
                 .add();
@@ -148,8 +148,8 @@ public class SensitivityAnalysisInputBuilderService {
         // check that monitored equipments type is allowed
         if (!listIdentAttributes.stream().allMatch(i -> equipmentsTypesAllowed.contains(i.getType()))) {
             reporter.newReportNode()
-                .withMessageTemplate("badMonitoredEquipmentType", "Monitored equipments type in filter with name=${names} should be ${expectedType} : filter is ignored")
-                .withUntypedValue(NAMES, containersNames)
+                .withMessageTemplate("sensitivity.analysis.server.badMonitoredEquipmentType")
+                .withUntypedValue(NAME, containersNames)
                 .withUntypedValue(EXPECTED_TYPE, equipmentsTypesAllowed.toString())
                 .withSeverity(TypedValue.WARN_SEVERITY)
                 .add();
@@ -223,7 +223,7 @@ public class SensitivityAnalysisInputBuilderService {
             List<WeightedSensitivityVariable> variables = new ArrayList<>();
             if (variablesList.getRight().get(0).getType() == IdentifiableType.LOAD && distributionType == SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP) {
                 reporter.newReportNode()
-                    .withMessageTemplate("distributionTypeNotAllowedForLoadsContainer", "Distribution type ${distributionType} is not allowed for loads filter : filter is ignored")
+                    .withMessageTemplate("sensitivity.analysis.server.distributionTypeNotAllowedForLoadsContainer")
                     .withUntypedValue("distributionType", distributionType.name())
                     .withSeverity(TypedValue.WARN_SEVERITY)
                     .add();
@@ -231,7 +231,7 @@ public class SensitivityAnalysisInputBuilderService {
             }
             if (variablesList.getRight().get(0).getDistributionKey() == null && distributionType == SensitivityAnalysisInputData.DistributionType.VENTILATION) {
                 reporter.newReportNode()
-                    .withMessageTemplate("distributionTypeAllowedOnlyForManualContainer", "Distribution type ${distributionType} is allowed only for manual filter : filter is ignored")
+                    .withMessageTemplate("sensitivity.analysis.server.distributionTypeAllowedOnlyForManualContainer")
                     .withUntypedValue("distributionType", distributionType.name())
                     .withSeverity(TypedValue.WARN_SEVERITY)
                     .add();
@@ -400,7 +400,7 @@ public class SensitivityAnalysisInputBuilderService {
         // check to be removed further ...
         if (!sensitivityNodes.isEmpty() && !StringUtils.equals("OpenLoadFlow", context.getProvider())) {
             reporter.newReportNode()
-                .withMessageTemplate("sensitivityNodesComputationNotSupported", "Sensitivity nodes computation is only supported with OpenLoadFlow : computation ignored")
+                .withMessageTemplate("sensitivity.analysis.server.sensitivityNodesComputationNotSupported")
                 .withSeverity(TypedValue.WARN_SEVERITY)
                 .add();
             return;
@@ -437,7 +437,7 @@ public class SensitivityAnalysisInputBuilderService {
             }
             LOGGER.error("Could not translate running context, got exception", ex);
             reporter.newReportNode()
-                .withMessageTemplate("sensitivityInputParametersTranslationFailure", "Failure while building inputs, exception : ${exception}")
+                .withMessageTemplate("sensitivity.analysis.server.sensitivityInputParametersTranslationFailure")
                 .withUntypedValue("exception", msg)
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .add();
