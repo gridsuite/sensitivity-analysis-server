@@ -9,6 +9,7 @@ package org.gridsuite.sensitivityanalysis.server.entities;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -19,6 +20,7 @@ import java.util.UUID;
 
 @Getter
 @NoArgsConstructor
+@FieldNameConstants
 @Entity
 @Table(name = "analysis_result")
 public class AnalysisResultEntity {

@@ -73,8 +73,8 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
         return resultUuid;
     }
 
-    public SensitivityRunQueryResult getRunResult(UUID resultUuid, ResultsSelector selector) {
-        return resultService.getRunResult(resultUuid, selector);
+    public SensitivityRunQueryResult getRunResult(UUID resultUuid, ResultsSelector selector, String stringFilters) {
+        return resultService.getRunResult(resultUuid, selector, stringFilters);
     }
 
     public SensitivityResultFilterOptions getSensitivityResultOptions(UUID resultUuid, ResultsSelector selector) {
@@ -130,7 +130,7 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
                 .tabSelection(sensitivityAnalysisCsvFileInfos.getResultTab())
                 .build();
 
-        SensitivityRunQueryResult result = getRunResult(resultUuid, selector);
+        SensitivityRunQueryResult result = getRunResult(resultUuid, selector, null);
         if (result == null) {
             throw new SensibilityAnalysisException(RESULT_NOT_FOUND, "The sensitivity analysis result '" + resultUuid + "' does not exist");
         }
