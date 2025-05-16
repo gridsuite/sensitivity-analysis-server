@@ -237,8 +237,13 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
         if (runContext.getReportInfos().reportUuid() != null) {
             final String reportType = runContext.getReportInfos().computationType();
             String rootReporterId = runContext.getReportInfos().reporterId() == null ? reportType : runContext.getReportInfos().reporterId() + "@" + reportType;
-            rootReporter.set(ReportNode.newRootReportNode().withMessageTemplate(rootReporterId, rootReporterId).build());
-            reporter = rootReporter.get().newReportNode().withMessageTemplate(reportType, reportType + " (${providerToUse})")
+            rootReporter.set(ReportNode.newRootReportNode()
+                    .withAllResourceBundlesFromClasspath()
+                    .withMessageTemplate("sensitivity.analysis.server.rootReporterId")
+                    .withUntypedValue("rootReporterId", rootReporterId)
+                    .build());
+            reporter = rootReporter.get().newReportNode().withMessageTemplate("sensitivity.analysis.server.reportType")
+                    .withUntypedValue("reportType", reportType)
                     .withUntypedValue("providerToUse", sensitivityAnalysisRunner.getName()).add();
             // Delete any previous sensi computation logs
             inMemoryObserver.observe("report.delete",
