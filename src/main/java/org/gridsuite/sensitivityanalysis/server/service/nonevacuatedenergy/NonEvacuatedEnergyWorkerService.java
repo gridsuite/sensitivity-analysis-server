@@ -22,18 +22,18 @@ import com.powsybl.loadflow.LoadFlowParameters;
 import com.powsybl.loadflow.LoadFlowProvider;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sensitivity.*;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import com.powsybl.ws.commons.computation.service.AbstractResultContext;
 import com.powsybl.ws.commons.computation.service.AbstractWorkerService;
+import com.powsybl.ws.commons.computation.service.ExecutionService;
+import com.powsybl.ws.commons.computation.service.ReportService;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStageDefinition;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStagesSelection;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.*;
-import com.powsybl.ws.commons.computation.service.ReportService;
-import com.powsybl.ws.commons.computation.service.ExecutionService;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +43,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -817,7 +817,7 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
             throw new PowsyblException("Loadflow in DC mode not allowed !!");
         }
 
-        ComputationManager computationManager = executionService.getComputationManager();
+        ComputationManager computationManager = runContext.getComputationManager();
 
         return CompletableFuture.supplyAsync(() ->
                 run(runContext, runContext.getNetwork(), sensitivityAnalysisParameters, sensitivityAnalysisRunner, computationManager, runContext.getReportNode())

@@ -48,6 +48,8 @@
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:sensitivity-analysis-server</sonar.projectKey>
+        <!-- FIXME: powsybl-ws-commons modules'version is overloaded in the dependencies section to be removed at next powsybl-ws-dependencies.version upgrade -->
+        <powsybl-ws-commons.version>1.25.0-SNAPSHOT</powsybl-ws-commons.version>
     </properties>
 
     <build>
@@ -145,6 +147,7 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-ws-commons</artifactId>
+            <version>${powsybl-ws-commons.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
