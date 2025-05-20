@@ -143,7 +143,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
                 contingencies,
                 runContext.getSensitivityAnalysisInputs().getVariablesSets(),
                 sensitivityAnalysisParameters,
-                executionService.getComputationManager(),
+                runContext.getComputationManager(),
                 runContext.getReportNode());
 
         if (resultUuid != null) {
@@ -227,6 +227,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
 
     private SensitivityAnalysisResult runInMemory(SensitivityAnalysisRunContext runContext) throws Exception {
         Objects.requireNonNull(runContext);
+        runContext.setComputationManager(createComputationManager());
 
         LOGGER.info("Run sensitivity analysis");
 
@@ -293,7 +294,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Void
                 contingencies,
                 context.getSensitivityAnalysisInputs().getVariablesSets(),
                 parameters,
-                executionService.getComputationManager(),
+                context.getComputationManager(),
                 reporter);
         return future.thenApply(r -> new SensitivityAnalysisResult(factors, writer.getContingencyStatuses(), writer.getValues()));
     }
