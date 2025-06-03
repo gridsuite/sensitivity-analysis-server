@@ -152,7 +152,7 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
                     double newTargetP = (generator.getMaxP() * pMaxPercent) / 100;
                     generator.setTargetP(newTargetP);
                     reporter.newReportNode()
-                        .withMessageTemplate("ApplyStageGeneratorTargetP", "Generator ${generatorId} targetP modification : ${oldTargetP} --> ${newTargetP}")
+                        .withMessageTemplate("sensitivity.analysis.server.ApplyStageGeneratorTargetP")
                         .withSeverity(TypedValue.TRACE_SEVERITY)
                         .withUntypedValue("generatorId", generator.getId())
                         .withUntypedValue("oldTargetP", oldTargetP)
@@ -241,7 +241,7 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
         if (!Double.isNaN(limitInfos.getValue())) {
             String contingencyStr = contingencyId != null ? ("Contingency " + contingencyId) : "N";
             reporter.newReportNode()
-                .withMessageTemplate("MonitoredBranchLimitValueToConsider", "${contingency} : ${limitName} limit value to consider on side ${side} for monitored branch ${branchId} = ${limitValue} to compare with I = ${intensity}")
+                .withMessageTemplate("sensitivity.analysis.server.MonitoredBranchLimitValueToConsider")
                 .withSeverity(TypedValue.TRACE_SEVERITY)
                 .withUntypedValue("contingency", contingencyStr)
                 .withUntypedValue("limitName", limitInfos.getName())
@@ -255,7 +255,7 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
             double delta = limitInfos.getValue() - functionReference;
             if (delta < 0) {
                 reporter.newReportNode()
-                    .withMessageTemplate("MonitoredBranchConstraintDeltaFound", "Constraint found for monitored branch ${branchId} : value of intensity to reduce = ${delta}")
+                    .withMessageTemplate("sensitivity.analysis.server.MonitoredBranchConstraintDeltaFound")
                     .withSeverity(TypedValue.TRACE_SEVERITY)
                     .withUntypedValue("branchId", monitoredBranchThreshold.getBranch().getId())
                     .withUntypedValue("delta", Math.abs(delta))
@@ -266,14 +266,14 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
                 injectionVariation = computeInjectionVariationForMonitoredBranch(network, nonEvacuatedEnergyInputs, generatorsSensitivities, delta, generatorCappings, monitoredBranchDetailResult);
 
                 reporter.newReportNode()
-                    .withMessageTemplate("GeneratorsVariationForMonitoredBranch", "Generator variation found for monitored branch ${branchId} : ${variation}")
+                    .withMessageTemplate("sensitivity.analysis.server.GeneratorsVariationForMonitoredBranch")
                     .withSeverity(TypedValue.TRACE_SEVERITY)
                     .withUntypedValue("branchId", monitoredBranchThreshold.getBranch().getId())
                     .withUntypedValue("variation", injectionVariation)
                     .add();
             } else {
                 reporter.newReportNode()
-                    .withMessageTemplate("MonitoredBranchNoConstraint", "No constraint found for monitored branch ${branchId}")
+                    .withMessageTemplate("sensitivity.analysis.server.MonitoredBranchNoConstraint")
                     .withSeverity(TypedValue.TRACE_SEVERITY)
                     .withUntypedValue("branchId", monitoredBranchThreshold.getBranch().getId())
                     .add();
@@ -584,7 +584,7 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
             // there is a limit violation detected and a further sensitivity analysis computation will be done for the current stage, except if max iteration is reached
             // we memorize the generators cappings needed to eliminate this limit violation
             reporter.newReportNode()
-                .withMessageTemplate("MaxVariationForMonitoredBranchToConsider", "The maximum variation has been found for monitored branch ${branchId}")
+                .withMessageTemplate("sensitivity.analysis.server.MaxVariationForMonitoredBranchToConsider")
                 .withSeverity(TypedValue.TRACE_SEVERITY)
                 .withUntypedValue("branchId", maxVariationForMonitoredBranch.getKey())
                 .add();
@@ -606,7 +606,7 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
                 double newTargetP = generator.getTargetP() - cappingValue;
                 generator.setTargetP(newTargetP);
                 reporter.newReportNode()
-                    .withMessageTemplate("ApplyGeneratorCapping", "Capping generator ${generatorId} using capping value ${cappingValue} : targetP ${oldTargetP} --> ${newTargetP}")
+                    .withMessageTemplate("sensitivity.analysis.server.ApplyGeneratorCapping")
                     .withSeverity(TypedValue.TRACE_SEVERITY)
                     .withUntypedValue("generatorId", generator.getId())
                     .withUntypedValue("oldTargetP", oldTargetP)
@@ -718,9 +718,8 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
         NonEvacuatedEnergyResults nonEvacuatedEnergyResults = new NonEvacuatedEnergyResults();
 
         // Loop on all generation stages
-        int iStage = 1;
         for (NonEvacuatedEnergyStagesSelection stageSelection : stages) {
-            ReportNode subReporter = reporter.newReportNode().withMessageTemplate("Stage" + iStage, "Stage " + " (${stageName})")
+            ReportNode subReporter = reporter.newReportNode().withMessageTemplate("sensitivity.analysis.server.Stage")
                     .withUntypedValue("stageName", stageSelection.getName())
                     .add();
 
@@ -765,7 +764,7 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
                     // generators cappings needed to eliminate on eventually limit violation on a monitored branch
                     Map<String, Double> generatorsCappings = new HashMap<>();
 
-                    ReportNode analyzeReporter = subReporter.newReportNode().withMessageTemplate("Analyzing results" + iterationCount, "Analyzing results").add();
+                    ReportNode analyzeReporter = subReporter.newReportNode().withMessageTemplate("sensitivity.analysis.server.AnalyzingResults").add();
 
                     if (sensiResult != null) {
                         // analyze sensi results and generate the generators cappings
@@ -786,7 +785,7 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
                     msg = e.getClass().getName();
                 }
                 subReporter.newReportNode()
-                    .withMessageTemplate("sensitivityNonEvacuatedEnergyFailure", "Failure while running non evacuated energy computation exception : ${exception}")
+                    .withMessageTemplate("sensitivity.analysis.server.sensitivityNonEvacuatedEnergyFailure")
                     .withSeverity(TypedValue.ERROR_SEVERITY)
                     .withUntypedValue("exception", msg)
                     .add();
@@ -794,7 +793,6 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
                 // remove network variant
                 network.getVariantManager().removeVariant(stageVariantId);
             }
-            iStage++;
         }
 
         // Build the non evacuated energy stage summary results from all stage detail results calculated
@@ -813,7 +811,7 @@ public class NonEvacuatedEnergyWorkerService extends AbstractWorkerService<NonEv
         if (sensitivityAnalysisParameters.getLoadFlowParameters().isDc()) {
             // loadflow in dc mode not allowed
             runContext.getReportNode().newReportNode()
-                    .withMessageTemplate("NonEvacuatedEnergyLoadFlowDcNotAllowed", "Loadflow in DC mode not allowed !!")
+                    .withMessageTemplate("sensitivity.analysis.server.NonEvacuatedEnergyLoadFlowDcNotAllowed")
                     .withSeverity(TypedValue.ERROR_SEVERITY)
                     .add();
             throw new PowsyblException("Loadflow in DC mode not allowed !!");

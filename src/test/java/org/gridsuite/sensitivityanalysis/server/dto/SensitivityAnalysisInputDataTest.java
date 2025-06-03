@@ -116,7 +116,9 @@ class SensitivityAnalysisInputDataTest {
             .sensitivityNodes(List.of())
             .parameters(SensitivityAnalysisParameters.load())
             .build();
-        ReportNode reporter = ReportNode.newRootReportNode().withMessageTemplate("a", "b").build();
+        ReportNode reporter = ReportNode.newRootReportNode()
+                .withResourceBundles("i18n.reports")
+                .withMessageTemplate("a").build();
         SensitivityAnalysisRunContext context;
         context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
         inputBuilderService.build(context, NETWORK, reporter);
@@ -136,7 +138,9 @@ class SensitivityAnalysisInputDataTest {
         given(actionsService.getContingencyList(anyList(), any(), any())).willReturn(new ContingencyListExportResult(null, List.of(u10Id, u11Id)));
         inputBuilderService = new SensitivityAnalysisInputBuilderService(actionsService, filterService);
         SensitivityAnalysisInputData.SensitivityAnalysisInputDataBuilder<?, ?> inputBuilder = SensitivityAnalysisInputData.builder();
-        ReportNode reporter = ReportNode.newRootReportNode().withMessageTemplate("a", "b").build();
+        ReportNode reporter = ReportNode.newRootReportNode()
+                .withResourceBundles("i18n.reports")
+                .withMessageTemplate("a").build();
         SensitivityAnalysisRunContext context;
 
         SensitivityAnalysisInputData inputData = inputBuilder
@@ -158,7 +162,7 @@ class SensitivityAnalysisInputDataTest {
         assertThat(reports.size(), is(3));
         Set<String> reportKeys = reports.stream().map(ReportNode::getMessageKey).collect(Collectors.toSet());
         assertThat(reportKeys.size(), is(2));
-        assertThat(reportKeys, contains("contingencyTranslationFailure", "filterTranslationFailure"));
+        assertThat(reportKeys, contains("sensitivity.analysis.server.contingencyTranslationFailure", "sensitivity.analysis.server.filterTranslationFailure"));
     }
 
     @Test
@@ -171,7 +175,9 @@ class SensitivityAnalysisInputDataTest {
         SensitivityAnalysisInputData inputData = inputBuilder
             .build();
         context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
-        final ReportNode reporter = ReportNode.newRootReportNode().withMessageTemplate("a", "b").build();
+        final ReportNode reporter = ReportNode.newRootReportNode()
+                .withResourceBundles("i18n.reports")
+                .withMessageTemplate("a").build();
         var thrown = assertThrows(NullPointerException.class, () -> inputBuilderService.build(context, NETWORK, reporter));
         assertThat(thrown, Matchers.instanceOf(NullPointerException.class));
 
@@ -180,6 +186,6 @@ class SensitivityAnalysisInputDataTest {
         assertThat(reports.size(), is(1));
         Set<String> reportKeys = reports.stream().map(ReportNode::getMessageKey).collect(Collectors.toSet());
         assertThat(reportKeys.size(), is(1));
-        assertThat(reportKeys, contains("sensitivityInputParametersTranslationFailure"));
+        assertThat(reportKeys, contains("sensitivity.analysis.server.sensitivityInputParametersTranslationFailure"));
     }
 }
