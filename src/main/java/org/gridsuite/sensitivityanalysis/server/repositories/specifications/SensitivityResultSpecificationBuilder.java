@@ -1,7 +1,7 @@
 package org.gridsuite.sensitivityanalysis.server.repositories.specifications;
 
 import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
-import com.powsybl.ws.commons.computation.utils.specification.AbstractCommonSpecificationBuilder;
+import com.powsybl.ws.commons.computation.specification.AbstractCommonSpecificationBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
