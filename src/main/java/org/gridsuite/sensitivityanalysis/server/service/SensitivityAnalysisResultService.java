@@ -197,14 +197,24 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
         Specification<SensitivityResultEntity> specification = selector.getTabSelection() == ResultTab.N_K ?
                 sensitivityResultNkSpecificationBuilder.buildSpecification(resultUuid, resourceFilters, false) :
                 sensitivityResultSpecificationBuilder.buildSpecification(resultUuid, resourceFilters, false);
-        specification = specification.and(fieldIn(List.of(selector.getFunctionType()), "functionType", null))
-                .and(fieldIn(selector.getFunctionIds(), "functionId", null))
-                .and(fieldIn(selector.getVariableIds(), "variableId", null));
+        specification = specification.and(
+                fieldIn(List.of(
+                        selector.getFunctionType()),
+                        ResultsSelector.Fields.functionType,
+                        null))
+                .and(fieldIn(
+                        selector.getFunctionIds(),
+                        SensitivityResultEntity.Fields.functionId,
+                        null))
+                .and(fieldIn(
+                        selector.getVariableIds(),
+                        SensitivityResultEntity.Fields.variableId,
+                        null));
         if (selector.getTabSelection() == ResultTab.N_K) {
             specification = specification.and(
                     fieldIn(selector.getContingencyIds(),
                             SensitivityResultEntity.Fields.contingencyResult,
-                            "contingencyId")
+                            ContingencyResultEntity.Fields.contingencyId)
             );
         }
 
