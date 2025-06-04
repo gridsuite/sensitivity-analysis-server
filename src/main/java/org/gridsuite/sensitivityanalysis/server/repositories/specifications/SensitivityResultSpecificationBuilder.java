@@ -5,6 +5,7 @@ import com.powsybl.ws.commons.computation.specification.AbstractCommonSpecificat
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
+import org.gridsuite.sensitivityanalysis.server.entities.RawSensitivityResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,12 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
-// preContingency
+import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultSpecification.nullContingency;
+
+/**
+ * @author Mathieu Deharbe <mathieu.deharbe_externe at rte-france.com>
+ *     preContingency (N)
+ */
 @Service
 public class SensitivityResultSpecificationBuilder extends AbstractCommonSpecificationBuilder<SensitivityResultEntity> {
 
@@ -34,15 +40,15 @@ public class SensitivityResultSpecificationBuilder extends AbstractCommonSpecifi
 
     @Override
     public Specification<SensitivityResultEntity> addSpecificFilterWhenNoChildrenFilter() {
-        Specification<SensitivityResultEntity> spec = (root, query, criteriaBuilder) -> criteriaBuilder.and(
-                criteriaBuilder.isNull(root.get(SensitivityResultEntity.Fields.contingencyResult))
-        );
-        return spec.and(Specification.not(nullRawValue()));
+        return Specification.not(nullRawValue())
+                .and(nullContingency());
     }
 
     public static Specification<SensitivityResultEntity> nullRawValue() {
         return (root, query, criteriaBuilder) -> criteriaBuilder.and(
-                criteriaBuilder.isNull(root.get("rawSensitivityResult").get("value"))
+                criteriaBuilder.isNull(
+                        root.get(SensitivityResultEntity.Fields.rawSensitivityResult).get(RawSensitivityResultEntity.Fields.value)
+                )
         );
     }
 

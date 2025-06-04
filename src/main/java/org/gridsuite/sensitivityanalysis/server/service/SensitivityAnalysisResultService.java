@@ -27,9 +27,9 @@ import org.gridsuite.sensitivityanalysis.server.repositories.GlobalStatusReposit
 import org.gridsuite.sensitivityanalysis.server.entities.*;
 import org.gridsuite.sensitivityanalysis.server.repositories.RawSensitivityResultRepository;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityResultRepository;
+import org.gridsuite.sensitivityanalysis.server.repositories.specifications.SensitivityResultNKSpecificationBuilder;
 import org.gridsuite.sensitivityanalysis.server.repositories.specifications.SensitivityResultSpecificationBuilder;
 import org.gridsuite.sensitivityanalysis.server.util.ContingencyResult;
-import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -48,6 +48,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static com.powsybl.ws.commons.computation.utils.FilterUtils.fromStringFiltersToDTO;
+import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultSpecification.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -75,6 +76,7 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
     private final ObjectMapper objectMapper;
 
     private final SensitivityResultSpecificationBuilder sensitivityResultSpecificationBuilder;
+    private final SensitivityResultNKSpecificationBuilder sensitivityResultNkSpecificationBuilder;
 
     @Transactional
     @Override
@@ -193,17 +195,14 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
         List<ResourceFilterDTO> resourceFilters = fromStringFiltersToDTO(stringFilters, objectMapper);
 
         Specification<SensitivityResultEntity> specification = selector.getTabSelection() == ResultTab.N_K ?
-            SensitivityResultSpecification.postContingencies(sas,
-                selector.getFunctionType(),
-                selector.getFunctionIds(),
-                selector.getVariableIds(),
-                selector.getContingencyIds()) : // TODO : utiliser ça !!!! ??
-            SensitivityResultSpecification.preContingency(sas,
-                selector.getFunctionType(), // TODO : utiliser ça !!!! ??
-                selector.getFunctionIds(),
-                selector.getVariableIds());
-
-        specification = sensitivityResultSpecificationBuilder.buildSpecification(resultUuid, resourceFilters, false);
+                sensitivityResultNkSpecificationBuilder.buildSpecification(resultUuid, resourceFilters, false) :
+                sensitivityResultSpecificationBuilder.buildSpecification(resultUuid, resourceFilters, false);
+        specification = specification.and(fieldIn(List.of(selector.getFunctionType()), "functionType", null))
+                .and(fieldIn(selector.getFunctionIds(), "functionId", null))
+                .and(fieldIn(selector.getVariableIds(), "variableId", null));
+        if (selector.getTabSelection() == ResultTab.N_K) {
+            specification = specification.and(fieldIn(selector.getContingencyIds(), CONTINGENCY, "contingencyId"));
+        }
 
         Page<SensitivityResultEntity> sensitivityEntities = sensitivityResultRepository.findAll(specification, getPageable(selector));
         return getSensitivityRunQueryResult(selector, sas, sensitivityEntities);

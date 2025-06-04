@@ -6,16 +6,11 @@
  */
 package org.gridsuite.sensitivityanalysis.server.util;
 
-import com.powsybl.sensitivity.SensitivityFunctionType;
-import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Collection;
-import java.util.List;
-
-import static org.gridsuite.sensitivityanalysis.server.repositories.specifications.SensitivityResultSpecificationBuilder.nullRawValue;
 
 /**
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
@@ -27,41 +22,13 @@ public final class SensitivityResultSpecification { // TODO : à virer ?
         // Should not be instantiated
     }
 
-    public static Specification<SensitivityResultEntity> postContingencies(AnalysisResultEntity sas,
-                                                                           SensitivityFunctionType functionType,
-                                                                           Collection<String> functionIds,
-                                                                           Collection<String> variableIds,
-                                                                           Collection<String> contingencyIds) {
-        return commonSpecification(sas, functionType, functionIds, variableIds)
-            .and(Specification.not(nullContingency()))
-            .and(fieldIn(contingencyIds, CONTINGENCY, "contingencyId")); // AJOUTER EN n_k
-    }
-
-    public static Specification<SensitivityResultEntity> preContingency(AnalysisResultEntity sas,
-                                                                        SensitivityFunctionType functionType,
-                                                                        Collection<String> functionIds,
-                                                                        Collection<String> variableIds) {
-        return commonSpecification(sas, functionType, functionIds, variableIds).and(nullContingency());
-    }
-
-    private static Specification<SensitivityResultEntity> commonSpecification(AnalysisResultEntity sas,
-                                                                              SensitivityFunctionType functionType,
-                                                                              Collection<String> functionIds,
-                                                                              Collection<String> variableIds) {
-        return fieldIn(List.of(sas.getResultUuid()), "analysisResult", "resultUuid")
-            .and(fieldIn(List.of(functionType), "functionType", null))
-            .and(fieldIn(functionIds, "functionId", null))
-            .and(fieldIn(variableIds, "variableId", null))
-            .and(Specification.not(nullRawValue()));
-    }
-
-    private static Specification<SensitivityResultEntity> nullContingency() {
+    public static Specification<SensitivityResultEntity> nullContingency() {
         return (root, query, criteriaBuilder) -> criteriaBuilder.and(
             criteriaBuilder.isNull(root.get(CONTINGENCY))
         );
     }
 
-    private static Specification<SensitivityResultEntity> fieldIn(Collection<?> collection,
+    public static Specification<SensitivityResultEntity> fieldIn(Collection<?> collection,
                                                                   String fieldName,
                                                                   String subFieldName) {
         return (root, query, criteriaBuilder) -> {
