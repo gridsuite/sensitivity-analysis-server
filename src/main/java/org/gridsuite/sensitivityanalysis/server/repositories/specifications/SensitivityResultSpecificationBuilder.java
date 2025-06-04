@@ -9,11 +9,11 @@ import org.gridsuite.sensitivityanalysis.server.entities.RawSensitivityResultEnt
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-
-import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultSpecification.nullContingency;
 
 /**
  * @author Mathieu Deharbe <mathieu.deharbe_externe at rte-france.com>
@@ -44,6 +44,11 @@ public class SensitivityResultSpecificationBuilder extends AbstractCommonSpecifi
                 .and(nullContingency());
     }
 
+    @Override
+    public Specification<SensitivityResultEntity> addSpecificFilterWhenChildrenFilters() {
+        return addSpecificFilterWhenNoChildrenFilter();
+    }
+
     public static Specification<SensitivityResultEntity> nullRawValue() {
         return (root, query, criteriaBuilder) -> criteriaBuilder.and(
                 criteriaBuilder.isNull(
@@ -52,8 +57,23 @@ public class SensitivityResultSpecificationBuilder extends AbstractCommonSpecifi
         );
     }
 
-    @Override
-    public Specification<SensitivityResultEntity> addSpecificFilterWhenChildrenFilters() {
-        return addSpecificFilterWhenNoChildrenFilter();
+    public Specification<SensitivityResultEntity> nullContingency() {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.and(
+                criteriaBuilder.isNull(root.get(SensitivityResultEntity.Fields.contingencyResult))
+        );
+    }
+
+    public static Specification<SensitivityResultEntity> fieldIn(Collection<?> collection,
+                                                                 String fieldName,
+                                                                 String subFieldName) {
+        return (root, query, criteriaBuilder) -> {
+            if (!CollectionUtils.isEmpty(collection)) {
+                var field = subFieldName == null ? root.get(fieldName) : root.get(fieldName).get(subFieldName);
+                return collection.stream()
+                        .map(id -> criteriaBuilder.equal(field, id))
+                        .reduce(criteriaBuilder.or(), criteriaBuilder::or);
+            }
+            return criteriaBuilder.and(); // Always True
+        };
     }
 }

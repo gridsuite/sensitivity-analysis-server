@@ -48,7 +48,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static com.powsybl.ws.commons.computation.utils.FilterUtils.fromStringFiltersToDTO;
-import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultSpecification.*;
+import static org.gridsuite.sensitivityanalysis.server.repositories.specifications.SensitivityResultSpecificationBuilder.fieldIn;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -201,7 +201,11 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
                 .and(fieldIn(selector.getFunctionIds(), "functionId", null))
                 .and(fieldIn(selector.getVariableIds(), "variableId", null));
         if (selector.getTabSelection() == ResultTab.N_K) {
-            specification = specification.and(fieldIn(selector.getContingencyIds(), CONTINGENCY, "contingencyId"));
+            specification = specification.and(
+                    fieldIn(selector.getContingencyIds(),
+                            SensitivityResultEntity.Fields.contingencyResult,
+                            "contingencyId")
+            );
         }
 
         Page<SensitivityResultEntity> sensitivityEntities = sensitivityResultRepository.findAll(specification, getPageable(selector));
@@ -220,7 +224,7 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
         List<Sort.Order> sortListFiltered = getOrders(selector);
         Pageable pageable = sortListFiltered.isEmpty() ? PageRequest.of(pageNumber, pageSize) :
             PageRequest.of(pageNumber, pageSize, Sort.by(sortListFiltered));
-        return addDefaultSort(pageable, DEFAULT_SENSITIVITY_SORT_COLUMN);
+        return addDefaultSort(pageable);
     }
 
     private static List<Sort.Order> getOrders(ResultsSelector selector) {
@@ -305,10 +309,10 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
         };
     }
 
-    private static Pageable addDefaultSort(Pageable pageable, String defaultSortColumn) {
-        if (pageable.isPaged() && pageable.getSort().getOrderFor(defaultSortColumn) == null) {
+    private static Pageable addDefaultSort(Pageable pageable) {
+        if (pageable.isPaged() && pageable.getSort().getOrderFor(DEFAULT_SENSITIVITY_SORT_COLUMN) == null) {
             //if it's already sorted by our defaultColumn we don't add another sort by the same column
-            Sort finalSort = pageable.getSort().and(Sort.by(DEFAULT_SORT_DIRECTION, defaultSortColumn));
+            Sort finalSort = pageable.getSort().and(Sort.by(DEFAULT_SORT_DIRECTION, DEFAULT_SENSITIVITY_SORT_COLUMN));
             return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), finalSort);
         }
         //nothing to do if the request is not paged
