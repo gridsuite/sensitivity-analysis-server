@@ -4,6 +4,7 @@ import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
 import com.powsybl.ws.commons.computation.specification.AbstractCommonSpecificationBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.RawSensitivityResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
@@ -49,7 +50,23 @@ public class SensitivityResultSpecificationBuilder extends AbstractCommonSpecifi
         return addSpecificFilterWhenNoChildrenFilter();
     }
 
-    public static Specification<SensitivityResultEntity> nullRawValue() {
+    public Specification<SensitivityResultEntity> buildSpecificationFromSelector(UUID resultUuid, List<ResourceFilterDTO> resourceFilters, ResultsSelector selector) {
+        return buildSpecification(resultUuid, resourceFilters, false)
+                .and(fieldIn(
+                        List.of(selector.getFunctionType()),
+                        ResultsSelector.Fields.functionType,
+                        null))
+                .and(fieldIn(
+                        selector.getFunctionIds(),
+                        SensitivityResultEntity.Fields.functionId,
+                        null))
+                .and(fieldIn(
+                        selector.getVariableIds(),
+                        SensitivityResultEntity.Fields.variableId,
+                        null));
+    }
+
+    public Specification<SensitivityResultEntity> nullRawValue() {
         return (root, query, criteriaBuilder) -> criteriaBuilder.and(
                 criteriaBuilder.isNull(
                         root.get(SensitivityResultEntity.Fields.rawSensitivityResult).get(RawSensitivityResultEntity.Fields.value)
@@ -63,7 +80,7 @@ public class SensitivityResultSpecificationBuilder extends AbstractCommonSpecifi
         );
     }
 
-    public static Specification<SensitivityResultEntity> fieldIn(Collection<?> collection,
+    public Specification<SensitivityResultEntity> fieldIn(Collection<?> collection,
                                                                  String fieldName,
                                                                  String subFieldName) {
         return (root, query, criteriaBuilder) -> {

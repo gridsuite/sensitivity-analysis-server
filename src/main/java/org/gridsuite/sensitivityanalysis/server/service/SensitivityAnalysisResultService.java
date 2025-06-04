@@ -48,7 +48,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static com.powsybl.ws.commons.computation.utils.FilterUtils.fromStringFiltersToDTO;
-import static org.gridsuite.sensitivityanalysis.server.repositories.specifications.SensitivityResultSpecificationBuilder.fieldIn;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -194,32 +193,16 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
         }
         List<ResourceFilterDTO> resourceFilters = fromStringFiltersToDTO(stringFilters, objectMapper);
 
-        Specification<SensitivityResultEntity> specification = selector.getTabSelection() == ResultTab.N_K ?
-                sensitivityResultNkSpecificationBuilder.buildSpecification(resultUuid, resourceFilters, false) :
-                sensitivityResultSpecificationBuilder.buildSpecification(resultUuid, resourceFilters, false);
-        specification = specification.and(
-                fieldIn(List.of(
-                        selector.getFunctionType()),
-                        ResultsSelector.Fields.functionType,
-                        null))
-                .and(fieldIn(
-                        selector.getFunctionIds(),
-                        SensitivityResultEntity.Fields.functionId,
-                        null))
-                .and(fieldIn(
-                        selector.getVariableIds(),
-                        SensitivityResultEntity.Fields.variableId,
-                        null));
-        if (selector.getTabSelection() == ResultTab.N_K) {
-            specification = specification.and(
-                    fieldIn(selector.getContingencyIds(),
-                            SensitivityResultEntity.Fields.contingencyResult,
-                            ContingencyResultEntity.Fields.contingencyId)
-            );
-        }
+        Specification<SensitivityResultEntity> spec = getSpecBuilder(selector)
+                .buildSpecificationFromSelector(resultUuid, resourceFilters, selector);
 
-        Page<SensitivityResultEntity> sensitivityEntities = sensitivityResultRepository.findAll(specification, getPageable(selector));
+        Page<SensitivityResultEntity> sensitivityEntities = sensitivityResultRepository.findAll(spec, getPageable(selector));
         return getSensitivityRunQueryResult(selector, sas, sensitivityEntities);
+    }
+
+    private SensitivityResultSpecificationBuilder getSpecBuilder(ResultsSelector selector) {
+        return selector.getTabSelection() == ResultTab.N_K ?
+                sensitivityResultNkSpecificationBuilder : sensitivityResultSpecificationBuilder;
     }
 
     private static Pageable getPageable(ResultsSelector selector) {
