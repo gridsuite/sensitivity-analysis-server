@@ -17,8 +17,12 @@ import java.util.List;
 import java.util.UUID;
 
 /**
+ * Builds specifications for querying {@link SensitivityResultEntity} objects.
+ *
+ * This builder focuses on constructing criteria for sensitivity analysis results including the contingency handling, i.e. tab N_K
+ *
  * @author Mathieu Deharbe <mathieu.deharbe_externe at rte-france.com>
- *     includes the contingency handling (N_K)
+ * 
  */
 @Service
 public class SensitivityResultNKSpecificationBuilder extends SensitivityResultSpecificationBuilder {
