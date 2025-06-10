@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_USER_ID;
+import static com.powsybl.ws.commons.computation.utils.FilterUtils.fromStringFiltersToDTO;
 import static org.springframework.http.MediaType.*;
 
 /**
@@ -147,7 +148,7 @@ public class SensitivityAnalysisController {
         String decodedStringFilters = filters != null ? URLDecoder.decode(filters, StandardCharsets.UTF_8) : null;
         try {
             ResultsSelector selector = getSelector(selectorJson);
-            SensitivityRunQueryResult result = service.getRunResult(resultUuid, selector, decodedStringFilters);
+            SensitivityRunQueryResult result = service.getRunResult(resultUuid, selector, fromStringFiltersToDTO(decodedStringFilters, objectMapper));
             return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result)
                     : ResponseEntity.notFound().build();
         } catch (JsonProcessingException e) {

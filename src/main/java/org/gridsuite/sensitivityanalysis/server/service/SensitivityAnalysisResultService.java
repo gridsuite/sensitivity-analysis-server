@@ -6,7 +6,6 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.sensitivity.SensitivityValue;
 import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
 import com.powsybl.ws.commons.computation.service.AbstractComputationResultService;
@@ -47,8 +46,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import static com.powsybl.ws.commons.computation.utils.FilterUtils.fromStringFiltersToDTO;
-
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
@@ -71,8 +68,6 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
     private final ContingencyResultRepository contingencyResultRepository;
 
     private final RawSensitivityResultRepository rawSensitivityResultRepository;
-
-    private final ObjectMapper objectMapper;
 
     private final SensitivityResultSpecificationBuilder sensitivityResultSpecificationBuilder;
     private final SensitivityResultNKSpecificationBuilder sensitivityResultNkSpecificationBuilder;
@@ -186,12 +181,11 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
     }
 
     @Transactional(readOnly = true)
-    public SensitivityRunQueryResult getRunResult(UUID resultUuid, ResultsSelector selector, String stringFilters) {
+    public SensitivityRunQueryResult getRunResult(UUID resultUuid, ResultsSelector selector, List<ResourceFilterDTO> resourceFilters) {
         AnalysisResultEntity sas = analysisResultRepository.findByResultUuid(resultUuid);
         if (sas == null) {
             return null;
         }
-        List<ResourceFilterDTO> resourceFilters = fromStringFiltersToDTO(stringFilters, objectMapper);
 
         Specification<SensitivityResultEntity> spec = getSpecBuilder(selector)
                 .buildSpecificationFromSelector(resultUuid, resourceFilters, selector);
