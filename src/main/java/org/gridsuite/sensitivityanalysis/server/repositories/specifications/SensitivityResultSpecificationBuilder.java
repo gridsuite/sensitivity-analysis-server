@@ -24,11 +24,9 @@ import java.util.UUID;
 
 /**
  * Builds specifications for querying {@link SensitivityResultEntity} objects.
- *
  * This builder focuses on constructing criteria for sensitivity analysis results without the contingency handling, i.e. tab N
  *
  * @author Mathieu Deharbe <mathieu.deharbe_externe at rte-france.com>
- * 
  */
 @Service
 public class SensitivityResultSpecificationBuilder extends AbstractCommonSpecificationBuilder<SensitivityResultEntity> {
