@@ -16,11 +16,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.experimental.FieldNameConstants;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Getter
+@FieldNameConstants
 @Schema(description = "Results selector")
 public class ResultsSelector {
     @Schema(description = "function type (/MW /A /kV)")

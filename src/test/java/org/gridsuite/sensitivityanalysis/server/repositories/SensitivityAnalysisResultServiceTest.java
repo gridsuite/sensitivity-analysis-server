@@ -128,7 +128,7 @@ class SensitivityAnalysisResultServiceTest {
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .sortKeysWithWeightAndDirection(Map.of(SortKey.SENSITIVITY, 1))
             .build();
-        var result = sensitivityAnalysisResultService.getRunResult(resultUuid, selectorN);
+        var result = sensitivityAnalysisResultService.getRunResult(resultUuid, selectorN, null);
         var sensitivities = result.getSensitivities();
         assertThat(sensitivities)
             .isNotNull()
@@ -149,7 +149,7 @@ class SensitivityAnalysisResultServiceTest {
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .sortKeysWithWeightAndDirection(Map.of(SortKey.SENSITIVITY, -1))
             .build();
-        var result = sensitivityAnalysisResultService.getRunResult(resultUuid, selectorN);
+        var result = sensitivityAnalysisResultService.getRunResult(resultUuid, selectorN, null);
         var sensitivities = result.getSensitivities();
         assertThat(sensitivities)
             .isNotNull()
@@ -170,7 +170,7 @@ class SensitivityAnalysisResultServiceTest {
             .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .sortKeysWithWeightAndDirection(Map.of(SortKey.POST_SENSITIVITY, 1))
             .build();
-        var result = sensitivityAnalysisResultService.getRunResult(resultUuid, selectorNK);
+        var result = sensitivityAnalysisResultService.getRunResult(resultUuid, selectorNK, null);
         assertThat(result).isNotNull();
         var sensitivities = result.getSensitivities();
         assertThat(sensitivities).isNotNull().hasSize(8);
@@ -191,7 +191,7 @@ class SensitivityAnalysisResultServiceTest {
             .pageNumber(1)
             .pageSize(3)
             .build();
-        var result = sensitivityAnalysisResultService.getRunResult(resultUuid, pagedSelector);
+        var result = sensitivityAnalysisResultService.getRunResult(resultUuid, pagedSelector, null);
         assertThat(result).isNotNull();
         var sensitivities = result.getSensitivities();
         assertThat(sensitivities).isNotNull();
@@ -211,7 +211,7 @@ class SensitivityAnalysisResultServiceTest {
             .pageSize(3)
             .pageNumber(3)
             .build();
-        var result = sensitivityAnalysisResultService.getRunResult(resultUuid, emptyPagedSelector);
+        var result = sensitivityAnalysisResultService.getRunResult(resultUuid, emptyPagedSelector, null);
         assertThat(result).isNotNull();
         var sensitivities = result.getSensitivities();
         assertThat(sensitivities).isEmpty();

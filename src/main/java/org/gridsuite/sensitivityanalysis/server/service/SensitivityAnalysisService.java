@@ -8,6 +8,7 @@ package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.sensitivity.SensitivityAnalysisProvider;
+import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
 import com.univocity.parsers.csv.CsvWriter;
 import com.univocity.parsers.csv.CsvWriterSettings;
 import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
@@ -73,8 +74,8 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
         return resultUuid;
     }
 
-    public SensitivityRunQueryResult getRunResult(UUID resultUuid, ResultsSelector selector) {
-        return resultService.getRunResult(resultUuid, selector);
+    public SensitivityRunQueryResult getRunResult(UUID resultUuid, ResultsSelector selector, List<ResourceFilterDTO> resourceFilters) {
+        return resultService.getRunResult(resultUuid, selector, resourceFilters);
     }
 
     public SensitivityResultFilterOptions getSensitivityResultOptions(UUID resultUuid, ResultsSelector selector) {
@@ -130,7 +131,7 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
                 .tabSelection(sensitivityAnalysisCsvFileInfos.getResultTab())
                 .build();
 
-        SensitivityRunQueryResult result = getRunResult(resultUuid, selector);
+        SensitivityRunQueryResult result = getRunResult(resultUuid, selector, null);
         if (result == null) {
             throw new SensibilityAnalysisException(RESULT_NOT_FOUND, "The sensitivity analysis result '" + resultUuid + "' does not exist");
         }

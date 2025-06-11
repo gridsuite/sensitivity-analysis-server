@@ -46,6 +46,7 @@
         <liquibase-hibernate-package>org.gridsuite.sensitivityanalysis.server</liquibase-hibernate-package>
         <db-util.version>1.0.5</db-util.version>
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
+        <powsybl-ws-commons.version>1.25.0</powsybl-ws-commons.version><!-- should be removed once gridsuite-dependencies is upgraded-->
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:sensitivity-analysis-server</sonar.projectKey>
     </properties>
@@ -145,6 +146,7 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-ws-commons</artifactId>
+            <version>${powsybl-ws-commons.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>

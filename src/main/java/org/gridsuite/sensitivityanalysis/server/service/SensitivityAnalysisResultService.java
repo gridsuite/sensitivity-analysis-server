@@ -7,7 +7,9 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.powsybl.sensitivity.SensitivityValue;
+import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
 import com.powsybl.ws.commons.computation.service.AbstractComputationResultService;
+import lombok.AllArgsConstructor;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
@@ -24,8 +26,9 @@ import org.gridsuite.sensitivityanalysis.server.repositories.GlobalStatusReposit
 import org.gridsuite.sensitivityanalysis.server.entities.*;
 import org.gridsuite.sensitivityanalysis.server.repositories.RawSensitivityResultRepository;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityResultRepository;
+import org.gridsuite.sensitivityanalysis.server.repositories.specifications.SensitivityResultNKSpecificationBuilder;
+import org.gridsuite.sensitivityanalysis.server.repositories.specifications.SensitivityResultSpecificationBuilder;
 import org.gridsuite.sensitivityanalysis.server.util.ContingencyResult;
-import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -46,6 +49,7 @@ import java.util.stream.Collectors;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
+@AllArgsConstructor
 @Service
 public class SensitivityAnalysisResultService extends AbstractComputationResultService<SensitivityAnalysisStatus> {
 
@@ -65,17 +69,8 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
 
     private final RawSensitivityResultRepository rawSensitivityResultRepository;
 
-    public SensitivityAnalysisResultService(GlobalStatusRepository globalStatusRepository,
-                                               AnalysisResultRepository analysisResultRepository,
-                                               SensitivityResultRepository sensitivityResultRepository,
-                                               ContingencyResultRepository contingencyResultRepository,
-                                               RawSensitivityResultRepository rawSensitivityResultRepository) {
-        this.globalStatusRepository = globalStatusRepository;
-        this.analysisResultRepository = analysisResultRepository;
-        this.sensitivityResultRepository = sensitivityResultRepository;
-        this.contingencyResultRepository = contingencyResultRepository;
-        this.rawSensitivityResultRepository = rawSensitivityResultRepository;
-    }
+    private final SensitivityResultSpecificationBuilder sensitivityResultSpecificationBuilder;
+    private final SensitivityResultNKSpecificationBuilder sensitivityResultNkSpecificationBuilder;
 
     @Transactional
     @Override
@@ -186,25 +181,22 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
     }
 
     @Transactional(readOnly = true)
-    public SensitivityRunQueryResult getRunResult(UUID resultUuid, ResultsSelector selector) {
+    public SensitivityRunQueryResult getRunResult(UUID resultUuid, ResultsSelector selector, List<ResourceFilterDTO> resourceFilters) {
         AnalysisResultEntity sas = analysisResultRepository.findByResultUuid(resultUuid);
         if (sas == null) {
             return null;
         }
 
-        Specification<SensitivityResultEntity> specification = selector.getTabSelection() == ResultTab.N_K ?
-            SensitivityResultSpecification.postContingencies(sas,
-                selector.getFunctionType(),
-                selector.getFunctionIds(),
-                selector.getVariableIds(),
-                selector.getContingencyIds()) :
-            SensitivityResultSpecification.preContingency(sas,
-                selector.getFunctionType(),
-                selector.getFunctionIds(),
-                selector.getVariableIds());
+        Specification<SensitivityResultEntity> spec = getSpecBuilder(selector)
+                .buildSpecificationFromSelector(resultUuid, resourceFilters, selector);
 
-        Page<SensitivityResultEntity> sensitivityEntities = sensitivityResultRepository.findAll(specification, getPageable(selector));
+        Page<SensitivityResultEntity> sensitivityEntities = sensitivityResultRepository.findAll(spec, getPageable(selector));
         return getSensitivityRunQueryResult(selector, sas, sensitivityEntities);
+    }
+
+    private SensitivityResultSpecificationBuilder getSpecBuilder(ResultsSelector selector) {
+        return selector.getTabSelection() == ResultTab.N_K ?
+                sensitivityResultNkSpecificationBuilder : sensitivityResultSpecificationBuilder;
     }
 
     private static Pageable getPageable(ResultsSelector selector) {
@@ -219,7 +211,7 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
         List<Sort.Order> sortListFiltered = getOrders(selector);
         Pageable pageable = sortListFiltered.isEmpty() ? PageRequest.of(pageNumber, pageSize) :
             PageRequest.of(pageNumber, pageSize, Sort.by(sortListFiltered));
-        return addDefaultSort(pageable, DEFAULT_SENSITIVITY_SORT_COLUMN);
+        return addDefaultSort(pageable);
     }
 
     private static List<Sort.Order> getOrders(ResultsSelector selector) {
@@ -304,10 +296,10 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
         };
     }
 
-    private static Pageable addDefaultSort(Pageable pageable, String defaultSortColumn) {
-        if (pageable.isPaged() && pageable.getSort().getOrderFor(defaultSortColumn) == null) {
+    private static Pageable addDefaultSort(Pageable pageable) {
+        if (pageable.isPaged() && pageable.getSort().getOrderFor(DEFAULT_SENSITIVITY_SORT_COLUMN) == null) {
             //if it's already sorted by our defaultColumn we don't add another sort by the same column
-            Sort finalSort = pageable.getSort().and(Sort.by(DEFAULT_SORT_DIRECTION, defaultSortColumn));
+            Sort finalSort = pageable.getSort().and(Sort.by(DEFAULT_SORT_DIRECTION, DEFAULT_SENSITIVITY_SORT_COLUMN));
             return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), finalSort);
         }
         //nothing to do if the request is not paged

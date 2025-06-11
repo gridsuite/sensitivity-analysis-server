@@ -34,10 +34,13 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
 import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_USER_ID;
+import static com.powsybl.ws.commons.computation.utils.FilterUtils.fromStringFiltersToDTO;
 import static org.springframework.http.MediaType.*;
 
 /**
@@ -54,23 +57,26 @@ public class SensitivityAnalysisController {
 
     private final NonEvacuatedEnergyService nonEvacuatedEnergyService;
 
+    private final ObjectMapper objectMapper;
+
     public SensitivityAnalysisController(SensitivityAnalysisService service, SensitivityAnalysisWorkerService workerService,
                                          NonEvacuatedEnergyService nonEvacuatedEnergyService,
-                                         SensitivityAnalysisParametersService sensitivityAnalysisParametersService) {
+                                         SensitivityAnalysisParametersService sensitivityAnalysisParametersService,
+                                         ObjectMapper objectMapper) {
         this.service = service;
         this.workerService = workerService;
         this.nonEvacuatedEnergyService = nonEvacuatedEnergyService;
         this.sensitivityAnalysisParametersService = sensitivityAnalysisParametersService;
+        this.objectMapper = objectMapper;
     }
 
-    private static ResultsSelector getSelector(String selectorJson) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
+    private ResultsSelector getSelector(String selectorJson) throws JsonProcessingException {
         return selectorJson == null ?
                 ResultsSelector.builder()
                         .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
                         .tabSelection(ResultTab.N_K)
                         .build() :
-                mapper.readValue(selectorJson, ResultsSelector.class);
+                objectMapper.readValue(selectorJson, ResultsSelector.class);
     }
 
     @PostMapping(value = "/networks/{networkUuid}/run", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
@@ -134,13 +140,15 @@ public class SensitivityAnalysisController {
     @Operation(summary = "Get a sensitivity analysis result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis result"),
         @ApiResponse(responseCode = "404", description = "Sensitivity analysis result has not been found")})
-    public ResponseEntity<SensitivityRunQueryResult> getResult(@Parameter(description = "Result UUID")
-                            @PathVariable("resultUuid") UUID resultUuid,
-        @RequestParam(name = "selector", required = false) String selectorJson) {
-
+    public ResponseEntity<SensitivityRunQueryResult> getResult(
+            @Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
+            @RequestParam(name = "selector", required = false) String selectorJson,
+            @Parameter(description = "JSON array of filters") @RequestParam(name = "filters", required = false) String filters
+    ) {
+        String decodedStringFilters = filters != null ? URLDecoder.decode(filters, StandardCharsets.UTF_8) : null;
         try {
             ResultsSelector selector = getSelector(selectorJson);
-            SensitivityRunQueryResult result = service.getRunResult(resultUuid, selector);
+            SensitivityRunQueryResult result = service.getRunResult(resultUuid, selector, fromStringFiltersToDTO(decodedStringFilters, objectMapper));
             return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result)
                     : ResponseEntity.notFound().build();
         } catch (JsonProcessingException e) {
