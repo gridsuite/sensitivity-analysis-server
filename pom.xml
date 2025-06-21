@@ -49,6 +49,8 @@
         <powsybl-ws-commons.version>1.25.0</powsybl-ws-commons.version><!-- should be removed once gridsuite-dependencies is upgraded-->
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:sensitivity-analysis-server</sonar.projectKey>
+        <!-- FIXME: powsybl-ws-commons modules'version is overloaded in the dependencies section to be removed at next powsybl-ws-dependencies.version upgrade -->
+        <powsybl-ws-commons.version>1.25.0-SNAPSHOT</powsybl-ws-commons.version>
     </properties>
 
     <build>
