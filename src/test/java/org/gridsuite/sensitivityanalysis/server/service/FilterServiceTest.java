@@ -8,6 +8,7 @@ package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.iidm.network.IdentifiableType;
+import com.powsybl.network.store.client.NetworkStoreService;
 import mockwebserver3.Dispatcher;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
@@ -63,9 +64,12 @@ class FilterServiceTest {
     @Autowired
     private FilterService filterService;
 
+    @Autowired
+    private NetworkStoreService networkStoreService;
+
     @BeforeEach
     void setUp(final MockWebServer mockWebServer) throws Exception {
-        filterService = new FilterService(initMockWebServer(mockWebServer));
+        filterService = new FilterService(networkStoreService, initMockWebServer(mockWebServer));
     }
 
     private String initMockWebServer(final MockWebServer server) throws IOException {

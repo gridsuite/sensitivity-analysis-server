@@ -10,6 +10,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityFunctionType;
+import com.powsybl.ws.commons.computation.dto.GlobalFilter;
+import com.powsybl.ws.commons.computation.dto.ReportInfos;
+import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
+import com.powsybl.ws.commons.computation.utils.FilterUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -17,7 +21,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
@@ -40,7 +43,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_USER_ID;
-import static com.powsybl.ws.commons.computation.utils.FilterUtils.fromStringFiltersToDTO;
 import static org.springframework.http.MediaType.*;
 
 /**
@@ -143,12 +145,18 @@ public class SensitivityAnalysisController {
     public ResponseEntity<SensitivityRunQueryResult> getResult(
             @Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
             @RequestParam(name = "selector", required = false) String selectorJson,
-            @Parameter(description = "JSON array of filters") @RequestParam(name = "filters", required = false) String filters
+            @Parameter(description = "JSON array of filters") @RequestParam(name = "filters", required = false) String filters,
+            @Parameter(description = "Global Filters") @RequestParam(name = "globalFilters", required = false) String globalFilters,
+            @Parameter(description = "network Uuid") @RequestParam(name = "networkUuid", required = false) UUID networkUuid,
+            @Parameter(description = "variant Id") @RequestParam(name = "variantId", required = false) String variantId
     ) {
         String decodedStringFilters = filters != null ? URLDecoder.decode(filters, StandardCharsets.UTF_8) : null;
+        String decodedStringGlobalFilters = globalFilters != null ? URLDecoder.decode(globalFilters, StandardCharsets.UTF_8) : null;
+        List<ResourceFilterDTO> resourceFilters = FilterUtils.fromStringFiltersToDTO(decodedStringFilters, objectMapper);
+        GlobalFilter globalFilter = FilterUtils.fromStringGlobalFiltersToDTO(decodedStringGlobalFilters, objectMapper);
         try {
             ResultsSelector selector = getSelector(selectorJson);
-            SensitivityRunQueryResult result = service.getRunResult(resultUuid, selector, fromStringFiltersToDTO(decodedStringFilters, objectMapper));
+            SensitivityRunQueryResult result = service.getRunResult(resultUuid, networkUuid, variantId, selector, resourceFilters, globalFilter);
             return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result)
                     : ResponseEntity.notFound().build();
         } catch (JsonProcessingException e) {
