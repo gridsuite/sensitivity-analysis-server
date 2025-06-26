@@ -141,7 +141,8 @@ public class SensitivityAnalysisController {
     @GetMapping(value = "/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Get a sensitivity analysis result from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis result"),
-        @ApiResponse(responseCode = "404", description = "Sensitivity analysis result has not been found")})
+        @ApiResponse(responseCode = "404", description = "Sensitivity analysis result has not been found"),
+        @ApiResponse(responseCode = "400", description = "Invalid filter format")})
     public ResponseEntity<SensitivityRunQueryResult> getResult(
             @Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
             @RequestParam(name = "selector", required = false) String selectorJson,
@@ -150,16 +151,15 @@ public class SensitivityAnalysisController {
             @Parameter(description = "network Uuid") @RequestParam(name = "networkUuid", required = false) UUID networkUuid,
             @Parameter(description = "variant Id") @RequestParam(name = "variantId", required = false) String variantId
     ) {
-        String decodedStringFilters = filters != null ? URLDecoder.decode(filters, StandardCharsets.UTF_8) : null;
-        String decodedStringGlobalFilters = globalFilters != null ? URLDecoder.decode(globalFilters, StandardCharsets.UTF_8) : null;
-        List<ResourceFilterDTO> resourceFilters = FilterUtils.fromStringFiltersToDTO(decodedStringFilters, objectMapper);
-        GlobalFilter globalFilter = FilterUtils.fromStringGlobalFiltersToDTO(decodedStringGlobalFilters, objectMapper);
         try {
+            String decodedStringFilters = filters != null ? URLDecoder.decode(filters, StandardCharsets.UTF_8) : null;
+            String decodedStringGlobalFilters = globalFilters != null ? URLDecoder.decode(globalFilters, StandardCharsets.UTF_8) : null;
+            List<ResourceFilterDTO> resourceFilters = FilterUtils.fromStringFiltersToDTO(decodedStringFilters, objectMapper);
+            GlobalFilter globalFilter = FilterUtils.fromStringGlobalFiltersToDTO(decodedStringGlobalFilters, objectMapper);
             ResultsSelector selector = getSelector(selectorJson);
             SensitivityRunQueryResult result = service.getRunResult(resultUuid, networkUuid, variantId, selector, resourceFilters, globalFilter);
-            return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result)
-                    : ResponseEntity.notFound().build();
-        } catch (JsonProcessingException e) {
+            return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result) : ResponseEntity.notFound().build();
+        } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
