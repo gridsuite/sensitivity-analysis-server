@@ -132,7 +132,7 @@ class SensitivityResultWriterPersistedTest {
         resultWriterPersisted.start();
         resultWriterPersisted.interrupt();
         resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.);
-        await().atLeast(500, TimeUnit.MILLISECONDS);
+        await().atLeast(1000, TimeUnit.MILLISECONDS);
         verify(analysisResultService, times(0)).writeSensitivityValues(any(), anyList());
     }
 
