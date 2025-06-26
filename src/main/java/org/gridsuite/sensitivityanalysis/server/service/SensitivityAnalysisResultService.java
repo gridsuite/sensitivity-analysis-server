@@ -191,10 +191,51 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
         if (resourceFilters == null || resourceFilters.isEmpty()) {
             return Collections.emptyList();
         }
-        return resourceFilters.stream()
+
+        Map<String, List<ResourceFilterDTO>> groupedFilters = resourceFilters.stream()
                 .filter(Objects::nonNull)
-                .flatMap(filter -> splitLargeFilter(filter).stream())
-                .toList();
+                .collect(Collectors.groupingBy(filter ->
+                        filter.column() + "_" + filter.type() + "_" + filter.dataType()));
+
+        List<ResourceFilterDTO> result = new ArrayList<>();
+
+        for (List<ResourceFilterDTO> group : groupedFilters.values()) {
+            if (group.size() == 1) {
+                result.addAll(splitLargeFilter(group.get(0)));
+            } else {
+                ResourceFilterDTO merged = mergeFiltersOfSameType(group);
+                if (merged != null) {
+                    result.addAll(splitLargeFilter(merged));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private ResourceFilterDTO mergeFiltersOfSameType(List<ResourceFilterDTO> filters) {
+        if (filters.isEmpty()) {
+            return null;
+        }
+
+        ResourceFilterDTO first = filters.get(0);
+        Set<String> allValues = new LinkedHashSet<>();
+
+        for (ResourceFilterDTO filter : filters) {
+            if (filter.value() instanceof List<?> valueList) {
+                @SuppressWarnings("unchecked")
+                List<String> values = (List<String>) valueList;
+                allValues.addAll(values);
+            }
+        }
+
+        return new ResourceFilterDTO(
+                first.dataType(),
+                first.type(),
+                new ArrayList<>(allValues),
+                first.column(),
+                first.tolerance()
+        );
     }
 
     private List<ResourceFilterDTO> splitLargeFilter(ResourceFilterDTO filter) {

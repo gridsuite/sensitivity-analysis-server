@@ -320,31 +320,6 @@ class FilterServiceTest {
         assertTrue(result.contains(FieldType.SUBSTATION_PROPERTIES));
     }
 
-    @Test
-    void testApplyIntersection() throws Exception {
-        Method applyIntersectionMethod = FilterService.class.getDeclaredMethod("applyIntersection", List.class);
-        applyIntersectionMethod.setAccessible(true);
-
-        List<String> result = (List<String>) applyIntersectionMethod.invoke(filterService, List.of());
-        assertTrue(result.isEmpty());
-
-        List<List<String>> filterResults = List.of(
-                List.of("id1", "id2", "id3"),
-                List.of("id2", "id3", "id4"),
-                List.of("id2", "id5")
-        );
-        result = (List<String>) applyIntersectionMethod.invoke(filterService, filterResults);
-        assertEquals(1, result.size());
-        assertEquals("id2", result.getFirst());
-
-        List<List<String>> noIntersectionResults = List.of(
-                List.of("id1", "id2"),
-                List.of("id3", "id4")
-        );
-        result = (List<String>) applyIntersectionMethod.invoke(filterService, noIntersectionResults);
-        assertTrue(result.isEmpty());
-    }
-
     private GlobalFilter createTestGlobalFilter() {
         return GlobalFilter.builder()
                 .genericFilter(List.of(LIST_UUID))

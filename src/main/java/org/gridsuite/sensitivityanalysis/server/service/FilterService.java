@@ -255,24 +255,26 @@ public class FilterService implements FilterLoader {
             List<AbstractFilter> genericFilters,
             EquipmentType equipmentType
     ) {
-        List<List<String>> allFilterResults = new ArrayList<>();
-
+        Set<String> expertFilterResults = new HashSet<>();
         ExpertFilter expertFilter = buildExpertFilter(globalFilter, equipmentType);
         if (expertFilter != null) {
-            List<String> expertIds = filterNetwork(expertFilter, network);
-            if (!expertIds.isEmpty()) {
-                allFilterResults.add(expertIds);
-            }
+            expertFilterResults.addAll(filterNetwork(expertFilter, network));
         }
 
+        Set<String> genericFilterResults = new HashSet<>();
         for (AbstractFilter filter : genericFilters) {
             List<String> filterIds = processGenericFilter(filter, equipmentType, network);
-            if (!filterIds.isEmpty()) {
-                allFilterResults.add(filterIds);
-            }
+            genericFilterResults.addAll(filterIds);
         }
 
-        return applyIntersection(allFilterResults);
+        if (!expertFilterResults.isEmpty() && !genericFilterResults.isEmpty()) {
+            expertFilterResults.retainAll(genericFilterResults);
+            return new ArrayList<>(expertFilterResults);
+        }
+
+        return !expertFilterResults.isEmpty() ?
+                new ArrayList<>(expertFilterResults) :
+                new ArrayList<>(genericFilterResults);
     }
 
     private List<String> processGenericFilter(AbstractFilter filter, EquipmentType equipmentType, Network network) {
@@ -283,18 +285,6 @@ public class FilterService implements FilterLoader {
             return filterNetwork(voltageFilter, network);
         }
         return List.of();
-    }
-
-    private List<String> applyIntersection(List<List<String>> allFilterResults) {
-        if (allFilterResults.isEmpty()) {
-            return List.of();
-        }
-
-        return allFilterResults.stream()
-                .reduce((list1, list2) -> list1.stream()
-                        .filter(list2::contains)
-                        .toList())
-                .orElse(List.of());
     }
 
     private ExpertFilter buildExpertFilter(GlobalFilter globalFilter, EquipmentType equipmentType) {
