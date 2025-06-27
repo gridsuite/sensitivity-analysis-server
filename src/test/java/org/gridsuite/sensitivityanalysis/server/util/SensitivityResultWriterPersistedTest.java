@@ -131,6 +131,11 @@ class SensitivityResultWriterPersistedTest {
     void testNotOperatingAfterInterruption() {
         resultWriterPersisted.start();
         resultWriterPersisted.interrupt();
+
+        // Wait until thread is actually interrupted/stopped
+        await().atMost(5000, TimeUnit.MILLISECONDS)
+                .until(() -> !resultWriterPersisted.isWorking());
+
         resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.);
         await().atLeast(500, TimeUnit.MILLISECONDS);
         verify(analysisResultService, times(0)).writeSensitivityValues(any(), anyList());
