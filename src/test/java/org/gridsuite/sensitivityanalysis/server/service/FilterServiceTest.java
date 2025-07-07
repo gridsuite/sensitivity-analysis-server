@@ -102,9 +102,6 @@ class FilterServiceTest {
     @BeforeEach
     void setUp(final MockWebServer mockWebServer) throws Exception {
         filterService = new FilterService(networkStoreService, initMockWebServer(mockWebServer));
-
-        //when(networkStoreService.getNetwork(UUID.fromString(eq(network.getId())), any(PreloadingStrategy.class))).thenReturn(network);
-        //when(network.getVariantManager()).thenReturn(variantManager);
         doNothing().when(variantManager).setWorkingVariant(anyString());
     }
 

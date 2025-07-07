@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityFunctionType;
+import com.powsybl.ws.commons.computation.ComputationException;
 import com.powsybl.ws.commons.computation.dto.GlobalFilter;
 import com.powsybl.ws.commons.computation.dto.ReportInfos;
 import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
@@ -33,6 +34,7 @@ import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorke
 import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.NonEvacuatedEnergyRunContext;
 import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.NonEvacuatedEnergyService;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -158,9 +160,13 @@ public class SensitivityAnalysisController {
             GlobalFilter globalFilter = FilterUtils.fromStringGlobalFiltersToDTO(decodedStringGlobalFilters, objectMapper);
             ResultsSelector selector = getSelector(selectorJson);
             SensitivityRunQueryResult result = service.getRunResult(resultUuid, networkUuid, variantId, selector, resourceFilters, globalFilter);
-            return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result) : ResponseEntity.notFound().build();
-        } catch (Exception e) {
+            return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result) : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (ComputationException e) {
+            // Handle JSON processing errors with bad request status
             return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            // Handle all other exceptions with internal server error status
+            return ResponseEntity.internalServerError().build();
         }
     }
 

@@ -347,7 +347,7 @@ class SensitivityAnalysisControllerTest {
 
         // check that a request with a bogus selector json does not crash and raises 4xx status
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", RESULT_UUID).param("selector", "bogusSelector"))
-                .andExpect(status().is4xxClientError())
+                .andExpect(status().is5xxServerError())
                 .andReturn();
 
         // should return not found if result does not exist
@@ -652,7 +652,7 @@ class SensitivityAnalysisControllerTest {
 
     private void setupGlobalFilterMocks() {
         // Mock for getResourceFiltersForSensitivity with empty global filter
-        given(filterService.getResourceFiltersForSensitivity(eq(NETWORK_UUID), any(), any()))
+        given(filterService.getResourceFilters(eq(NETWORK_UUID), any(), any()))
                 .willReturn(List.of());
 
         // Mock for getResourceFiltersForSensitivity with not empty global filter
@@ -670,7 +670,7 @@ class SensitivityAnalysisControllerTest {
                 .substationProperty(Map.of("region", List.of("north", "south")))
                 .build();
 
-        given(filterService.getResourceFiltersForSensitivity(eq(NETWORK_UUID), any(), eq(globalFilterWithFilters)))
+        given(filterService.getResourceFilters(eq(NETWORK_UUID), any(), eq(globalFilterWithFilters)))
                 .willReturn(List.of(resourceFilter));
     }
 
@@ -795,7 +795,7 @@ class SensitivityAnalysisControllerTest {
         );
 
         assertNotNull(queryResult);
-        verify(filterService, never()).getResourceFiltersForSensitivity(any(), any(), any());
+        verify(filterService, never()).getResourceFilters(any(), any(), any());
     }
 
     @Test

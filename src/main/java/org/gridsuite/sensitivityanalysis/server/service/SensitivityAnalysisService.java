@@ -76,7 +76,7 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
             allResourceFilters.addAll(resourceFilters);
         }
         if (globalFilter != null) {
-            List<ResourceFilterDTO> resourceGlobalFilters = filterService.getResourceFiltersForSensitivity(networkUuid, variantId, globalFilter);
+            List<ResourceFilterDTO> resourceGlobalFilters = filterService.getResourceFilters(networkUuid, variantId, globalFilter);
             if (!resourceGlobalFilters.isEmpty()) {
                 allResourceFilters.addAll(resourceGlobalFilters);
             }

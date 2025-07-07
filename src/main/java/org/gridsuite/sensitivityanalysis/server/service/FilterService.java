@@ -14,6 +14,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.ws.commons.computation.dto.GlobalFilter;
 import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
+import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
@@ -28,6 +29,7 @@ import org.gridsuite.filter.utils.expertfilter.OperatorType;
 import org.gridsuite.sensitivityanalysis.server.dto.FilterEquipments;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
+import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -209,7 +211,7 @@ public class FilterService implements FilterLoader {
         }).getBody();
     }
 
-    public List<ResourceFilterDTO> getResourceFiltersForSensitivity(UUID networkUuid, String variantId, GlobalFilter globalFilter) {
+    public List<ResourceFilterDTO> getResourceFilters(@NonNull UUID networkUuid, @NonNull String variantId, @NonNull GlobalFilter globalFilter) {
         Network network = getNetwork(networkUuid, variantId);
         List<AbstractFilter> genericFilters = getFilters(globalFilter.getGenericFilter());
 
@@ -227,7 +229,7 @@ public class FilterService implements FilterLoader {
                         ResourceFilterDTO.DataType.TEXT,
                         ResourceFilterDTO.Type.IN,
                         allSubjectIds,
-                        "functionId"
+                        SensitivityResultEntity.Fields.functionId
                 ));
     }
 

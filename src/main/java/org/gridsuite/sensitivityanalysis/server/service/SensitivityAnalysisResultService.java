@@ -6,7 +6,6 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
-import com.google.common.collect.Lists;
 import com.powsybl.sensitivity.SensitivityValue;
 import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
 import com.powsybl.ws.commons.computation.service.AbstractComputationResultService;
@@ -45,8 +44,6 @@ import java.util.stream.Collectors;
 public class SensitivityAnalysisResultService extends AbstractComputationResultService<SensitivityAnalysisStatus> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisResultService.class);
-
-    private static final int MAX_IN_CLAUSE_SIZE = 500;
 
     private static final String DEFAULT_SENSITIVITY_SORT_COLUMN = "id";
 
@@ -179,84 +176,12 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
         if (sas == null) {
             return null;
         }
-        List<ResourceFilterDTO> optimizedFilters = optimizeResourceFilters(resourceFilters);
+
         Specification<SensitivityResultEntity> spec = getSpecBuilder(selector)
-                .buildSpecificationFromSelector(resultUuid, optimizedFilters, selector);
+                .buildSpecificationFromSelector(resultUuid, resourceFilters, selector);
 
         Page<SensitivityResultEntity> sensitivityEntities = sensitivityResultRepository.findAll(spec, getPageable(selector));
         return getSensitivityRunQueryResult(selector, sas, sensitivityEntities);
-    }
-
-    private List<ResourceFilterDTO> optimizeResourceFilters(List<ResourceFilterDTO> resourceFilters) {
-        if (resourceFilters == null || resourceFilters.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        Map<String, List<ResourceFilterDTO>> groupedFilters = resourceFilters.stream()
-                .filter(Objects::nonNull)
-                .collect(Collectors.groupingBy(filter ->
-                        filter.column() + "_" + filter.type() + "_" + filter.dataType()));
-
-        List<ResourceFilterDTO> result = new ArrayList<>();
-
-        for (List<ResourceFilterDTO> group : groupedFilters.values()) {
-            if (group.size() == 1) {
-                result.addAll(splitLargeFilter(group.get(0)));
-            } else {
-                ResourceFilterDTO merged = mergeFiltersOfSameType(group);
-                if (merged != null) {
-                    result.addAll(splitLargeFilter(merged));
-                }
-            }
-        }
-
-        return result;
-    }
-
-    private ResourceFilterDTO mergeFiltersOfSameType(List<ResourceFilterDTO> filters) {
-        if (filters.isEmpty()) {
-            return null;
-        }
-
-        ResourceFilterDTO first = filters.get(0);
-        Set<String> allValues = new LinkedHashSet<>();
-
-        for (ResourceFilterDTO filter : filters) {
-            if (filter.value() instanceof List<?> valueList) {
-                @SuppressWarnings("unchecked")
-                List<String> values = (List<String>) valueList;
-                allValues.addAll(values);
-            }
-        }
-
-        return new ResourceFilterDTO(
-                first.dataType(),
-                first.type(),
-                new ArrayList<>(allValues),
-                first.column(),
-                first.tolerance()
-        );
-    }
-
-    private List<ResourceFilterDTO> splitLargeFilter(ResourceFilterDTO filter) {
-        if (!(filter.value() instanceof List<?> valueList) || valueList.size() <= MAX_IN_CLAUSE_SIZE) {
-            return List.of(filter);
-        }
-
-        @SuppressWarnings("unchecked")
-        List<String> stringValues = (List<String>) valueList;
-
-        List<List<String>> chunks = Lists.partition(stringValues, MAX_IN_CLAUSE_SIZE);
-
-        return chunks.stream()
-                .map(chunk -> new ResourceFilterDTO(
-                        filter.dataType(),
-                        filter.type(),
-                        chunk,
-                        filter.column(),
-                        filter.tolerance()
-                ))
-                .toList();
     }
 
     private SensitivityResultSpecificationBuilder getSpecBuilder(ResultsSelector selector) {
