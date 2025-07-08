@@ -7,12 +7,15 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManager;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.ws.commons.computation.dto.GlobalFilter;
+import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
 import mockwebserver3.Dispatcher;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
@@ -31,16 +34,20 @@ import org.gridsuite.filter.utils.expertfilter.OperatorType;
 import org.gridsuite.sensitivityanalysis.server.dto.FilterEquipments;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
+import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -49,8 +56,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -62,6 +70,10 @@ class FilterServiceTest {
     private static final int DATA_BUFFER_LIMIT = 256 * 1024; // AbstractJackson2Decoder.maxInMemorySize
 
     private static final String NETWORK_UUID = "7928181c-7977-4592-ba19-88027e4254e4";
+
+    private static final UUID TEST_NETWORK_ID = UUID.randomUUID();
+
+    private static final UUID NOT_FOUND_NETWORK_ID = UUID.randomUUID();
 
     private static final String VARIANT_ID = "variant_id";
 
@@ -93,7 +105,7 @@ class FilterServiceTest {
     @Mock
     private VariantManager variantManager;
 
-    @Autowired
+    @MockBean
     private NetworkStoreService networkStoreService;
 
     @Autowired
@@ -102,7 +114,9 @@ class FilterServiceTest {
     @BeforeEach
     void setUp(final MockWebServer mockWebServer) throws Exception {
         filterService = new FilterService(networkStoreService, initMockWebServer(mockWebServer));
+        when(networkStoreService.getNetwork(eq(NOT_FOUND_NETWORK_ID), any(PreloadingStrategy.class))).thenThrow(new PowsyblException());
         doNothing().when(variantManager).setWorkingVariant(anyString());
+        when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), any(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
     }
 
     private String initMockWebServer(final MockWebServer server) throws IOException {
@@ -205,8 +219,94 @@ class FilterServiceTest {
     @Test
     void testListOfUuids() throws Exception {
         // DataBufferLimitException should not be thrown with this message : "Exceeded limit on max bytes to buffer : DATA_BUFFER_LIMIT"
-        List<FilterEquipments> list = filterService.getFilterEquipements(List.of(VERY_LARGE_LIST_UUID, LIST_UUID), UUID.fromString(NETWORK_UUID), null);
+        List<FilterEquipments> list = filterService.getFilterEquipments(List.of(VERY_LARGE_LIST_UUID, LIST_UUID), UUID.fromString(NETWORK_UUID), null);
         assertEquals(objectMapper.writeValueAsString(createFilterEquipments()), objectMapper.writeValueAsString(list));
+    }
+
+    @Test
+    void testGetResourceFiltersNetworkNotFound() {
+        // Test case when network is not found
+        GlobalFilter globalFilter = GlobalFilter.builder()
+                .genericFilter(List.of(LIST_UUID))
+                .build();
+
+        when(networkStoreService.getNetwork(any(UUID.class), any(PreloadingStrategy.class))).thenReturn(null);
+
+        assertThrows(ResponseStatusException.class, () ->
+                filterService.getResourceFilters(
+                        NOT_FOUND_NETWORK_ID,
+                        VARIANT_ID,
+                        globalFilter
+                )
+        );
+    }
+
+    @Test
+    void testGetResourceFiltersWithAllFilters() {
+        // Test case with all types of filters
+        GlobalFilter globalFilter = GlobalFilter.builder()
+                .genericFilter(List.of(LIST_UUID))
+                .nominalV(List.of("220.0", "400.0"))
+                .countryCode(List.of(Country.FR, Country.DE))
+                .substationProperty(Map.of("prop1", List.of("value1", "value2")))
+                .build();
+
+        when(network.getVariantManager()).thenReturn(variantManager);
+        when(networkStoreService.getNetwork(any(UUID.class), any(PreloadingStrategy.class))).thenReturn(network);
+
+        List<ResourceFilterDTO> result = filterService.getResourceFilters(
+                UUID.fromString(NETWORK_UUID),
+                VARIANT_ID,
+                globalFilter
+        );
+
+        assertNotNull(result);
+        if (!result.isEmpty()) {
+            ResourceFilterDTO dto = result.getFirst();
+            assertEquals(ResourceFilterDTO.DataType.TEXT, dto.dataType());
+            assertEquals(ResourceFilterDTO.Type.IN, dto.type());
+            assertEquals(SensitivityResultEntity.Fields.functionId, dto.column());
+        }
+    }
+
+    @Test
+    void testGetResourceFiltersEmptyResult() {
+        // Test case when no filters match
+        GlobalFilter emptyGlobalFilter = GlobalFilter.builder()
+                .genericFilter(List.of())
+                .build();
+
+        when(network.getVariantManager()).thenReturn(variantManager);
+        when(networkStoreService.getNetwork(any(), any(PreloadingStrategy.class))).thenReturn(network);
+
+        List<ResourceFilterDTO> result = filterService.getResourceFilters(
+                UUID.fromString(NETWORK_UUID),
+                VARIANT_ID,
+                emptyGlobalFilter
+        );
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void testGetResourceFiltersWithGenericFilters() {
+        // Test case with generic filters
+        GlobalFilter globalFilter = GlobalFilter.builder()
+                .genericFilter(List.of(LIST_UUID))
+                .nominalV(List.of("220.0"))
+                .countryCode(List.of(Country.FR))
+                .build();
+
+        when(network.getVariantManager()).thenReturn(variantManager);
+        when(networkStoreService.getNetwork(any(UUID.class), any(PreloadingStrategy.class))).thenReturn(network);
+
+        List<ResourceFilterDTO> result = filterService.getResourceFilters(
+                UUID.fromString(NETWORK_UUID),
+                VARIANT_ID,
+                globalFilter
+        );
+
+        assertNotNull(result);
     }
 
     @Test
@@ -288,14 +388,17 @@ class FilterServiceTest {
 
     @Test
     void testGetCountryCodeFieldType() throws Exception {
-        Method getCountryCodeFieldTypeMethod = FilterService.class.getDeclaredMethod(
-                "getCountryCodeFieldType", EquipmentType.class);
+        Method getCountryCodeFieldTypeMethod = FilterService.class.getDeclaredMethod("getCountryCodeFieldType", EquipmentType.class);
         getCountryCodeFieldTypeMethod.setAccessible(true);
 
         List<FieldType> result = (List<FieldType>) getCountryCodeFieldTypeMethod.invoke(filterService, EquipmentType.LINE);
         assertEquals(2, result.size());
         assertTrue(result.contains(FieldType.COUNTRY_1));
         assertTrue(result.contains(FieldType.COUNTRY_2));
+
+        result = (List<FieldType>) getCountryCodeFieldTypeMethod.invoke(filterService, EquipmentType.TWO_WINDINGS_TRANSFORMER);
+        assertEquals(1, result.size());
+        assertTrue(result.contains(FieldType.COUNTRY));
 
         result = (List<FieldType>) getCountryCodeFieldTypeMethod.invoke(filterService, EquipmentType.VOLTAGE_LEVEL);
         assertEquals(1, result.size());
@@ -312,7 +415,7 @@ class FilterServiceTest {
         assertTrue(result.contains(FieldType.SUBSTATION_PROPERTIES_1));
         assertTrue(result.contains(FieldType.SUBSTATION_PROPERTIES_2));
 
-        result = (List<FieldType>) getSubstationPropertiesFieldTypesMethod.invoke(filterService, EquipmentType.GENERATOR);
+        result = (List<FieldType>) getSubstationPropertiesFieldTypesMethod.invoke(filterService, EquipmentType.VOLTAGE_LEVEL);
         assertEquals(1, result.size());
         assertTrue(result.contains(FieldType.SUBSTATION_PROPERTIES));
     }
@@ -328,8 +431,7 @@ class FilterServiceTest {
 
     @Test
     void testBuildExpertFilter() throws Exception {
-        Method buildExpertFilterMethod = FilterService.class.getDeclaredMethod(
-                "buildExpertFilter", GlobalFilter.class, EquipmentType.class);
+        Method buildExpertFilterMethod = FilterService.class.getDeclaredMethod("buildExpertFilter", GlobalFilter.class, EquipmentType.class);
         buildExpertFilterMethod.setAccessible(true);
 
         GlobalFilter globalFilter = createTestGlobalFilter();

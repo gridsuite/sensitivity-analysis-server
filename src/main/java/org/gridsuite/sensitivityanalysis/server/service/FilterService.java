@@ -163,7 +163,7 @@ public class FilterService implements FilterLoader {
     }
 
     public List<IdentifiableAttributes> getIdentifiablesFromFilters(List<UUID> filterUuids, UUID networkUuid, String variantId) {
-        List<FilterEquipments> filterEquipments = getFilterEquipements(filterUuids, networkUuid, variantId);
+        List<FilterEquipments> filterEquipments = getFilterEquipments(filterUuids, networkUuid, variantId);
 
         List<IdentifiableAttributes> mergedIdentifiables = new ArrayList<>();
         for (FilterEquipments filterEquipment : filterEquipments) {
@@ -177,7 +177,7 @@ public class FilterService implements FilterLoader {
         return getIdentifiablesFromFilters(List.of(filterUuid), networkUuid, variantId);
     }
 
-    public List<FilterEquipments> getFilterEquipements(List<UUID> filterUuids, UUID networkUuid, String variantId) {
+    public List<FilterEquipments> getFilterEquipments(List<UUID> filterUuids, UUID networkUuid, String variantId) {
         Objects.requireNonNull(filterUuids);
         Objects.requireNonNull(networkUuid);
 

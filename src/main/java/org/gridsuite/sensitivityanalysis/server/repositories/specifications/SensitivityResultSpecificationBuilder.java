@@ -89,8 +89,8 @@ public class SensitivityResultSpecificationBuilder extends AbstractCommonSpecifi
     }
 
     public Specification<SensitivityResultEntity> fieldIn(Collection<?> collection,
-                                                          String fieldName,
-                                                          String subFieldName) {
+                                                                 String fieldName,
+                                                                 String subFieldName) {
         return (root, query, criteriaBuilder) -> {
             if (!CollectionUtils.isEmpty(collection)) {
                 var field = subFieldName == null ? root.get(fieldName) : root.get(fieldName).get(subFieldName);
