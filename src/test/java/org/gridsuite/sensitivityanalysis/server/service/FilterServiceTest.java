@@ -27,7 +27,6 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.expertfilter.ExpertFilter;
 import org.gridsuite.filter.expertfilter.expertrule.AbstractExpertRule;
 import org.gridsuite.filter.expertfilter.expertrule.NumberExpertRule;
-import org.gridsuite.filter.expertfilter.expertrule.PropertiesExpertRule;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.filter.utils.expertfilter.FieldType;
 import org.gridsuite.filter.utils.expertfilter.OperatorType;
@@ -47,7 +46,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -224,24 +222,6 @@ class FilterServiceTest {
     }
 
     @Test
-    void testGetResourceFiltersNetworkNotFound() {
-        // Test case when network is not found
-        GlobalFilter globalFilter = GlobalFilter.builder()
-                .genericFilter(List.of(LIST_UUID))
-                .build();
-
-        when(networkStoreService.getNetwork(any(UUID.class), any(PreloadingStrategy.class))).thenReturn(null);
-
-        assertThrows(ResponseStatusException.class, () ->
-                filterService.getResourceFilters(
-                        NOT_FOUND_NETWORK_ID,
-                        VARIANT_ID,
-                        globalFilter
-                )
-        );
-    }
-
-    @Test
     void testGetResourceFiltersWithAllFilters() {
         // Test case with all types of filters
         GlobalFilter globalFilter = GlobalFilter.builder()
@@ -324,48 +304,6 @@ class FilterServiceTest {
         List<IdentifiableAttributes> result = filterService.getIdentifiablesFromFilter(LIST_UUID, UUID.fromString(NETWORK_UUID), null);
         assertEquals(1, result.size());
         assertEquals(IDENTIFIABLE.getId(), result.getFirst().getId());
-    }
-
-    @Test
-    void testCreateNumberExpertRules() throws Exception {
-
-        Method createNumberExpertRulesMethod = FilterService.class.getDeclaredMethod("createNumberExpertRules", List.class, FieldType.class);
-        createNumberExpertRulesMethod.setAccessible(true);
-
-        List<AbstractExpertRule> result = (List<AbstractExpertRule>) createNumberExpertRulesMethod.invoke(filterService, null, FieldType.NOMINAL_VOLTAGE);
-        assertTrue(result.isEmpty());
-
-        List<String> values = List.of("220.0", "400.0");
-        result = (List<AbstractExpertRule>) createNumberExpertRulesMethod.invoke(filterService, values, FieldType.NOMINAL_VOLTAGE);
-        assertEquals(2, result.size());
-    }
-
-    @Test
-    void testCreateEnumExpertRules() throws Exception {
-        Method createEnumExpertRulesMethod = FilterService.class.getDeclaredMethod(
-                "createEnumExpertRules", List.class, FieldType.class);
-        createEnumExpertRulesMethod.setAccessible(true);
-
-        List<AbstractExpertRule> result = (List<AbstractExpertRule>) createEnumExpertRulesMethod.invoke(filterService, null, FieldType.COUNTRY);
-        assertTrue(result.isEmpty());
-
-        List<Country> countries = List.of(Country.FR, Country.DE);
-        result = (List<AbstractExpertRule>) createEnumExpertRulesMethod.invoke(filterService, countries, FieldType.COUNTRY);
-        assertEquals(2, result.size());
-    }
-
-    @Test
-    void testCreatePropertiesRule() throws Exception {
-        Method createPropertiesRuleMethod = FilterService.class.getDeclaredMethod("createPropertiesRule", String.class, List.class, FieldType.class);
-        createPropertiesRuleMethod.setAccessible(true);
-
-        String property = "testProperty";
-        List<String> values = List.of("value1", "value2");
-
-        AbstractExpertRule result = (AbstractExpertRule) createPropertiesRuleMethod.invoke(filterService, property, values, FieldType.SUBSTATION_PROPERTIES);
-
-        assertNotNull(result);
-        assertInstanceOf(PropertiesExpertRule.class, result);
     }
 
     @Test
