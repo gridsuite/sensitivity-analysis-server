@@ -6,17 +6,13 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
-import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.ws.commons.computation.dto.GlobalFilter;
 import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
 import com.powsybl.ws.commons.computation.service.AbstractFilterService;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.gridsuite.filter.AbstractFilter;
-import org.gridsuite.filter.expertfilter.ExpertFilter;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.filter.utils.expertfilter.FieldType;
 import org.gridsuite.sensitivityanalysis.server.dto.FilterEquipments;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
@@ -91,101 +87,11 @@ public class FilterService extends AbstractFilterService {
         return getIdentifiablesFromFilters(List.of(filterUuid), networkUuid, variantId);
     }
 
-    public List<ResourceFilterDTO> getResourceFilters(@NonNull UUID networkUuid, @NonNull String variantId, @NonNull GlobalFilter globalFilter) {
-        Network network = getNetwork(networkUuid, variantId);
-        List<AbstractFilter> genericFilters = getFilters(globalFilter.getGenericFilter());
+    public Optional<ResourceFilterDTO> getResourceFilter(@NonNull UUID networkUuid, @NonNull String variantId, @NonNull GlobalFilter globalFilter) {
+        // Get equipment types from violation types
+        List<EquipmentType> equipmentTypes = List.of(EquipmentType.LINE, EquipmentType.TWO_WINDINGS_TRANSFORMER);
 
-        Map<EquipmentType, List<String>> subjectIdsByEquipmentType = filterEquipmentsByType(
-                network, globalFilter, genericFilters, List.of(EquipmentType.LINE, EquipmentType.TWO_WINDINGS_TRANSFORMER)
-        );
-
-        List<String> allSubjectIds = subjectIdsByEquipmentType.values().stream()
-                .filter(Objects::nonNull)
-                .flatMap(List::stream)
-                .toList();
-
-        return allSubjectIds.isEmpty() ? List.of() :
-                List.of(new ResourceFilterDTO(
-                        ResourceFilterDTO.DataType.TEXT,
-                        ResourceFilterDTO.Type.IN,
-                        allSubjectIds,
-                        SensitivityResultEntity.Fields.functionId
-                ));
-    }
-
-    /**
-     * Filters equipments by type and returns map of IDs grouped by equipment type
-     */
-    private Map<EquipmentType, List<String>> filterEquipmentsByType(
-            Network network,
-            GlobalFilter globalFilter,
-            List<AbstractFilter> genericFilters,
-            List<EquipmentType> equipmentTypes) {
-
-        Map<EquipmentType, List<String>> result = new EnumMap<>(EquipmentType.class);
-
-        for (EquipmentType equipmentType : equipmentTypes) {
-            List<String> filteredIds = extractFilteredEquipmentIds(network, globalFilter, genericFilters, equipmentType);
-            if (!filteredIds.isEmpty()) {
-                result.put(equipmentType, filteredIds);
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Extracts filtered equipment IDs by applying expert and generic filters
-     */
-    private List<String> extractFilteredEquipmentIds(
-            Network network,
-            GlobalFilter globalFilter,
-            List<AbstractFilter> genericFilters,
-            EquipmentType equipmentType) {
-
-        List<List<String>> allFilterResults = new ArrayList<>();
-
-        // Extract IDs from expert filter
-        ExpertFilter expertFilter = buildExpertFilter(globalFilter, equipmentType);
-        if (expertFilter != null) {
-            allFilterResults.add(filterNetwork(expertFilter, network));
-        }
-
-        // Extract IDs from generic filters
-        for (AbstractFilter filter : genericFilters) {
-            List<String> filterResult = extractEquipmentIdsFromGenericFilter(filter, equipmentType, network);
-            if (!filterResult.isEmpty()) {
-                allFilterResults.add(filterResult);
-            }
-        }
-
-        // Combine results with appropriate logic
-        // Expert filters use OR between them, generic filters use AND
-        return combineFilterResults(allFilterResults, !genericFilters.isEmpty());
-    }
-
-    @Override
-    protected List<FieldType> getNominalVoltageFieldType(EquipmentType equipmentType) {
-        return switch (equipmentType) {
-            case LINE, TWO_WINDINGS_TRANSFORMER -> List.of(FieldType.NOMINAL_VOLTAGE_1, FieldType.NOMINAL_VOLTAGE_2);
-            case VOLTAGE_LEVEL -> List.of(FieldType.NOMINAL_VOLTAGE);
-            default -> List.of();
-        };
-    }
-
-    @Override
-    protected List<FieldType> getCountryCodeFieldType(EquipmentType equipmentType) {
-        return switch (equipmentType) {
-            case VOLTAGE_LEVEL, TWO_WINDINGS_TRANSFORMER -> List.of(FieldType.COUNTRY);
-            case LINE -> List.of(FieldType.COUNTRY_1, FieldType.COUNTRY_2);
-            default -> List.of();
-        };
-    }
-
-    @Override
-    protected List<FieldType> getSubstationPropertiesFieldTypes(EquipmentType equipmentType) {
-        return equipmentType == EquipmentType.LINE ?
-                List.of(FieldType.SUBSTATION_PROPERTIES_1, FieldType.SUBSTATION_PROPERTIES_2) :
-                List.of(FieldType.SUBSTATION_PROPERTIES);
+        // Call the common implementation with specific parameters
+        return super.getResourceFilter(networkUuid, variantId, globalFilter, equipmentTypes, SensitivityResultEntity.Fields.functionId);
     }
 }

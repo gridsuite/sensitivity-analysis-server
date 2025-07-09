@@ -652,8 +652,8 @@ class SensitivityAnalysisControllerTest {
 
     private void setupGlobalFilterMocks() {
         // Mock for getResourceFiltersForSensitivity with empty global filter
-        given(filterService.getResourceFilters(eq(NETWORK_UUID), any(), any()))
-                .willReturn(List.of());
+        given(filterService.getResourceFilter(eq(NETWORK_UUID), any(), any()))
+                .willReturn(Optional.empty());
 
         // Mock for getResourceFiltersForSensitivity with not empty global filter
         ResourceFilterDTO resourceFilter = new ResourceFilterDTO(
@@ -670,8 +670,8 @@ class SensitivityAnalysisControllerTest {
                 .substationProperty(Map.of("region", List.of("north", "south")))
                 .build();
 
-        given(filterService.getResourceFilters(eq(NETWORK_UUID), any(), eq(globalFilterWithFilters)))
-                .willReturn(List.of(resourceFilter));
+        given(filterService.getResourceFilter(eq(NETWORK_UUID), any(), eq(globalFilterWithFilters)))
+                .willReturn(Optional.of(resourceFilter));
     }
 
     @Test
@@ -795,7 +795,7 @@ class SensitivityAnalysisControllerTest {
         );
 
         assertNotNull(queryResult);
-        verify(filterService, never()).getResourceFilters(any(), any(), any());
+        verify(filterService, never()).getResourceFilter(any(), any(), any());
     }
 
     @Test

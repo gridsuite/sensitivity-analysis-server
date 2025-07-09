@@ -48,7 +48,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -234,15 +233,15 @@ class FilterServiceTest {
         when(network.getVariantManager()).thenReturn(variantManager);
         when(networkStoreService.getNetwork(any(UUID.class), any(PreloadingStrategy.class))).thenReturn(network);
 
-        List<ResourceFilterDTO> result = filterService.getResourceFilters(
+        Optional<ResourceFilterDTO> result = filterService.getResourceFilter(
                 UUID.fromString(NETWORK_UUID),
                 VARIANT_ID,
                 globalFilter
         );
 
         assertNotNull(result);
-        if (!result.isEmpty()) {
-            ResourceFilterDTO dto = result.getFirst();
+        if (result.isPresent()) {
+            ResourceFilterDTO dto = result.get();
             assertEquals(ResourceFilterDTO.DataType.TEXT, dto.dataType());
             assertEquals(ResourceFilterDTO.Type.IN, dto.type());
             assertEquals(SensitivityResultEntity.Fields.functionId, dto.column());
@@ -259,7 +258,7 @@ class FilterServiceTest {
         when(network.getVariantManager()).thenReturn(variantManager);
         when(networkStoreService.getNetwork(any(), any(PreloadingStrategy.class))).thenReturn(network);
 
-        List<ResourceFilterDTO> result = filterService.getResourceFilters(
+        Optional<ResourceFilterDTO> result = filterService.getResourceFilter(
                 UUID.fromString(NETWORK_UUID),
                 VARIANT_ID,
                 emptyGlobalFilter
@@ -280,7 +279,7 @@ class FilterServiceTest {
         when(network.getVariantManager()).thenReturn(variantManager);
         when(networkStoreService.getNetwork(any(UUID.class), any(PreloadingStrategy.class))).thenReturn(network);
 
-        List<ResourceFilterDTO> result = filterService.getResourceFilters(
+        Optional<ResourceFilterDTO> result = filterService.getResourceFilter(
                 UUID.fromString(NETWORK_UUID),
                 VARIANT_ID,
                 globalFilter
@@ -304,57 +303,5 @@ class FilterServiceTest {
         List<IdentifiableAttributes> result = filterService.getIdentifiablesFromFilter(LIST_UUID, UUID.fromString(NETWORK_UUID), null);
         assertEquals(1, result.size());
         assertEquals(IDENTIFIABLE.getId(), result.getFirst().getId());
-    }
-
-    @Test
-    void testGetNominalVoltageFieldType() throws Exception {
-        Method getNominalVoltageFieldTypeMethod = FilterService.class.getDeclaredMethod("getNominalVoltageFieldType", EquipmentType.class);
-        getNominalVoltageFieldTypeMethod.setAccessible(true);
-
-        List<FieldType> result = (List<FieldType>) getNominalVoltageFieldTypeMethod.invoke(filterService, EquipmentType.LINE);
-        assertEquals(2, result.size());
-        assertTrue(result.contains(FieldType.NOMINAL_VOLTAGE_1));
-        assertTrue(result.contains(FieldType.NOMINAL_VOLTAGE_2));
-
-        result = (List<FieldType>) getNominalVoltageFieldTypeMethod.invoke(filterService, EquipmentType.VOLTAGE_LEVEL);
-        assertEquals(1, result.size());
-        assertTrue(result.contains(FieldType.NOMINAL_VOLTAGE));
-
-        result = (List<FieldType>) getNominalVoltageFieldTypeMethod.invoke(filterService, EquipmentType.GENERATOR);
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void testGetCountryCodeFieldType() throws Exception {
-        Method getCountryCodeFieldTypeMethod = FilterService.class.getDeclaredMethod("getCountryCodeFieldType", EquipmentType.class);
-        getCountryCodeFieldTypeMethod.setAccessible(true);
-
-        List<FieldType> result = (List<FieldType>) getCountryCodeFieldTypeMethod.invoke(filterService, EquipmentType.LINE);
-        assertEquals(2, result.size());
-        assertTrue(result.contains(FieldType.COUNTRY_1));
-        assertTrue(result.contains(FieldType.COUNTRY_2));
-
-        result = (List<FieldType>) getCountryCodeFieldTypeMethod.invoke(filterService, EquipmentType.TWO_WINDINGS_TRANSFORMER);
-        assertEquals(1, result.size());
-        assertTrue(result.contains(FieldType.COUNTRY));
-
-        result = (List<FieldType>) getCountryCodeFieldTypeMethod.invoke(filterService, EquipmentType.VOLTAGE_LEVEL);
-        assertEquals(1, result.size());
-        assertTrue(result.contains(FieldType.COUNTRY));
-    }
-
-    @Test
-    void testGetSubstationPropertiesFieldTypes() throws Exception {
-        Method getSubstationPropertiesFieldTypesMethod = FilterService.class.getDeclaredMethod("getSubstationPropertiesFieldTypes", EquipmentType.class);
-        getSubstationPropertiesFieldTypesMethod.setAccessible(true);
-
-        List<FieldType> result = (List<FieldType>) getSubstationPropertiesFieldTypesMethod.invoke(filterService, EquipmentType.LINE);
-        assertEquals(2, result.size());
-        assertTrue(result.contains(FieldType.SUBSTATION_PROPERTIES_1));
-        assertTrue(result.contains(FieldType.SUBSTATION_PROPERTIES_2));
-
-        result = (List<FieldType>) getSubstationPropertiesFieldTypesMethod.invoke(filterService, EquipmentType.VOLTAGE_LEVEL);
-        assertEquals(1, result.size());
-        assertTrue(result.contains(FieldType.SUBSTATION_PROPERTIES));
     }
 }
