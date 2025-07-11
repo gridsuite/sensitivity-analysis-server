@@ -180,7 +180,7 @@ public class SensitivityAnalysisController {
             ResultsSelector selector = getSelector(selectorJson);
             SensitivityResultFilterOptions result = service.getSensitivityResultOptions(resultUuid, selector);
             return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result)
-                    : ResponseEntity.notFound().build();
+                    : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (JsonProcessingException e) {
             return ResponseEntity.badRequest().build();
         }
