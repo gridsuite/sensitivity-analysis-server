@@ -9,7 +9,6 @@ package org.gridsuite.sensitivityanalysis.server.service;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.ws.commons.computation.dto.GlobalFilter;
 import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
-import com.powsybl.ws.commons.computation.service.AbstractFilterService;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.utils.EquipmentType;
