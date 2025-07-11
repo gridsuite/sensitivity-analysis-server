@@ -131,6 +131,7 @@ class SensitivityResultWriterPersistedTest {
     void testNotOperatingAfterInterruption() {
         resultWriterPersisted.start();
         resultWriterPersisted.interrupt();
+
         resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.);
         await().atLeast(500, TimeUnit.MILLISECONDS);
         verify(analysisResultService, times(0)).writeSensitivityValues(any(), anyList());

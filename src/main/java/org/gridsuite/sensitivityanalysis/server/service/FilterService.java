@@ -6,58 +6,54 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
+import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.ws.commons.computation.dto.GlobalFilter;
+import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
+import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.sensitivityanalysis.server.dto.FilterEquipments;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
+import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
-public class FilterService {
-
-    static final String FILTER_API_VERSION = "v1";
-    private static final String DELIMITER = "/";
-    private final RestTemplate restTemplate = new RestTemplate();
-    private String filterServerBaseUri;
-    public static final String NETWORK_UUID = "networkUuid";
-
-    public static final String IDS = "ids";
+public class FilterService extends AbstractFilterService {
     private static final String QUERY_PARAM_VARIANT_ID = "variantId";
 
-    public FilterService(@Value("${gridsuite.services.filter-server.base-uri:http://filter-server/}") String filterServerBaseUri) {
-        this.filterServerBaseUri = filterServerBaseUri;
+    public FilterService(
+            NetworkStoreService networkStoreService,
+            @Value("${gridsuite.services.filter-server.base-uri:http://filter-server/}") String filterServerBaseUri) {
+        super(networkStoreService, filterServerBaseUri);
     }
 
-    public List<IdentifiableAttributes> getIdentifiablesFromFilters(List<UUID> filterUuids, UUID networkUuid, String variantId) {
-        List<FilterEquipments> filterEquipments = getFilterEquipements(filterUuids, networkUuid, variantId);
-
-        List<IdentifiableAttributes> mergedIdentifiables = new ArrayList<>();
-        for (FilterEquipments filterEquipment : filterEquipments) {
-            mergedIdentifiables.addAll(filterEquipment.getIdentifiableAttributes());
+    public Map<String, Long> getIdentifiablesCount(SensitivityFactorsIdsByGroup factorsIds, UUID networkUuid, String variantId) {
+        var uriComponentsBuilder = UriComponentsBuilder
+                .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/identifiables-count")
+                .queryParam(NETWORK_UUID, networkUuid);
+        if (!StringUtils.isBlank(variantId)) {
+            uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);
         }
 
-        return mergedIdentifiables;
+        factorsIds.getIds().forEach((key, value) -> uriComponentsBuilder.queryParam(String.format("ids[%s]", key), value));
+
+        var path = uriComponentsBuilder.build().toUriString();
+
+        return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.GET, null, new ParameterizedTypeReference<Map<String, Long>>() {
+        }).getBody();
     }
 
-    public List<IdentifiableAttributes> getIdentifiablesFromFilter(UUID filterUuid, UUID networkUuid, String variantId) {
-        return getIdentifiablesFromFilters(List.of(filterUuid), networkUuid, variantId);
-    }
-
-    public List<FilterEquipments> getFilterEquipements(List<UUID> filterUuids, UUID networkUuid, String variantId) {
+    public List<FilterEquipments> getFilterEquipments(List<UUID> filterUuids, UUID networkUuid, String variantId) {
         Objects.requireNonNull(filterUuids);
         Objects.requireNonNull(networkUuid);
 
@@ -75,19 +71,26 @@ public class FilterService {
                 }).getBody();
     }
 
-    public Map<String, Long> getIdentifiablesCount(SensitivityFactorsIdsByGroup factorsIds, UUID networkUuid, String variantId) {
-        var uriComponentsBuilder = UriComponentsBuilder
-                .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/identifiables-count")
-                .queryParam(NETWORK_UUID, networkUuid);
-        if (!StringUtils.isBlank(variantId)) {
-            uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);
+    public List<IdentifiableAttributes> getIdentifiablesFromFilters(List<UUID> filterUuids, UUID networkUuid, String variantId) {
+        List<FilterEquipments> filterEquipments = getFilterEquipments(filterUuids, networkUuid, variantId);
+
+        List<IdentifiableAttributes> mergedIdentifiables = new ArrayList<>();
+        for (FilterEquipments filterEquipment : filterEquipments) {
+            mergedIdentifiables.addAll(filterEquipment.getIdentifiableAttributes());
         }
 
-        factorsIds.getIds().forEach((key, value) -> uriComponentsBuilder.queryParam(String.format("ids[%s]", key), value));
+        return mergedIdentifiables;
+    }
 
-        var path = uriComponentsBuilder.build().toUriString();
+    public List<IdentifiableAttributes> getIdentifiablesFromFilter(UUID filterUuid, UUID networkUuid, String variantId) {
+        return getIdentifiablesFromFilters(List.of(filterUuid), networkUuid, variantId);
+    }
 
-        return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.GET, null, new ParameterizedTypeReference<Map<String, Long>>() {
-        }).getBody();
+    public Optional<ResourceFilterDTO> getResourceFilter(@NonNull UUID networkUuid, @NonNull String variantId, @NonNull GlobalFilter globalFilter) {
+        // Get equipment types from violation types
+        List<EquipmentType> equipmentTypes = List.of(EquipmentType.LINE, EquipmentType.TWO_WINDINGS_TRANSFORMER);
+
+        // Call the common implementation with specific parameters
+        return super.getResourceFilter(networkUuid, variantId, globalFilter, equipmentTypes, SensitivityResultEntity.Fields.functionId);
     }
 }
