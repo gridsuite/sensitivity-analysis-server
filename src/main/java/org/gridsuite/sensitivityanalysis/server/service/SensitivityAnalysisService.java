@@ -8,15 +8,16 @@ package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.sensitivity.SensitivityAnalysisProvider;
+import com.powsybl.ws.commons.computation.dto.GlobalFilter;
 import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
-import com.univocity.parsers.csv.CsvWriter;
-import com.univocity.parsers.csv.CsvWriterSettings;
-import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
 import com.powsybl.ws.commons.computation.service.AbstractComputationService;
 import com.powsybl.ws.commons.computation.service.NotificationService;
 import com.powsybl.ws.commons.computation.service.UuidGeneratorService;
-import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
+import com.univocity.parsers.csv.CsvWriter;
+import com.univocity.parsers.csv.CsvWriterSettings;
+import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -26,16 +27,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException.Type.FILE_EXPORT_ERROR;
-import static org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException.Type.INVALID_EXPORT_PARAMS;
-import static org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException.Type.RESULT_NOT_FOUND;
+import static org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException.Type.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -74,8 +70,16 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
         return resultUuid;
     }
 
-    public SensitivityRunQueryResult getRunResult(UUID resultUuid, ResultsSelector selector, List<ResourceFilterDTO> resourceFilters) {
-        return resultService.getRunResult(resultUuid, selector, resourceFilters);
+    public SensitivityRunQueryResult getRunResult(UUID resultUuid, UUID networkUuid, String variantId, ResultsSelector selector, List<ResourceFilterDTO> resourceFilters, GlobalFilter globalFilter) {
+        List<ResourceFilterDTO> allResourceFilters = new ArrayList<>();
+        if (resourceFilters != null) {
+            allResourceFilters.addAll(resourceFilters);
+        }
+        if (globalFilter != null) {
+            Optional<ResourceFilterDTO> resourceGlobalFilters = filterService.getResourceFilter(networkUuid, variantId, globalFilter);
+            resourceGlobalFilters.ifPresent(allResourceFilters::add);
+        }
+        return resultService.getRunResult(resultUuid, selector, allResourceFilters);
     }
 
     public SensitivityResultFilterOptions getSensitivityResultOptions(UUID resultUuid, ResultsSelector selector) {
@@ -131,7 +135,7 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
                 .tabSelection(sensitivityAnalysisCsvFileInfos.getResultTab())
                 .build();
 
-        SensitivityRunQueryResult result = getRunResult(resultUuid, selector, null);
+        SensitivityRunQueryResult result = getRunResult(resultUuid, null, null, selector, null, null);
         if (result == null) {
             throw new SensibilityAnalysisException(RESULT_NOT_FOUND, "The sensitivity analysis result '" + resultUuid + "' does not exist");
         }
