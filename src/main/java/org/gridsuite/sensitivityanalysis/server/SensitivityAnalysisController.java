@@ -10,11 +10,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityFunctionType;
-import com.powsybl.ws.commons.computation.ComputationException;
-import com.powsybl.ws.commons.computation.dto.GlobalFilter;
-import com.powsybl.ws.commons.computation.dto.ReportInfos;
-import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
-import com.powsybl.ws.commons.computation.utils.FilterUtils;
+import org.gridsuite.computation.ComputationException;
+import org.gridsuite.computation.dto.GlobalFilter;
+import org.gridsuite.computation.dto.ReportInfos;
+import org.gridsuite.computation.dto.ResourceFilterDTO;
+import org.gridsuite.computation.utils.FilterUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -44,7 +44,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
-import static com.powsybl.ws.commons.computation.service.NotificationService.HEADER_USER_ID;
+import static org.gridsuite.computation.service.NotificationService.HEADER_USER_ID;
 import static org.springframework.http.MediaType.*;
 
 /**

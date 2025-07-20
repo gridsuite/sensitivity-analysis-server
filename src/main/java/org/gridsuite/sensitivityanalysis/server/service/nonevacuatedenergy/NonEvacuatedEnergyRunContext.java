@@ -7,8 +7,8 @@
 package org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy;
 
 import lombok.Getter;
-import com.powsybl.ws.commons.computation.service.AbstractComputationRunContext;
-import com.powsybl.ws.commons.computation.dto.ReportInfos;
+import org.gridsuite.computation.service.AbstractComputationRunContext;
+import org.gridsuite.computation.dto.ReportInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
 
 import java.util.UUID;

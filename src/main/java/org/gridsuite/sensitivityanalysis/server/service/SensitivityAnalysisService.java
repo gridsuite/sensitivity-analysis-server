@@ -8,11 +8,11 @@ package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.sensitivity.SensitivityAnalysisProvider;
-import com.powsybl.ws.commons.computation.dto.GlobalFilter;
-import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
-import com.powsybl.ws.commons.computation.service.AbstractComputationService;
-import com.powsybl.ws.commons.computation.service.NotificationService;
-import com.powsybl.ws.commons.computation.service.UuidGeneratorService;
+import org.gridsuite.computation.dto.GlobalFilter;
+import org.gridsuite.computation.dto.ResourceFilterDTO;
+import org.gridsuite.computation.service.AbstractComputationService;
+import org.gridsuite.computation.service.NotificationService;
+import org.gridsuite.computation.service.UuidGeneratorService;
 import com.univocity.parsers.csv.CsvWriter;
 import com.univocity.parsers.csv.CsvWriterSettings;
 import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
