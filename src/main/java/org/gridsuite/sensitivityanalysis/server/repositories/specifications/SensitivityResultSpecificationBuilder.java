@@ -6,8 +6,8 @@
  */
 package org.gridsuite.sensitivityanalysis.server.repositories.specifications;
 
-import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
-import com.powsybl.ws.commons.computation.specification.AbstractCommonSpecificationBuilder;
+import org.gridsuite.computation.dto.ResourceFilterDTO;
+import org.gridsuite.computation.specification.AbstractCommonSpecificationBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
