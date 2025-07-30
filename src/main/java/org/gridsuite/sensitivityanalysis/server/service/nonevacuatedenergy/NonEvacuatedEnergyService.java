@@ -7,9 +7,9 @@
 package org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.ws.commons.computation.service.AbstractComputationService;
+import org.gridsuite.computation.service.AbstractComputationService;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
-import com.powsybl.ws.commons.computation.service.UuidGeneratorService;
+import org.gridsuite.computation.service.UuidGeneratorService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

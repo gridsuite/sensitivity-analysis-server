@@ -10,7 +10,7 @@ package org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.NonNull;
-import com.powsybl.ws.commons.computation.service.AbstractComputationObserver;
+import org.gridsuite.computation.service.AbstractComputationObserver;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.results.NonEvacuatedEnergyResults;
 import org.springframework.stereotype.Service;

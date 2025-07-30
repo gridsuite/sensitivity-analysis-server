@@ -18,8 +18,8 @@ import com.powsybl.loadflow.LoadFlowParameters;
 import com.powsybl.loadflow.LoadFlowProvider;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sensitivity.*;
-import com.powsybl.ws.commons.computation.dto.ReportInfos;
-import com.powsybl.ws.commons.computation.service.*;
+import org.gridsuite.computation.dto.ReportInfos;
+import org.gridsuite.computation.service.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static com.powsybl.ws.commons.computation.service.NotificationService.getFailedMessage;
+import static org.gridsuite.computation.service.NotificationService.getFailedMessage;
 import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder.buildContingencyResults;
 import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder.buildSensitivityResults;
 

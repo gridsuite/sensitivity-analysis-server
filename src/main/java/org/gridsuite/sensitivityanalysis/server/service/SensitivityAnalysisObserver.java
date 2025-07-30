@@ -10,7 +10,7 @@ package org.gridsuite.sensitivityanalysis.server.service;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.NonNull;
-import com.powsybl.ws.commons.computation.service.AbstractComputationObserver;
+import org.gridsuite.computation.service.AbstractComputationObserver;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.springframework.stereotype.Service;
 

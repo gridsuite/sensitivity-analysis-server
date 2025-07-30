@@ -6,7 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy;
 
-import com.powsybl.ws.commons.computation.service.AbstractComputationResultService;
+import org.gridsuite.computation.service.AbstractComputationResultService;
 import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
 import org.gridsuite.sensitivityanalysis.server.entities.nonevacuatedenergy.NonEvacuatedEnergyGlobalStatusEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.nonevacuatedenergy.NonEvacuatedEnergyResultEntity;
