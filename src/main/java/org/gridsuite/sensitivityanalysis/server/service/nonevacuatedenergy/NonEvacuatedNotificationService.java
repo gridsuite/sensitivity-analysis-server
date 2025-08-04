@@ -6,7 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy;
 
-import com.powsybl.ws.commons.computation.service.NotificationService;
+import org.gridsuite.computation.service.NotificationService;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Service;
 

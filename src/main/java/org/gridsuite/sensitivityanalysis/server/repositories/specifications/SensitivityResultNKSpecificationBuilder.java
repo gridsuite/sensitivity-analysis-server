@@ -6,7 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.repositories.specifications;
 
-import com.powsybl.ws.commons.computation.dto.ResourceFilterDTO;
+import org.gridsuite.computation.dto.ResourceFilterDTO;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
