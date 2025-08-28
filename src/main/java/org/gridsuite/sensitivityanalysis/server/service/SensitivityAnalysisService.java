@@ -123,7 +123,7 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
         return contAttributesCountTemp;
     }
 
-    public byte[] exportSensitivityResultsAsCsv(UUID resultUuid, SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos) {
+    public byte[] exportSensitivityResultsAsCsv(UUID resultUuid, SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos, UUID networkUuid, String variantId, List<ResourceFilterDTO> resourceFilters, GlobalFilter globalFilter) {
         if (sensitivityAnalysisCsvFileInfos == null ||
                 sensitivityAnalysisCsvFileInfos.getSensitivityFunctionType() == null ||
                 sensitivityAnalysisCsvFileInfos.getResultTab() == null ||
@@ -135,7 +135,7 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
                 .tabSelection(sensitivityAnalysisCsvFileInfos.getResultTab())
                 .build();
 
-        SensitivityRunQueryResult result = getRunResult(resultUuid, null, null, selector, null, null);
+        SensitivityRunQueryResult result = getRunResult(resultUuid, networkUuid, variantId, selector, resourceFilters, globalFilter);
         if (result == null) {
             throw new SensibilityAnalysisException(RESULT_NOT_FOUND, "The sensitivity analysis result '" + resultUuid + "' does not exist");
         }
