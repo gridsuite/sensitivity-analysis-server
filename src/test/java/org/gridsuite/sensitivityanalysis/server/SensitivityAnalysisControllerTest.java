@@ -430,6 +430,7 @@ class SensitivityAnalysisControllerTest {
                 .sensitivityFunctionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
                 .resultTab(ResultTab.N)
                 .csvHeaders(List.of("functionId", "variableId", "functionReference", "value"))
+                .language("en")
                 .build();
 
         // Not found with random UUID

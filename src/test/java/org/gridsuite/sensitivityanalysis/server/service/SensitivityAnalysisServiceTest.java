@@ -109,6 +109,7 @@ class SensitivityAnalysisServiceTest {
             .sensitivityFunctionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .resultTab(ResultTab.N)
             .csvHeaders(List.of("functionId", "variableId", "functionReference", "value"))
+            .language("en")
             .build();
 
         byte[] zip = analysisService.exportSensitivityResultsAsCsv(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos);
@@ -148,6 +149,7 @@ class SensitivityAnalysisServiceTest {
             .sensitivityFunctionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .resultTab(ResultTab.N_K)
             .csvHeaders(List.of("functionId", "variableId", "contingencyId", "functionReference", "value", "functionReferenceAfter", "valueAfter"))
+            .language("en")
             .build();
 
         byte[] zip = analysisService.exportSensitivityResultsAsCsv(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos);
@@ -170,6 +172,7 @@ class SensitivityAnalysisServiceTest {
             .sensitivityFunctionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .resultTab(ResultTab.N)
             .csvHeaders(List.of("functionId", "variableId", "functionReference", "value"))
+            .language("en")
             .build();
 
         assertThrows(SensibilityAnalysisException.class, () -> analysisService.exportSensitivityResultsAsCsv(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos));
