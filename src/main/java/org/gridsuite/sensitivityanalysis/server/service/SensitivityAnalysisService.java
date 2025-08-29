@@ -136,7 +136,10 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
     }
 
     private static String convertDoubleToLocale(Double value, String language) {
-        return value != null ? NumberFormat.getInstance(language != null && language.equals("fr") ? Locale.FRENCH : Locale.US).format(value) : null;
+        if (value != null) {
+            return NumberFormat.getInstance(language != null && language.equals("fr") ? Locale.FRENCH : Locale.US).format(value);
+        }
+        return null;
     }
 
     public byte[] exportSensitivityResultsAsCsv(UUID resultUuid, SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos) {
