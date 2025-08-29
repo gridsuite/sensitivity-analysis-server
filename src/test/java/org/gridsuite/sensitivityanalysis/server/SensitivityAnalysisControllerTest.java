@@ -448,16 +448,16 @@ class SensitivityAnalysisControllerTest {
             String[] splitLine = line.trim().split(",");
             expectedCsvLines.put(Pair.of(splitLine[0], splitLine[1]), Arrays.asList(Double.valueOf(splitLine[2]), Double.valueOf(splitLine[3])));
         }
-        assertEquals(75.510381, expectedCsvLines.get(Pair.of("L1-5-1", "B2-G")).get(0), Math.pow(10, -6));
-        assertEquals(-0.172620, expectedCsvLines.get(Pair.of("L1-5-1", "B2-G")).get(1), Math.pow(10, -6));
+        assertEquals(75.51, expectedCsvLines.get(Pair.of("L1-5-1", "B2-G")).get(0), Math.pow(10, -6));
+        assertEquals(-0.173, expectedCsvLines.get(Pair.of("L1-5-1", "B2-G")).get(1), Math.pow(10, -6));
 
-        assertEquals(75.510381, expectedCsvLines.get(Pair.of("L1-5-1", "B1-G")).get(0), Math.pow(10, -6));
+        assertEquals(75.51, expectedCsvLines.get(Pair.of("L1-5-1", "B1-G")).get(0), Math.pow(10, -6));
         assertEquals(0.0, expectedCsvLines.get(Pair.of("L1-5-1", "B1-G")).get(1));
 
-        assertEquals(73.237579, expectedCsvLines.get(Pair.of("L2-3-1", "B2-G")).get(0), Math.pow(10, -6));
-        assertEquals(0.0280001, expectedCsvLines.get(Pair.of("L2-3-1", "B2-G")).get(1), Math.pow(10, -6));
+        assertEquals(73.238, expectedCsvLines.get(Pair.of("L2-3-1", "B2-G")).get(0), Math.pow(10, -6));
+        assertEquals(0.028, expectedCsvLines.get(Pair.of("L2-3-1", "B2-G")).get(1), Math.pow(10, -6));
 
-        assertEquals(73.237579, expectedCsvLines.get(Pair.of("L2-3-1", "B1-G")).get(0), Math.pow(10, -6));
+        assertEquals(73.238, expectedCsvLines.get(Pair.of("L2-3-1", "B1-G")).get(0), Math.pow(10, -6));
         assertEquals(0.0, expectedCsvLines.get(Pair.of("L2-3-1", "B1-G")).get(1));
     }
 
