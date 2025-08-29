@@ -52,6 +52,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.nio.charset.StandardCharsets;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -420,45 +421,52 @@ class SensitivityAnalysisControllerTest {
                 .isEqualTo(sortedSensitivityList);
     }
 
+    private static Double getValueFromString(String value, String language) throws Exception {
+        return NumberFormat.getInstance(language.equals("fr") ? Locale.FRENCH : Locale.US).parse(value).doubleValue();
+    }
+
     @Test
     void csvExportTest() throws Exception {
         UUID resultUuid = run(parametersUuid);
         checkComputationSucceeded(resultUuid);
 
         // export results as csv
-        SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos = SensitivityAnalysisCsvFileInfos.builder()
+        for (String language : List.of("fr", "en")) {
+            String fieldSeparator = language.equals("fr") ? ";" : ",";
+            SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos = SensitivityAnalysisCsvFileInfos.builder()
                 .sensitivityFunctionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
                 .resultTab(ResultTab.N)
                 .csvHeaders(List.of("functionId", "variableId", "functionReference", "value"))
-                .language("en")
+                .language(language)
                 .build();
 
-        // Not found with random UUID
-        exportCsvFails(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos, status().isNotFound());
-        // Bad request with empty CSV file infos
-        exportCsvFails(resultUuid, SensitivityAnalysisCsvFileInfos.builder().build(), status().isBadRequest());
+            // Not found with random UUID
+            exportCsvFails(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos, status().isNotFound());
+            // Bad request with empty CSV file infos
+            exportCsvFails(resultUuid, SensitivityAnalysisCsvFileInfos.builder().build(), status().isBadRequest());
 
-        byte[] zipFile = exportCsv(resultUuid, sensitivityAnalysisCsvFileInfos);
-        byte[] csvFile = unzip(zipFile);
-        String csvFileAsString = new String(csvFile, StandardCharsets.UTF_8);
-        List<String> actualCsvLines = Arrays.asList(csvFileAsString.split("\n"));
-        assertEquals("\uFEFFfunctionId,variableId,functionReference,value", actualCsvLines.get(0));
-        Map<Pair<String, String>, List<Double>> expectedCsvLines = new HashMap<>();
-        for (String line : actualCsvLines.subList(1, actualCsvLines.size())) {
-            String[] splitLine = line.trim().split(",");
-            expectedCsvLines.put(Pair.of(splitLine[0], splitLine[1]), Arrays.asList(Double.valueOf(splitLine[2]), Double.valueOf(splitLine[3])));
+            byte[] zipFile = exportCsv(resultUuid, sensitivityAnalysisCsvFileInfos);
+            byte[] csvFile = unzip(zipFile);
+            String csvFileAsString = new String(csvFile, StandardCharsets.UTF_8);
+            List<String> actualCsvLines = Arrays.asList(csvFileAsString.split("\n"));
+            assertEquals("\uFEFFfunctionId" + fieldSeparator + "variableId" + fieldSeparator + "functionReference" + fieldSeparator + "value", actualCsvLines.get(0));
+            Map<Pair<String, String>, List<Double>> expectedCsvLines = new HashMap<>();
+            for (String line : actualCsvLines.subList(1, actualCsvLines.size())) {
+                String[] splitLine = line.trim().split(fieldSeparator);
+                expectedCsvLines.put(Pair.of(splitLine[0], splitLine[1]), Arrays.asList(getValueFromString(splitLine[2], language), getValueFromString(splitLine[3], language)));
+            }
+            assertEquals(75.51, expectedCsvLines.get(Pair.of("L1-5-1", "B2-G")).get(0), Math.pow(10, -6));
+            assertEquals(-0.173, expectedCsvLines.get(Pair.of("L1-5-1", "B2-G")).get(1), Math.pow(10, -6));
+
+            assertEquals(75.51, expectedCsvLines.get(Pair.of("L1-5-1", "B1-G")).get(0), Math.pow(10, -6));
+            assertEquals(0.0, expectedCsvLines.get(Pair.of("L1-5-1", "B1-G")).get(1));
+
+            assertEquals(73.238, expectedCsvLines.get(Pair.of("L2-3-1", "B2-G")).get(0), Math.pow(10, -6));
+            assertEquals(0.028, expectedCsvLines.get(Pair.of("L2-3-1", "B2-G")).get(1), Math.pow(10, -6));
+
+            assertEquals(73.238, expectedCsvLines.get(Pair.of("L2-3-1", "B1-G")).get(0), Math.pow(10, -6));
+            assertEquals(0.0, expectedCsvLines.get(Pair.of("L2-3-1", "B1-G")).get(1));
         }
-        assertEquals(75.51, expectedCsvLines.get(Pair.of("L1-5-1", "B2-G")).get(0), Math.pow(10, -6));
-        assertEquals(-0.173, expectedCsvLines.get(Pair.of("L1-5-1", "B2-G")).get(1), Math.pow(10, -6));
-
-        assertEquals(75.51, expectedCsvLines.get(Pair.of("L1-5-1", "B1-G")).get(0), Math.pow(10, -6));
-        assertEquals(0.0, expectedCsvLines.get(Pair.of("L1-5-1", "B1-G")).get(1));
-
-        assertEquals(73.238, expectedCsvLines.get(Pair.of("L2-3-1", "B2-G")).get(0), Math.pow(10, -6));
-        assertEquals(0.028, expectedCsvLines.get(Pair.of("L2-3-1", "B2-G")).get(1), Math.pow(10, -6));
-
-        assertEquals(73.238, expectedCsvLines.get(Pair.of("L2-3-1", "B1-G")).get(0), Math.pow(10, -6));
-        assertEquals(0.0, expectedCsvLines.get(Pair.of("L2-3-1", "B1-G")).get(1));
     }
 
     @Test
