@@ -109,6 +109,7 @@ class SensitivityAnalysisServiceTest {
             .sensitivityFunctionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .resultTab(ResultTab.N)
             .csvHeaders(List.of("functionId", "variableId", "functionReference", "value"))
+            .language("en")
             .build();
 
         byte[] zip = analysisService.exportSensitivityResultsAsCsv(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos);
@@ -118,7 +119,7 @@ class SensitivityAnalysisServiceTest {
 
         // Including "\uFEFF" indicates the UTF-8 BOM at the start.
         List<String> expectedLines = new ArrayList<>(List.of("\uFEFFfunctionId,variableId,functionReference,value",
-            "funcId1,varId1,100.0,0.1"));
+            "funcId1,varId1,100,0.1"));
 
         actualLines.sort(String::compareTo);
         expectedLines.sort(String::compareTo);
@@ -148,6 +149,7 @@ class SensitivityAnalysisServiceTest {
             .sensitivityFunctionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .resultTab(ResultTab.N_K)
             .csvHeaders(List.of("functionId", "variableId", "contingencyId", "functionReference", "value", "functionReferenceAfter", "valueAfter"))
+            .language("en")
             .build();
 
         byte[] zip = analysisService.exportSensitivityResultsAsCsv(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos);
@@ -157,7 +159,7 @@ class SensitivityAnalysisServiceTest {
 
         // Including "\uFEFF" indicates the UTF-8 BOM at the start.
         List<String> expectedLines = new ArrayList<>(List.of("\uFEFFfunctionId,variableId,contingencyId,functionReference,value,functionReferenceAfter,valueAfter",
-            "funcId1,varId1,contingencyId1,100.0,0.1,200.0,0.2"));
+            "funcId1,varId1,contingencyId1,100,0.1,200,0.2"));
 
         actualLines.sort(String::compareTo);
         expectedLines.sort(String::compareTo);
@@ -170,6 +172,7 @@ class SensitivityAnalysisServiceTest {
             .sensitivityFunctionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
             .resultTab(ResultTab.N)
             .csvHeaders(List.of("functionId", "variableId", "functionReference", "value"))
+            .language("en")
             .build();
 
         assertThrows(SensibilityAnalysisException.class, () -> analysisService.exportSensitivityResultsAsCsv(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos));
