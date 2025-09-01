@@ -8,6 +8,7 @@ package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.sensitivity.SensitivityAnalysisProvider;
+import com.univocity.parsers.csv.CsvFormat;
 import org.gridsuite.computation.dto.GlobalFilter;
 import org.gridsuite.computation.dto.ResourceFilterDTO;
 import org.gridsuite.computation.service.AbstractComputationService;
@@ -27,6 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -42,6 +44,10 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
     public static final String INJECTIONS = "injections";
 
     public static final String CONTINGENCIES = "contingencies";
+
+    public static final char CSV_DELIMITER_FR = ';';
+    public static final char CSV_DELIMITER_EN = ',';
+    public static final char CSV_QUOTE_ESCAPE = '"';
 
     private final ActionsService actionsService;
 
@@ -123,6 +129,19 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
         return contAttributesCountTemp;
     }
 
+    private static void setFormat(CsvFormat format, String language) {
+        format.setLineSeparator(System.lineSeparator());
+        format.setDelimiter(language != null && language.equals("fr") ? CSV_DELIMITER_FR : CSV_DELIMITER_EN);
+        format.setQuoteEscape(CSV_QUOTE_ESCAPE);
+    }
+
+    private static String convertDoubleToLocale(Double value, String language) {
+        if (value != null) {
+            return NumberFormat.getInstance(language != null && language.equals("fr") ? Locale.FRENCH : Locale.US).format(value);
+        }
+        return null;
+    }
+
     public byte[] exportSensitivityResultsAsCsv(UUID resultUuid, SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos, UUID networkUuid, String variantId, List<ResourceFilterDTO> resourceFilters, GlobalFilter globalFilter) {
         if (sensitivityAnalysisCsvFileInfos == null ||
                 sensitivityAnalysisCsvFileInfos.getSensitivityFunctionType() == null ||
@@ -147,6 +166,7 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
             // adding BOM to the beginning of file to help excel in some versions to detect this is UTF-8 encoding bytes
             writeUTF8Bom(zipOutputStream);
             CsvWriterSettings settings = new CsvWriterSettings();
+            setFormat(settings.getFormat(), sensitivityAnalysisCsvFileInfos.getLanguage());
             CsvWriter csvWriter = new CsvWriter(zipOutputStream, StandardCharsets.UTF_8, settings);
             csvWriter.writeHeaders(sensitivityAnalysisCsvFileInfos.getCsvHeaders());
             if (selector.getTabSelection() == ResultTab.N) {
@@ -154,8 +174,8 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
                         .forEach(sensitivity -> csvWriter.writeRow(
                                 sensitivity.getFuncId(),
                                 sensitivity.getVarId(),
-                                nullIfNan(sensitivity.getFunctionReference()),
-                                nullIfNan(sensitivity.getValue())
+                                convertDoubleToLocale(nullIfNan(sensitivity.getFunctionReference()), sensitivityAnalysisCsvFileInfos.getLanguage()),
+                                convertDoubleToLocale(nullIfNan(sensitivity.getValue()), sensitivityAnalysisCsvFileInfos.getLanguage())
                         ));
             } else if (selector.getTabSelection() == ResultTab.N_K) {
                 result.getSensitivities()
@@ -165,10 +185,10 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
                                 sensitivityWithContingency.getFuncId(),
                                 sensitivityWithContingency.getVarId(),
                                 sensitivityWithContingency.getContingencyId(),
-                                nullIfNan(sensitivityWithContingency.getFunctionReference()),
-                                nullIfNan(sensitivityWithContingency.getValue()),
-                                nullIfNan(sensitivityWithContingency.getFunctionReferenceAfter()),
-                                nullIfNan(sensitivityWithContingency.getValueAfter())
+                                convertDoubleToLocale(nullIfNan(sensitivityWithContingency.getFunctionReference()), sensitivityAnalysisCsvFileInfos.getLanguage()),
+                                convertDoubleToLocale(nullIfNan(sensitivityWithContingency.getValue()), sensitivityAnalysisCsvFileInfos.getLanguage()),
+                                convertDoubleToLocale(nullIfNan(sensitivityWithContingency.getFunctionReferenceAfter()), sensitivityAnalysisCsvFileInfos.getLanguage()),
+                                convertDoubleToLocale(nullIfNan(sensitivityWithContingency.getValueAfter()), sensitivityAnalysisCsvFileInfos.getLanguage())
                         ));
             }
 
