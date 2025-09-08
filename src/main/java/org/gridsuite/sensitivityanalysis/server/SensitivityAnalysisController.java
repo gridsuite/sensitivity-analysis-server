@@ -241,6 +241,7 @@ public class SensitivityAnalysisController {
     public ResponseEntity<byte[]> exportSensitivityResultsAsCsv(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
                                                                 @Parameter(description = "network Uuid") @RequestParam(name = "networkUuid", required = false) UUID networkUuid,
                                                                 @Parameter(description = "variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                                @RequestParam(name = "selector", required = false) String selectorJson,
                                                                 @Parameter(description = "JSON array of filters") @RequestParam(name = "filters", required = false) String filters,
                                                                 @Parameter(description = "Global Filters") @RequestParam(name = "globalFilters", required = false) String globalFilters,
                                                                 @RequestBody SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos) {
@@ -248,15 +249,20 @@ public class SensitivityAnalysisController {
         httpHeaders.setContentType(APPLICATION_OCTET_STREAM);
         httpHeaders.setContentDispositionFormData("attachment", "sensitivity_results.zip");
 
-        String decodedStringFilters = filters != null ? URLDecoder.decode(filters, StandardCharsets.UTF_8) : null;
-        String decodedStringGlobalFilters = globalFilters != null ? URLDecoder.decode(globalFilters, StandardCharsets.UTF_8) : null;
-        List<ResourceFilterDTO> resourceFilters = FilterUtils.fromStringFiltersToDTO(decodedStringFilters, objectMapper);
-        GlobalFilter globalFilter = FilterUtils.fromStringGlobalFiltersToDTO(decodedStringGlobalFilters, objectMapper);
+        try {
+            String decodedStringFilters = filters != null ? URLDecoder.decode(filters, StandardCharsets.UTF_8) : null;
+            String decodedStringGlobalFilters = globalFilters != null ? URLDecoder.decode(globalFilters, StandardCharsets.UTF_8) : null;
+            List<ResourceFilterDTO> resourceFilters = FilterUtils.fromStringFiltersToDTO(decodedStringFilters, objectMapper);
+            GlobalFilter globalFilter = FilterUtils.fromStringGlobalFiltersToDTO(decodedStringGlobalFilters, objectMapper);
+            ResultsSelector selector = getSelector(selectorJson);
 
-        byte[] csv = service.exportSensitivityResultsAsCsv(resultUuid, sensitivityAnalysisCsvFileInfos, networkUuid, variantId, resourceFilters, globalFilter);
-        return ResponseEntity.ok()
-                .headers(httpHeaders)
-                .body(csv);
+            byte[] csv = service.exportSensitivityResultsAsCsv(resultUuid, sensitivityAnalysisCsvFileInfos, networkUuid, variantId, selector, resourceFilters, globalFilter);
+            return ResponseEntity.ok()
+                    .headers(httpHeaders)
+                    .body(csv);
+        } catch (JsonProcessingException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PostMapping(value = "/networks/{networkUuid}/non-evacuated-energy/run-and-save", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
