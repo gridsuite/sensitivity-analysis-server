@@ -20,6 +20,7 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityFunctionType;
+import lombok.SneakyThrows;
 import org.gridsuite.computation.dto.GlobalFilter;
 import org.gridsuite.computation.dto.ResourceFilterDTO;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
@@ -470,6 +471,22 @@ class SensitivityAnalysisControllerTest {
     }
 
     @Test
+    @SneakyThrows
+    void exportCsvBadJson() {
+        SensitivityAnalysisCsvFileInfos csvFileInfos = SensitivityAnalysisCsvFileInfos.builder()
+                .sensitivityFunctionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+                .resultTab(ResultTab.N)
+                .csvHeaders(List.of("functionId", "variableId", "functionReference", "value"))
+                .language("fr")
+                .build();
+        mockMvc.perform(post("/" + VERSION + "/results/{resultUuid}/csv", UUID.randomUUID())
+                        .param("selector", "{bad json string")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(csvFileInfos)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void deleteResultsTest() throws Exception {
         UUID resultUuid = run(parametersUuid);
         checkComputationSucceeded(resultUuid);
@@ -646,7 +663,18 @@ class SensitivityAnalysisControllerTest {
     }
 
     private void exportCsvFails(UUID resultUuid, SensitivityAnalysisCsvFileInfos csvFileInfos, ResultMatcher resultMatcher) throws Exception {
+        GlobalFilter emptyGlobalFilter = GlobalFilter.builder().build();
+        List<ResourceFilterDTO> resourceFilters = List.of(
+                new ResourceFilterDTO(
+                        ResourceFilterDTO.DataType.TEXT,
+                        ResourceFilterDTO.Type.EQUALS,
+                        "specificFunction",
+                        "functionId"
+                )
+        );
         mockMvc.perform(post("/" + VERSION + "/results/{resultUuid}/csv", resultUuid)
+                        .param("globalFilters", mapper.writeValueAsString(emptyGlobalFilter))
+                        .param("filters", mapper.writeValueAsString(resourceFilters))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(csvFileInfos)))
                 .andExpect(resultMatcher)
