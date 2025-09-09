@@ -643,7 +643,12 @@ class SensitivityAnalysisControllerTest {
     }
 
     private byte[] exportCsv(UUID resultUuid, SensitivityAnalysisCsvFileInfos csvFileInfos) throws Exception {
+        ResultsSelector selector = ResultsSelector.builder()
+                .tabSelection(ResultTab.N)
+                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+                .build();
         MvcResult result = mockMvc.perform(post("/" + VERSION + "/results/{resultUuid}/csv", resultUuid)
+                        .param("selector", mapper.writeValueAsString(selector))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(csvFileInfos)))
                 .andExpect(status().isOk())
