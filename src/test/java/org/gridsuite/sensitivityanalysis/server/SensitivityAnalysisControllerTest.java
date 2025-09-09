@@ -470,17 +470,6 @@ class SensitivityAnalysisControllerTest {
     }
 
     @Test
-    void deleteResultTest() throws Exception {
-        UUID resultUuid = run(parametersUuid);
-        checkComputationSucceeded(resultUuid);
-
-        mockMvc.perform(delete("/" + VERSION + "/results").queryParam("resultsUuids", resultUuid.toString()))
-                .andExpect(status().isOk());
-        mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", RESULT_UUID))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
     void deleteResultsTest() throws Exception {
         UUID resultUuid = run(parametersUuid);
         checkComputationSucceeded(resultUuid);
