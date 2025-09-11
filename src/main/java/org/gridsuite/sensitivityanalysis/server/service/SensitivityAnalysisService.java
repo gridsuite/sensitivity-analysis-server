@@ -144,19 +144,14 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
         return null;
     }
 
-    public byte[] exportSensitivityResultsAsCsv(UUID resultUuid, SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos) {
+    public byte[] exportSensitivityResultsAsCsv(UUID resultUuid, SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos, UUID networkUuid, String variantId, ResultsSelector selector, List<ResourceFilterDTO> resourceFilters, GlobalFilter globalFilter) {
         if (sensitivityAnalysisCsvFileInfos == null ||
                 sensitivityAnalysisCsvFileInfos.getSensitivityFunctionType() == null ||
                 sensitivityAnalysisCsvFileInfos.getResultTab() == null ||
                 CollectionUtils.isEmpty(sensitivityAnalysisCsvFileInfos.getCsvHeaders())) {
             throw new SensibilityAnalysisException(INVALID_EXPORT_PARAMS, "Missing information to export sensitivity result as csv : Sensitivity result tab, sensitivity function type and csv file headers must be provided");
         }
-        ResultsSelector selector = ResultsSelector.builder()
-                .functionType(sensitivityAnalysisCsvFileInfos.getSensitivityFunctionType())
-                .tabSelection(sensitivityAnalysisCsvFileInfos.getResultTab())
-                .build();
-
-        SensitivityRunQueryResult result = getRunResult(resultUuid, null, null, selector, null, null);
+        SensitivityRunQueryResult result = getRunResult(resultUuid, networkUuid, variantId, selector, resourceFilters, globalFilter);
         if (result == null) {
             throw new SensibilityAnalysisException(RESULT_NOT_FOUND, "The sensitivity analysis result '" + resultUuid + "' does not exist");
         }

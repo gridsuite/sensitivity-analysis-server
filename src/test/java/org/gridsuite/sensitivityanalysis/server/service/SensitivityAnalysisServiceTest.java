@@ -11,6 +11,7 @@ import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
+import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -111,8 +112,12 @@ class SensitivityAnalysisServiceTest {
             .csvHeaders(List.of("functionId", "variableId", "functionReference", "value"))
             .language("en")
             .build();
+        ResultsSelector selector = ResultsSelector.builder()
+                .tabSelection(ResultTab.N)
+                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+                .build();
 
-        byte[] zip = analysisService.exportSensitivityResultsAsCsv(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos);
+        byte[] zip = analysisService.exportSensitivityResultsAsCsv(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos, null, null, selector, null, null);
         byte[] csv = unzip(zip);
         String csvStr = new String(csv, StandardCharsets.UTF_8);
         List<String> actualLines = Arrays.asList(csvStr.split("\n"));
@@ -151,8 +156,12 @@ class SensitivityAnalysisServiceTest {
             .csvHeaders(List.of("functionId", "variableId", "contingencyId", "functionReference", "value", "functionReferenceAfter", "valueAfter"))
             .language("en")
             .build();
+        ResultsSelector selector = ResultsSelector.builder()
+                .tabSelection(ResultTab.N_K)
+                .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+                .build();
 
-        byte[] zip = analysisService.exportSensitivityResultsAsCsv(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos);
+        byte[] zip = analysisService.exportSensitivityResultsAsCsv(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos, null, null, selector, null, null);
         byte[] csv = unzip(zip);
         String csvStr = new String(csv, StandardCharsets.UTF_8);
         List<String> actualLines = Arrays.asList(csvStr.split("\n"));
@@ -174,8 +183,8 @@ class SensitivityAnalysisServiceTest {
             .csvHeaders(List.of("functionId", "variableId", "functionReference", "value"))
             .language("en")
             .build();
-
-        assertThrows(SensibilityAnalysisException.class, () -> analysisService.exportSensitivityResultsAsCsv(UUID.randomUUID(), sensitivityAnalysisCsvFileInfos));
+        final UUID resultUuid = UUID.randomUUID();
+        assertThrows(SensibilityAnalysisException.class, () -> analysisService.exportSensitivityResultsAsCsv(resultUuid, sensitivityAnalysisCsvFileInfos, null, null, null, null, null));
     }
 
     private static SensitivityRunQueryResult.SensitivityRunQueryResultBuilder getDefaultQueryBuilder() {
