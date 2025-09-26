@@ -36,11 +36,4 @@ public class SupervisionController {
     public ResponseEntity<Integer> getResultsCount() {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(supervisionService.getAnalysisResultsCount());
     }
-
-    @GetMapping(value = "/non-evacuated-energy/results-count")
-    @Operation(summary = "Get non evacuated energy results count")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The count of all non evacuated energy results")})
-    public ResponseEntity<Integer> getNonEvacuatedEnergyResultsCount() {
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(supervisionService.getNonEvacuatedEnergyResultsCount());
-    }
 }

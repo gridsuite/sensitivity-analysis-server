@@ -7,7 +7,6 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import org.gridsuite.sensitivityanalysis.server.repositories.AnalysisResultRepository;
-import org.gridsuite.sensitivityanalysis.server.repositories.nonevacuatedenergy.NonEvacuatedEnergyResultRepository;
 import org.springframework.stereotype.Service;
 
 /**
@@ -16,19 +15,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class SupervisionService {
     private final AnalysisResultRepository analysisResultRepository;
-    private final NonEvacuatedEnergyResultRepository nonEvacuatedEnergyResultRepository;
 
-    public SupervisionService(AnalysisResultRepository analysisResultRepository,
-                              NonEvacuatedEnergyResultRepository nonEvacuatedEnergyResultRepository) {
+    public SupervisionService(AnalysisResultRepository analysisResultRepository) {
         this.analysisResultRepository = analysisResultRepository;
-        this.nonEvacuatedEnergyResultRepository = nonEvacuatedEnergyResultRepository;
     }
 
     public Integer getAnalysisResultsCount() {
         return (int) analysisResultRepository.count();
-    }
-
-    public Integer getNonEvacuatedEnergyResultsCount() {
-        return (int) nonEvacuatedEnergyResultRepository.count();
     }
 }

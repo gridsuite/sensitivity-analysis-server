@@ -4,7 +4,7 @@ spring:
 
   cloud:
     function:
-      definition: consumeRun;consumeCancel;consumeNonEvacuatedEnergyRun;consumeNonEvacuatedEnergyCancel
+      definition: consumeRun;consumeCancel
     stream:
       bindings:
         consumeRun-in-0:
@@ -26,25 +26,7 @@ spring:
         publishCancelFailed-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}sensitivityanalysis.cancelfailed
 
-        consumeNonEvacuatedEnergyRun-in-0:
-          destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.run
-          group: sensitivityanalysisGroup
-          consumer:
-            max-attempts: 1
-        publishNonEvacuatedEnergyRun-out-0:
-          destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.run
-        publishNonEvacuatedEnergyResult-out-0:
-          destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.result
-        consumeNonEvacuatedEnergyCancel-in-0:
-          destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.cancel
-        publishNonEvacuatedEnergyCancel-out-0:
-          destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.cancel
-        publishNonEvacuatedEnergyStopped-out-0:
-          destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.stopped
-        publishNonEvacuatedEnergyCancelFailed-out-0:
-          destination: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.cancelfailed
-
-      output-bindings: publishRun-out-0;publishResult-out-0;publishCancel-out-0;publishStopped-out-0;publishCancelFailed-out-0;publishNonEvacuatedEnergyRun-out-0;publishNonEvacuatedEnergyResult-out-0;publishNonEvacuatedEnergyCancel-out-0;publishNonEvacuatedEnergyStopped-out-0;publishNonEvacuatedEnergyCancelFailed-out-0
+      output-bindings: publishRun-out-0;publishResult-out-0;publishCancel-out-0;publishStopped-out-0;publishCancelFailed-out-0
       rabbit:
         bindings:
           consumeRun-in-0:
@@ -52,15 +34,6 @@ spring:
               auto-bind-dlq: true
               dead-letter-exchange: ${powsybl-ws.rabbitmq.destination.prefix:}sensitivityanalysis.run.dlx
               dead-letter-queue-name: ${powsybl-ws.rabbitmq.destination.prefix:}sensitivityanalysis.run.dlx.dlq
-              dead-letter-exchange-type: topic
-              quorum:
-                enabled: true
-                delivery-limit: 2
-          consumeNonEvacuatedEnergyRun-in-0:
-            consumer:
-              auto-bind-dlq: true
-              dead-letter-exchange: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.run.dlx
-              dead-letter-queue-name: ${powsybl-ws.rabbitmq.destination.prefix:}nonEvacuatedEnergy.run.dlx.dlq
               dead-letter-exchange-type: topic
               quorum:
                 enabled: true
@@ -81,7 +54,4 @@ powsybl-ws:
 
 # default value for loadflow provider "OpenLoadFlow"
 sensitivity-analysis:
-  default-provider: OpenLoadFlow
-
-non-evacuated-energy:
   default-provider: OpenLoadFlow
