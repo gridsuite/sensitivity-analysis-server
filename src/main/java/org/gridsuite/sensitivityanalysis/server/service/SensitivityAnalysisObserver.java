@@ -36,6 +36,6 @@ public class SensitivityAnalysisObserver extends AbstractComputationObserver<Sen
 
     @Override
     protected String getResultStatus(SensitivityAnalysisResult res) {
-        return res != null && res.getContingencyStatuses().stream().filter(value -> value.getStatus() == FAILURE).toList().isEmpty() ? "OK" : "NOK";
+        return res != null ? "OK" : "NOK";
     }
 }
