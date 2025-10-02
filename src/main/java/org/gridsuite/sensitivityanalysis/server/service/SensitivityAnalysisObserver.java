@@ -15,8 +15,6 @@ import org.gridsuite.computation.service.AbstractComputationObserver;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.springframework.stereotype.Service;
 
-import static com.powsybl.sensitivity.SensitivityAnalysisResult.Status.FAILURE;
-
 /**
  * @author Florent MILLOT <florent.millot at rte-france.com>
  */
