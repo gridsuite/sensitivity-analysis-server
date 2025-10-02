@@ -49,7 +49,7 @@ import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBu
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
-public class SensitivityAnalysisWorkerService extends AbstractWorkerService<SensitivityAnalysisResult, SensitivityAnalysisRunContext, SensitivityAnalysisInputData, SensitivityAnalysisResultService> {
+public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Boolean, SensitivityAnalysisRunContext, SensitivityAnalysisInputData, SensitivityAnalysisResultService> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisWorkerService.class);
     public static final String COMPUTATION_TYPE = "Sensitivity analysis";
 
@@ -84,7 +84,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Sens
     }
 
     @Override
-    protected boolean resultCanBeSaved(SensitivityAnalysisResult result) {
+    protected boolean resultCanBeSaved(Boolean isResultOk) {
         return true;
     }
 
@@ -117,7 +117,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Sens
     }
 
     @Override
-    protected CompletableFuture<SensitivityAnalysisResult> getCompletableFuture(SensitivityAnalysisRunContext runContext, String provider, UUID resultUuid) {
+    protected CompletableFuture<Boolean> getCompletableFuture(SensitivityAnalysisRunContext runContext, String provider, UUID resultUuid) {
         SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(runContext.getProvider());
         String variantId = runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID;
 
@@ -134,7 +134,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Sens
 
         List<SensitivityFactor> factors = groupedFactors.stream().flatMap(Collection::stream).toList();
         SensitivityFactorReader sensitivityFactorReader = new SensitivityFactorModelReader(factors, runContext.getNetwork());
-        CompletableFuture<SensitivityAnalysisResult> future = sensitivityAnalysisRunner.runAsync(
+        CompletableFuture<Boolean> future = sensitivityAnalysisRunner.runAsync(
                         runContext.getNetwork(),
                         variantId,
                         sensitivityFactorReader,
@@ -150,13 +150,13 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Sens
                     }
                     writer.interrupt();
                     // used to check if result is not null
-                    return new SensitivityAnalysisResult(factors, Collections.emptyList(), Collections.emptyList());
+                    return true;
                 })
                 .exceptionally(e -> {
                     LOGGER.error("Error occurred during computation", e);
                     writer.interrupt();
                     // null means it failed
-                    return null;
+                    return false;
                 });
         if (resultUuid != null) {
             futures.put(resultUuid, future);
@@ -192,8 +192,8 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Sens
     }
 
     @Override
-    protected void saveResult(Network network, AbstractResultContext<SensitivityAnalysisRunContext> resultContext, SensitivityAnalysisResult result) {
-        SensitivityAnalysisStatus status = result != null ? SensitivityAnalysisStatus.COMPLETED : SensitivityAnalysisStatus.FAILED;
+    protected void saveResult(Network network, AbstractResultContext<SensitivityAnalysisRunContext> resultContext, Boolean isResultOk) {
+        SensitivityAnalysisStatus status = isResultOk ? SensitivityAnalysisStatus.COMPLETED : SensitivityAnalysisStatus.FAILED;
         resultService.insertStatus(List.of(resultContext.getResultUuid()), status);
     }
 

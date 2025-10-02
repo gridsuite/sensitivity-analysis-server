@@ -7,7 +7,6 @@
 
 package org.gridsuite.sensitivityanalysis.server.service;
 
-import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.NonNull;
@@ -19,7 +18,7 @@ import org.springframework.stereotype.Service;
  * @author Florent MILLOT <florent.millot at rte-france.com>
  */
 @Service
-public class SensitivityAnalysisObserver extends AbstractComputationObserver<SensitivityAnalysisResult, SensitivityAnalysisInputData> {
+public class SensitivityAnalysisObserver extends AbstractComputationObserver<Boolean, SensitivityAnalysisInputData> {
     private static final String COMPUTATION_TYPE = "sensitivityanalysis";
 
     public SensitivityAnalysisObserver(@NonNull ObservationRegistry observationRegistry,
@@ -33,7 +32,7 @@ public class SensitivityAnalysisObserver extends AbstractComputationObserver<Sen
     }
 
     @Override
-    protected String getResultStatus(SensitivityAnalysisResult res) {
-        return res != null ? "OK" : "NOK";
+    protected String getResultStatus(Boolean res) {
+        return res ? "OK" : "NOK";
     }
 }
