@@ -7,6 +7,7 @@
 
 package org.gridsuite.sensitivityanalysis.server.service;
 
+import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.NonNull;
@@ -14,11 +15,13 @@ import org.gridsuite.computation.service.AbstractComputationObserver;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.springframework.stereotype.Service;
 
+import static com.powsybl.sensitivity.SensitivityAnalysisResult.Status.FAILURE;
+
 /**
  * @author Florent MILLOT <florent.millot at rte-france.com>
  */
 @Service
-public class SensitivityAnalysisObserver extends AbstractComputationObserver<Void, SensitivityAnalysisInputData> {
+public class SensitivityAnalysisObserver extends AbstractComputationObserver<SensitivityAnalysisResult, SensitivityAnalysisInputData> {
     private static final String COMPUTATION_TYPE = "sensitivityanalysis";
 
     public SensitivityAnalysisObserver(@NonNull ObservationRegistry observationRegistry,
@@ -32,7 +35,7 @@ public class SensitivityAnalysisObserver extends AbstractComputationObserver<Voi
     }
 
     @Override
-    protected String getResultStatus(Void res) {
-        return "OK";
+    protected String getResultStatus(SensitivityAnalysisResult res) {
+        return res != null && res.getContingencyStatuses().stream().filter(value -> value.getStatus() == FAILURE).toList().isEmpty() ? "OK" : "NOK";
     }
 }
