@@ -144,20 +144,21 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Sens
                         sensitivityAnalysisParameters,
                         executionService.getComputationManager(),
                         runContext.getReportNode())
-                .exceptionally(e -> {
-                    LOGGER.error("Error occurred during computation", e);
-                    writer.interrupt();
-                    // null means it failed
-                    return null;
-                })
                 .thenApply(unused -> {
                     while (writer.isWorking()) {
                         // Nothing to do
                     }
                     writer.interrupt();
                     // used to check if result is not null
-                    return new SensitivityAnalysisResult(Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
-                });
+                    return new SensitivityAnalysisResult(factors, Collections.emptyList(), Collections.emptyList());
+                })
+                .exceptionally(e -> {
+                    LOGGER.error("Error occurred during computation", e);
+                    writer.interrupt();
+                    // null means it failed
+                    return null;
+                })
+                ;
 
         if (resultUuid != null) {
             futures.put(resultUuid, future);
