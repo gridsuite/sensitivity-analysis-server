@@ -146,6 +146,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Sens
                         runContext.getReportNode())
                 .exceptionally(e -> {
                     LOGGER.error("Error occurred during computation", e);
+                    writer.interrupt();
                     // null means it failed
                     return null;
                 })
