@@ -157,9 +157,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Sens
                     writer.interrupt();
                     // null means it failed
                     return null;
-                })
-                ;
-
+                });
         if (resultUuid != null) {
             futures.put(resultUuid, future);
         }
