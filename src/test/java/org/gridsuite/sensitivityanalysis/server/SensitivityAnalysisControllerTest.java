@@ -284,6 +284,8 @@ class SensitivityAnalysisControllerTest {
         assertEquals("FAILED", result.getResponse().getContentAsString());
         mockMvc.perform(delete("/" + VERSION + "/results").queryParam("resultsUuids", resultUuid.toString()))
                 .andExpect(status().isOk());
+        mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", resultUuid))
+                .andExpect(status().isNotFound());
     }
 
     @Test
