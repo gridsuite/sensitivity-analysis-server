@@ -193,7 +193,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
 
     @Override
     protected void saveResult(Network network, AbstractResultContext<SensitivityAnalysisRunContext> resultContext, Boolean isResultOk) {
-        SensitivityAnalysisStatus status = isResultOk ? SensitivityAnalysisStatus.COMPLETED : SensitivityAnalysisStatus.FAILED;
+        SensitivityAnalysisStatus status = isResultOk.equals(Boolean.TRUE) ? SensitivityAnalysisStatus.COMPLETED : SensitivityAnalysisStatus.FAILED;
         resultService.insertStatus(List.of(resultContext.getResultUuid()), status);
     }
 

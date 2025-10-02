@@ -33,6 +33,6 @@ public class SensitivityAnalysisObserver extends AbstractComputationObserver<Boo
 
     @Override
     protected String getResultStatus(Boolean res) {
-        return res ? "OK" : "NOK";
+        return res.equals(Boolean.TRUE) ? "OK" : "NOK";
     }
 }
