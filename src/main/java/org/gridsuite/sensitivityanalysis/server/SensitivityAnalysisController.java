@@ -23,16 +23,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyInputData;
-import org.gridsuite.sensitivityanalysis.server.dto.nonevacuatedenergy.NonEvacuatedEnergyStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisParametersService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisRunContext;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService;
-import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.NonEvacuatedEnergyRunContext;
-import org.gridsuite.sensitivityanalysis.server.service.nonevacuatedenergy.NonEvacuatedEnergyService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -59,17 +55,13 @@ public class SensitivityAnalysisController {
     private final SensitivityAnalysisWorkerService workerService;
     private final SensitivityAnalysisParametersService sensitivityAnalysisParametersService;
 
-    private final NonEvacuatedEnergyService nonEvacuatedEnergyService;
-
     private final ObjectMapper objectMapper;
 
     public SensitivityAnalysisController(SensitivityAnalysisService service, SensitivityAnalysisWorkerService workerService,
-                                         NonEvacuatedEnergyService nonEvacuatedEnergyService,
                                          SensitivityAnalysisParametersService sensitivityAnalysisParametersService,
                                          ObjectMapper objectMapper) {
         this.service = service;
         this.workerService = workerService;
-        this.nonEvacuatedEnergyService = nonEvacuatedEnergyService;
         this.sensitivityAnalysisParametersService = sensitivityAnalysisParametersService;
         this.objectMapper = objectMapper;
     }
@@ -263,86 +255,5 @@ public class SensitivityAnalysisController {
         } catch (JsonProcessingException e) {
             return ResponseEntity.badRequest().build();
         }
-    }
-
-    @PostMapping(value = "/networks/{networkUuid}/non-evacuated-energy/run-and-save", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Run a non evacuated energy sensitivity analysis on a network and save results in the database")
-    @ApiResponses(@ApiResponse(responseCode = "200", description = "The non evacuated energy sensitivity analysis default provider has been found"))
-    public ResponseEntity<UUID> runNonEvacuatedEnergy(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-                                           @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
-                                           @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver,
-                                           @Parameter(description = "Provider") @RequestParam(name = "provider", required = false) String provider,
-                                           @Parameter(description = "reportUuid") @RequestParam(name = "reportUuid", required = false) UUID reportUuid,
-                                           @Parameter(description = "reporterId") @RequestParam(name = "reporterId", required = false) String reporterId,
-                                           @Parameter(description = "The type name for the report") @RequestParam(name = "reportType", required = false, defaultValue = "NonEvacuatedEnergy") String reportType,
-                                           @Parameter(description = "loadFlow parameters uuid") @RequestParam(name = "loadFlowParametersUuid") UUID loadFlowParametersUuid,
-                                           @RequestBody NonEvacuatedEnergyInputData nonEvacuatedEnergyInputData,
-                                           @RequestHeader(HEADER_USER_ID) String userId) {
-
-        NonEvacuatedEnergyRunContext runContext = sensitivityAnalysisParametersService.createNonEvacuatedEnergyRunContext(
-                networkUuid,
-                variantId,
-                receiver,
-                new ReportInfos(reportUuid, reporterId, reportType),
-                userId,
-                provider,
-                loadFlowParametersUuid,
-                nonEvacuatedEnergyInputData
-        );
-
-        UUID resultUuid = nonEvacuatedEnergyService.runAndSaveResult(runContext);
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
-    }
-
-    @GetMapping(value = "/non-evacuated-energy/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get a non evacuated energy result from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The non evacuated energy result"),
-        @ApiResponse(responseCode = "404", description = "Non evacuated energy result has not been found")})
-    public ResponseEntity<String> getResult(@Parameter(description = "Result UUID")
-                                                @PathVariable("resultUuid") UUID resultUuid) {
-        String result = nonEvacuatedEnergyService.getRunResult(resultUuid);
-        return result != null ? ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result)
-            : ResponseEntity.notFound().build();
-    }
-
-    @DeleteMapping(value = "/non-evacuated-energy/results", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Delete non evacuated energy results from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All non evacuated energy results have been deleted")})
-    public ResponseEntity<Void> deleteNonEvacuatedEnergyResults(@Parameter(description = "Results UUID") @RequestParam(value = "resultsUuids", required = false) List<UUID> resultsUuids) {
-        nonEvacuatedEnergyService.deleteResults(resultsUuids);
-        return ResponseEntity.ok().build();
-    }
-
-    @GetMapping(value = "/non-evacuated-energy/results/{resultUuid}/status", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get the non evacuated energy status from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The non evacuated energy status status")})
-    public ResponseEntity<String> getNonEvacuatedEnergyStatus(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid) {
-        NonEvacuatedEnergyStatus result = nonEvacuatedEnergyService.getStatus(resultUuid);
-        return ResponseEntity.ok().body(result == null ? null : result.name());
-    }
-
-    @PutMapping(value = "/non-evacuated-energy/results/invalidate-status", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Invalidate the non evacuated energy status from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The non evacuated energy status has been invalidated")})
-    public ResponseEntity<Void> invalidateNonEvacuatedEnergyStatus(@Parameter(description = "Result uuids") @RequestParam(name = "resultUuid") List<UUID> resultUuids) {
-        nonEvacuatedEnergyService.setStatus(resultUuids, NonEvacuatedEnergyStatus.NOT_DONE);
-        return ResponseEntity.ok().build();
-    }
-
-    @PutMapping(value = "/non-evacuated-energy/results/{resultUuid}/stop", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Stop a non evacuated energy computation")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The non evacuated energy has been stopped")})
-    public ResponseEntity<Void> stopNonEvacuatedEnergy(@Parameter(description = "Result UUID") @PathVariable("resultUuid") UUID resultUuid,
-                                                       @Parameter(description = "Result receiver") @RequestParam(name = "receiver", required = false) String receiver,
-                                                       @RequestHeader(HEADER_USER_ID) String userId) {
-        nonEvacuatedEnergyService.stop(resultUuid, receiver, userId);
-        return ResponseEntity.ok().build();
-    }
-
-    @GetMapping(value = "/non-evacuated-energy-default-provider", produces = TEXT_PLAIN_VALUE)
-    @Operation(summary = "Get sensitivity analysis non evacuated energy default provider")
-    @ApiResponses(@ApiResponse(responseCode = "200", description = "The sensitivity analysis non evacuated energy default provider has been found"))
-    public ResponseEntity<String> getNonEvacuatedEnergyDefaultProvider() {
-        return ResponseEntity.ok().body(nonEvacuatedEnergyService.getDefaultProvider());
     }
 }
