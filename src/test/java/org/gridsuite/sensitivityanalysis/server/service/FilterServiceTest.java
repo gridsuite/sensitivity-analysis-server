@@ -42,10 +42,10 @@ import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.IOException;
 import java.util.*;
@@ -102,7 +102,7 @@ class FilterServiceTest {
     @Mock
     private VariantManager variantManager;
 
-    @MockBean
+    @MockitoBean
     private NetworkStoreService networkStoreService;
 
     @Autowired

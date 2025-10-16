@@ -15,10 +15,9 @@ import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelect
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -42,19 +41,17 @@ class SensitivityAnalysisServiceTest {
     @Autowired
     private SensitivityAnalysisService analysisService;
 
-    @MockBean
+    @MockitoBean
     private SensitivityAnalysisParametersService parametersService;
 
-    @MockBean
+    @MockitoBean
     private SensitivityAnalysisResultService sensitivityAnalysisResultService;
 
-    @MockBean(name = "notificationService")
+    @MockitoBean(name = "notificationService")
     private NotificationService notificationService;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-
         var parametersInfos = Mockito.mock(SensitivityAnalysisParametersInfos.class);
         given(parametersInfos.getProvider()).willReturn("open-loadflow");
         given(parametersService.getParameters(any())).willReturn(Optional.of(parametersInfos));
