@@ -23,7 +23,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.Collection;
 import java.util.List;
@@ -50,10 +50,10 @@ class SensitivityAnalysisInputDataTest {
     private static final String VARIANT_ID = VariantManagerConstants.INITIAL_VARIANT_ID;
     private static final Network NETWORK = new NetworkFactoryImpl().createNetwork("ghost network", "absent format");
 
-    @MockBean
+    @MockitoBean
     private ActionsService actionsService;
 
-    @MockBean
+    @MockitoBean
     private FilterService filterService;
 
     @Autowired
