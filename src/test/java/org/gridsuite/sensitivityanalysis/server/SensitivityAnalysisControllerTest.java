@@ -11,9 +11,11 @@ import com.google.gdata.util.common.base.Pair;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.contingency.TwoWindingsTransformerContingency;
 import com.powsybl.ieeecdf.converter.IeeeCdfNetworkFactory;
+import com.powsybl.iidm.network.Connectable;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.test.FourSubstationsNodeBreakerFactory;
 import com.powsybl.loadflow.LoadFlowParameters;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
@@ -40,13 +42,13 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.http.MediaType;
 import org.springframework.messaging.Message;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -58,9 +60,9 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.gridsuite.computation.service.NotificationService.HEADER_USER_ID;
 import static org.gridsuite.computation.service.NotificationService.getCancelFailedMessage;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService.COMPUTATION_TYPE;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.DEFAULT_PROVIDER;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
@@ -88,6 +90,7 @@ class SensitivityAnalysisControllerTest {
 
     private static final UUID NETWORK_UUID = UUID.randomUUID();
     private static final UUID NETWORK_ERROR_UUID = UUID.randomUUID();
+    private static final UUID NETWORK_FAILED_UUID = UUID.randomUUID();
     private UUID parametersUuid;
     private UUID parametersUuid2;
     private UUID parametersUuid3;
@@ -121,23 +124,26 @@ class SensitivityAnalysisControllerTest {
     @Autowired
     private ObjectMapper mapper;
 
-    @MockBean
+    @MockitoBean
     private NetworkStoreService networkStoreService;
 
-    @MockBean
+    @MockitoBean
     private ActionsService actionsService;
 
-    @MockBean
+    @MockitoBean
     private FilterService filterService;
 
-    @MockBean
+    @MockitoBean
     private LoadFlowService loadflowService;
 
     @BeforeEach
     void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
         Network network = IeeeCdfNetworkFactory.create14(new NetworkFactoryImpl());
+        Network failedNetwork = FourSubstationsNodeBreakerFactory.create(new NetworkFactoryImpl());
+        failedNetwork.getGeneratorStream().forEach(Connectable::disconnect);
         given(networkStoreService.getNetwork(NETWORK_UUID, PreloadingStrategy.COLLECTION)).willReturn(network);
+        given(networkStoreService.getNetwork(NETWORK_FAILED_UUID, PreloadingStrategy.COLLECTION)).willReturn(failedNetwork);
         given(networkStoreService.getNetwork(NETWORK_ERROR_UUID, PreloadingStrategy.COLLECTION)).willThrow(new RuntimeException(ERROR_MESSAGE));
 
         given(actionsService.getContingencyList(eq(List.of(CONTINGENCY1_CONTAINER_UUID, CONTINGENCY2_CONTAINER_UUID)), any(), any())).willReturn(new ContingencyListExportResult(List.of(CONTINGENCY1, CONTINGENCY2), List.of()));
@@ -265,6 +271,21 @@ class SensitivityAnalysisControllerTest {
         assertNull(nWithTypeFilterResult.getAllContingencyIds());
         assertEquals(0, nWithTypeFilterResult.getAllFunctionIds().size());
         assertEquals(0, nWithTypeFilterResult.getAllVariableIds().size());
+    }
+
+    @Test
+    void failedTest() throws Exception {
+        UUID resultUuid = run(NETWORK_FAILED_UUID, parametersUuid);
+        checkComputationSucceeded(resultUuid);
+        MvcResult result = mockMvc.perform(get(
+                        "/" + VERSION + "/results/{resultUuid}/status", resultUuid))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertEquals("FAILED", result.getResponse().getContentAsString());
+        mockMvc.perform(delete("/" + VERSION + "/results").queryParam("resultsUuids", resultUuid.toString()))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", resultUuid))
+                .andExpect(status().isNotFound());
     }
 
     @Test
