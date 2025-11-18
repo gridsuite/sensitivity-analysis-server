@@ -7,24 +7,36 @@
 
 package org.gridsuite.sensitivityanalysis.server;
 
+import com.powsybl.ws.commons.error.AbstractBaseRestExceptionHandler;
+import com.powsybl.ws.commons.error.ServerNameProvider;
+import lombok.NonNull;
+import org.gridsuite.computation.ComputationBusinessErrorCode;
+import org.gridsuite.computation.ComputationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
  */
 
 @ControllerAdvice
-public class RestResponseEntityExceptionHandler {
-    @ExceptionHandler(SensibilityAnalysisException.class)
-    protected ResponseEntity<Object> handleSensibilityAnalysisException(SensibilityAnalysisException exception) {
-        return switch (exception.getType()) {
-            case RESULT_NOT_FOUND -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
-            case FILE_EXPORT_ERROR -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exception.getMessage());
-            case INVALID_EXPORT_PARAMS -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
-            default -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+public class RestResponseEntityExceptionHandler extends AbstractBaseRestExceptionHandler<ComputationException, ComputationBusinessErrorCode> {
+
+    protected RestResponseEntityExceptionHandler(ServerNameProvider serverNameProvider) {
+        super(serverNameProvider);
+    }
+
+    @Override
+    protected @NonNull ComputationBusinessErrorCode getBusinessCode(ComputationException e) {
+        return e.getBusinessErrorCode();
+    }
+
+    @Override
+    protected HttpStatus mapStatus(ComputationBusinessErrorCode errorCode) {
+        return switch (errorCode) {
+            case RESULT_NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case INVALID_EXPORT_PARAMS -> HttpStatus.BAD_REQUEST;
+            default -> HttpStatus.INTERNAL_SERVER_ERROR;
         };
     }
 }

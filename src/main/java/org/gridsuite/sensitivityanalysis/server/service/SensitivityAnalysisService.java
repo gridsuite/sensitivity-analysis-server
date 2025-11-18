@@ -9,6 +9,7 @@ package org.gridsuite.sensitivityanalysis.server.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.sensitivity.SensitivityAnalysisProvider;
 import com.univocity.parsers.csv.CsvFormat;
+import org.gridsuite.computation.ComputationException;
 import org.gridsuite.computation.dto.GlobalFilter;
 import org.gridsuite.computation.dto.ResourceFilterDTO;
 import org.gridsuite.computation.service.AbstractComputationService;
@@ -16,7 +17,6 @@ import org.gridsuite.computation.service.NotificationService;
 import org.gridsuite.computation.service.UuidGeneratorService;
 import com.univocity.parsers.csv.CsvWriter;
 import com.univocity.parsers.csv.CsvWriterSettings;
-import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
@@ -33,7 +33,9 @@ import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException.Type.*;
+import static org.gridsuite.computation.ComputationBusinessErrorCode.FILE_EXPORT_ERROR;
+import static org.gridsuite.computation.ComputationBusinessErrorCode.INVALID_EXPORT_PARAMS;
+import static org.gridsuite.computation.ComputationBusinessErrorCode.RESULT_NOT_FOUND;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -149,11 +151,11 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
                 sensitivityAnalysisCsvFileInfos.getSensitivityFunctionType() == null ||
                 sensitivityAnalysisCsvFileInfos.getResultTab() == null ||
                 CollectionUtils.isEmpty(sensitivityAnalysisCsvFileInfos.getCsvHeaders())) {
-            throw new SensibilityAnalysisException(INVALID_EXPORT_PARAMS, "Missing information to export sensitivity result as csv : Sensitivity result tab, sensitivity function type and csv file headers must be provided");
+            throw new ComputationException(INVALID_EXPORT_PARAMS, "Missing information to export sensitivity result as csv : Sensitivity result tab, sensitivity function type and csv file headers must be provided");
         }
         SensitivityRunQueryResult result = getRunResult(resultUuid, networkUuid, variantId, selector, resourceFilters, globalFilter);
         if (result == null) {
-            throw new SensibilityAnalysisException(RESULT_NOT_FOUND, "The sensitivity analysis result '" + resultUuid + "' does not exist");
+            throw new ComputationException(RESULT_NOT_FOUND, "The sensitivity analysis result '" + resultUuid + "' does not exist");
         }
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -192,7 +194,7 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
             csvWriter.close();
             return outputStream.toByteArray();
         } catch (IOException e) {
-            throw new SensibilityAnalysisException(FILE_EXPORT_ERROR, e.getMessage());
+            throw new ComputationException(FILE_EXPORT_ERROR, e.getMessage());
         }
     }
 

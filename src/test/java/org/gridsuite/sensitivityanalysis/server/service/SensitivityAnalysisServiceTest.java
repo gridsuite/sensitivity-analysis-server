@@ -5,9 +5,9 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.powsybl.sensitivity.SensitivityFunctionType;
+import org.gridsuite.computation.ComputationException;
 import org.gridsuite.computation.dto.ReportInfos;
 import org.gridsuite.computation.service.NotificationService;
-import org.gridsuite.sensitivityanalysis.server.SensibilityAnalysisException;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
@@ -181,7 +181,7 @@ class SensitivityAnalysisServiceTest {
             .language("en")
             .build();
         final UUID resultUuid = UUID.randomUUID();
-        assertThrows(SensibilityAnalysisException.class, () -> analysisService.exportSensitivityResultsAsCsv(resultUuid, sensitivityAnalysisCsvFileInfos, null, null, null, null, null));
+        assertThrows(ComputationException.class, () -> analysisService.exportSensitivityResultsAsCsv(resultUuid, sensitivityAnalysisCsvFileInfos, null, null, null, null, null));
     }
 
     private static SensitivityRunQueryResult.SensitivityRunQueryResultBuilder getDefaultQueryBuilder() {
