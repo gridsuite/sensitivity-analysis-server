@@ -27,13 +27,13 @@ import org.springframework.util.CollectionUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static org.gridsuite.computation.ComputationBusinessErrorCode.FILE_EXPORT_ERROR;
 import static org.gridsuite.computation.ComputationBusinessErrorCode.INVALID_EXPORT_PARAMS;
 import static org.gridsuite.computation.ComputationBusinessErrorCode.RESULT_NOT_FOUND;
 
@@ -194,7 +194,7 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
             csvWriter.close();
             return outputStream.toByteArray();
         } catch (IOException e) {
-            throw new ComputationException(FILE_EXPORT_ERROR, e.getMessage());
+            throw new UncheckedIOException("Error occured during data csv export", e);
         }
     }
 
