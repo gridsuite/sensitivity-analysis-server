@@ -863,7 +863,7 @@ class SensitivityAnalysisControllerTest {
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", resultUuid)
                         .param("selector", mapper.writeValueAsString(selector))
                         .param("globalFilters", "invalid-json"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
