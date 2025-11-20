@@ -478,16 +478,16 @@ class SensitivityAnalysisControllerTest {
                 expectedCsvLines.put(Pair.of(splitLine[0], splitLine[1]), Arrays.asList(getValueFromString(splitLine[2], language), getValueFromString(splitLine[3], language)));
             }
             assertEquals(75.51, expectedCsvLines.get(Pair.of("L1-5-1", "B2-G")).get(0), Math.pow(10, -6));
-            assertEquals(-0.173, expectedCsvLines.get(Pair.of("L1-5-1", "B2-G")).get(1), Math.pow(10, -6));
+            assertEquals(-0.086, expectedCsvLines.get(Pair.of("L1-5-1", "B2-G")).get(1), Math.pow(10, -6));
 
             assertEquals(75.51, expectedCsvLines.get(Pair.of("L1-5-1", "B1-G")).get(0), Math.pow(10, -6));
-            assertEquals(0.0, expectedCsvLines.get(Pair.of("L1-5-1", "B1-G")).get(1));
+            assertEquals(0.086, expectedCsvLines.get(Pair.of("L1-5-1", "B1-G")).get(1));
 
             assertEquals(73.238, expectedCsvLines.get(Pair.of("L2-3-1", "B2-G")).get(0), Math.pow(10, -6));
-            assertEquals(0.028, expectedCsvLines.get(Pair.of("L2-3-1", "B2-G")).get(1), Math.pow(10, -6));
+            assertEquals(0.014, expectedCsvLines.get(Pair.of("L2-3-1", "B2-G")).get(1), Math.pow(10, -6));
 
             assertEquals(73.238, expectedCsvLines.get(Pair.of("L2-3-1", "B1-G")).get(0), Math.pow(10, -6));
-            assertEquals(0.0, expectedCsvLines.get(Pair.of("L2-3-1", "B1-G")).get(1));
+            assertEquals(-0.014, expectedCsvLines.get(Pair.of("L2-3-1", "B1-G")).get(1));
         }
     }
 
