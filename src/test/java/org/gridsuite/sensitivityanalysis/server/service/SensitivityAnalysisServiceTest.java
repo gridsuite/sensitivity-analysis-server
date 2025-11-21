@@ -5,7 +5,7 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.powsybl.sensitivity.SensitivityFunctionType;
-import org.gridsuite.computation.ComputationException;
+import org.gridsuite.computation.error.ComputationException;
 import org.gridsuite.computation.dto.ReportInfos;
 import org.gridsuite.computation.service.NotificationService;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
