@@ -13,10 +13,13 @@ import com.powsybl.commons.extensions.Extension;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.NetworkFactory;
 import com.powsybl.iidm.network.VariantManagerConstants;
+import com.powsybl.iidm.serde.NetworkSerDe;
 import com.powsybl.loadflow.LoadFlowParameters;
 import com.powsybl.loadflow.LoadFlowProvider;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.sensitivity.*;
 import org.gridsuite.computation.dto.ReportInfos;
 import org.gridsuite.computation.service.*;
@@ -37,6 +40,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -84,6 +88,11 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
     }
 
     @Override
+    protected PreloadingStrategy getNetworkPreloadingStrategy() {
+        return PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW;
+    }
+
+    @Override
     protected boolean resultCanBeSaved(Boolean isResultOk) {
         return true;
     }
@@ -122,7 +131,22 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
         String variantId = runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID;
 
         SensitivityAnalysisParameters sensitivityAnalysisParameters = buildParameters(runContext);
-        sensitivityAnalysisInputBuilderService.build(runContext, runContext.getNetwork(), runContext.getReportNode());
+        Network network = runContext.getNetwork();
+        // FIXME: Remove this part when multithread variant access is implemented in the network-store
+        if (runContext.getProvider().equals("OpenLoadFlow")) {
+            long startTime = System.nanoTime();
+            Network originalNetwork = runContext.getNetwork();
+            String originalVariant = originalNetwork.getVariantManager().getWorkingVariantId();
+            originalNetwork.getVariantManager().setWorkingVariant(variantId);
+
+            network = NetworkSerDe.copy(originalNetwork, NetworkFactory.find("Default"));
+            if (!variantId.equals(VariantManagerConstants.INITIAL_VARIANT_ID)) {
+                network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, variantId);
+            }
+            LOGGER.info("Network copied to iidm-impl in {} ms", TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime));
+            originalNetwork.getVariantManager().setWorkingVariant(originalVariant);
+        }
+        sensitivityAnalysisInputBuilderService.build(runContext, network, runContext.getReportNode());
 
         List<List<SensitivityFactor>> groupedFactors = runContext.getSensitivityAnalysisInputs().getFactors();
         List<Contingency> contingencies = new ArrayList<>(runContext.getSensitivityAnalysisInputs().getContingencies());
@@ -133,9 +157,9 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
         writer.start();
 
         List<SensitivityFactor> factors = groupedFactors.stream().flatMap(Collection::stream).toList();
-        SensitivityFactorReader sensitivityFactorReader = new SensitivityFactorModelReader(factors, runContext.getNetwork());
+        SensitivityFactorReader sensitivityFactorReader = new SensitivityFactorModelReader(factors, network);
         CompletableFuture<Boolean> future = sensitivityAnalysisRunner.runAsync(
-                        runContext.getNetwork(),
+                        network,
                         variantId,
                         sensitivityFactorReader,
                         writer,

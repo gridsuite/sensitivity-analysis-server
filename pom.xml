@@ -48,6 +48,7 @@
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:sensitivity-analysis-server</sonar.projectKey>
+        <open-loadflow.version>2.1.0-SNAPSHOT</open-loadflow.version>
     </properties>
 
     <build>
@@ -189,6 +190,7 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-open-loadflow</artifactId>
+            <version>${open-loadflow.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -209,6 +211,12 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- FIXME: Remove this runtime dependency when variant multithread access is implemented in the network-store -->
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-iidm-impl</artifactId>
             <scope>runtime</scope>
         </dependency>
 
