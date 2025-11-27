@@ -48,6 +48,9 @@
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:sensitivity-analysis-server</sonar.projectKey>
+        <!-- To remove after when using gridsuite dependencies release and computation version containing merged PR: https://github.com/gridsuite/computation/pull/19 -->
+        <gridsuite-computation.version>1.7.0-SNAPSHOT</gridsuite-computation.version>
+        <powsybl-ws-commons.version>1.34.0-SNAPSHOT</powsybl-ws-commons.version>
     </properties>
 
     <build>
@@ -145,6 +148,7 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-ws-commons</artifactId>
+            <version>${powsybl-ws-commons.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
@@ -173,6 +177,7 @@
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-computation</artifactId>
+            <version>${gridsuite-computation.version}</version>
         </dependency>
 
         <!-- Runtime dependencies -->
