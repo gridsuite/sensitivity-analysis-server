@@ -7,7 +7,6 @@
 package org.gridsuite.sensitivityanalysis.server;
 
 import com.powsybl.network.store.client.NetworkStoreService;
-import com.powsybl.ws.commons.error.BaseExceptionHandler;
 import org.gridsuite.computation.error.ComputationExceptionHandler;
 import org.gridsuite.computation.service.NotificationService;
 import org.springframework.boot.SpringApplication;
@@ -17,7 +16,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @SuppressWarnings("checkstyle:HideUtilityClassConstructor")
-@SpringBootApplication(scanBasePackageClasses = {SensitivityAnalysisApplication.class, NetworkStoreService.class, NotificationService.class, ComputationExceptionHandler.class, BaseExceptionHandler.class})
+@SpringBootApplication(scanBasePackageClasses = {SensitivityAnalysisApplication.class, NetworkStoreService.class, NotificationService.class, ComputationExceptionHandler.class})
 public class SensitivityAnalysisApplication {
     public static void main(String[] args) {
         SpringApplication.run(SensitivityAnalysisApplication.class, args);
