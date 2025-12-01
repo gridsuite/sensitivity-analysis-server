@@ -31,6 +31,7 @@ import java.util.*;
 @Service
 public class FilterService extends AbstractFilterService {
     private static final String QUERY_PARAM_VARIANT_ID = "variantId";
+    private static final String NETWORK_UUID = "networkUuid";
 
     public FilterService(
             NetworkStoreService networkStoreService,
