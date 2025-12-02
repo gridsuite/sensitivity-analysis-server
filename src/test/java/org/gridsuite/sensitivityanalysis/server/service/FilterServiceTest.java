@@ -39,9 +39,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -106,11 +108,14 @@ class FilterServiceTest {
     private NetworkStoreService networkStoreService;
 
     @Autowired
+    RestTemplateBuilder restTemplateBuilder;
+
+    @Autowired
     private FilterService filterService;
 
     @BeforeEach
     void setUp(final MockWebServer mockWebServer) throws Exception {
-        filterService = new FilterService(networkStoreService, initMockWebServer(mockWebServer));
+        filterService = new FilterService(restTemplateBuilder, networkStoreService, initMockWebServer(mockWebServer));
         when(networkStoreService.getNetwork(eq(NOT_FOUND_NETWORK_ID), any(PreloadingStrategy.class))).thenThrow(new PowsyblException());
         doNothing().when(variantManager).setWorkingVariant(anyString());
         when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), any(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
