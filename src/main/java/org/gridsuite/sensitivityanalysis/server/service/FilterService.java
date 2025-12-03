@@ -18,6 +18,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -33,10 +34,10 @@ public class FilterService extends AbstractFilterService {
     private static final String QUERY_PARAM_VARIANT_ID = "variantId";
     private static final String NETWORK_UUID = "networkUuid";
 
-    public FilterService(
-            NetworkStoreService networkStoreService,
-            @Value("${gridsuite.services.filter-server.base-uri:http://filter-server/}") String filterServerBaseUri) {
-        super(networkStoreService, filterServerBaseUri);
+    public FilterService(RestTemplateBuilder restTemplateBuilder,
+                         NetworkStoreService networkStoreService,
+                         @Value("${gridsuite.services.filter-server.base-uri:http://filter-server/}") String filterServerBaseUri) {
+        super(restTemplateBuilder, networkStoreService, filterServerBaseUri);
     }
 
     public Map<String, Long> getIdentifiablesCount(SensitivityFactorsIdsByGroup factorsIds, UUID networkUuid, String variantId) {

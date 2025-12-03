@@ -14,8 +14,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManager;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import org.gridsuite.computation.dto.GlobalFilter;
-import org.gridsuite.computation.dto.ResourceFilterDTO;
 import mockwebserver3.Dispatcher;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
@@ -23,6 +21,8 @@ import mockwebserver3.RecordedRequest;
 import mockwebserver3.junit5.internal.MockWebServerExtension;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
+import org.gridsuite.computation.dto.GlobalFilter;
+import org.gridsuite.computation.dto.ResourceFilterDTO;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.expertfilter.ExpertFilter;
 import org.gridsuite.filter.expertfilter.expertrule.AbstractExpertRule;
@@ -42,6 +42,7 @@ import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -52,8 +53,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
@@ -106,11 +111,14 @@ class FilterServiceTest {
     private NetworkStoreService networkStoreService;
 
     @Autowired
+    RestTemplateBuilder restTemplateBuilder;
+
+    @Autowired
     private FilterService filterService;
 
     @BeforeEach
     void setUp(final MockWebServer mockWebServer) throws Exception {
-        filterService = new FilterService(networkStoreService, initMockWebServer(mockWebServer));
+        filterService = new FilterService(restTemplateBuilder, networkStoreService, initMockWebServer(mockWebServer));
         when(networkStoreService.getNetwork(eq(NOT_FOUND_NETWORK_ID), any(PreloadingStrategy.class))).thenThrow(new PowsyblException());
         doNothing().when(variantManager).setWorkingVariant(anyString());
         when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), any(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
