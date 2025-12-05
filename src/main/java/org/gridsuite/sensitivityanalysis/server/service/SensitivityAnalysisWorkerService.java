@@ -11,6 +11,7 @@ import com.google.common.collect.Lists;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.extensions.Extension;
 import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
@@ -154,6 +155,12 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
                 })
                 .exceptionally(e -> {
                     LOGGER.error("Error occurred during computation", e);
+                    runContext.getReportNode()
+                            .newReportNode()
+                            .withMessageTemplate("sensitivity.analysis.server.sensitivityComputationFailed")
+                            .withUntypedValue("exception", e.getMessage())
+                            .withSeverity(TypedValue.ERROR_SEVERITY)
+                            .add();
                     writer.interrupt();
                     // null means it failed
                     return false;
