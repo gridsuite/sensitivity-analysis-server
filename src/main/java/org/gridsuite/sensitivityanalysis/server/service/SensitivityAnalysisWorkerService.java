@@ -22,6 +22,7 @@ import com.powsybl.sensitivity.*;
 import org.gridsuite.computation.dto.ReportInfos;
 import org.gridsuite.computation.service.*;
 import org.apache.commons.lang3.tuple.Pair;
+import org.gridsuite.sensitivityanalysis.server.PropertyServerNameProvider;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
@@ -76,8 +77,9 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
                                             SensitivityAnalysisParametersService parametersService,
                                             SensitivityAnalysisRunnerSupplier sensitivityAnalysisRunnerSupplier,
                                             SensitivityAnalysisObserver observer,
-                                            SensitivityAnalysisInMemoryObserver inMemoryObserver) {
-        super(networkStoreService, notificationService, reportService, resultService, executionService, observer, objectMapper);
+                                            SensitivityAnalysisInMemoryObserver inMemoryObserver,
+                                            PropertyServerNameProvider propertyServerNameProvider) {
+        super(networkStoreService, notificationService, reportService, resultService, executionService, observer, objectMapper, propertyServerNameProvider);
         this.sensitivityAnalysisInputBuilderService = sensitivityAnalysisInputBuilderService;
         this.parametersService = parametersService;
         this.sensitivityAnalysisFactorySupplier = sensitivityAnalysisRunnerSupplier::getRunner;
