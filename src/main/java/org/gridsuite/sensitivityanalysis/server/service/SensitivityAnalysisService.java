@@ -18,6 +18,7 @@ import org.gridsuite.computation.service.UuidGeneratorService;
 import com.univocity.parsers.csv.CsvWriter;
 import com.univocity.parsers.csv.CsvWriterSettings;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.FactorCount;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,15 +44,13 @@ import static org.gridsuite.computation.error.ComputationBusinessErrorCode.RESUL
 @Service
 public class SensitivityAnalysisService extends AbstractComputationService<SensitivityAnalysisRunContext, SensitivityAnalysisResultService, SensitivityAnalysisStatus> {
 
-    public static final String INJECTIONS = "injections";
-
-    public static final String CONTINGENCIES = "contingencies";
-
     public static final char CSV_DELIMITER_FR = ';';
     public static final char CSV_DELIMITER_EN = ',';
     public static final char CSV_QUOTE_ESCAPE = '"';
+    public static final int MAX_RESULTS_THRESHOLD = 500_000;
+    public static final int MAX_VARIABLES_THRESHOLD = 5_000;
 
-    private final ActionsService actionsService;
+    private final SensitivityAnalysisFactorCountService sensitivityAnalysisFactorCountService;
 
     private final FilterService filterService;
 
@@ -59,11 +58,11 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
                                       SensitivityAnalysisResultService resultService,
                                       UuidGeneratorService uuidGeneratorService,
                                       NotificationService notificationService,
-                                      ActionsService actionsService,
+                                      SensitivityAnalysisFactorCountService sensitivityAnalysisFactorCountService,
                                       FilterService filterService,
                                       ObjectMapper objectMapper) {
         super(notificationService, resultService, objectMapper, uuidGeneratorService, defaultProvider);
-        this.actionsService = actionsService;
+        this.sensitivityAnalysisFactorCountService = sensitivityAnalysisFactorCountService;
         this.filterService = filterService;
     }
 
@@ -71,6 +70,22 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
     public UUID runAndSaveResult(SensitivityAnalysisRunContext runContext) {
         Objects.requireNonNull(runContext);
         var resultUuid = uuidGeneratorService.generate();
+
+        FactorCount factorCount = sensitivityAnalysisFactorCountService.getFactorCount(
+                runContext.getNetworkUuid(),
+                runContext.getVariantId(),
+                runContext.getParameters().getSensitivityInjectionsSets(),
+                runContext.getParameters().getSensitivityInjections(),
+                runContext.getParameters().getSensitivityHVDCs(),
+                runContext.getParameters().getSensitivityPSTs(),
+                runContext.getParameters().getSensitivityNodes());
+        if (factorCount.resultCount() > MAX_RESULTS_THRESHOLD || factorCount.variableCount() > MAX_VARIABLES_THRESHOLD) {
+            //FIXME: use business error
+            throw new IllegalStateException(
+                    String.format("Too many factors to run sensitivity analysis: %d results (limit: %d) and %d variables (limit: %d)",
+                            factorCount.resultCount(), MAX_RESULTS_THRESHOLD, factorCount.variableCount(), MAX_VARIABLES_THRESHOLD)
+            );
+        }
 
         // update status to running status
         setStatus(List.of(resultUuid), SensitivityAnalysisStatus.RUNNING);
@@ -99,36 +114,6 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
         return SensitivityAnalysisProvider.findAll().stream()
                 .map(SensitivityAnalysisProvider::getName)
                 .toList();
-    }
-
-    public Long getFactorsCount(SensitivityFactorsIdsByGroup factorIds, UUID networkUuid, String variantId, Boolean isInjectionsSet) {
-        Long containersAttributesCount = 1L;
-        if (Boolean.TRUE.equals(isInjectionsSet)) {
-            containersAttributesCount *= factorIds.getIds().get(INJECTIONS).size();
-            factorIds.getIds().remove(INJECTIONS);
-        }
-        containersAttributesCount *= getFactorsCount(factorIds, networkUuid, variantId);
-        return containersAttributesCount;
-    }
-
-    private Long getFactorsCount(SensitivityFactorsIdsByGroup factorIds, UUID networkUuid, String variantId) {
-        Map<String, List<UUID>> ids = factorIds.getIds();
-        long contAttributesCountTemp = 1L;
-        if (ids.containsKey(CONTINGENCIES) && !ids.get(CONTINGENCIES).isEmpty()) {
-            int sumContingencyListSizes = actionsService.getContingencyCount(ids.get(CONTINGENCIES), networkUuid, variantId);
-            sumContingencyListSizes = Math.max(sumContingencyListSizes, 1);
-            contAttributesCountTemp *= sumContingencyListSizes;
-            ids.remove(CONTINGENCIES);
-        }
-        ids.entrySet().removeIf(entry -> Objects.isNull(entry.getValue()));
-        Map<String, Long> map = filterService.getIdentifiablesCount(factorIds, networkUuid, variantId);
-        for (Long count : map.values()) {
-            if (count != 0) {
-                contAttributesCountTemp *= count;
-            }
-        }
-
-        return contAttributesCountTemp;
     }
 
     private static void setFormat(CsvFormat format, String language) {

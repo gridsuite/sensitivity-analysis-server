@@ -20,7 +20,10 @@ import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -40,7 +43,7 @@ public class FilterService extends AbstractFilterService {
         super(restTemplateBuilder, networkStoreService, filterServerBaseUri);
     }
 
-    public Map<String, Long> getIdentifiablesCount(SensitivityFactorsIdsByGroup factorsIds, UUID networkUuid, String variantId) {
+    public Map<String, Long> getIdentifiablesCountByGroup(SensitivityFactorsIdsByGroup factorsIds, UUID networkUuid, String variantId) {
         var uriComponentsBuilder = UriComponentsBuilder
                 .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/identifiables-count")
                 .queryParam(NETWORK_UUID, networkUuid);
@@ -48,11 +51,13 @@ public class FilterService extends AbstractFilterService {
             uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);
         }
 
-        factorsIds.getIds().forEach((key, value) -> uriComponentsBuilder.queryParam(String.format("ids[%s]", key), value));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<SensitivityFactorsIdsByGroup> httpEntity = new HttpEntity<>(factorsIds, headers);
 
         var path = uriComponentsBuilder.build().toUriString();
 
-        return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.GET, null, new ParameterizedTypeReference<Map<String, Long>>() {
+        return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<Map<String, Long>>() {
         }).getBody();
     }
 
