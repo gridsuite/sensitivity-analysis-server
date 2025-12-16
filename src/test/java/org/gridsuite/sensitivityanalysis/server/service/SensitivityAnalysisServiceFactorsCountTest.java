@@ -233,7 +233,7 @@ class SensitivityAnalysisServiceFactorsCountTest {
         SensitivityAnalysisParametersInfos parameters = createParameters(
                 List.of(
                         createInjectionsSet(true, List.of(BRANCH1_UUID), List.of()),
-                        createInjectionsSet(false, List.of(BRANCH2_UUID), List.of()) // Not activated
+                        createInjectionsSet(false, List.of(BRANCH2_UUID), List.of())
                 ),
                 List.of(
                         createInjection(false, List.of(BRANCH1_UUID), List.of(GEN1_UUID), List.of())
