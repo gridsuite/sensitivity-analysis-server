@@ -36,7 +36,6 @@ public class ActionsService {
     private static final String NETWORK_UUID = "networkUuid";
     private static final String QUERY_PARAM_VARIANT_ID = "variantId";
     private static final String QUERY_PARAM_CONTINGENCY_LIST_IDS = "contingencyListIds";
-    private static final String CONTINGENCY_LIST_IDS = "ids";
 
     private final RestTemplate restTemplate;
 

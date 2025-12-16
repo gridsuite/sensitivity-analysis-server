@@ -58,6 +58,7 @@ public class SensitivityAnalysisFactorCountService {
         Objects.requireNonNull(hvdcs);
         Objects.requireNonNull(psts);
         Objects.requireNonNull(nodes);
+
         if (CollectionUtils.isEmpty(injectionsSets)
                 && CollectionUtils.isEmpty(injections)
                 && CollectionUtils.isEmpty(hvdcs)
