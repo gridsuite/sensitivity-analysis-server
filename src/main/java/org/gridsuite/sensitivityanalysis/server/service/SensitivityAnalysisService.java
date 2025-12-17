@@ -21,6 +21,8 @@ import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.FactorCount;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
+import org.gridsuite.sensitivityanalysis.server.error.SensitivityAnalysisBusinessErrorCode;
+import org.gridsuite.sensitivityanalysis.server.error.SensitivityAnalysisException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -80,11 +82,7 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
                 runContext.getParameters().getSensitivityPSTs(),
                 runContext.getParameters().getSensitivityNodes());
         if (factorCount.resultCount() > MAX_RESULTS_THRESHOLD || factorCount.variableCount() > MAX_VARIABLES_THRESHOLD) {
-            //FIXME: use business error
-            throw new IllegalStateException(
-                    String.format("Too many factors to run sensitivity analysis: %d results (limit: %d) and %d variables (limit: %d)",
-                            factorCount.resultCount(), MAX_RESULTS_THRESHOLD, factorCount.variableCount(), MAX_VARIABLES_THRESHOLD)
-            );
+            throw new SensitivityAnalysisException(SensitivityAnalysisBusinessErrorCode.TOO_MANY_FACTORS, "Too many factors to run sensitivity analysis", Map.of("resultCount", factorCount.resultCount(), "resultCountLimit", MAX_RESULTS_THRESHOLD, "variableCount", factorCount.variableCount(), "variableCountLimit", MAX_VARIABLES_THRESHOLD));
         }
 
         // update status to running status
