@@ -50,7 +50,7 @@ public class ActionsService {
 
     public Map<String, Long> getContingencyCountByGroup(SensitivityFactorsIdsByGroup contingencyListIdsByGroup, UUID networkUuid, String variantId) {
         var uriComponentsBuilder = UriComponentsBuilder
-                .fromPath(DELIMITER + ACTIONS_API_VERSION + "/contingency-lists/count/by-group")
+                .fromPath(DELIMITER + ACTIONS_API_VERSION + "/contingency-lists/count-by-group")
                 .queryParam(NETWORK_UUID, networkUuid);
         if (!StringUtils.isBlank(variantId)) {
             uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);

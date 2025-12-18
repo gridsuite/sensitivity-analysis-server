@@ -95,8 +95,8 @@ class ActionsServiceTest {
                 } else if (requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&variantId=%s&contingencyListIds=%s", NETWORK_UUID, VARIANT_ID, VERY_LARGE_LIST_UUID))
                            || requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&contingencyListIds=%s", NETWORK_UUID, VERY_LARGE_LIST_UUID))) {
                     return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE), veryLargeJsonExpected);
-                } else if (requestPath.equals(String.format("/v1/contingency-lists/count/by-group?networkUuid=%s&variantId=%s", NETWORK_UUID, VARIANT_ID))
-                        || requestPath.equals(String.format("/v1/contingency-lists/count/by-group?networkUuid=%s", NETWORK_UUID))) {
+                } else if (requestPath.equals(String.format("/v1/contingency-lists/count-by-group?networkUuid=%s&variantId=%s", NETWORK_UUID, VARIANT_ID))
+                        || requestPath.equals(String.format("/v1/contingency-lists/count-by-group?networkUuid=%s", NETWORK_UUID))) {
                     return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE), contingencyCountExpected);
                 } else {
                     return new MockResponse.Builder().code(HttpStatus.NOT_FOUND.value()).body("Path not supported: " + request.getPath()).build();
