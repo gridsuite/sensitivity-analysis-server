@@ -90,9 +90,33 @@ class SensitivityAnalysisServiceTest {
     }
 
     @Test
-    void testRunAndSaveThrowsIfTooManyFactors() {
+    void testRunAndSaveThrowsIfTooManyResults() {
         given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any()))
-                .willReturn(new FactorCount(10, SensitivityAnalysisService.MAX_RESULTS_THRESHOLD + 1L));
+                .willReturn(new FactorCount(10, SensitivityAnalysisService.MAX_RESULTS_THRESHOLD + 1));
+        SensitivityAnalysisRunContext sensitivityAnalysisRunContext = new SensitivityAnalysisRunContext(
+                UUID.randomUUID(),
+                "variantId",
+                "me",
+                Mockito.mock(ReportInfos.class),
+                "userId",
+                DEFAULT_PROVIDER,
+                Mockito.mock(SensitivityAnalysisInputData.class)
+        );
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                analysisService.runAndSaveResult(sensitivityAnalysisRunContext)
+        );
+
+        assertThat(exception.getMessage()).contains("Too many factors to run sensitivity analysis");
+
+        verify(sensitivityAnalysisResultService, times(0)).insertStatus(any(), eq(SensitivityAnalysisStatus.RUNNING));
+        verify(notificationService, times(0)).sendRunMessage(any());
+    }
+
+    @Test
+    void testRunAndSaveThrowsIfTooManyVariables() {
+        given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any()))
+                .willReturn(new FactorCount(SensitivityAnalysisService.MAX_VARIABLES_THRESHOLD + 1, 100));
         SensitivityAnalysisRunContext sensitivityAnalysisRunContext = new SensitivityAnalysisRunContext(
                 UUID.randomUUID(),
                 "variantId",

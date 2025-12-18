@@ -338,7 +338,7 @@ class SensitivityAnalysisServiceFactorsCountTest {
         );
 
         assertEquals(8L, result.variableCount());
-        assertEquals(36L, result.resultCount());
+        assertEquals(36L, result.resultCount(), "(injections set: 2 mon. × (1 base + 1 cont.)) + (injections: 1 mon. × 2 var. × (1 base + 2 cont.)) + (hvdc: 1 mon. × 1 var. × 1 base) + (pst: 1 mon. × 1 var. × 1 base) + (nodes: 2 mon. × 3 var. × 2 emp. fact. × (1 base + 1 cont.)) = 36");
     }
 
     @Test
