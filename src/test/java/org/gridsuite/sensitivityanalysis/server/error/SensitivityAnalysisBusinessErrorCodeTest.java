@@ -12,7 +12,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 /**
- * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
+ * @author Antoine Bouhours <antoine.bouhours at rte-france.com>
  */
 
 class SensitivityAnalysisBusinessErrorCodeTest {
