@@ -11,10 +11,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 /**
  * @author Antoine Bouhours <antoine.bouhours at rte-france.com>
  */
-
 class SensitivityAnalysisBusinessErrorCodeTest {
     @ParameterizedTest
     @EnumSource(SensitivityAnalysisBusinessErrorCode.class)
