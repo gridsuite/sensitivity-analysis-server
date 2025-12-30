@@ -13,6 +13,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.parameters.FactorCount;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
+import org.gridsuite.sensitivityanalysis.server.error.SensitivityAnalysisException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -103,7 +104,7 @@ class SensitivityAnalysisServiceTest {
                 Mockito.mock(SensitivityAnalysisInputData.class)
         );
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+        SensitivityAnalysisException exception = assertThrows(SensitivityAnalysisException.class, () ->
                 analysisService.runAndSaveResult(sensitivityAnalysisRunContext)
         );
 
@@ -127,7 +128,7 @@ class SensitivityAnalysisServiceTest {
                 Mockito.mock(SensitivityAnalysisInputData.class)
         );
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+        SensitivityAnalysisException exception = assertThrows(SensitivityAnalysisException.class, () ->
                 analysisService.runAndSaveResult(sensitivityAnalysisRunContext)
         );
 
