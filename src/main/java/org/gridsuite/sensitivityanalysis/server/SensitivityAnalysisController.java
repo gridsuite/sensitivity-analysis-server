@@ -23,12 +23,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.FactorCount;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
-import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisParametersService;
-import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisRunContext;
-import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisService;
-import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService;
+import org.gridsuite.sensitivityanalysis.server.service.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -54,16 +53,18 @@ public class SensitivityAnalysisController {
 
     private final SensitivityAnalysisWorkerService workerService;
     private final SensitivityAnalysisParametersService sensitivityAnalysisParametersService;
+    private final SensitivityAnalysisFactorCountService sensitivityAnalysisFactorCountService;
 
     private final ObjectMapper objectMapper;
 
     public SensitivityAnalysisController(SensitivityAnalysisService service, SensitivityAnalysisWorkerService workerService,
                                          SensitivityAnalysisParametersService sensitivityAnalysisParametersService,
-                                         ObjectMapper objectMapper) {
+                                         ObjectMapper objectMapper, SensitivityAnalysisFactorCountService sensitivityAnalysisFactorCountService) {
         this.service = service;
         this.workerService = workerService;
         this.sensitivityAnalysisParametersService = sensitivityAnalysisParametersService;
         this.objectMapper = objectMapper;
+        this.sensitivityAnalysisFactorCountService = sensitivityAnalysisFactorCountService;
     }
 
     private ResultsSelector getSelector(String selectorJson) throws JsonProcessingException {
@@ -121,15 +122,22 @@ public class SensitivityAnalysisController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
     }
 
-    @GetMapping(value = "/networks/{networkUuid}/factors-count", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get factors count")
+    @PostMapping(value = "/networks/{networkUuid}/factor-count", produces = APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get factor count")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis factors count"),
         @ApiResponse(responseCode = "404", description = "Filters or contingencies has not been found")})
-    public ResponseEntity<Long> getFactorsCount(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-                                                @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
-                                                @Parameter(description = "Is Injections Set") @RequestParam(name = "isInjectionsSet", required = false) Boolean isInjectionsSet,
-                                                SensitivityFactorsIdsByGroup factorsIds) {
-        return ResponseEntity.ok().body(service.getFactorsCount(factorsIds, networkUuid, variantId, isInjectionsSet));
+    public ResponseEntity<FactorCount> getFactorCount(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                      @Parameter(description = "Variant Id") @RequestParam(name = "variantId", required = false) String variantId,
+                                                      @RequestBody SensitivityAnalysisParametersInfos parametersInfos) {
+        FactorCount factorCount = sensitivityAnalysisFactorCountService.getFactorCount(
+                networkUuid,
+                variantId,
+                parametersInfos.getSensitivityInjectionsSet(),
+                parametersInfos.getSensitivityInjection(),
+                parametersInfos.getSensitivityHVDC(),
+                parametersInfos.getSensitivityPST(),
+                parametersInfos.getSensitivityNodes());
+        return ResponseEntity.ok().body(factorCount);
     }
 
     @GetMapping(value = "/results/{resultUuid}", produces = APPLICATION_JSON_VALUE)

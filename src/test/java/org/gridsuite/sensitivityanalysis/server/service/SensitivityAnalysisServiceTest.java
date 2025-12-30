@@ -9,6 +9,7 @@ import org.gridsuite.computation.error.ComputationException;
 import org.gridsuite.computation.dto.ReportInfos;
 import org.gridsuite.computation.service.NotificationService;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.FactorCount;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
@@ -45,6 +46,9 @@ class SensitivityAnalysisServiceTest {
     private SensitivityAnalysisParametersService parametersService;
 
     @MockitoBean
+    private SensitivityAnalysisFactorCountService sensitivityAnalysisFactorCountService;
+
+    @MockitoBean
     private SensitivityAnalysisResultService sensitivityAnalysisResultService;
 
     @MockitoBean(name = "notificationService")
@@ -58,6 +62,9 @@ class SensitivityAnalysisServiceTest {
 
         var inputData = Mockito.mock(SensitivityAnalysisInputData.class);
         given(parametersService.buildInputData(any(), any())).willReturn(inputData);
+
+        FactorCount mockedFactorCount = new FactorCount(10, 1000);
+        given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any())).willReturn(mockedFactorCount);
     }
 
     @Test
@@ -80,6 +87,54 @@ class SensitivityAnalysisServiceTest {
 
         verify(sensitivityAnalysisResultService, times(1)).insertStatus(any(), eq(SensitivityAnalysisStatus.RUNNING));
         verify(notificationService, times(1)).sendRunMessage(any());
+    }
+
+    @Test
+    void testRunAndSaveThrowsIfTooManyResults() {
+        given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any()))
+                .willReturn(new FactorCount(10, SensitivityAnalysisService.MAX_RESULTS_THRESHOLD + 1));
+        SensitivityAnalysisRunContext sensitivityAnalysisRunContext = new SensitivityAnalysisRunContext(
+                UUID.randomUUID(),
+                "variantId",
+                "me",
+                Mockito.mock(ReportInfos.class),
+                "userId",
+                DEFAULT_PROVIDER,
+                Mockito.mock(SensitivityAnalysisInputData.class)
+        );
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                analysisService.runAndSaveResult(sensitivityAnalysisRunContext)
+        );
+
+        assertThat(exception.getMessage()).contains("Too many factors to run sensitivity analysis");
+
+        verify(sensitivityAnalysisResultService, times(0)).insertStatus(any(), eq(SensitivityAnalysisStatus.RUNNING));
+        verify(notificationService, times(0)).sendRunMessage(any());
+    }
+
+    @Test
+    void testRunAndSaveThrowsIfTooManyVariables() {
+        given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any()))
+                .willReturn(new FactorCount(SensitivityAnalysisService.MAX_VARIABLES_THRESHOLD + 1, 100));
+        SensitivityAnalysisRunContext sensitivityAnalysisRunContext = new SensitivityAnalysisRunContext(
+                UUID.randomUUID(),
+                "variantId",
+                "me",
+                Mockito.mock(ReportInfos.class),
+                "userId",
+                DEFAULT_PROVIDER,
+                Mockito.mock(SensitivityAnalysisInputData.class)
+        );
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                analysisService.runAndSaveResult(sensitivityAnalysisRunContext)
+        );
+
+        assertThat(exception.getMessage()).contains("Too many factors to run sensitivity analysis");
+
+        verify(sensitivityAnalysisResultService, times(0)).insertStatus(any(), eq(SensitivityAnalysisStatus.RUNNING));
+        verify(notificationService, times(0)).sendRunMessage(any());
     }
 
     @Test

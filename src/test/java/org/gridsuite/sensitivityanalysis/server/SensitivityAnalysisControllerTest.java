@@ -26,6 +26,7 @@ import lombok.SneakyThrows;
 import org.gridsuite.computation.dto.GlobalFilter;
 import org.gridsuite.computation.dto.ResourceFilterDTO;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
+import org.gridsuite.sensitivityanalysis.server.dto.parameters.FactorCount;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
@@ -35,6 +36,7 @@ import org.gridsuite.sensitivityanalysis.server.repositories.TestRepository;
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
+import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisFactorCountService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -82,9 +84,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ContextHierarchy({@ContextConfiguration(classes = {SensitivityAnalysisApplication.class, TestChannelBinderConfiguration.class})})
 class SensitivityAnalysisControllerTest {
-    private static final String MONITORED_BRANCHES_KEY = "monitoredBranchs";
-    private static final String INJECTIONS_KEY = "injections";
-    private static final String CONTINGENCIES_KEY = "contingencies";
     private static final int TIMEOUT = 1000;
     private static final String ERROR_MESSAGE = "Error message test";
 
@@ -134,6 +133,9 @@ class SensitivityAnalysisControllerTest {
     private FilterService filterService;
 
     @MockitoBean
+    private SensitivityAnalysisFactorCountService sensitivityAnalysisFactorCountService;
+
+    @MockitoBean
     private LoadFlowService loadflowService;
 
     @BeforeEach
@@ -147,10 +149,12 @@ class SensitivityAnalysisControllerTest {
         given(networkStoreService.getNetwork(NETWORK_ERROR_UUID, PreloadingStrategy.COLLECTION)).willThrow(new RuntimeException(ERROR_MESSAGE));
 
         given(actionsService.getContingencyList(eq(List.of(CONTINGENCY1_CONTAINER_UUID, CONTINGENCY2_CONTAINER_UUID)), any(), any())).willReturn(new ContingencyListExportResult(List.of(CONTINGENCY1, CONTINGENCY2), List.of()));
-        given(actionsService.getContingencyCount(eq(List.of(CONTINGENCY1_CONTAINER_UUID, CONTINGENCY2_CONTAINER_UUID)), any(), any())).willReturn(2);
         given(filterService.getIdentifiablesFromFilters(eq(List.of(GEN1_CONTAINER_UUID, GEN2_CONTAINER_UUID)), any(), any())).willReturn(List.of(GEN1, GEN2));
         given(filterService.getIdentifiablesFromFilters(eq(List.of(BRANCH1_CONTAINER_UUID, BRANCH2_CONTAINER_UUID)), any(), any())).willReturn(List.of(BRANCH1, BRANCH2));
         given(filterService.getIdentifiablesFromFilters(eq(List.of(GEN1_CONTAINER_UUID, GEN2_CONTAINER_UUID)), any(), any())).willReturn(List.of(GEN1, GEN2));
+
+        FactorCount mockedFactorCount = new FactorCount(10, 1000);
+        given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any())).willReturn(mockedFactorCount);
 
         LoadFlowParametersValues loadFlowParametersValues = LoadFlowParametersValues.builder()
                 .commonParameters(LoadFlowParameters.load())
@@ -539,32 +543,21 @@ class SensitivityAnalysisControllerTest {
     }
 
     @Test
-    void testGetFactorsCount() throws Exception {
-        // Need an extra mock for this case
-        SensitivityFactorsIdsByGroup factorsIdsByGroupWithoutContingencies = SensitivityFactorsIdsByGroup.builder()
-                .ids(Map.of(
-                        MONITORED_BRANCHES_KEY, List.of(BRANCH1_CONTAINER_UUID, BRANCH2_CONTAINER_UUID),
-                        INJECTIONS_KEY, List.of(GEN1_CONTAINER_UUID, GEN2_CONTAINER_UUID))
-                )
-                .build();
-        given(filterService.getIdentifiablesCount(eq(factorsIdsByGroupWithoutContingencies), any(), any())).willReturn(Map.of(MONITORED_BRANCHES_KEY, (long) 2, INJECTIONS_KEY, (long) 2));
+    void testGetFactorCount() throws Exception {
+        SensitivityAnalysisParametersInfos mockParametersInfos = SensitivityAnalysisParametersInfos.builder().build();
 
-        MockHttpServletRequestBuilder requestBuilder = get("/" + VERSION + "/networks/{networkUuid}/factors-count", NETWORK_UUID);
-
-        SensitivityFactorsIdsByGroup factorsIdsByGroup = SensitivityFactorsIdsByGroup.builder()
-                .ids(Map.of(
-                        MONITORED_BRANCHES_KEY, List.of(BRANCH1_CONTAINER_UUID, BRANCH2_CONTAINER_UUID),
-                        INJECTIONS_KEY, List.of(GEN1_CONTAINER_UUID, GEN2_CONTAINER_UUID),
-                        CONTINGENCIES_KEY, List.of(CONTINGENCY1_CONTAINER_UUID, CONTINGENCY2_CONTAINER_UUID))
-                )
-                .build();
-
-        factorsIdsByGroup.getIds().forEach((key, list) -> requestBuilder.param(String.format("ids[%s]", key), list.stream().map(UUID::toString).toArray(String[]::new)));
-        MvcResult result = mockMvc.perform(requestBuilder)
+        MvcResult result = mockMvc.perform(post("/" + VERSION + "/networks/{networkUuid}/factor-count", NETWORK_UUID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(mockParametersInfos)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
-        assertEquals("8", result.getResponse().getContentAsString());
+
+        FactorCount factorCount =
+                mapper.readValue(result.getResponse().getContentAsString(), FactorCount.class);
+
+        assertEquals(10L, factorCount.variableCount());
+        assertEquals(1000L, factorCount.resultCount());
     }
 
     @Test

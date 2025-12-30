@@ -8,14 +8,19 @@ package org.gridsuite.sensitivityanalysis.server.service;
 
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.sensitivityanalysis.server.dto.ContingencyListExportResult;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -31,7 +36,6 @@ public class ActionsService {
     private static final String NETWORK_UUID = "networkUuid";
     private static final String QUERY_PARAM_VARIANT_ID = "variantId";
     private static final String QUERY_PARAM_CONTINGENCY_LIST_IDS = "contingencyListIds";
-    private static final String CONTINGENCY_LIST_IDS = "ids";
 
     private final RestTemplate restTemplate;
 
@@ -44,16 +48,20 @@ public class ActionsService {
         this.actionsServerBaseUri = actionsServerBaseUri;
     }
 
-    public Integer getContingencyCount(List<UUID> uuids, UUID networkUuid, String variantId) {
+    public Map<String, Long> getContingencyCountByGroup(SensitivityFactorsIdsByGroup contingencyListIdsByGroup, UUID networkUuid, String variantId) {
         var uriComponentsBuilder = UriComponentsBuilder
-                .fromPath(DELIMITER + ACTIONS_API_VERSION + "/contingency-lists/count")
-                .queryParam(CONTINGENCY_LIST_IDS, uuids)
+                .fromPath(DELIMITER + ACTIONS_API_VERSION + "/contingency-lists/count-by-group")
                 .queryParam(NETWORK_UUID, networkUuid);
         if (!StringUtils.isBlank(variantId)) {
             uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);
         }
         var path = uriComponentsBuilder.toUriString();
-        return restTemplate.exchange(actionsServerBaseUri + path, HttpMethod.GET, null, Integer.class).getBody();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<SensitivityFactorsIdsByGroup> httpEntity = new HttpEntity<>(contingencyListIdsByGroup, headers);
+
+        return restTemplate.exchange(actionsServerBaseUri + path, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<Map<String, Long>>() { }).getBody();
     }
 
     public ContingencyListExportResult getContingencyList(List<UUID> contingencyListIds, UUID networkUuid, String variantId) {

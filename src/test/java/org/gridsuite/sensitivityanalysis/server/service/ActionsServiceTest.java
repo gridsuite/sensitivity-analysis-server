@@ -18,6 +18,7 @@ import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import org.gridsuite.sensitivityanalysis.server.configuration.RestTemplateConfig;
 import org.gridsuite.sensitivityanalysis.server.dto.ContingencyListExportResult;
+import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,7 @@ import org.springframework.http.MediaType;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -52,7 +54,11 @@ class ActionsServiceTest {
 
     private static final UUID LIST_UUID = UUID.randomUUID();
     private static final UUID LIST2_UUID = UUID.randomUUID();
-    private static final String CONTINGENCY_COUNT = "7";
+    private static final String CONTINGENCY_ID_1 = "contingency-1";
+    private static final String CONTINGENCY_ID_2 = "contingency-2";
+    private static final Long CONTINGENCY_COUNT_1 = 7L;
+    private static final Long CONTINGENCY_COUNT_2 = 3L;
+    public static final Map<String, Long> EXPECTED_CONTINGENCY_COUNTS = Map.of(CONTINGENCY_ID_1, CONTINGENCY_COUNT_1, CONTINGENCY_ID_2, CONTINGENCY_COUNT_2);
 
     private static final UUID VERY_LARGE_LIST_UUID = UUID.randomUUID();
 
@@ -75,6 +81,7 @@ class ActionsServiceTest {
         String jsonExpected = objectMapper.writeValueAsString(new ContingencyListExportResult(List.of(CONTINGENCY), null));
         String veryLargeJsonExpected = objectMapper.writeValueAsString(new ContingencyListExportResult(createVeryLargeList(), null));
         String jsonVariantExpected = objectMapper.writeValueAsString(new ContingencyListExportResult(List.of(CONTINGENCY_VARIANT), null));
+        String contingencyCountExpected = objectMapper.writeValueAsString(EXPECTED_CONTINGENCY_COUNTS);
 
         final Dispatcher dispatcher = new Dispatcher() {
             @NotNull
@@ -88,9 +95,9 @@ class ActionsServiceTest {
                 } else if (requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&variantId=%s&contingencyListIds=%s", NETWORK_UUID, VARIANT_ID, VERY_LARGE_LIST_UUID))
                            || requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&contingencyListIds=%s", NETWORK_UUID, VERY_LARGE_LIST_UUID))) {
                     return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE), veryLargeJsonExpected);
-                } else if (requestPath.equals(String.format("/v1/contingency-lists/count?ids=%s&ids=%s&networkUuid=%s&variantId=%s", LIST_UUID, LIST2_UUID, NETWORK_UUID, VARIANT_ID))
-                        || requestPath.equals(String.format("/v1/contingency-lists/count?ids=%s&ids=%s&networkUuid=%s", LIST_UUID, LIST2_UUID, NETWORK_UUID))) {
-                    return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE), CONTINGENCY_COUNT);
+                } else if (requestPath.equals(String.format("/v1/contingency-lists/count-by-group?networkUuid=%s&variantId=%s", NETWORK_UUID, VARIANT_ID))
+                        || requestPath.equals(String.format("/v1/contingency-lists/count-by-group?networkUuid=%s", NETWORK_UUID))) {
+                    return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE), contingencyCountExpected);
                 } else {
                     return new MockResponse.Builder().code(HttpStatus.NOT_FOUND.value()).body("Path not supported: " + request.getPath()).build();
                 }
@@ -125,10 +132,18 @@ class ActionsServiceTest {
     }
 
     @Test
-    void testGetContingencyCount() {
-        Integer count = actionsService.getContingencyCount(List.of(LIST_UUID, LIST2_UUID), UUID.fromString(NETWORK_UUID), null);
-        assertEquals(CONTINGENCY_COUNT, count.toString());
-        count = actionsService.getContingencyCount(List.of(LIST_UUID, LIST2_UUID), UUID.fromString(NETWORK_UUID), VARIANT_ID);
-        assertEquals(CONTINGENCY_COUNT, count.toString());
+    void testGetContingencyCountByGroup() {
+        Map<String, List<UUID>> contingencyIds = Map.of(CONTINGENCY_ID_1, List.of(LIST_UUID, LIST2_UUID), CONTINGENCY_ID_2, List.of(LIST_UUID));
+        Map<String, Long> count = actionsService.getContingencyCountByGroup(
+                SensitivityFactorsIdsByGroup.builder().ids(contingencyIds).build(),
+                UUID.fromString(NETWORK_UUID),
+                null);
+        assertEquals(EXPECTED_CONTINGENCY_COUNTS, count);
+
+        count = actionsService.getContingencyCountByGroup(
+                SensitivityFactorsIdsByGroup.builder().ids(contingencyIds).build(),
+                UUID.fromString(NETWORK_UUID),
+                VARIANT_ID);
+        assertEquals(EXPECTED_CONTINGENCY_COUNTS, count);
     }
 }
