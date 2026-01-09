@@ -709,7 +709,7 @@ class SensitivityAnalysisControllerTest {
         );
 
         GlobalFilter globalFilterWithFilters = GlobalFilter.builder()
-                .nominalV(List.of("400", "225"))
+                .voltageRanges(List.of(List.of(200, 250), List.of(350, 450)))
                 .countryCode(List.of(Country.FR, Country.DE))
                 .genericFilter(List.of(GENERIC_FILTER_UUID_1, GENERIC_FILTER_UUID_2))
                 .substationProperty(Map.of("region", List.of("north", "south")))
@@ -752,7 +752,7 @@ class SensitivityAnalysisControllerTest {
         checkComputationSucceeded(resultUuid);
 
         GlobalFilter globalFilter = GlobalFilter.builder()
-                .nominalV(List.of("400", "225"))
+                .voltageRanges(List.of(List.of(200, 250), List.of(350, 450)))
                 .countryCode(List.of(Country.FR, Country.DE))
                 .genericFilter(List.of(GENERIC_FILTER_UUID_1, GENERIC_FILTER_UUID_2))
                 .substationProperty(Map.of("region", List.of("north", "south")))
@@ -793,7 +793,7 @@ class SensitivityAnalysisControllerTest {
         );
 
         GlobalFilter globalFilter = GlobalFilter.builder()
-                .nominalV(List.of("400"))
+                .voltageRanges(List.of(List.of(350, 450)))
                 .countryCode(List.of(Country.FR))
                 .build();
 
@@ -865,7 +865,7 @@ class SensitivityAnalysisControllerTest {
         checkComputationSucceeded(resultUuid);
 
         GlobalFilter globalFilter = GlobalFilter.builder()
-                .nominalV(List.of("400", "225", "90"))
+                .voltageRanges(List.of(List.of(80, 100), List.of(200, 250), List.of(350, 450)))
                 .build();
 
         ResultsSelector selector = ResultsSelector.builder()
@@ -991,7 +991,7 @@ class SensitivityAnalysisControllerTest {
         );
 
         GlobalFilter complexGlobalFilter = GlobalFilter.builder()
-                .nominalV(List.of("400", "225", "90", "63"))
+                .voltageRanges(List.of(List.of(50, 80), List.of(80, 100), List.of(200, 250), List.of(350, 450)))
                 .countryCode(List.of(Country.FR, Country.DE, Country.BE, Country.CH))
                 .genericFilter(List.of(GENERIC_FILTER_UUID_1, GENERIC_FILTER_UUID_2))
                 .substationProperty(complexSubstationProperties)
@@ -1028,7 +1028,7 @@ class SensitivityAnalysisControllerTest {
         checkComputationSucceeded(resultUuid);
 
         GlobalFilter globalFilter = GlobalFilter.builder()
-                .nominalV(List.of("400"))
+                .voltageRanges(List.of(List.of(350, 450)))
                 .countryCode(List.of(Country.FR))
                 .build();
 

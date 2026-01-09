@@ -233,7 +233,7 @@ class FilterServiceTest {
         // Test case with all types of filters
         GlobalFilter globalFilter = GlobalFilter.builder()
                 .genericFilter(List.of(LIST_UUID))
-                .nominalV(List.of("220.0", "400.0"))
+                .voltageRanges(List.of(List.of(200, 250), List.of(350, 450)))
                 .countryCode(List.of(Country.FR, Country.DE))
                 .substationProperty(Map.of("prop1", List.of("value1", "value2")))
                 .build();
@@ -280,7 +280,7 @@ class FilterServiceTest {
         // Test case with generic filters
         GlobalFilter globalFilter = GlobalFilter.builder()
                 .genericFilter(List.of(LIST_UUID))
-                .nominalV(List.of("220.0"))
+                .voltageRanges(List.of(List.of(200, 250)))
                 .countryCode(List.of(Country.FR))
                 .build();
 
