@@ -147,8 +147,9 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
                         sensitivityAnalysisParameters,
                         executionService.getComputationManager(),
                         runContext.getReportNode())
+                .whenComplete((unused1, unused2) -> writer.setQueueProducerFinished())
                 .thenApply(unused -> {
-                    while (writer.isWorking()) {
+                    while (!writer.isConsumerFinished()) {
                         // Nothing to do
                     }
                     writer.interrupt();
