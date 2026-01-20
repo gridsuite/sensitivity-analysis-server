@@ -69,10 +69,13 @@ class SensitivityResultWriterPersistedTest {
     }
 
     @Test
-    void testNotOperatingIfNotStarted() {
+    void testNotOperatingIfNotStarted() throws InterruptedException {
         verify(analysisResultService, times(0)).writeSensitivityValues(any(), anyList());
         resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.);
-        assertTrue(resultWriterPersisted.isWorking());
+        assertFalse(resultWriterPersisted.isConsumerFinished());
+        resultWriterPersisted.setQueueProducerFinished();
+        Thread.sleep(500);
+        assertFalse(resultWriterPersisted.isConsumerFinished());
         verify(analysisResultService, times(0)).writeSensitivityValues(any(), anyList());
     }
 
@@ -80,11 +83,11 @@ class SensitivityResultWriterPersistedTest {
     void testWritingOneSensitivityValue() {
         verify(analysisResultService, times(0)).writeSensitivityValues(any(), anyList());
         resultWriterPersisted.start();
-        assertFalse(resultWriterPersisted.isWorking());
+        assertFalse(resultWriterPersisted.isConsumerFinished());
 
         resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.);
-        await().atMost(500, TimeUnit.MILLISECONDS).until(resultWriterPersisted::isWorking);
-        await().atMost(1, TimeUnit.SECONDS).until(() -> !resultWriterPersisted.isWorking());
+        resultWriterPersisted.setQueueProducerFinished();
+        await().atMost(1, TimeUnit.SECONDS).until(() -> resultWriterPersisted.isConsumerFinished());
         verify(analysisResultService, atLeast(1)).writeSensitivityValues(any(), anyList());
     }
 
@@ -92,12 +95,12 @@ class SensitivityResultWriterPersistedTest {
     void testWritingSeveralSensitivityValuesIsBatched() {
         verify(analysisResultService, times(0)).writeSensitivityValues(any(), anyList());
         resultWriterPersisted.start();
-        assertFalse(resultWriterPersisted.isWorking());
+        assertFalse(resultWriterPersisted.isConsumerFinished());
 
         IntStream.range(0, 1000).forEach(i -> resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.));
-        assertTrue(resultWriterPersisted.isWorking());
+        resultWriterPersisted.setQueueProducerFinished();
 
-        await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
+        await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> resultWriterPersisted.isConsumerFinished());
         verify(analysisResultService, atLeast(2)).writeSensitivityValues(any(), anyList());
     }
 
@@ -105,12 +108,12 @@ class SensitivityResultWriterPersistedTest {
     void testWritingOneContingencyStatus() {
         verify(analysisResultService, times(0)).writeSensitivityValues(any(), anyList());
         resultWriterPersisted.start();
-        assertFalse(resultWriterPersisted.isWorking());
+        assertFalse(resultWriterPersisted.isConsumerFinished());
 
         resultWriterPersisted.writeContingencyStatus(0, SensitivityAnalysisResult.Status.SUCCESS);
-        assertTrue(resultWriterPersisted.isWorking());
+        resultWriterPersisted.setQueueProducerFinished();
 
-        await().atMost(500, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
+        await().atMost(500, TimeUnit.MILLISECONDS).until(() -> resultWriterPersisted.isConsumerFinished());
         verify(analysisResultService, atLeast(1)).writeContingenciesStatus(any(), anyList());
     }
 
@@ -118,22 +121,23 @@ class SensitivityResultWriterPersistedTest {
     void testWritingSeveralContingencyStatusesIsBatched() {
         verify(analysisResultService, times(0)).writeSensitivityValues(any(), anyList());
         resultWriterPersisted.start();
-        assertFalse(resultWriterPersisted.isWorking());
+        assertFalse(resultWriterPersisted.isConsumerFinished());
 
         IntStream.range(0, 1000).forEach(i -> resultWriterPersisted.writeContingencyStatus(0, SensitivityAnalysisResult.Status.SUCCESS));
-        assertTrue(resultWriterPersisted.isWorking());
+        resultWriterPersisted.setQueueProducerFinished();
 
-        await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
+        await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> resultWriterPersisted.isConsumerFinished());
         verify(analysisResultService, atLeast(2)).writeContingenciesStatus(any(), anyList());
     }
 
     @Test
-    void testNotOperatingAfterInterruption() {
+    void testNotOperatingAfterInterruption() throws InterruptedException {
         resultWriterPersisted.start();
         resultWriterPersisted.interrupt();
-
+        Thread.sleep(500);
         resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.);
-        await().atLeast(500, TimeUnit.MILLISECONDS);
+        Thread.sleep(500);
+        assertTrue(resultWriterPersisted.isConsumerFinished());
         verify(analysisResultService, times(0)).writeSensitivityValues(any(), anyList());
     }
 
@@ -144,7 +148,8 @@ class SensitivityResultWriterPersistedTest {
             .writeSensitivityValues(any(), anyList());
         resultWriterPersisted.start();
         IntStream.range(0, 1000).forEach(i -> resultWriterPersisted.writeSensitivityValue(0, 0, 0., 0.));
-        await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
+        resultWriterPersisted.setQueueProducerFinished();
+        await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> resultWriterPersisted.isConsumerFinished());
     }
 
     @Test
@@ -154,6 +159,7 @@ class SensitivityResultWriterPersistedTest {
             .writeContingenciesStatus(any(), anyList());
         resultWriterPersisted.start();
         IntStream.range(0, 1000).forEach(i -> resultWriterPersisted.writeContingencyStatus(0, SensitivityAnalysisResult.Status.SUCCESS));
-        await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> !resultWriterPersisted.isWorking());
+        resultWriterPersisted.setQueueProducerFinished();
+        await().atMost(1000, TimeUnit.MILLISECONDS).until(() -> resultWriterPersisted.isConsumerFinished());
     }
 }

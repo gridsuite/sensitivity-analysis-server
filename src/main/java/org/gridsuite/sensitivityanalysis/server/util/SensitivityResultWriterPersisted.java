@@ -38,9 +38,11 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
 
     private final Thread contingencyResultsThread;
 
-    private final AtomicBoolean sensitivityValuesWorking;
+    private final AtomicBoolean sensitivityValuesConsumerFinished;
 
-    private final AtomicBoolean contingencyResultsWorking;
+    private final AtomicBoolean contingencyResultsConsumerFinished;
+
+    private final AtomicBoolean queueProducerFinished;
 
     private UUID resultUuid;
 
@@ -50,8 +52,9 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
         contingencyResultsQueue = new LinkedBlockingQueue<>();
         sensitivityValuesThread = new Thread(sensitivityValuesBatchedHandling(), "sensitivityWriterThread");
         contingencyResultsThread = new Thread(contingencyResultsBatchedHandling(), "contingencyWriterThread");
-        sensitivityValuesWorking = new AtomicBoolean(false);
-        contingencyResultsWorking = new AtomicBoolean(false);
+        sensitivityValuesConsumerFinished = new AtomicBoolean(false);
+        contingencyResultsConsumerFinished = new AtomicBoolean(false);
+        queueProducerFinished = new AtomicBoolean(false);
         this.resultUuid = resultUuid;
     }
 
@@ -65,11 +68,12 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
         contingencyResultsThread.interrupt();
     }
 
-    public boolean isWorking() {
-        return !sensitivityValuesQueue.isEmpty()
-            || !contingencyResultsQueue.isEmpty()
-            || sensitivityValuesWorking.get()
-            || contingencyResultsWorking.get();
+    public boolean isConsumerFinished() {
+        return sensitivityValuesConsumerFinished.get() && contingencyResultsConsumerFinished.get();
+    }
+
+    public void setQueueProducerFinished() {
+        queueProducerFinished.set(true);
     }
 
     @Override
@@ -88,7 +92,7 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
     private Runnable sensitivityValuesBatchedHandling() {
         return () -> run(
             sensitivityValuesThread,
-            sensitivityValuesWorking,
+            sensitivityValuesConsumerFinished,
             sensitivityValuesQueue,
             sensitivityAnalysisResultService::writeSensitivityValues
         );
@@ -97,7 +101,7 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
     private Runnable contingencyResultsBatchedHandling() {
         return () -> run(
             contingencyResultsThread,
-            contingencyResultsWorking,
+            contingencyResultsConsumerFinished,
             contingencyResultsQueue,
             sensitivityAnalysisResultService::writeContingenciesStatus
         );
@@ -107,19 +111,22 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
         void run(UUID resultUuid, List<T> tasks);
     }
 
-    private <T> void run(Thread thread, AtomicBoolean isWorking, BlockingQueue<T> queue, BatchedRunnable<T> runnable) {
+    private <T> void run(Thread thread, AtomicBoolean isFinished, BlockingQueue<T> queue, BatchedRunnable<T> runnable) {
         try {
-            while (!thread.isInterrupted()) {
+            // Note: checking isInterrupted here is a bit redundant with Thread.sleep below which
+            // also checks it and throws to exit the loop, but it has the advantage of making the
+            // code safer if we ever remove such a blocking call (ie ones throwing when interrupted).
+            // Also a minor advantage is that we stop the loop one iteration earlier (drain + run)
+            // with the current code that only blocks if the queue was empty (drained 0 elements)
+            while (!(thread.isInterrupted() || queueProducerFinished.get() && queue.isEmpty())) {
                 List<T> tasks = new ArrayList<>(BUFFER_SIZE);
-                while (queue.drainTo(tasks, BUFFER_SIZE) == 0) {
+                while (!(queue.drainTo(tasks, BUFFER_SIZE) > 0 || queueProducerFinished.get() && queue.isEmpty())) {
                     Thread.sleep(100);
                 }
                 LOGGER.debug("{} - Remaining {} elements in the queue", thread.getName(), queue.size());
                 if (!tasks.isEmpty()) {
                     LOGGER.debug("{} - Treating {} elements in the batch", thread.getName(), tasks.size());
-                    isWorking.set(true);
                     runnable.run(resultUuid, tasks);
-                    isWorking.set(false);
                 }
             }
         } catch (InterruptedException e) {
@@ -127,8 +134,8 @@ public class SensitivityResultWriterPersisted implements SensitivityResultWriter
             thread.interrupt();
         } catch (Exception e) {
             LOGGER.error("Unexpected error occurred during persisting results", e);
-            queue.clear();
-            isWorking.set(false);
+        } finally {
+            isFinished.set(true);
         }
     }
 }
