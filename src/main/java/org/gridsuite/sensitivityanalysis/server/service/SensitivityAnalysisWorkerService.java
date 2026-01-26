@@ -149,8 +149,12 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
                         runContext.getReportNode())
                 .whenComplete((unused1, unused2) -> writer.setQueueProducerFinished())
                 .thenApply(unused -> {
-                    while (!writer.isConsumerFinished()) {
-                        // Nothing to do
+                    try {
+                        while (!writer.isConsumerFinished()) {
+                            Thread.sleep(100);
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
                     }
                     writer.interrupt();
                     // used to check if result is not null
