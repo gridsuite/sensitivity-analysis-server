@@ -19,6 +19,7 @@ import com.powsybl.loadflow.LoadFlowParameters;
 import com.powsybl.loadflow.LoadFlowProvider;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sensitivity.*;
+import lombok.extern.slf4j.Slf4j;
 import org.gridsuite.computation.dto.ReportInfos;
 import org.gridsuite.computation.service.*;
 import org.apache.commons.lang3.tuple.Pair;
@@ -29,10 +30,10 @@ import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalys
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
+import org.gridsuite.sensitivityanalysis.server.util.BatchAsyncPollerFactory;
+import org.gridsuite.sensitivityanalysis.server.util.ExecutorProviderService;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
-import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultWriterPersisted;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultPersistedWriter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
@@ -50,22 +51,20 @@ import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBu
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
+@Slf4j
 @Service
 public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Boolean, SensitivityAnalysisRunContext, SensitivityAnalysisInputData, SensitivityAnalysisResultService> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisWorkerService.class);
+
     public static final String COMPUTATION_TYPE = "Sensitivity analysis";
-
     public static final int CONTINGENCY_RESULTS_BUFFER_SIZE = 128;
-
     public static final int MAX_RESULTS_BUFFER_SIZE = 128;
 
-    private final SensitivityAnalysisInputBuilderService sensitivityAnalysisInputBuilderService;
-
-    private final SensitivityAnalysisParametersService parametersService;
-
-    private final Function<String, SensitivityAnalysis.Runner> sensitivityAnalysisFactorySupplier;
-
     protected final SensitivityAnalysisInMemoryObserver inMemoryObserver;
+    private final SensitivityAnalysisInputBuilderService sensitivityAnalysisInputBuilderService;
+    private final SensitivityAnalysisParametersService parametersService;
+    private final Function<String, SensitivityAnalysis.Runner> sensitivityAnalysisFactorySupplier;
+    private final ExecutorProviderService executorProviderService;
+    private final BatchAsyncPollerFactory batchAsyncPollerFactory;
 
     public SensitivityAnalysisWorkerService(NetworkStoreService networkStoreService,
                                             ReportService reportService,
@@ -78,12 +77,15 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
                                             SensitivityAnalysisRunnerSupplier sensitivityAnalysisRunnerSupplier,
                                             SensitivityAnalysisObserver observer,
                                             SensitivityAnalysisInMemoryObserver inMemoryObserver,
-                                            PropertyServerNameProvider propertyServerNameProvider) {
+                                            PropertyServerNameProvider propertyServerNameProvider,
+                                            ExecutorProviderService executorProviderService) {
         super(networkStoreService, notificationService, reportService, resultService, executionService, observer, objectMapper, propertyServerNameProvider);
         this.sensitivityAnalysisInputBuilderService = sensitivityAnalysisInputBuilderService;
         this.parametersService = parametersService;
         this.sensitivityAnalysisFactorySupplier = sensitivityAnalysisRunnerSupplier::getRunner;
         this.inMemoryObserver = inMemoryObserver;
+        this.executorProviderService = executorProviderService;
+        this.batchAsyncPollerFactory = new BatchAsyncPollerFactory(); // TODO this should be a spring service
     }
 
     @Override
@@ -132,50 +134,21 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
 
         saveSensitivityResults(groupedFactors, resultUuid, contingencies);
 
-        SensitivityResultWriterPersisted writer = new SensitivityResultWriterPersisted(resultUuid, resultService);
-        writer.start();
-
         List<SensitivityFactor> factors = groupedFactors.stream().flatMap(Collection::stream).toList();
         SensitivityFactorReader sensitivityFactorReader = new SensitivityFactorModelReader(factors, runContext.getNetwork());
-        CompletableFuture<Boolean> future = sensitivityAnalysisRunner.runAsync(
-                        runContext.getNetwork(),
-                        variantId,
-                        sensitivityFactorReader,
-                        writer,
-                        contingencies,
-                        runContext.getSensitivityAnalysisInputs().getVariablesSets(),
-                        sensitivityAnalysisParameters,
-                        executionService.getComputationManager(),
-                        runContext.getReportNode())
-                .whenComplete((unused1, unused2) -> writer.setQueueProducerFinished())
-                .thenApply(unused -> {
-                    try {
-                        while (!writer.isConsumerFinished()) {
-                            Thread.sleep(100);
-                        }
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                    writer.interrupt();
-                    // used to check if result is not null
-                    return true;
-                })
-                .exceptionally(e -> {
-                    LOGGER.error("Error occurred during computation", e);
-                    runContext.getReportNode()
-                            .newReportNode()
-                            .withMessageTemplate("sensitivity.analysis.server.sensitivityComputationFailed")
-                            .withUntypedValue("exception", e.getMessage())
-                            .withSeverity(TypedValue.ERROR_SEVERITY)
-                            .add();
-                    writer.interrupt();
-                    // null means it failed
-                    return false;
-                });
-        if (resultUuid != null) {
-            futures.put(resultUuid, future);
-        }
-        return future;
+        SensitivityResultPersistedWriter sensitivityResultPersistedWriter = new SensitivityResultPersistedWriter(resultUuid, resultService, executorProviderService, batchAsyncPollerFactory);
+
+        SensitivityAnalysisRunParameters runParameters = new SensitivityAnalysisRunParameters()
+                .setContingencies(contingencies)
+                .setVariableSets(runContext.getSensitivityAnalysisInputs().getVariablesSets())
+                .setParameters(sensitivityAnalysisParameters)
+                .setComputationManager(executionService.getComputationManager())
+                .setReportNode(runContext.getReportNode());
+
+        return sensitivityAnalysisRunner.runAsync(runContext.getNetwork(), variantId, sensitivityFactorReader, sensitivityResultPersistedWriter, runParameters)
+                .thenApply(unused -> Boolean.TRUE)
+                .whenComplete((result, throwable) -> syncWriterCompletion(throwable, sensitivityResultPersistedWriter))
+                .exceptionally(throwable -> handleAsyncError(throwable, runContext));
     }
 
     private void saveSensitivityResults(List<List<SensitivityFactor>> groupedFactors, UUID resultUuid, List<Contingency> contingencies) {
@@ -236,7 +209,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
             Thread.currentThread().interrupt();
             return null;
         } catch (Exception e) {
-            LOGGER.error(getFailedMessage(getComputationType()), e);
+            log.error(getFailedMessage(getComputationType()), e);
             return null;
         }
     }
@@ -244,7 +217,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
     private SensitivityAnalysisResult runInMemory(SensitivityAnalysisRunContext runContext) throws Exception {
         Objects.requireNonNull(runContext);
 
-        LOGGER.info("Run sensitivity analysis");
+        log.info("Run sensitivity analysis");
 
         SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(runContext.getProvider());
 
@@ -312,5 +285,32 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
                 executionService.getComputationManager(),
                 reporter);
         return future.thenApply(r -> new SensitivityAnalysisResult(factors, writer.getContingencyStatuses(), writer.getValues()));
+    }
+
+    private void syncWriterCompletion(Throwable throwable, SensitivityResultPersistedWriter persistedWriter) {
+        // force free resources
+        try (persistedWriter) {
+            persistedWriter.notifyCompletion();
+
+            // success, so we wait for the writer to properly finish its job
+            if (throwable == null) {
+                persistedWriter.waitForCompletion();
+            }
+        } catch (Exception e) {
+            // writer can throw an exception if one or more results could not be persisted
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Boolean handleAsyncError(Throwable throwable, SensitivityAnalysisRunContext runContext) {
+        log.error("Error occurred during computation", throwable);
+        runContext.getReportNode()
+                .newReportNode()
+                .withMessageTemplate("sensitivity.analysis.server.sensitivityComputationFailed")
+                .withUntypedValue("exception", throwable.getMessage())
+                .withSeverity(TypedValue.ERROR_SEVERITY)
+                .add();
+        // false since the computation failed
+        return false;
     }
 }
