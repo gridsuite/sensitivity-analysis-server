@@ -19,9 +19,10 @@ import com.powsybl.loadflow.LoadFlowParameters;
 import com.powsybl.loadflow.LoadFlowProvider;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.sensitivity.*;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.computation.dto.ReportInfos;
 import org.gridsuite.computation.service.*;
-import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.sensitivityanalysis.server.PropertyServerNameProvider;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisStatus;
@@ -30,9 +31,7 @@ import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
-import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultWriterPersisted;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultPersistedWriter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
@@ -50,22 +49,18 @@ import static org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBu
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
+@Slf4j
 @Service
 public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Boolean, SensitivityAnalysisRunContext, SensitivityAnalysisInputData, SensitivityAnalysisResultService> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisWorkerService.class);
+
     public static final String COMPUTATION_TYPE = "Sensitivity analysis";
-
     public static final int CONTINGENCY_RESULTS_BUFFER_SIZE = 128;
-
     public static final int MAX_RESULTS_BUFFER_SIZE = 128;
 
+    private final SensitivityAnalysisInMemoryObserver inMemoryObserver;
     private final SensitivityAnalysisInputBuilderService sensitivityAnalysisInputBuilderService;
-
     private final SensitivityAnalysisParametersService parametersService;
-
     private final Function<String, SensitivityAnalysis.Runner> sensitivityAnalysisFactorySupplier;
-
-    protected final SensitivityAnalysisInMemoryObserver inMemoryObserver;
 
     public SensitivityAnalysisWorkerService(NetworkStoreService networkStoreService,
                                             ReportService reportService,
@@ -86,9 +81,20 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
         this.inMemoryObserver = inMemoryObserver;
     }
 
-    @Override
-    protected boolean resultCanBeSaved(Boolean isResultOk) {
-        return true;
+    private static SensitivityAnalysisParameters buildParameters(SensitivityAnalysisRunContext context) {
+        SensitivityAnalysisParameters params = context.getSensitivityAnalysisInputData().getParameters() == null ?
+                new SensitivityAnalysisParameters() : context.getSensitivityAnalysisInputData().getParameters();
+        if (context.getSensitivityAnalysisInputData().getLoadFlowSpecificParameters() == null
+                || context.getSensitivityAnalysisInputData().getLoadFlowSpecificParameters().isEmpty()) {
+            return params; // no specific LF params
+        }
+        LoadFlowProvider lfProvider = LoadFlowProvider.findAll().stream()
+                .filter(p -> p.getName().equals(context.getProvider()))
+                .findFirst().orElseThrow(() -> new PowsyblException("Sensitivity analysis provider not found " + context.getProvider()));
+        Extension<LoadFlowParameters> extension = lfProvider.loadSpecificParameters(context.getSensitivityAnalysisInputData().getLoadFlowSpecificParameters())
+                .orElseThrow(() -> new PowsyblException("Cannot add specific loadflow parameters with sensitivity analysis provider " + context.getProvider()));
+        params.getLoadFlowParameters().addExtension((Class) extension.getClass(), extension);
+        return params;
     }
 
     @Bean
@@ -101,114 +107,6 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
     @Override
     public Consumer<Message<String>> consumeCancel() {
         return super.consumeCancel();
-    }
-
-    private static SensitivityAnalysisParameters buildParameters(SensitivityAnalysisRunContext context) {
-        SensitivityAnalysisParameters params = context.getSensitivityAnalysisInputData().getParameters() == null ?
-            new SensitivityAnalysisParameters() : context.getSensitivityAnalysisInputData().getParameters();
-        if (context.getSensitivityAnalysisInputData().getLoadFlowSpecificParameters() == null
-            || context.getSensitivityAnalysisInputData().getLoadFlowSpecificParameters().isEmpty()) {
-            return params; // no specific LF params
-        }
-        LoadFlowProvider lfProvider = LoadFlowProvider.findAll().stream()
-            .filter(p -> p.getName().equals(context.getProvider()))
-            .findFirst().orElseThrow(() -> new PowsyblException("Sensitivity analysis provider not found " + context.getProvider()));
-        Extension<LoadFlowParameters> extension = lfProvider.loadSpecificParameters(context.getSensitivityAnalysisInputData().getLoadFlowSpecificParameters())
-            .orElseThrow(() -> new PowsyblException("Cannot add specific loadflow parameters with sensitivity analysis provider " + context.getProvider()));
-        params.getLoadFlowParameters().addExtension((Class) extension.getClass(), extension);
-        return params;
-    }
-
-    @Override
-    protected CompletableFuture<Boolean> getCompletableFuture(SensitivityAnalysisRunContext runContext, String provider, UUID resultUuid) {
-        SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(runContext.getProvider());
-        String variantId = runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID;
-
-        SensitivityAnalysisParameters sensitivityAnalysisParameters = buildParameters(runContext);
-        sensitivityAnalysisInputBuilderService.build(runContext, runContext.getNetwork(), runContext.getReportNode());
-
-        List<List<SensitivityFactor>> groupedFactors = runContext.getSensitivityAnalysisInputs().getFactors();
-        List<Contingency> contingencies = new ArrayList<>(runContext.getSensitivityAnalysisInputs().getContingencies());
-
-        saveSensitivityResults(groupedFactors, resultUuid, contingencies);
-
-        SensitivityResultWriterPersisted writer = new SensitivityResultWriterPersisted(resultUuid, resultService);
-        writer.start();
-
-        List<SensitivityFactor> factors = groupedFactors.stream().flatMap(Collection::stream).toList();
-        SensitivityFactorReader sensitivityFactorReader = new SensitivityFactorModelReader(factors, runContext.getNetwork());
-        CompletableFuture<Boolean> future = sensitivityAnalysisRunner.runAsync(
-                        runContext.getNetwork(),
-                        variantId,
-                        sensitivityFactorReader,
-                        writer,
-                        contingencies,
-                        runContext.getSensitivityAnalysisInputs().getVariablesSets(),
-                        sensitivityAnalysisParameters,
-                        executionService.getComputationManager(),
-                        runContext.getReportNode())
-                .whenComplete((unused1, unused2) -> writer.setQueueProducerFinished())
-                .thenApply(unused -> {
-                    try {
-                        while (!writer.isConsumerFinished()) {
-                            Thread.sleep(100);
-                        }
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                    writer.interrupt();
-                    // used to check if result is not null
-                    return true;
-                })
-                .exceptionally(e -> {
-                    LOGGER.error("Error occurred during computation", e);
-                    runContext.getReportNode()
-                            .newReportNode()
-                            .withMessageTemplate("sensitivity.analysis.server.sensitivityComputationFailed")
-                            .withUntypedValue("exception", e.getMessage())
-                            .withSeverity(TypedValue.ERROR_SEVERITY)
-                            .add();
-                    writer.interrupt();
-                    // null means it failed
-                    return false;
-                });
-        if (resultUuid != null) {
-            futures.put(resultUuid, future);
-        }
-        return future;
-    }
-
-    private void saveSensitivityResults(List<List<SensitivityFactor>> groupedFactors, UUID resultUuid, List<Contingency> contingencies) {
-        AnalysisResultEntity analysisResult = resultService.insertAnalysisResult(resultUuid);
-
-        Map<String, ContingencyResultEntity> contingencyResults = buildContingencyResults(contingencies, analysisResult);
-        Lists.partition(contingencyResults.values().stream().toList(), CONTINGENCY_RESULTS_BUFFER_SIZE)
-                .parallelStream()
-                .forEach(resultService::saveAllContingencyResultsAndFlush);
-
-        Pair<List<SensitivityResultEntity>, List<SensitivityResultEntity>> sensitivityResults = buildSensitivityResults(groupedFactors, analysisResult, contingencyResults);
-        Lists.partition(sensitivityResults.getLeft(), MAX_RESULTS_BUFFER_SIZE)
-                .parallelStream()
-                .forEach(resultService::saveAllResultsAndFlush);
-        Lists.partition(sensitivityResults.getRight(), MAX_RESULTS_BUFFER_SIZE)
-                .parallelStream()
-                .forEach(resultService::saveAllResultsAndFlush);
-    }
-
-    @Override
-    protected String getComputationType() {
-        return COMPUTATION_TYPE;
-    }
-
-    @Override
-    protected SensitivityAnalysisResultContext fromMessage(Message<String> message) {
-        return SensitivityAnalysisResultContext.fromMessage(message, objectMapper);
-    }
-
-    @Override
-    protected void saveResult(Network network, AbstractResultContext<SensitivityAnalysisRunContext> resultContext, Boolean isResultOk) {
-        SensitivityAnalysisStatus status = isResultOk.equals(Boolean.TRUE) ? SensitivityAnalysisStatus.COMPLETED : SensitivityAnalysisStatus.FAILED;
-        resultService.insertStatus(List.of(resultContext.getResultUuid()), status);
     }
 
     /**
@@ -236,15 +134,107 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
             Thread.currentThread().interrupt();
             return null;
         } catch (Exception e) {
-            LOGGER.error(getFailedMessage(getComputationType()), e);
+            log.error(getFailedMessage(getComputationType()), e);
             return null;
         }
+    }
+
+    @Override
+    protected String getComputationType() {
+        return COMPUTATION_TYPE;
+    }
+
+    @Override
+    protected boolean resultCanBeSaved(Boolean isResultOk) {
+        return true;
+    }
+
+    @Override
+    protected SensitivityAnalysisResultContext fromMessage(Message<String> message) {
+        return SensitivityAnalysisResultContext.fromMessage(message, objectMapper);
+    }
+
+    @Override
+    protected void saveResult(Network network, AbstractResultContext<SensitivityAnalysisRunContext> resultContext, Boolean isResultOk) {
+        SensitivityAnalysisStatus status = isResultOk.equals(Boolean.TRUE) ? SensitivityAnalysisStatus.COMPLETED : SensitivityAnalysisStatus.FAILED;
+        resultService.insertStatus(List.of(resultContext.getResultUuid()), status);
+    }
+
+    @Override
+    protected CompletableFuture<Boolean> getCompletableFuture(SensitivityAnalysisRunContext runContext, String provider, UUID resultUuid) {
+        SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(runContext.getProvider());
+        String variantId = runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID;
+
+        SensitivityAnalysisParameters sensitivityAnalysisParameters = buildParameters(runContext);
+        sensitivityAnalysisInputBuilderService.build(runContext, runContext.getNetwork(), runContext.getReportNode());
+
+        List<List<SensitivityFactor>> groupedFactors = runContext.getSensitivityAnalysisInputs().getFactors();
+        List<Contingency> contingencies = new ArrayList<>(runContext.getSensitivityAnalysisInputs().getContingencies());
+
+        saveSensitivityResults(groupedFactors, resultUuid, contingencies);
+
+        List<SensitivityFactor> factors = groupedFactors.stream().flatMap(Collection::stream).toList();
+        SensitivityFactorReader sensitivityFactorReader = new SensitivityFactorModelReader(factors, runContext.getNetwork());
+        SensitivityResultPersistedWriter sensitivityResultPersistedWriter = new SensitivityResultPersistedWriter(resultUuid, resultService);
+
+        SensitivityAnalysisRunParameters runParameters = new SensitivityAnalysisRunParameters()
+                .setContingencies(contingencies)
+                .setVariableSets(runContext.getSensitivityAnalysisInputs().getVariablesSets())
+                .setParameters(sensitivityAnalysisParameters)
+                .setComputationManager(executionService.getComputationManager())
+                .setReportNode(runContext.getReportNode());
+
+        return sensitivityAnalysisRunner.runAsync(runContext.getNetwork(), variantId, sensitivityFactorReader, sensitivityResultPersistedWriter, runParameters)
+                .thenApply(unused -> Boolean.TRUE)
+                .whenComplete((result, throwable) -> syncWriterCompletion(throwable, sensitivityResultPersistedWriter))
+                .exceptionally(throwable -> handleAsyncError(throwable, runContext));
+    }
+
+    private void saveSensitivityResults(List<List<SensitivityFactor>> groupedFactors, UUID resultUuid, List<Contingency> contingencies) {
+        AnalysisResultEntity analysisResult = resultService.insertAnalysisResult(resultUuid);
+
+        Map<String, ContingencyResultEntity> contingencyResults = buildContingencyResults(contingencies, analysisResult);
+        Lists.partition(contingencyResults.values().stream().toList(), CONTINGENCY_RESULTS_BUFFER_SIZE)
+                .parallelStream()
+                .forEach(resultService::saveAllContingencyResultsAndFlush);
+
+        Pair<List<SensitivityResultEntity>, List<SensitivityResultEntity>> sensitivityResults = buildSensitivityResults(groupedFactors, analysisResult, contingencyResults);
+        Lists.partition(sensitivityResults.getLeft(), MAX_RESULTS_BUFFER_SIZE)
+                .parallelStream()
+                .forEach(resultService::saveAllResultsAndFlush);
+        Lists.partition(sensitivityResults.getRight(), MAX_RESULTS_BUFFER_SIZE)
+                .parallelStream()
+                .forEach(resultService::saveAllResultsAndFlush);
+    }
+
+    private void syncWriterCompletion(Throwable throwable, SensitivityResultPersistedWriter persistedWriter) {
+        persistedWriter.notifyCompletion();
+
+        // success, so we wait for the writer to properly finish its job
+        if (throwable == null) {
+            persistedWriter.waitForCompletion();
+        }
+
+        // force free resources
+        persistedWriter.close();
+    }
+
+    private Boolean handleAsyncError(Throwable throwable, SensitivityAnalysisRunContext runContext) {
+        log.error("Error occurred during computation", throwable);
+        runContext.getReportNode()
+                .newReportNode()
+                .withMessageTemplate("sensitivity.analysis.server.sensitivityComputationFailed")
+                .withUntypedValue("exception", throwable.getMessage())
+                .withSeverity(TypedValue.ERROR_SEVERITY)
+                .add();
+        // null means it failed
+        return false;
     }
 
     private SensitivityAnalysisResult runInMemory(SensitivityAnalysisRunContext runContext) throws Exception {
         Objects.requireNonNull(runContext);
 
-        LOGGER.info("Run sensitivity analysis");
+        log.info("Run sensitivity analysis");
 
         SensitivityAnalysis.Runner sensitivityAnalysisRunner = sensitivityAnalysisFactorySupplier.apply(runContext.getProvider());
 
@@ -290,27 +280,27 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
         }
     }
 
-    private CompletableFuture<SensitivityAnalysisResult> runAsyncInMemory(SensitivityAnalysisRunContext context,
+    private CompletableFuture<SensitivityAnalysisResult> runAsyncInMemory(SensitivityAnalysisRunContext runContext,
                                                                           SensitivityAnalysis.Runner sensitivityAnalysisRunner,
                                                                           ReportNode reporter,
                                                                           Network network,
-                                                                          SensitivityAnalysisParameters parameters) {
-        List<SensitivityFactor> factors = context.getSensitivityAnalysisInputs().getFactors().stream().flatMap(Collection::stream).toList();
-        List<Contingency> contingencies = new ArrayList<>(context.getSensitivityAnalysisInputs().getContingencies());
+                                                                          SensitivityAnalysisParameters sensitivityAnalysisParameters) {
+        String variantId = runContext.getVariantId() != null ? runContext.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID;
+        List<SensitivityFactor> factors = runContext.getSensitivityAnalysisInputs().getFactors().stream().flatMap(Collection::stream).toList();
+        List<Contingency> contingencies = new ArrayList<>(runContext.getSensitivityAnalysisInputs().getContingencies());
 
         SensitivityFactorReader sensitivityFactorReader = new SensitivityFactorModelReader(factors, network);
         SensitivityResultModelWriter writer = new SensitivityResultModelWriter(contingencies);
 
-        CompletableFuture<Void> future = sensitivityAnalysisRunner.runAsync(
-                network,
-                context.getVariantId() != null ? context.getVariantId() : VariantManagerConstants.INITIAL_VARIANT_ID,
-                sensitivityFactorReader,
-                writer,
-                contingencies,
-                context.getSensitivityAnalysisInputs().getVariablesSets(),
-                parameters,
-                executionService.getComputationManager(),
-                reporter);
+        SensitivityAnalysisRunParameters runParameters = new SensitivityAnalysisRunParameters()
+                .setContingencies(contingencies)
+                .setVariableSets(runContext.getSensitivityAnalysisInputs().getVariablesSets())
+                .setParameters(sensitivityAnalysisParameters)
+                .setComputationManager(executionService.getComputationManager())
+                .setReportNode(reporter);
+
+        CompletableFuture<Void> future = sensitivityAnalysisRunner.runAsync(network, variantId, sensitivityFactorReader, writer, runParameters);
+
         return future.thenApply(r -> new SensitivityAnalysisResult(factors, writer.getContingencyStatuses(), writer.getValues()));
     }
 }
