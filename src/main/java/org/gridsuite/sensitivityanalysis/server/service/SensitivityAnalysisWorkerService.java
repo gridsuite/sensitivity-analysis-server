@@ -218,7 +218,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
     public SensitivityAnalysisResult run(UUID networkUuid, String variantId, ReportInfos reportInfos, String userId, UUID parametersUuid, UUID loadFlowParametersUuid) {
 
         SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersUuid != null
-                ? parametersService.getParameters(parametersUuid)
+                ? parametersService.getParameters(parametersUuid, userId)
                 .orElse(parametersService.getDefauSensitivityAnalysisParametersInfos())
                 : parametersService.getDefauSensitivityAnalysisParametersInfos();
 
