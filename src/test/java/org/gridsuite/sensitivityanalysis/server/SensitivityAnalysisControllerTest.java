@@ -66,7 +66,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.gridsuite.computation.service.NotificationService.HEADER_USER_ID;
 import static org.gridsuite.computation.service.NotificationService.getCancelFailedMessage;
 import static org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService.COMPUTATION_TYPE;
-import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.DEFAULT_PROVIDER;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -584,15 +583,6 @@ class SensitivityAnalysisControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().string("[\"OpenLoadFlow\"]"))
-                .andReturn();
-    }
-
-    @Test
-    void getDefaultProviderTest() throws Exception {
-        mockMvc.perform(get("/" + VERSION + "/default-provider"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8)))
-                .andExpect(content().string(DEFAULT_PROVIDER))
                 .andReturn();
     }
 
