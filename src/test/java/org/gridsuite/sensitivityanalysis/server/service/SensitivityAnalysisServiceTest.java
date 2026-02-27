@@ -59,7 +59,7 @@ class SensitivityAnalysisServiceTest {
     void setUp() {
         var parametersInfos = Mockito.mock(SensitivityAnalysisParametersInfos.class);
         given(parametersInfos.getProvider()).willReturn("open-loadflow");
-        given(parametersService.getParameters(any())).willReturn(Optional.of(parametersInfos));
+        given(parametersService.getParameters(any(UUID.class), any(String.class))).willReturn(Optional.of(parametersInfos));
 
         var inputData = Mockito.mock(SensitivityAnalysisInputData.class);
         given(parametersService.buildInputData(any(), any())).willReturn(inputData);
@@ -70,7 +70,7 @@ class SensitivityAnalysisServiceTest {
 
     @Test
     void testRunAndSave() {
-        SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersService.getParameters(UUID.randomUUID())
+        SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersService.getParameters(UUID.randomUUID(), "userId")
                 .orElse(parametersService.getDefauSensitivityAnalysisParametersInfos());
 
         SensitivityAnalysisInputData inputData = parametersService.buildInputData(sensitivityAnalysisParametersInfos, UUID.randomUUID());
