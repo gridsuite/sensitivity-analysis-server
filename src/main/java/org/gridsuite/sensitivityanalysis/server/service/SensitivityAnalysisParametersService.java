@@ -66,7 +66,7 @@ public class SensitivityAnalysisParametersService {
      *
      * @return a copy of the entity
      */
-    public SensitivityAnalysisParametersEntity copy(SensitivityAnalysisParametersEntity entity, String userId) {
+    private SensitivityAnalysisParametersEntity copy(SensitivityAnalysisParametersEntity entity, String userId) {
         return getSensitivityAnalysisParametersInfos(entity, userId).toEntity();
     }
 
@@ -170,47 +170,49 @@ public class SensitivityAnalysisParametersService {
                 inputData);
     }
 
-    public SensitivityAnalysisParametersInfos getSensitivityAnalysisParametersInfos(SensitivityAnalysisParametersEntity entity, String userId) {
+    private SensitivityAnalysisParametersInfos getSensitivityAnalysisParametersInfos(SensitivityAnalysisParametersEntity entity, String userId) {
+        Map<UUID, String> allContainerNames = getAllContainerNames(entity, userId);
+
         List<SensitivityInjectionsSet> sensiInjectionsSets = new ArrayList<>();
         entity.getSensitivityInjectionsSets().stream().map(sensitivityInjectionsSet -> new SensitivityInjectionsSet(
-                fromEmbeddableContainerEquipments(sensitivityInjectionsSet.getMonitoredBranch(), userId),
-                fromEmbeddableContainerEquipments(sensitivityInjectionsSet.getInjections(), userId),
+                toEquipmentContainerDTO(sensitivityInjectionsSet.getMonitoredBranch(), allContainerNames),
+                toEquipmentContainerDTO(sensitivityInjectionsSet.getInjections(), allContainerNames),
                 sensitivityInjectionsSet.getDistributionType(),
-                fromEmbeddableContainerEquipments(sensitivityInjectionsSet.getContingencies(), userId),
+                toEquipmentContainerDTO(sensitivityInjectionsSet.getContingencies(), allContainerNames),
                 sensitivityInjectionsSet.isActivated()
         )).forEach(sensiInjectionsSets::add);
 
         List<SensitivityInjection> sensiInjections = new ArrayList<>();
         entity.getSensitivityInjections().stream().map(sensitivityInjection -> new SensitivityInjection(
-                fromEmbeddableContainerEquipments(sensitivityInjection.getMonitoredBranch(), userId),
-                fromEmbeddableContainerEquipments(sensitivityInjection.getInjections(), userId),
-                fromEmbeddableContainerEquipments(sensitivityInjection.getContingencies(), userId),
+                toEquipmentContainerDTO(sensitivityInjection.getMonitoredBranch(), allContainerNames),
+                toEquipmentContainerDTO(sensitivityInjection.getInjections(), allContainerNames),
+                toEquipmentContainerDTO(sensitivityInjection.getContingencies(), allContainerNames),
                 sensitivityInjection.isActivated()
         )).forEach(sensiInjections::add);
 
         List<SensitivityHVDC> sensiHvdcs = new ArrayList<>();
         entity.getSensitivityHVDCs().stream().map(sensitivityHvdc -> new SensitivityHVDC(
-                fromEmbeddableContainerEquipments(sensitivityHvdc.getMonitoredBranch(), userId),
+                toEquipmentContainerDTO(sensitivityHvdc.getMonitoredBranch(), allContainerNames),
                 sensitivityHvdc.getSensitivityType(),
-                fromEmbeddableContainerEquipments(sensitivityHvdc.getInjections(), userId),
-                fromEmbeddableContainerEquipments(sensitivityHvdc.getContingencies(), userId),
+                toEquipmentContainerDTO(sensitivityHvdc.getInjections(), allContainerNames),
+                toEquipmentContainerDTO(sensitivityHvdc.getContingencies(), allContainerNames),
                 sensitivityHvdc.isActivated()
         )).forEach(sensiHvdcs::add);
 
         List<SensitivityPST> sensiPsts = new ArrayList<>();
         entity.getSensitivityPSTs().stream().map(sensitivityPst -> new SensitivityPST(
-                fromEmbeddableContainerEquipments(sensitivityPst.getMonitoredBranch(), userId),
+                toEquipmentContainerDTO(sensitivityPst.getMonitoredBranch(), allContainerNames),
                 sensitivityPst.getSensitivityType(),
-                fromEmbeddableContainerEquipments(sensitivityPst.getInjections(), userId),
-                fromEmbeddableContainerEquipments(sensitivityPst.getContingencies(), userId),
+                toEquipmentContainerDTO(sensitivityPst.getInjections(), allContainerNames),
+                toEquipmentContainerDTO(sensitivityPst.getContingencies(), allContainerNames),
                 sensitivityPst.isActivated()
         )).forEach(sensiPsts::add);
 
         List<SensitivityNodes> sensiNodes = new ArrayList<>();
         entity.getSensitivityNodes().stream().map(sensitivityNode -> new SensitivityNodes(
-                fromEmbeddableContainerEquipments(sensitivityNode.getMonitoredBranch(), userId),
-                fromEmbeddableContainerEquipments(sensitivityNode.getInjections(), userId),
-                fromEmbeddableContainerEquipments(sensitivityNode.getContingencies(), userId),
+                toEquipmentContainerDTO(sensitivityNode.getMonitoredBranch(), allContainerNames),
+                toEquipmentContainerDTO(sensitivityNode.getInjections(), allContainerNames),
+                toEquipmentContainerDTO(sensitivityNode.getContingencies(), allContainerNames),
                 sensitivityNode.isActivated()
         )).forEach(sensiNodes::add);
 
@@ -228,13 +230,48 @@ public class SensitivityAnalysisParametersService {
                 .build();
     }
 
-    public List<EquipmentsContainer> fromEmbeddableContainerEquipments(List<UUID> containerIds, String userId) {
+    private Map<UUID, String> getAllContainerNames(SensitivityAnalysisParametersEntity entity, String userId) {
+        Set<UUID> allContainerIds = new HashSet<>();
+
+        entity.getSensitivityInjectionsSets().forEach(sensitivityInjectionsSet -> {
+            allContainerIds.addAll(sensitivityInjectionsSet.getMonitoredBranch());
+            allContainerIds.addAll(sensitivityInjectionsSet.getInjections());
+            allContainerIds.addAll(sensitivityInjectionsSet.getContingencies());
+        });
+
+        entity.getSensitivityInjections().forEach(sensitivityInjection -> {
+            allContainerIds.addAll(sensitivityInjection.getMonitoredBranch());
+            allContainerIds.addAll(sensitivityInjection.getInjections());
+            allContainerIds.addAll(sensitivityInjection.getContingencies());
+        });
+
+        entity.getSensitivityHVDCs().forEach(sensitivityHvdc -> {
+            allContainerIds.addAll(sensitivityHvdc.getMonitoredBranch());
+            allContainerIds.addAll(sensitivityHvdc.getInjections());
+            allContainerIds.addAll(sensitivityHvdc.getContingencies());
+        });
+
+        entity.getSensitivityPSTs().forEach(sensitivityPst -> {
+            allContainerIds.addAll(sensitivityPst.getMonitoredBranch());
+            allContainerIds.addAll(sensitivityPst.getInjections());
+            allContainerIds.addAll(sensitivityPst.getContingencies());
+        });
+
+        entity.getSensitivityNodes().forEach(sensitivityNode -> {
+            allContainerIds.addAll(sensitivityNode.getMonitoredBranch());
+            allContainerIds.addAll(sensitivityNode.getInjections());
+            allContainerIds.addAll(sensitivityNode.getContingencies());
+        });
+
+        return directoryService.getElementNames(allContainerIds, userId);
+    }
+
+    private List<EquipmentsContainer> toEquipmentContainerDTO(List<UUID> containerIds, Map<UUID, String> containerNames) {
         if (containerIds == null) {
             return null;
         }
-        Map<UUID, String> contingenciesInfos = directoryService.getElementNames(containerIds, userId);
         return containerIds.stream()
-                .map(id -> new EquipmentsContainer(id, contingenciesInfos.get(id)))
+                .map(id -> new EquipmentsContainer(id, containerNames.get(id)))
                 .toList();
     }
 }

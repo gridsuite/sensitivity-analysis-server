@@ -36,6 +36,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -94,12 +95,12 @@ class SensitivityAnalysisParametersTest {
         wireMockServer.start();
         loadFlowService.setLoadFlowServiceBaseUri(wireMockServer.baseUrl());
 
-        when(directoryService.getElementNames(List.of(EQUIPMENTS_ID_1), USER_ID))
-                .thenReturn(Map.of(EQUIPMENTS_ID_1, EQUIPMENTS_NAME_1));
-        when(directoryService.getElementNames(List.of(EQUIPMENTS_ID_2), USER_ID))
-                .thenReturn(Map.of(EQUIPMENTS_ID_2, EQUIPMENTS_NAME_2));
-        when(directoryService.getElementNames(List.of(EQUIPMENTS_ID_3), USER_ID))
-                .thenReturn(Map.of(EQUIPMENTS_ID_3, EQUIPMENTS_NAME_3));
+        when(directoryService.getElementNames(Set.of(EQUIPMENTS_ID_1, EQUIPMENTS_ID_2, EQUIPMENTS_ID_3), USER_ID))
+                .thenReturn(Map.of(
+                        EQUIPMENTS_ID_1, EQUIPMENTS_NAME_1,
+                        EQUIPMENTS_ID_2, EQUIPMENTS_NAME_2,
+                        EQUIPMENTS_ID_3, EQUIPMENTS_NAME_3
+                ));
     }
 
     @AfterEach
@@ -291,10 +292,10 @@ class SensitivityAnalysisParametersTest {
         EquipmentsContainer equipments1 = new EquipmentsContainer(EQUIPMENTS_ID_1, EQUIPMENTS_NAME_1);
         EquipmentsContainer equipments2 = new EquipmentsContainer(EQUIPMENTS_ID_2, EQUIPMENTS_NAME_2);
         EquipmentsContainer equipments3 = new EquipmentsContainer(EQUIPMENTS_ID_3, EQUIPMENTS_NAME_3);
-        SensitivityInjectionsSet injectionsSet = new SensitivityInjectionsSet(List.of(equipments2), List.of(equipments1), SensitivityAnalysisInputData.DistributionType.PROPORTIONAL, List.of(equipments3), true);
+        SensitivityInjectionsSet injectionsSet = new SensitivityInjectionsSet(List.of(equipments1), List.of(equipments2), SensitivityAnalysisInputData.DistributionType.PROPORTIONAL, List.of(equipments3), true);
         SensitivityInjection injections = new SensitivityInjection(List.of(equipments1), List.of(equipments2), List.of(equipments3), true);
         SensitivityHVDC hvdc = new SensitivityHVDC(List.of(equipments1), SensitivityAnalysisInputData.SensitivityType.DELTA_MW, List.of(equipments2), List.of(equipments3), true);
-        SensitivityPST pst = new SensitivityPST(List.of(equipments2), SensitivityAnalysisInputData.SensitivityType.DELTA_MW, List.of(equipments1), List.of(equipments3), true);
+        SensitivityPST pst = new SensitivityPST(List.of(equipments1), SensitivityAnalysisInputData.SensitivityType.DELTA_MW, List.of(equipments2), List.of(equipments3), true);
         SensitivityNodes nodes = new SensitivityNodes(List.of(equipments1), List.of(equipments2), List.of(equipments3), true);
 
         return SensitivityAnalysisParametersInfos.builder()

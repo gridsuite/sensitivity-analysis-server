@@ -24,6 +24,7 @@ import static org.gridsuite.computation.service.NotificationService.HEADER_USER_
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -71,7 +72,7 @@ class DirectoryServiceTest {
 
     @Test
     void getElementNamesWithEmptyElementUuidsTest() {
-        assertEquals(Map.of(), directoryService.getElementNames(List.of(), USER_ID));
+        assertEquals(Map.of(), directoryService.getElementNames(Set.of(), USER_ID));
     }
 
     @Test
@@ -91,6 +92,6 @@ class DirectoryServiceTest {
                 EQUIPMENTS_ID_1, EQUIPMENTS_NAME_1,
                 EQUIPMENTS_ID_2, EQUIPMENTS_NAME_2
         );
-        assertEquals(elementNames, directoryService.getElementNames(List.of(EQUIPMENTS_ID_1, EQUIPMENTS_ID_2), USER_ID));
+        assertEquals(elementNames, directoryService.getElementNames(Set.of(EQUIPMENTS_ID_1, EQUIPMENTS_ID_2), USER_ID));
     }
 }

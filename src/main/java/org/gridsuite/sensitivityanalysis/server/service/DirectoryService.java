@@ -20,10 +20,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.computation.service.NotificationService.HEADER_USER_ID;
@@ -45,7 +42,7 @@ public class DirectoryService {
         this.restTemplate = restTemplate;
     }
 
-    public Map<UUID, String> getElementNames(List<UUID> elementUuids, String userId) {
+    public Map<UUID, String> getElementNames(Set<UUID> elementUuids, String userId) {
         Objects.requireNonNull(elementUuids);
 
         if (elementUuids.isEmpty()) {
