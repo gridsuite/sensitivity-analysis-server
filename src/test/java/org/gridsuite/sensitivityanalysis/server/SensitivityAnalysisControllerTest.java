@@ -33,10 +33,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
 import org.gridsuite.sensitivityanalysis.server.repositories.TestRepository;
-import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
-import org.gridsuite.sensitivityanalysis.server.service.FilterService;
-import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
-import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisFactorCountService;
+import org.gridsuite.sensitivityanalysis.server.service.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -137,6 +134,9 @@ class SensitivityAnalysisControllerTest {
 
     @MockitoBean
     private LoadFlowService loadflowService;
+
+    @MockitoBean
+    private DirectoryService directoryService;
 
     @BeforeEach
     void setUp() throws Exception {
