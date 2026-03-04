@@ -228,13 +228,6 @@ public class SensitivityAnalysisController {
                 .body(service.getProviders());
     }
 
-    @GetMapping(value = "/default-provider", produces = TEXT_PLAIN_VALUE)
-    @Operation(summary = "Get sensitivity analysis default provider")
-    @ApiResponses(@ApiResponse(responseCode = "200", description = "The sensitivity analysis default provider has been found"))
-    public ResponseEntity<String> getDefaultProvider() {
-        return ResponseEntity.ok().body(service.getDefaultProvider());
-    }
-
     @PostMapping(value = "/results/{resultUuid}/csv")
     @Operation(summary = "export sensitivity results as csv file")
     @ApiResponses(@ApiResponse(responseCode = "200", description = "Sensitivity results successfully exported as csv file"))
