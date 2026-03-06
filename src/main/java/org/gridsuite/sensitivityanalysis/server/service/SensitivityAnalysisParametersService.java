@@ -14,14 +14,12 @@ import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParameter
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.entities.parameters.SensitivityAnalysisParametersEntity;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisParametersRepository;
+import org.gridsuite.sensitivityanalysis.server.service.mapper.SensitivityAnalysisParametersMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -34,14 +32,17 @@ public class SensitivityAnalysisParametersService {
 
     private final LoadFlowService loadFlowService;
 
+    private final SensitivityAnalysisParametersMapper parametersMapper;
+
     private final String defaultProvider;
 
     public SensitivityAnalysisParametersService(@Value("${sensitivity-analysis.default-provider}") String defaultProvider,
                                                 SensitivityAnalysisParametersRepository sensitivityAnalysisParametersRepository,
-                                                LoadFlowService loadFlowService) {
+                                                LoadFlowService loadFlowService, SensitivityAnalysisParametersMapper sensitivityAnalysisParametersMapper) {
         this.defaultProvider = defaultProvider;
         this.sensitivityAnalysisParametersRepository = sensitivityAnalysisParametersRepository;
         this.loadFlowService = loadFlowService;
+        this.parametersMapper = sensitivityAnalysisParametersMapper;
     }
 
     public UUID createDefaultParameters() {
@@ -53,25 +54,37 @@ public class SensitivityAnalysisParametersService {
     }
 
     @Transactional
-    public Optional<UUID> duplicateParameters(UUID sourceParametersId) {
+    public Optional<UUID> duplicateParameters(UUID sourceParametersId, String userId) {
         return sensitivityAnalysisParametersRepository.findById(sourceParametersId)
-            .map(SensitivityAnalysisParametersEntity::copy)
+            .map(entity -> copy(entity, userId))
             .map(sensitivityAnalysisParametersRepository::save)
             .map(SensitivityAnalysisParametersEntity::getId);
     }
 
-    @Transactional(readOnly = true)
-    public Optional<SensitivityAnalysisParametersInfos> getParameters(UUID parametersUuid) {
-        return getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid));
+    /**
+     * Copy used to duplicate in DB with .save.
+     * The ID is changed. The date is updated.
+     *
+     * @return a copy of the entity
+     */
+    private SensitivityAnalysisParametersEntity copy(SensitivityAnalysisParametersEntity entity, String userId) {
+        return parametersMapper.getSensitivityAnalysisParametersInfos(entity, userId).toEntity();
     }
 
-    private Optional<SensitivityAnalysisParametersInfos> getParameters(Optional<SensitivityAnalysisParametersEntity> parametersEntity) {
-        return parametersEntity.map(SensitivityAnalysisParametersEntity::toInfos);
+    @Transactional(readOnly = true)
+    public Optional<SensitivityAnalysisParametersInfos> getParameters(UUID parametersUuid, String userId) {
+        return getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid), userId);
+    }
+
+    private Optional<SensitivityAnalysisParametersInfos> getParameters(Optional<SensitivityAnalysisParametersEntity> parametersEntity, String userId) {
+        return parametersEntity.map(entity -> parametersMapper.getSensitivityAnalysisParametersInfos(entity, userId));
     }
 
     @Transactional(readOnly = true)
-    public List<SensitivityAnalysisParametersInfos> getAllParameters() {
-        return sensitivityAnalysisParametersRepository.findAll().stream().map(SensitivityAnalysisParametersEntity::toInfos).toList();
+    public List<SensitivityAnalysisParametersInfos> getAllParameters(String userId) {
+        return sensitivityAnalysisParametersRepository.findAll().stream()
+                .map(entity -> parametersMapper.getSensitivityAnalysisParametersInfos(entity, userId))
+                .toList();
     }
 
     @Transactional
@@ -139,7 +152,7 @@ public class SensitivityAnalysisParametersService {
                                                           UUID parametersUuid,
                                                           UUID loadFlowParametersUuid) {
         SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersUuid != null
-                ? getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid))
+                ? getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid), userId)
                 .orElse(getDefauSensitivityAnalysisParametersInfos())
                 : getDefauSensitivityAnalysisParametersInfos();
 

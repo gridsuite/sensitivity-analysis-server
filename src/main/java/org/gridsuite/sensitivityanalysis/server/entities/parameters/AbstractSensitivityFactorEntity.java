@@ -34,7 +34,8 @@ public abstract class AbstractSensitivityFactorEntity {
             name = "monitoredBranch",
             joinColumns = @JoinColumn(name = "SensitivityFactorId")
     )
-    private List<EquipmentsContainerEmbeddable> monitoredBranch;
+    @Column(name = "containerId")
+    private List<UUID> monitoredBranch;
 
     // liquidbase add foreignKey everytime, you need to delete it
     @ElementCollection
@@ -42,7 +43,8 @@ public abstract class AbstractSensitivityFactorEntity {
             name = "injections",
             joinColumns = @JoinColumn(name = "SensitivityFactorId")
     )
-    private List<EquipmentsContainerEmbeddable> injections;
+    @Column(name = "containerId")
+    private List<UUID> injections;
 
     // liquidbase add foreignKey everytime, you need to delete it
     @ElementCollection
@@ -50,7 +52,8 @@ public abstract class AbstractSensitivityFactorEntity {
             name = "contingencies",
             joinColumns = @JoinColumn(name = "SensitivityFactorId")
     )
-    private List<EquipmentsContainerEmbeddable> contingencies;
+    @Column(name = "containerId")
+    private List<UUID> contingencies;
 
     @Column(name = "activated", columnDefinition = "boolean default true")
     private boolean activated;
