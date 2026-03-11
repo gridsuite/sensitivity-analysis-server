@@ -134,9 +134,6 @@ class SensitivityAnalysisControllerTest {
     @MockitoBean
     private LoadFlowService loadflowService;
 
-    @MockitoBean
-    private DirectoryService directoryService;
-
     @BeforeEach
     void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
@@ -164,17 +161,17 @@ class SensitivityAnalysisControllerTest {
         SensitivityAnalysisParametersInfos parameters = SensitivityAnalysisParametersInfos.builder()
                 .sensitivityInjection(List.of(
                         SensitivityInjection.builder()
-                                .monitoredBranches(List.of(
-                                        new EquipmentsContainer(BRANCH1_CONTAINER_UUID, "branch1"),
-                                        new EquipmentsContainer(BRANCH2_CONTAINER_UUID, "branch2")
+                                .monitoredBranchIds(List.of(
+                                        BRANCH1_CONTAINER_UUID,
+                                        BRANCH2_CONTAINER_UUID
                                 ))
-                                .injections(List.of(
-                                        new EquipmentsContainer(GEN1_CONTAINER_UUID, "gen1"),
-                                        new EquipmentsContainer(GEN2_CONTAINER_UUID, "gen2")
+                                .injectionIds(List.of(
+                                        GEN1_CONTAINER_UUID,
+                                        GEN2_CONTAINER_UUID
                                 ))
-                                .contingencies(List.of(
-                                        new EquipmentsContainer(CONTINGENCY1_CONTAINER_UUID, "contingency1"),
-                                        new EquipmentsContainer(CONTINGENCY2_CONTAINER_UUID, "contingency2")
+                                .contingencyIds(List.of(
+                                        CONTINGENCY1_CONTAINER_UUID,
+                                        CONTINGENCY2_CONTAINER_UUID
                                 ))
                                 .activated(true)
                                 .build()
@@ -184,15 +181,15 @@ class SensitivityAnalysisControllerTest {
         SensitivityAnalysisParametersInfos noEquipmentAllowedParameters = SensitivityAnalysisParametersInfos.builder()
                 .sensitivityInjection(List.of(
                         SensitivityInjection.builder()
-                                .monitoredBranches(List.of(
-                                        new EquipmentsContainer(BRANCH1_CONTAINER_UUID, "branch1")
+                                .monitoredBranchIds(List.of(
+                                        BRANCH1_CONTAINER_UUID
                                 ))
-                                .injections(List.of(
-                                        new EquipmentsContainer(BRANCH1_CONTAINER_UUID, "branch1"),
-                                        new EquipmentsContainer(BRANCH2_CONTAINER_UUID, "branch2")
+                                .injectionIds(List.of(
+                                        BRANCH1_CONTAINER_UUID,
+                                        BRANCH2_CONTAINER_UUID
                                 ))
-                                .contingencies(List.of(
-                                        new EquipmentsContainer(CONTINGENCY1_CONTAINER_UUID, "contingency1")
+                                .contingencyIds(List.of(
+                                        CONTINGENCY1_CONTAINER_UUID
                                 ))
                                 .activated(true)
                                 .build()
@@ -202,16 +199,16 @@ class SensitivityAnalysisControllerTest {
         SensitivityAnalysisParametersInfos noMonitoredEquipmentAllowedParameters = SensitivityAnalysisParametersInfos.builder()
                 .sensitivityInjection(List.of(
                         SensitivityInjection.builder()
-                                .monitoredBranches(List.of(
-                                        new EquipmentsContainer(GEN1_CONTAINER_UUID, "gen1"),
-                                        new EquipmentsContainer(GEN2_CONTAINER_UUID, "gen2")
+                                .monitoredBranchIds(List.of(
+                                        GEN1_CONTAINER_UUID,
+                                        GEN2_CONTAINER_UUID
                                 ))
-                                .injections(List.of(
-                                        new EquipmentsContainer(GEN1_CONTAINER_UUID, "gen1"),
-                                        new EquipmentsContainer(GEN2_CONTAINER_UUID, "gen2")
+                                .injectionIds(List.of(
+                                        GEN1_CONTAINER_UUID,
+                                        GEN2_CONTAINER_UUID
                                 ))
-                                .contingencies(List.of(
-                                        new EquipmentsContainer(CONTINGENCY1_CONTAINER_UUID, "contingency1")
+                                .contingencyIds(List.of(
+                                        CONTINGENCY1_CONTAINER_UUID
                                 ))
                                 .activated(true)
                                 .build()

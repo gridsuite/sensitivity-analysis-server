@@ -18,7 +18,6 @@ import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParameter
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.entities.parameters.SensitivityAnalysisParametersEntity;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisParametersRepository;
-import org.gridsuite.sensitivityanalysis.server.service.DirectoryService;
 import org.gridsuite.sensitivityanalysis.server.service.LoadFlowService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisParametersService;
 import org.junit.jupiter.api.AfterEach;
@@ -30,13 +29,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -44,7 +41,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.computation.service.NotificationService.HEADER_USER_ID;
 import static org.gridsuite.sensitivityanalysis.server.util.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -60,11 +56,8 @@ class SensitivityAnalysisParametersTest {
     private static final String USER_ID = "userId";
 
     private static final UUID EQUIPMENTS_ID_1 = UUID.fromString("cf399ef3-7f14-4884-8c82-1c90300da321");
-    private static final String EQUIPMENTS_NAME_1 = "identifiable1";
     private static final UUID EQUIPMENTS_ID_2 = UUID.fromString("cf399ef3-7f14-4884-8c82-1c90300da322");
-    private static final String EQUIPMENTS_NAME_2 = "identifiable2";
     private static final UUID EQUIPMENTS_ID_3 = UUID.fromString("cf399ef3-7f14-4884-8c82-1c90300da323");
-    private static final String EQUIPMENTS_NAME_3 = "identifiable3";
 
     @Value("${sensitivity-analysis.default-provider}")
     private String defaultSensitivityAnalysisProvider;
@@ -86,21 +79,11 @@ class SensitivityAnalysisParametersTest {
     @Autowired
     private LoadFlowService loadFlowService;
 
-    @MockitoBean
-    DirectoryService directoryService;
-
     @BeforeEach
     void setUp() {
         wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
         wireMockServer.start();
         loadFlowService.setLoadFlowServiceBaseUri(wireMockServer.baseUrl());
-
-        when(directoryService.getElementNames(Set.of(EQUIPMENTS_ID_1, EQUIPMENTS_ID_2, EQUIPMENTS_ID_3), USER_ID))
-                .thenReturn(Map.of(
-                        EQUIPMENTS_ID_1, EQUIPMENTS_NAME_1,
-                        EQUIPMENTS_ID_2, EQUIPMENTS_NAME_2,
-                        EQUIPMENTS_ID_3, EQUIPMENTS_NAME_3
-                ));
     }
 
     @AfterEach
@@ -289,14 +272,11 @@ class SensitivityAnalysisParametersTest {
     }
 
     private static SensitivityAnalysisParametersInfos buildParameters() {
-        EquipmentsContainer equipments1 = new EquipmentsContainer(EQUIPMENTS_ID_1, EQUIPMENTS_NAME_1);
-        EquipmentsContainer equipments2 = new EquipmentsContainer(EQUIPMENTS_ID_2, EQUIPMENTS_NAME_2);
-        EquipmentsContainer equipments3 = new EquipmentsContainer(EQUIPMENTS_ID_3, EQUIPMENTS_NAME_3);
-        SensitivityInjectionsSet injectionsSet = new SensitivityInjectionsSet(List.of(equipments1), List.of(equipments2), SensitivityAnalysisInputData.DistributionType.PROPORTIONAL, List.of(equipments3), true);
-        SensitivityInjection injections = new SensitivityInjection(List.of(equipments1), List.of(equipments2), List.of(equipments3), true);
-        SensitivityHVDC hvdc = new SensitivityHVDC(List.of(equipments1), SensitivityAnalysisInputData.SensitivityType.DELTA_MW, List.of(equipments2), List.of(equipments3), true);
-        SensitivityPST pst = new SensitivityPST(List.of(equipments1), SensitivityAnalysisInputData.SensitivityType.DELTA_MW, List.of(equipments2), List.of(equipments3), true);
-        SensitivityNodes nodes = new SensitivityNodes(List.of(equipments1), List.of(equipments2), List.of(equipments3), true);
+        SensitivityInjectionsSet injectionsSet = new SensitivityInjectionsSet(List.of(EQUIPMENTS_ID_1), List.of(EQUIPMENTS_ID_2), SensitivityAnalysisInputData.DistributionType.PROPORTIONAL, List.of(EQUIPMENTS_ID_3), true);
+        SensitivityInjection injections = new SensitivityInjection(List.of(EQUIPMENTS_ID_1), List.of(EQUIPMENTS_ID_2), List.of(EQUIPMENTS_ID_3), true);
+        SensitivityHVDC hvdc = new SensitivityHVDC(List.of(EQUIPMENTS_ID_1), SensitivityAnalysisInputData.SensitivityType.DELTA_MW, List.of(EQUIPMENTS_ID_2), List.of(EQUIPMENTS_ID_3), true);
+        SensitivityPST pst = new SensitivityPST(List.of(EQUIPMENTS_ID_1), SensitivityAnalysisInputData.SensitivityType.DELTA_MW, List.of(EQUIPMENTS_ID_2), List.of(EQUIPMENTS_ID_3), true);
+        SensitivityNodes nodes = new SensitivityNodes(List.of(EQUIPMENTS_ID_1), List.of(EQUIPMENTS_ID_2), List.of(EQUIPMENTS_ID_3), true);
 
         return SensitivityAnalysisParametersInfos.builder()
             .provider(PROVIDER)
