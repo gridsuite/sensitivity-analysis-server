@@ -67,9 +67,8 @@ public class SensitivityAnalysisParametersController {
     @ApiResponse(responseCode = "200", description = "parameters were returned")
     @ApiResponse(responseCode = "404", description = "parameters were not found")
     public ResponseEntity<SensitivityAnalysisParametersInfos> getParameters(
-        @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid,
-        @RequestHeader(HEADER_USER_ID) String userId) {
-        return ResponseEntity.of(parametersService.getParameters(parametersUuid, userId));
+        @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid) {
+        return ResponseEntity.of(parametersService.getParameters(parametersUuid));
     }
 
     @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)

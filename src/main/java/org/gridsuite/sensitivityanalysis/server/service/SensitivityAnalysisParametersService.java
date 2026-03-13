@@ -72,11 +72,11 @@ public class SensitivityAnalysisParametersService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<SensitivityAnalysisParametersInfos> getParameters(UUID parametersUuid, String userId) {
-        return getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid), userId);
+    public Optional<SensitivityAnalysisParametersInfos> getParameters(UUID parametersUuid) {
+        return getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid));
     }
 
-    private Optional<SensitivityAnalysisParametersInfos> getParameters(Optional<SensitivityAnalysisParametersEntity> parametersEntity, String userId) {
+    private Optional<SensitivityAnalysisParametersInfos> getParameters(Optional<SensitivityAnalysisParametersEntity> parametersEntity) {
         return parametersEntity.map(parametersMapper::getSensitivityAnalysisParametersInfos);
     }
 
@@ -152,7 +152,7 @@ public class SensitivityAnalysisParametersService {
                                                           UUID parametersUuid,
                                                           UUID loadFlowParametersUuid) {
         SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersUuid != null
-                ? getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid), userId)
+                ? getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid))
                 .orElse(getDefauSensitivityAnalysisParametersInfos())
                 : getDefauSensitivityAnalysisParametersInfos();
 
