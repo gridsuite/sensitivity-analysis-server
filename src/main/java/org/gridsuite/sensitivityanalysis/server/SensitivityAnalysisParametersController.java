@@ -75,9 +75,8 @@ public class SensitivityAnalysisParametersController {
     @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get all parameters")
     @ApiResponse(responseCode = "200", description = "the list of all parameters was returned")
-    public ResponseEntity<List<SensitivityAnalysisParametersInfos>> getAllParameters(
-            @RequestHeader(HEADER_USER_ID) String userId) {
-        return ResponseEntity.ok(parametersService.getAllParameters(userId));
+    public ResponseEntity<List<SensitivityAnalysisParametersInfos>> getAllParameters() {
+        return ResponseEntity.ok(parametersService.getAllParameters());
     }
 
     @PutMapping(value = "/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

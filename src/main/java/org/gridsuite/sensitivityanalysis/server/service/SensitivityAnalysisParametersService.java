@@ -56,7 +56,7 @@ public class SensitivityAnalysisParametersService {
     @Transactional
     public Optional<UUID> duplicateParameters(UUID sourceParametersId, String userId) {
         return sensitivityAnalysisParametersRepository.findById(sourceParametersId)
-            .map(entity -> copy(entity, userId))
+            .map(this::copy)
             .map(sensitivityAnalysisParametersRepository::save)
             .map(SensitivityAnalysisParametersEntity::getId);
     }
@@ -67,8 +67,8 @@ public class SensitivityAnalysisParametersService {
      *
      * @return a copy of the entity
      */
-    private SensitivityAnalysisParametersEntity copy(SensitivityAnalysisParametersEntity entity, String userId) {
-        return parametersMapper.getSensitivityAnalysisParametersInfos(entity, userId).toEntity();
+    private SensitivityAnalysisParametersEntity copy(SensitivityAnalysisParametersEntity entity) {
+        return parametersMapper.getSensitivityAnalysisParametersInfos(entity).toEntity();
     }
 
     @Transactional(readOnly = true)
@@ -77,13 +77,13 @@ public class SensitivityAnalysisParametersService {
     }
 
     private Optional<SensitivityAnalysisParametersInfos> getParameters(Optional<SensitivityAnalysisParametersEntity> parametersEntity, String userId) {
-        return parametersEntity.map(entity -> parametersMapper.getSensitivityAnalysisParametersInfos(entity, userId));
+        return parametersEntity.map(parametersMapper::getSensitivityAnalysisParametersInfos);
     }
 
     @Transactional(readOnly = true)
-    public List<SensitivityAnalysisParametersInfos> getAllParameters(String userId) {
+    public List<SensitivityAnalysisParametersInfos> getAllParameters() {
         return sensitivityAnalysisParametersRepository.findAll().stream()
-                .map(entity -> parametersMapper.getSensitivityAnalysisParametersInfos(entity, userId))
+                .map(parametersMapper::getSensitivityAnalysisParametersInfos)
                 .toList();
     }
 

@@ -134,9 +134,6 @@ class SensitivityAnalysisControllerTest {
     @MockitoBean
     private LoadFlowService loadflowService;
 
-    @MockitoBean
-    private DirectoryService directoryService;
-
     @BeforeEach
     void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
