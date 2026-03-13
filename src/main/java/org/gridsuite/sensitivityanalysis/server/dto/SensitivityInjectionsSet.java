@@ -26,13 +26,13 @@ import java.util.UUID;
 @Setter
 @Schema(description = "Sensitivity relatively to injections set")
 public class SensitivityInjectionsSet {
-    List<UUID> monitoredBranchIds;
+    List<UUID> monitoredBranches;
 
-    List<UUID> injectionIds;
+    List<UUID> injections;
 
     SensitivityAnalysisInputData.DistributionType distributionType;
 
-    List<UUID> contingencyIds;
+    List<UUID> contingencies;
 
     boolean activated;
 }

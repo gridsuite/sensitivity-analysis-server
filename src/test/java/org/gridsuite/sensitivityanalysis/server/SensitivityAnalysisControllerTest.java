@@ -161,15 +161,15 @@ class SensitivityAnalysisControllerTest {
         SensitivityAnalysisParametersInfos parameters = SensitivityAnalysisParametersInfos.builder()
                 .sensitivityInjection(List.of(
                         SensitivityInjection.builder()
-                                .monitoredBranchIds(List.of(
+                                .monitoredBranches(List.of(
                                         BRANCH1_CONTAINER_UUID,
                                         BRANCH2_CONTAINER_UUID
                                 ))
-                                .injectionIds(List.of(
+                                .injections(List.of(
                                         GEN1_CONTAINER_UUID,
                                         GEN2_CONTAINER_UUID
                                 ))
-                                .contingencyIds(List.of(
+                                .contingencies(List.of(
                                         CONTINGENCY1_CONTAINER_UUID,
                                         CONTINGENCY2_CONTAINER_UUID
                                 ))
@@ -181,14 +181,14 @@ class SensitivityAnalysisControllerTest {
         SensitivityAnalysisParametersInfos noEquipmentAllowedParameters = SensitivityAnalysisParametersInfos.builder()
                 .sensitivityInjection(List.of(
                         SensitivityInjection.builder()
-                                .monitoredBranchIds(List.of(
+                                .monitoredBranches(List.of(
                                         BRANCH1_CONTAINER_UUID
                                 ))
-                                .injectionIds(List.of(
+                                .injections(List.of(
                                         BRANCH1_CONTAINER_UUID,
                                         BRANCH2_CONTAINER_UUID
                                 ))
-                                .contingencyIds(List.of(
+                                .contingencies(List.of(
                                         CONTINGENCY1_CONTAINER_UUID
                                 ))
                                 .activated(true)
@@ -199,15 +199,15 @@ class SensitivityAnalysisControllerTest {
         SensitivityAnalysisParametersInfos noMonitoredEquipmentAllowedParameters = SensitivityAnalysisParametersInfos.builder()
                 .sensitivityInjection(List.of(
                         SensitivityInjection.builder()
-                                .monitoredBranchIds(List.of(
+                                .monitoredBranches(List.of(
                                         GEN1_CONTAINER_UUID,
                                         GEN2_CONTAINER_UUID
                                 ))
-                                .injectionIds(List.of(
+                                .injections(List.of(
                                         GEN1_CONTAINER_UUID,
                                         GEN2_CONTAINER_UUID
                                 ))
-                                .contingencyIds(List.of(
+                                .contingencies(List.of(
                                         CONTINGENCY1_CONTAINER_UUID
                                 ))
                                 .activated(true)

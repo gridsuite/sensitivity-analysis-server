@@ -26,13 +26,13 @@ import java.util.UUID;
 @Setter
 @Schema(description = "Sensitivity relatively to each HVDC")
 public class SensitivityHVDC {
-    List<UUID> monitoredBranchIds;
+    List<UUID> monitoredBranches;
 
     SensitivityAnalysisInputData.SensitivityType sensitivityType;
 
-    List<UUID> hvdcIds;
+    List<UUID> hvdcs;
 
-    List<UUID> contingencyIds;
+    List<UUID> contingencies;
 
     boolean activated;
 }

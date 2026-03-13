@@ -26,13 +26,13 @@ import java.util.UUID;
 @Setter
 @Schema(description = "Sensitivity relatively to each PST")
 public class SensitivityPST {
-    List<UUID> monitoredBranchIds;
+    List<UUID> monitoredBranches;
 
     SensitivityAnalysisInputData.SensitivityType sensitivityType;
 
-    List<UUID> pstIds;
+    List<UUID> psts;
 
-    List<UUID> contingencyIds;
+    List<UUID> contingencies;
 
     boolean activated;
 }

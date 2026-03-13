@@ -26,11 +26,11 @@ import java.util.UUID;
 @Setter
 @Schema(description = "Sensitivity relatively to nodes")
 public class SensitivityNodes {
-    List<UUID> monitoredVoltageLevelIds;
+    List<UUID> monitoredVoltageLevels;
 
-    List<UUID> equipmentInVoltageRegulationIds;
+    List<UUID> equipmentsInVoltageRegulation;
 
-    List<UUID> contingencyIds;
+    List<UUID> contingencies;
 
     boolean activated;
 }

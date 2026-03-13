@@ -29,7 +29,7 @@ public abstract class AbstractSensitivityFactorEntity {
     private UUID id;
 
     // liquidbase add foreignKey everytime, you need to delete it
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "monitoredBranch",
             joinColumns = @JoinColumn(name = "SensitivityFactorId")
@@ -38,7 +38,7 @@ public abstract class AbstractSensitivityFactorEntity {
     private List<UUID> monitoredBranch;
 
     // liquidbase add foreignKey everytime, you need to delete it
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "injections",
             joinColumns = @JoinColumn(name = "SensitivityFactorId")
@@ -47,7 +47,7 @@ public abstract class AbstractSensitivityFactorEntity {
     private List<UUID> injections;
 
     // liquidbase add foreignKey everytime, you need to delete it
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "contingencies",
             joinColumns = @JoinColumn(name = "SensitivityFactorId")

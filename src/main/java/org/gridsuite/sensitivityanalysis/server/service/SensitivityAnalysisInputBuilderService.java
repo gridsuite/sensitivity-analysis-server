@@ -306,16 +306,16 @@ public class SensitivityAnalysisInputBuilderService {
     private void buildSensitivityInjectionsSets(SensitivityAnalysisRunContext context, Network network, ReportNode reporter) {
         List<SensitivityInjectionsSet> sensitivityInjectionsSets = context.getSensitivityAnalysisInputData().getSensitivityInjectionsSets();
         sensitivityInjectionsSets.forEach(sensitivityInjectionsSet -> {
-            List<Contingency> cInjectionsSet = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityInjectionsSet.getContingencyIds(), reporter);
+            List<Contingency> cInjectionsSet = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityInjectionsSet.getContingencies(), reporter);
             List<SensitivityVariableSet> vInjectionsSets = buildSensitivityVariableSets(context,
                 network, reporter,
                 List.of(IdentifiableType.GENERATOR, IdentifiableType.LOAD),
-                sensitivityInjectionsSet.getInjectionIds(),
+                sensitivityInjectionsSet.getInjections(),
                 sensitivityInjectionsSet.getDistributionType());
             List<List<SensitivityFactor>> fInjectionsSet = buildSensitivityFactorsFromVariablesSets(
                 context, network, reporter,
                 List.of(IdentifiableType.LINE, IdentifiableType.TWO_WINDINGS_TRANSFORMER),
-                sensitivityInjectionsSet.getMonitoredBranchIds(),
+                sensitivityInjectionsSet.getMonitoredBranches(),
                 vInjectionsSets,
                 cInjectionsSet,
                 SensitivityFunctionType.BRANCH_ACTIVE_POWER_1,
@@ -330,13 +330,13 @@ public class SensitivityAnalysisInputBuilderService {
     private void buildSensitivityInjections(SensitivityAnalysisRunContext context, Network network, ReportNode reporter) {
         List<SensitivityInjection> sensitivityInjections = context.getSensitivityAnalysisInputData().getSensitivityInjections();
         sensitivityInjections.forEach(sensitivityInjection -> {
-            List<Contingency> cInjections = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityInjection.getContingencyIds(), reporter);
+            List<Contingency> cInjections = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityInjection.getContingencies(), reporter);
             List<List<SensitivityFactor>> fInjections = buildSensitivityFactorsFromEquipments(
                 context, network, reporter,
                 List.of(IdentifiableType.LINE, IdentifiableType.TWO_WINDINGS_TRANSFORMER),
-                sensitivityInjection.getMonitoredBranchIds(),
+                sensitivityInjection.getMonitoredBranches(),
                 List.of(IdentifiableType.GENERATOR, IdentifiableType.LOAD),
-                sensitivityInjection.getInjectionIds(),
+                sensitivityInjection.getInjections(),
                 cInjections,
                 SensitivityFunctionType.BRANCH_ACTIVE_POWER_1,
                 SensitivityVariableType.INJECTION_ACTIVE_POWER);
@@ -349,7 +349,7 @@ public class SensitivityAnalysisInputBuilderService {
     private void buildSensitivityHVDCs(SensitivityAnalysisRunContext context, Network network, ReportNode reporter) {
         List<SensitivityHVDC> sensitivityHVDCs = context.getSensitivityAnalysisInputData().getSensitivityHVDCs();
         sensitivityHVDCs.forEach(sensitivityHVDC -> {
-            List<Contingency> cHVDC = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityHVDC.getContingencyIds(), reporter);
+            List<Contingency> cHVDC = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityHVDC.getContingencies(), reporter);
             SensitivityFunctionType sensitivityFunctionType = sensitivityHVDC.getSensitivityType() == SensitivityAnalysisInputData.SensitivityType.DELTA_MW
                 ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1
                 : SensitivityFunctionType.BRANCH_CURRENT_1;
@@ -357,9 +357,9 @@ public class SensitivityAnalysisInputBuilderService {
             List<List<SensitivityFactor>> fHVDC = buildSensitivityFactorsFromEquipments(
                 context, network, reporter,
                 List.of(IdentifiableType.LINE, IdentifiableType.TWO_WINDINGS_TRANSFORMER),
-                sensitivityHVDC.getMonitoredBranchIds(),
+                sensitivityHVDC.getMonitoredBranches(),
                 List.of(IdentifiableType.HVDC_LINE),
-                sensitivityHVDC.getHvdcIds(),
+                sensitivityHVDC.getHvdcs(),
                 cHVDC,
                 sensitivityFunctionType,
                 SensitivityVariableType.HVDC_LINE_ACTIVE_POWER);
@@ -372,13 +372,13 @@ public class SensitivityAnalysisInputBuilderService {
     private void buildSensitivityPSTs(SensitivityAnalysisRunContext context, Network network, ReportNode reporter) {
         List<SensitivityPST> sensitivityPSTs = context.getSensitivityAnalysisInputData().getSensitivityPSTs();
         sensitivityPSTs.forEach(sensitivityPST -> {
-            List<Contingency> cPST = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityPST.getContingencyIds(), reporter);
+            List<Contingency> cPST = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityPST.getContingencies(), reporter);
             List<List<SensitivityFactor>> fPST = buildSensitivityFactorsFromEquipments(
                 context, network, reporter,
                 List.of(IdentifiableType.LINE, IdentifiableType.TWO_WINDINGS_TRANSFORMER),
-                sensitivityPST.getMonitoredBranchIds(),
+                sensitivityPST.getMonitoredBranches(),
                 List.of(IdentifiableType.TWO_WINDINGS_TRANSFORMER),
-                sensitivityPST.getPstIds(),
+                sensitivityPST.getPsts(),
                 cPST,
                 sensitivityPST.getSensitivityType() == SensitivityAnalysisInputData.SensitivityType.DELTA_MW
                     ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1
@@ -402,14 +402,14 @@ public class SensitivityAnalysisInputBuilderService {
             return;
         }
         sensitivityNodes.forEach(sensitivityNode -> {
-            List<Contingency> cNodes = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityNode.getContingencyIds(), reporter);
+            List<Contingency> cNodes = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityNode.getContingencies(), reporter);
             List<List<SensitivityFactor>> fNodes = buildSensitivityFactorsFromEquipments(
                 context, network, reporter,
                 List.of(IdentifiableType.VOLTAGE_LEVEL),
-                sensitivityNode.getMonitoredVoltageLevelIds(),
+                sensitivityNode.getMonitoredVoltageLevels(),
                 List.of(IdentifiableType.GENERATOR, IdentifiableType.TWO_WINDINGS_TRANSFORMER,
                     IdentifiableType.HVDC_CONVERTER_STATION, IdentifiableType.STATIC_VAR_COMPENSATOR, IdentifiableType.SHUNT_COMPENSATOR),
-                sensitivityNode.getEquipmentInVoltageRegulationIds(),
+                sensitivityNode.getEquipmentsInVoltageRegulation(),
                 cNodes,
                 SensitivityFunctionType.BUS_VOLTAGE,
                 SensitivityVariableType.BUS_TARGET_VOLTAGE);

@@ -93,9 +93,9 @@ public class SensitivityAnalysisFactorCountService {
         injectionsSets.stream()
             .filter(SensitivityInjectionsSet::isActivated)
             .forEach(injectionsSet -> factors.add(new Factor(
-                                        injectionsSet.getMonitoredBranchIds(),
+                                        injectionsSet.getMonitoredBranches(),
                                         null,
-                                        injectionsSet.getContingencyIds(),
+                                        injectionsSet.getContingencies(),
                                         FactorType.INJECTIONS_SET
                                 )
                         )
@@ -104,9 +104,9 @@ public class SensitivityAnalysisFactorCountService {
         injections.stream()
             .filter(SensitivityInjection::isActivated)
             .forEach(injection -> factors.add(new Factor(
-                                        injection.getMonitoredBranchIds(),
-                                        injection.getInjectionIds(),
-                                        injection.getContingencyIds(),
+                                        injection.getMonitoredBranches(),
+                                        injection.getInjections(),
+                                        injection.getContingencies(),
                                         FactorType.INJECTIONS
                                 )
                         )
@@ -115,9 +115,9 @@ public class SensitivityAnalysisFactorCountService {
         hvdcs.stream()
             .filter(SensitivityHVDC::isActivated)
             .forEach(hvdc -> factors.add(new Factor(
-                                        hvdc.getMonitoredBranchIds(),
-                                        hvdc.getHvdcIds(),
-                                        hvdc.getContingencyIds(),
+                                        hvdc.getMonitoredBranches(),
+                                        hvdc.getHvdcs(),
+                                        hvdc.getContingencies(),
                                         FactorType.HVDC
                                 )
                         )
@@ -126,9 +126,9 @@ public class SensitivityAnalysisFactorCountService {
         psts.stream()
             .filter(SensitivityPST::isActivated)
             .forEach(pst -> factors.add(new Factor(
-                                        pst.getMonitoredBranchIds(),
-                                        pst.getPstIds(),
-                                        pst.getContingencyIds(),
+                                        pst.getMonitoredBranches(),
+                                        pst.getPsts(),
+                                        pst.getContingencies(),
                                         FactorType.PST
                                 )
                         )
@@ -137,9 +137,9 @@ public class SensitivityAnalysisFactorCountService {
         nodes.stream()
             .filter(SensitivityNodes::isActivated)
             .forEach(node -> factors.add(new Factor(
-                                        node.getMonitoredVoltageLevelIds(),
-                                        node.getEquipmentInVoltageRegulationIds(),
-                                        node.getContingencyIds(),
+                                        node.getMonitoredVoltageLevels(),
+                                        node.getEquipmentsInVoltageRegulation(),
+                                        node.getContingencies(),
                                         FactorType.NODES
                                 )
                         )
