@@ -50,7 +50,7 @@ public class SensitivityAnalysisParametersService {
     }
 
     @Transactional
-    public Optional<UUID> duplicateParameters(UUID sourceParametersId, String userId) {
+    public Optional<UUID> duplicateParameters(UUID sourceParametersId) {
         return sensitivityAnalysisParametersRepository.findById(sourceParametersId)
             .map(this::copy)
             .map(sensitivityAnalysisParametersRepository::save)
@@ -68,16 +68,16 @@ public class SensitivityAnalysisParametersService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<SensitivityAnalysisParametersInfos> getParameters(UUID parametersUuid, String userId) {
-        return getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid), userId);
+    public Optional<SensitivityAnalysisParametersInfos> getParameters(UUID parametersUuid) {
+        return getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid));
     }
 
-    private Optional<SensitivityAnalysisParametersInfos> getParameters(Optional<SensitivityAnalysisParametersEntity> parametersEntity, String userId) {
+    private Optional<SensitivityAnalysisParametersInfos> getParameters(Optional<SensitivityAnalysisParametersEntity> parametersEntity) {
         return parametersEntity.map(this::getSensitivityAnalysisParametersInfos);
     }
 
     @Transactional(readOnly = true)
-    public List<SensitivityAnalysisParametersInfos> getAllParameters(String userId) {
+    public List<SensitivityAnalysisParametersInfos> getAllParameters() {
         return sensitivityAnalysisParametersRepository.findAll().stream()
                 .map(this::getSensitivityAnalysisParametersInfos)
                 .toList();
@@ -148,7 +148,7 @@ public class SensitivityAnalysisParametersService {
                                                           UUID parametersUuid,
                                                           UUID loadFlowParametersUuid) {
         SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersUuid != null
-                ? getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid), userId)
+                ? getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid))
                 .orElse(getDefauSensitivityAnalysisParametersInfos())
                 : getDefauSensitivityAnalysisParametersInfos();
 
