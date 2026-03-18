@@ -14,7 +14,6 @@ import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParameter
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.entities.parameters.SensitivityAnalysisParametersEntity;
 import org.gridsuite.sensitivityanalysis.server.repositories.SensitivityAnalysisParametersRepository;
-import org.gridsuite.sensitivityanalysis.server.service.mapper.SensitivityAnalysisParametersMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,17 +31,14 @@ public class SensitivityAnalysisParametersService {
 
     private final LoadFlowService loadFlowService;
 
-    private final SensitivityAnalysisParametersMapper parametersMapper;
-
     private final String defaultProvider;
 
     public SensitivityAnalysisParametersService(@Value("${sensitivity-analysis.default-provider}") String defaultProvider,
                                                 SensitivityAnalysisParametersRepository sensitivityAnalysisParametersRepository,
-                                                LoadFlowService loadFlowService, SensitivityAnalysisParametersMapper sensitivityAnalysisParametersMapper) {
+                                                LoadFlowService loadFlowService) {
         this.defaultProvider = defaultProvider;
         this.sensitivityAnalysisParametersRepository = sensitivityAnalysisParametersRepository;
         this.loadFlowService = loadFlowService;
-        this.parametersMapper = sensitivityAnalysisParametersMapper;
     }
 
     public UUID createDefaultParameters() {
@@ -54,9 +50,9 @@ public class SensitivityAnalysisParametersService {
     }
 
     @Transactional
-    public Optional<UUID> duplicateParameters(UUID sourceParametersId, String userId) {
+    public Optional<UUID> duplicateParameters(UUID sourceParametersId) {
         return sensitivityAnalysisParametersRepository.findById(sourceParametersId)
-            .map(entity -> copy(entity, userId))
+            .map(this::copy)
             .map(sensitivityAnalysisParametersRepository::save)
             .map(SensitivityAnalysisParametersEntity::getId);
     }
@@ -67,23 +63,23 @@ public class SensitivityAnalysisParametersService {
      *
      * @return a copy of the entity
      */
-    private SensitivityAnalysisParametersEntity copy(SensitivityAnalysisParametersEntity entity, String userId) {
-        return parametersMapper.getSensitivityAnalysisParametersInfos(entity, userId).toEntity();
+    private SensitivityAnalysisParametersEntity copy(SensitivityAnalysisParametersEntity entity) {
+        return getSensitivityAnalysisParametersInfos(entity).toEntity();
     }
 
     @Transactional(readOnly = true)
-    public Optional<SensitivityAnalysisParametersInfos> getParameters(UUID parametersUuid, String userId) {
-        return getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid), userId);
+    public Optional<SensitivityAnalysisParametersInfos> getParameters(UUID parametersUuid) {
+        return getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid));
     }
 
-    private Optional<SensitivityAnalysisParametersInfos> getParameters(Optional<SensitivityAnalysisParametersEntity> parametersEntity, String userId) {
-        return parametersEntity.map(entity -> parametersMapper.getSensitivityAnalysisParametersInfos(entity, userId));
+    private Optional<SensitivityAnalysisParametersInfos> getParameters(Optional<SensitivityAnalysisParametersEntity> parametersEntity) {
+        return parametersEntity.map(this::getSensitivityAnalysisParametersInfos);
     }
 
     @Transactional(readOnly = true)
-    public List<SensitivityAnalysisParametersInfos> getAllParameters(String userId) {
+    public List<SensitivityAnalysisParametersInfos> getAllParameters() {
         return sensitivityAnalysisParametersRepository.findAll().stream()
-                .map(entity -> parametersMapper.getSensitivityAnalysisParametersInfos(entity, userId))
+                .map(this::getSensitivityAnalysisParametersInfos)
                 .toList();
     }
 
@@ -152,7 +148,7 @@ public class SensitivityAnalysisParametersService {
                                                           UUID parametersUuid,
                                                           UUID loadFlowParametersUuid) {
         SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersUuid != null
-                ? getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid), userId)
+                ? getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid))
                 .orElse(getDefauSensitivityAnalysisParametersInfos())
                 : getDefauSensitivityAnalysisParametersInfos();
 
@@ -169,5 +165,63 @@ public class SensitivityAnalysisParametersService {
                 userId,
                 sensitivityAnalysisParametersInfos.getProvider(),
                 inputData);
+    }
+
+    private SensitivityAnalysisParametersInfos getSensitivityAnalysisParametersInfos(SensitivityAnalysisParametersEntity entity) {
+        List<SensitivityInjectionsSet> sensiInjectionsSets = entity.getSensitivityInjectionsSets().stream()
+                .map(sensitivityInjectionsSet -> new SensitivityInjectionsSet(
+                        sensitivityInjectionsSet.getMonitoredBranch(),
+                        sensitivityInjectionsSet.getInjections(),
+                        sensitivityInjectionsSet.getDistributionType(),
+                        sensitivityInjectionsSet.getContingencies(),
+                        sensitivityInjectionsSet.isActivated()))
+                .toList();
+
+        List<SensitivityInjection> sensiInjections = entity.getSensitivityInjections().stream()
+                .map(sensitivityInjection -> new SensitivityInjection(
+                        sensitivityInjection.getMonitoredBranch(),
+                        sensitivityInjection.getInjections(),
+                        sensitivityInjection.getContingencies(),
+                        sensitivityInjection.isActivated()))
+                .toList();
+
+        List<SensitivityHVDC> sensiHvdcs = entity.getSensitivityHVDCs().stream()
+                .map(sensitivityHvdc -> new SensitivityHVDC(
+                        sensitivityHvdc.getMonitoredBranch(),
+                        sensitivityHvdc.getSensitivityType(),
+                        sensitivityHvdc.getInjections(),
+                        sensitivityHvdc.getContingencies(),
+                        sensitivityHvdc.isActivated()))
+                .toList();
+
+        List<SensitivityPST> sensiPsts = entity.getSensitivityPSTs().stream()
+                .map(sensitivityPst -> new SensitivityPST(
+                        sensitivityPst.getMonitoredBranch(),
+                        sensitivityPst.getSensitivityType(),
+                        sensitivityPst.getInjections(),
+                        sensitivityPst.getContingencies(),
+                        sensitivityPst.isActivated()))
+                .toList();
+
+        List<SensitivityNodes> sensiNodes = entity.getSensitivityNodes().stream()
+                .map(sensitivityNode -> new SensitivityNodes(
+                        sensitivityNode.getMonitoredBranch(),
+                        sensitivityNode.getInjections(),
+                        sensitivityNode.getContingencies(),
+                        sensitivityNode.isActivated()))
+                .toList();
+
+        return SensitivityAnalysisParametersInfos.builder()
+                .uuid(entity.getId())
+                .provider(entity.getProvider())
+                .flowFlowSensitivityValueThreshold(entity.getFlowFlowSensitivityValueThreshold())
+                .angleFlowSensitivityValueThreshold(entity.getAngleFlowSensitivityValueThreshold())
+                .flowVoltageSensitivityValueThreshold(entity.getFlowVoltageSensitivityValueThreshold())
+                .sensitivityInjectionsSet(sensiInjectionsSets)
+                .sensitivityInjection(sensiInjections)
+                .sensitivityHVDC(sensiHvdcs)
+                .sensitivityPST(sensiPsts)
+                .sensitivityNodes(sensiNodes)
+                .build();
     }
 }
