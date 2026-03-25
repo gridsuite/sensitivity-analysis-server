@@ -170,44 +170,44 @@ public class SensitivityAnalysisParametersService {
     private SensitivityAnalysisParametersInfos getSensitivityAnalysisParametersInfos(SensitivityAnalysisParametersEntity entity) {
         List<SensitivityInjectionsSet> sensiInjectionsSets = entity.getSensitivityInjectionsSets().stream()
                 .map(sensitivityInjectionsSet -> new SensitivityInjectionsSet(
-                        sensitivityInjectionsSet.getMonitoredBranch(),
-                        sensitivityInjectionsSet.getInjections(),
+                        new ArrayList<>(sensitivityInjectionsSet.getMonitoredBranch()),
+                        new ArrayList<>(sensitivityInjectionsSet.getInjections()),
                         sensitivityInjectionsSet.getDistributionType(),
-                        sensitivityInjectionsSet.getContingencies(),
+                        new ArrayList<>(sensitivityInjectionsSet.getContingencies()),
                         sensitivityInjectionsSet.isActivated()))
                 .toList();
 
         List<SensitivityInjection> sensiInjections = entity.getSensitivityInjections().stream()
                 .map(sensitivityInjection -> new SensitivityInjection(
-                        sensitivityInjection.getMonitoredBranch(),
-                        sensitivityInjection.getInjections(),
-                        sensitivityInjection.getContingencies(),
+                        new ArrayList<>(sensitivityInjection.getMonitoredBranch()),
+                        new ArrayList<>(sensitivityInjection.getInjections()),
+                        new ArrayList<>(sensitivityInjection.getContingencies()),
                         sensitivityInjection.isActivated()))
                 .toList();
 
         List<SensitivityHVDC> sensiHvdcs = entity.getSensitivityHVDCs().stream()
                 .map(sensitivityHvdc -> new SensitivityHVDC(
-                        sensitivityHvdc.getMonitoredBranch(),
+                        new ArrayList<>(sensitivityHvdc.getMonitoredBranch()),
                         sensitivityHvdc.getSensitivityType(),
-                        sensitivityHvdc.getInjections(),
-                        sensitivityHvdc.getContingencies(),
+                        new ArrayList<>(sensitivityHvdc.getInjections()),
+                        new ArrayList<>(sensitivityHvdc.getContingencies()),
                         sensitivityHvdc.isActivated()))
                 .toList();
 
         List<SensitivityPST> sensiPsts = entity.getSensitivityPSTs().stream()
                 .map(sensitivityPst -> new SensitivityPST(
-                        sensitivityPst.getMonitoredBranch(),
+                        new ArrayList<>(sensitivityPst.getMonitoredBranch()),
                         sensitivityPst.getSensitivityType(),
-                        sensitivityPst.getInjections(),
-                        sensitivityPst.getContingencies(),
+                        new ArrayList<>(sensitivityPst.getInjections()),
+                        new ArrayList<>(sensitivityPst.getContingencies()),
                         sensitivityPst.isActivated()))
                 .toList();
 
         List<SensitivityNodes> sensiNodes = entity.getSensitivityNodes().stream()
                 .map(sensitivityNode -> new SensitivityNodes(
-                        sensitivityNode.getMonitoredBranch(),
-                        sensitivityNode.getInjections(),
-                        sensitivityNode.getContingencies(),
+                        new ArrayList<>(sensitivityNode.getMonitoredBranch()),
+                        new ArrayList<>(sensitivityNode.getInjections()),
+                        new ArrayList<>(sensitivityNode.getContingencies()),
                         sensitivityNode.isActivated()))
                 .toList();
 

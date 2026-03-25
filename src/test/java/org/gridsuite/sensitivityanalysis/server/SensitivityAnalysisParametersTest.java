@@ -38,7 +38,6 @@ import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.gridsuite.computation.service.NotificationService.HEADER_USER_ID;
 import static org.gridsuite.sensitivityanalysis.server.util.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -53,7 +52,6 @@ class SensitivityAnalysisParametersTest {
     private static final String URI_PARAMETERS_BASE = "/v1/parameters";
     private static final String URI_PARAMETERS_GET_PUT = URI_PARAMETERS_BASE + "/";
     private static final String PROVIDER = "provider";
-    private static final String USER_ID = "userId";
 
     private static final UUID EQUIPMENTS_ID_1 = UUID.fromString("cf399ef3-7f14-4884-8c82-1c90300da321");
     private static final UUID EQUIPMENTS_ID_2 = UUID.fromString("cf399ef3-7f14-4884-8c82-1c90300da322");
@@ -112,8 +110,7 @@ class SensitivityAnalysisParametersTest {
         SensitivityAnalysisParametersInfos parametersToRead = buildParameters();
         UUID parametersUuid = saveAndReturnId(parametersToRead);
 
-        MvcResult mvcResult = mockMvc.perform(get(URI_PARAMETERS_GET_PUT + parametersUuid)
-                        .header(HEADER_USER_ID, USER_ID))
+        MvcResult mvcResult = mockMvc.perform(get(URI_PARAMETERS_GET_PUT + parametersUuid))
             .andExpect(status().isOk()).andReturn();
         String resultAsString = mvcResult.getResponse().getContentAsString();
         SensitivityAnalysisParametersInfos receivedParameters = mapper.readValue(resultAsString, new TypeReference<>() { });
@@ -162,8 +159,7 @@ class SensitivityAnalysisParametersTest {
         saveAndReturnId(parameters1);
         saveAndReturnId(parameters2);
 
-        MvcResult mvcResult = mockMvc.perform(get(URI_PARAMETERS_BASE)
-                        .header(HEADER_USER_ID, USER_ID))
+        MvcResult mvcResult = mockMvc.perform(get(URI_PARAMETERS_BASE))
             .andExpect(status().isOk()).andReturn();
         String resultAsString = mvcResult.getResponse().getContentAsString();
         List<SensitivityAnalysisParametersInfos> receivedParameters = mapper.readValue(resultAsString, new TypeReference<>() { });
@@ -177,9 +173,7 @@ class SensitivityAnalysisParametersTest {
         UUID parametersUuid = postParameters(parametersToCreate);
         SensitivityAnalysisParametersInfos createdParameters = getParameters(parametersUuid);
 
-        mockMvc.perform(post(URI_PARAMETERS_BASE)
-                        .header(HEADER_USER_ID, USER_ID)
-                        .queryParam("duplicateFrom", UUID.randomUUID().toString()))
+        mockMvc.perform(post(URI_PARAMETERS_BASE).queryParam("duplicateFrom", UUID.randomUUID().toString()))
             .andExpect(status().isNotFound());
 
         UUID duplicatedParametersUuid = duplicateParameters(createdParameters.getUuid());
@@ -230,8 +224,7 @@ class SensitivityAnalysisParametersTest {
     }
 
     private SensitivityAnalysisParametersInfos getParameters(UUID parameterUuid) throws Exception {
-        MvcResult mvcGetResult = mockMvc.perform(get(URI_PARAMETERS_BASE + "/{parameterUuid}", parameterUuid)
-                        .header(HEADER_USER_ID, USER_ID))
+        MvcResult mvcGetResult = mockMvc.perform(get(URI_PARAMETERS_BASE + "/{parameterUuid}", parameterUuid))
             .andExpect(status().isOk()).andReturn();
 
         return mapper.readValue(
@@ -256,9 +249,7 @@ class SensitivityAnalysisParametersTest {
     }
 
     private UUID duplicateParameters(UUID parametersUuid) throws Exception {
-        MvcResult mvcPostResult = mockMvc.perform(post(URI_PARAMETERS_BASE)
-                        .header(HEADER_USER_ID, USER_ID)
-                        .queryParam("duplicateFrom", parametersUuid.toString()))
+        MvcResult mvcPostResult = mockMvc.perform(post(URI_PARAMETERS_BASE).queryParam("duplicateFrom", parametersUuid.toString()))
             .andExpect(status().isOk()).andReturn();
 
         return mapper.readValue(mvcPostResult.getResponse().getContentAsString(), UUID.class);
