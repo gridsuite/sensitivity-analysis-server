@@ -57,7 +57,7 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 null, null, null, null
         );
 
-        mockFilterServiceResponse(Map.of("monitored-0", 2L));
+        mockFilterServiceResponse(Map.of("monitored-0", new CountWithMissingUuids(2L, Collections.emptyList())));
 
         FactorCount result = factorCountService.getFactorCount(
                 NETWORK_UUID, VARIANT_ID,
@@ -65,7 +65,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 parameters.getSensitivityInjection(),
                 parameters.getSensitivityHVDC(),
                 parameters.getSensitivityPST(),
-                parameters.getSensitivityNodes()
+                parameters.getSensitivityNodes(),
+                false
         );
 
         assertEquals(1L, result.variableCount());
@@ -80,8 +81,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 null, null, null, null
         );
 
-        mockFilterServiceResponse(Map.of("monitored-0", 2L));
-        mockContingencyServiceResponse(Map.of("contingencies-0", 3L));
+        mockFilterServiceResponse(Map.of("monitored-0", new CountWithMissingUuids(2L, Collections.emptyList())));
+        mockContingencyServiceResponse(Map.of("contingencies-0", new CountWithMissingUuids(3L, Collections.emptyList())));
 
         FactorCount result = factorCountService.getFactorCount(
                 NETWORK_UUID, VARIANT_ID,
@@ -89,7 +90,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 parameters.getSensitivityInjection(),
                 parameters.getSensitivityHVDC(),
                 parameters.getSensitivityPST(),
-                parameters.getSensitivityNodes()
+                parameters.getSensitivityNodes(),
+                false
         );
 
         assertEquals(1L, result.variableCount());
@@ -105,8 +107,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
         );
 
         mockFilterServiceResponse(Map.of(
-                "monitored-0", 1L,
-                "variables-0", 2L
+                "monitored-0", new CountWithMissingUuids(1L, Collections.emptyList()),
+                "variables-0", new CountWithMissingUuids(2L, Collections.emptyList())
         ));
 
         FactorCount result = factorCountService.getFactorCount(
@@ -115,7 +117,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 parameters.getSensitivityInjection(),
                 parameters.getSensitivityHVDC(),
                 parameters.getSensitivityPST(),
-                parameters.getSensitivityNodes()
+                parameters.getSensitivityNodes(),
+                false
         );
 
         assertEquals(2L, result.variableCount());
@@ -132,10 +135,10 @@ class SensitivityAnalysisServiceFactorsCountTest {
         );
 
         mockFilterServiceResponse(Map.of(
-                "monitored-0", 2L,
-                "variables-0", 2L
+                "monitored-0", new CountWithMissingUuids(2L, Collections.emptyList()),
+                "variables-0", new CountWithMissingUuids(2L, Collections.emptyList())
         ));
-        mockContingencyServiceResponse(Map.of("contingencies-0", 1L));
+        mockContingencyServiceResponse(Map.of("contingencies-0", new CountWithMissingUuids(1L, Collections.emptyList())));
 
         FactorCount result = factorCountService.getFactorCount(
                 NETWORK_UUID, VARIANT_ID,
@@ -143,7 +146,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 parameters.getSensitivityInjection(),
                 parameters.getSensitivityHVDC(),
                 parameters.getSensitivityPST(),
-                parameters.getSensitivityNodes()
+                parameters.getSensitivityNodes(),
+                false
         );
 
         assertEquals(2L, result.variableCount());
@@ -159,8 +163,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
         );
 
         mockFilterServiceResponse(Map.of(
-                "monitored-0", 1L,
-                "variables-0", 1L
+                "monitored-0", new CountWithMissingUuids(1L, Collections.emptyList()),
+                "variables-0", new CountWithMissingUuids(1L, Collections.emptyList())
         ));
 
         FactorCount result = factorCountService.getFactorCount(
@@ -169,7 +173,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 parameters.getSensitivityInjection(),
                 parameters.getSensitivityHVDC(),
                 parameters.getSensitivityPST(),
-                parameters.getSensitivityNodes()
+                parameters.getSensitivityNodes(),
+                false
         );
 
         assertEquals(1L, result.variableCount());
@@ -185,8 +190,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
         );
 
         mockFilterServiceResponse(Map.of(
-                "monitored-0", 1L,
-                "variables-0", 1L
+                "monitored-0", new CountWithMissingUuids(1L, Collections.emptyList()),
+                "variables-0", new CountWithMissingUuids(1L, Collections.emptyList())
         ));
 
         FactorCount result = factorCountService.getFactorCount(
@@ -195,7 +200,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 parameters.getSensitivityInjection(),
                 parameters.getSensitivityHVDC(),
                 parameters.getSensitivityPST(),
-                parameters.getSensitivityNodes()
+                parameters.getSensitivityNodes(),
+                false
         );
 
         assertEquals(1L, result.variableCount());
@@ -211,8 +217,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
         );
 
         mockFilterServiceResponse(Map.of(
-                "monitored-0", 3L,
-                "variables-0", 2L
+                "monitored-0", new CountWithMissingUuids(3L, Collections.emptyList()),
+                "variables-0", new CountWithMissingUuids(2L, Collections.emptyList())
         ));
 
         FactorCount result = factorCountService.getFactorCount(
@@ -221,7 +227,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 parameters.getSensitivityInjection(),
                 parameters.getSensitivityHVDC(),
                 parameters.getSensitivityPST(),
-                parameters.getSensitivityNodes()
+                parameters.getSensitivityNodes(),
+                false
         );
 
         assertEquals(2L, result.variableCount());
@@ -241,7 +248,7 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 null, null, null
         );
 
-        mockFilterServiceResponse(Map.of("monitored-0", 1L));
+        mockFilterServiceResponse(Map.of("monitored-0", new CountWithMissingUuids(1L, Collections.emptyList())));
 
         FactorCount result = factorCountService.getFactorCount(
                 NETWORK_UUID, VARIANT_ID,
@@ -249,7 +256,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 parameters.getSensitivityInjection(),
                 parameters.getSensitivityHVDC(),
                 parameters.getSensitivityPST(),
-                parameters.getSensitivityNodes()
+                parameters.getSensitivityNodes(),
+                false
         );
 
         assertEquals(1L, result.variableCount());
@@ -268,7 +276,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 parameters.getSensitivityInjection(),
                 parameters.getSensitivityHVDC(),
                 parameters.getSensitivityPST(),
-                parameters.getSensitivityNodes()
+                parameters.getSensitivityNodes(),
+                false
         );
 
         assertEquals(0L, result.variableCount());
@@ -283,7 +292,7 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 null, null, null, null
         );
 
-        mockFilterServiceResponse(Map.of("monitored-0", 1L));
+        mockFilterServiceResponse(Map.of("monitored-0", new CountWithMissingUuids(1L, Collections.emptyList())));
 
         factorCountService.getFactorCount(
                 NETWORK_UUID, VARIANT_ID,
@@ -291,7 +300,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 parameters.getSensitivityInjection(),
                 parameters.getSensitivityHVDC(),
                 parameters.getSensitivityPST(),
-                parameters.getSensitivityNodes()
+                parameters.getSensitivityNodes(),
+                false
         );
 
         verifyNoInteractions(actionsService);
@@ -311,21 +321,21 @@ class SensitivityAnalysisServiceFactorsCountTest {
         );
 
         mockFilterServiceResponse(Map.of(
-                "monitored-0", 2L,  // injections set
-                "monitored-1", 1L,  // injections
-                "variables-1", 2L,
-                "monitored-2", 1L,  // hvdc
-                "variables-2", 1L,
-                "monitored-3", 1L,  // pst
-                "variables-3", 1L,
-                "monitored-4", 2L,  // nodes
-                "variables-4", 3L
+                "monitored-0", new CountWithMissingUuids(2L, Collections.emptyList()),  // injections set
+                "monitored-1", new CountWithMissingUuids(1L, Collections.emptyList()),  // injections
+                "variables-1", new CountWithMissingUuids(2L, Collections.emptyList()),
+                "monitored-2", new CountWithMissingUuids(1L, Collections.emptyList()),  // hvdc
+                "variables-2", new CountWithMissingUuids(1L, Collections.emptyList()),
+                "monitored-3", new CountWithMissingUuids(1L, Collections.emptyList()),  // pst
+                "variables-3", new CountWithMissingUuids(1L, Collections.emptyList()),
+                "monitored-4", new CountWithMissingUuids(2L, Collections.emptyList()),  // nodes
+                "variables-4", new CountWithMissingUuids(3L, Collections.emptyList())
         ));
 
         mockContingencyServiceResponse(Map.of(
-                "contingencies-0", 1L,  // injections set: 1 contingency
-                "contingencies-1", 2L,  // injections: 2 contingencies
-                "contingencies-4", 1L   // nodes: 1 contingency
+                "contingencies-0", new CountWithMissingUuids(1L, Collections.emptyList()),  // injections set: 1 contingency
+                "contingencies-1", new CountWithMissingUuids(2L, Collections.emptyList()),  // injections: 2 contingencies
+                "contingencies-4", new CountWithMissingUuids(1L, Collections.emptyList())   // nodes: 1 contingency
         ));
 
         FactorCount result = factorCountService.getFactorCount(
@@ -334,7 +344,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 parameters.getSensitivityInjection(),
                 parameters.getSensitivityHVDC(),
                 parameters.getSensitivityPST(),
-                parameters.getSensitivityNodes()
+                parameters.getSensitivityNodes(),
+                false
         );
 
         assertEquals(8L, result.variableCount());
@@ -350,8 +361,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
         );
 
         mockFilterServiceResponse(Map.of(
-                "monitored-0", 50_000L,
-                "variables-0", 10_000L
+                "monitored-0", new CountWithMissingUuids(50_000L, Collections.emptyList()),
+                "variables-0", new CountWithMissingUuids(10_000L, Collections.emptyList())
         ));
 
         FactorCount result = factorCountService.getFactorCount(
@@ -360,7 +371,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 parameters.getSensitivityInjection(),
                 parameters.getSensitivityHVDC(),
                 parameters.getSensitivityPST(),
-                parameters.getSensitivityNodes()
+                parameters.getSensitivityNodes(),
+                false
         );
 
         assertEquals(10_000L, result.variableCount());
@@ -461,12 +473,12 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 .toList();
     }
 
-    private void mockFilterServiceResponse(Map<String, Long> response) {
+    private void mockFilterServiceResponse(Map<String, CountWithMissingUuids> response) {
         when(filterService.getIdentifiablesCountByGroup(any(), eq(NETWORK_UUID), eq(VARIANT_ID)))
                 .thenReturn(response);
     }
 
-    private void mockContingencyServiceResponse(Map<String, Long> response) {
+    private void mockContingencyServiceResponse(Map<String, CountWithMissingUuids> response) {
         when(actionsService.getContingencyCountByGroup(any(), eq(NETWORK_UUID), eq(VARIANT_ID)))
                 .thenReturn(response);
     }

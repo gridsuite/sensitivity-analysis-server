@@ -37,6 +37,7 @@ public class SensitivityAnalysisExceptionHandler
     protected HttpStatus mapStatus(SensitivityAnalysisBusinessErrorCode errorCode) {
         return switch (errorCode) {
             case TOO_MANY_FACTORS -> HttpStatus.UNPROCESSABLE_ENTITY;
+            case FILTERS_OR_CONTINGENCIES_LIST_NOT_FOUND -> HttpStatus.BAD_REQUEST;
         };
     }
 

@@ -9,9 +9,12 @@ package org.gridsuite.sensitivityanalysis.server.service;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.FactorCount;
+import org.gridsuite.sensitivityanalysis.server.error.SensitivityAnalysisBusinessErrorCode;
+import org.gridsuite.sensitivityanalysis.server.error.SensitivityAnalysisException;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Antoine Bouhours <antoine.bouhours at rte-france.com>
@@ -51,7 +54,8 @@ public class SensitivityAnalysisFactorCountService {
             List<SensitivityInjection> injections,
             List<SensitivityHVDC> hvdcs,
             List<SensitivityPST> psts,
-            List<SensitivityNodes> nodes
+            List<SensitivityNodes> nodes,
+            boolean throwExceptionIfMissingFiltersOrContingencies
     ) {
         Objects.requireNonNull(injectionsSets);
         Objects.requireNonNull(injections);
@@ -75,10 +79,20 @@ public class SensitivityAnalysisFactorCountService {
                 nodes
         );
 
-        Map<String, Long> equipmentCounts = fetchIdentifiableCounts(factors, networkUuid, variantId);
-        Map<String, Long> contingencyCounts = fetchContingencyCounts(factors, networkUuid, variantId);
+        Map<String, CountWithMissingUuids> equipmentCounts = fetchIdentifiableCounts(factors, networkUuid, variantId);
+        if (throwExceptionIfMissingFiltersOrContingencies && equipmentCounts.entrySet().stream().anyMatch(e -> !e.getValue().missingUuids().isEmpty())) {
+            throw new SensitivityAnalysisException(SensitivityAnalysisBusinessErrorCode.FILTERS_OR_CONTINGENCIES_LIST_NOT_FOUND, "Some filters or contingencies lists are not found");
+        }
 
-        return computeFactorCounts(factors, equipmentCounts, contingencyCounts);
+        Map<String, CountWithMissingUuids> contingencyCounts = fetchContingencyCounts(factors, networkUuid, variantId);
+        if (throwExceptionIfMissingFiltersOrContingencies && contingencyCounts.entrySet().stream().anyMatch(e -> !e.getValue().missingUuids().isEmpty())) {
+            throw new SensitivityAnalysisException(SensitivityAnalysisBusinessErrorCode.FILTERS_OR_CONTINGENCIES_LIST_NOT_FOUND, "Some filters or contingencies lists are not found");
+        }
+
+        return computeFactorCounts(
+            factors,
+            equipmentCounts.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().count())),
+            contingencyCounts.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().count())));
     }
 
     private List<Factor> getFactors(
@@ -154,11 +168,7 @@ public class SensitivityAnalysisFactorCountService {
                 .toList();
     }
 
-    private Map<String, Long> fetchIdentifiableCounts(
-            List<Factor> factors,
-            UUID networkUuid,
-            String variantId
-    ) {
+    private Map<String, CountWithMissingUuids> fetchIdentifiableCounts(List<Factor> factors, UUID networkUuid, String variantId) {
         Map<String, List<UUID>> identifiableIdsByKey = new HashMap<>();
 
         for (int i = 0; i < factors.size(); i++) {
@@ -177,11 +187,7 @@ public class SensitivityAnalysisFactorCountService {
         );
     }
 
-    private Map<String, Long> fetchContingencyCounts(
-            List<Factor> factors,
-            UUID networkUuid,
-            String variantId
-    ) {
+    private Map<String, CountWithMissingUuids> fetchContingencyCounts(List<Factor> factors, UUID networkUuid, String variantId) {
         Map<String, List<UUID>> contingencyIdsByKey = new HashMap<>();
 
         for (int i = 0; i < factors.size(); i++) {
