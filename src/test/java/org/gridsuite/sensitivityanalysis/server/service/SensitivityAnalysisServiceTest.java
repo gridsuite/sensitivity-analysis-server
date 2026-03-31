@@ -144,7 +144,7 @@ class SensitivityAnalysisServiceTest {
     void testRunAndSaveThrowsIfMissingFiltersOrContingencies() {
         given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any(), eq(true)))
                 .willThrow(new SensitivityAnalysisException(
-                        SensitivityAnalysisBusinessErrorCode.FILTERS_OR_CONTINGENCIES_LIST_NOT_FOUND,
+                        SensitivityAnalysisBusinessErrorCode.FILTERS_OR_CONTINGENCIES_LISTS_NOT_FOUND,
                         "Some filters or contingencies lists are not found"
                 ));
         SensitivityAnalysisRunContext sensitivityAnalysisRunContext = new SensitivityAnalysisRunContext(

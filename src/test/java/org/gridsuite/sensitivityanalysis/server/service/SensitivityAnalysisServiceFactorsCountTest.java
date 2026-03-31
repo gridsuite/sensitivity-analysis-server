@@ -408,7 +408,7 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 )
         );
 
-        assertEquals(SensitivityAnalysisBusinessErrorCode.FILTERS_OR_CONTINGENCIES_LIST_NOT_FOUND, exception.getErrorCode());
+        assertEquals(SensitivityAnalysisBusinessErrorCode.FILTERS_OR_CONTINGENCIES_LISTS_NOT_FOUND, exception.getErrorCode());
         assertEquals("Some filters or contingencies lists are not found", exception.getMessage());
     }
 
@@ -436,7 +436,7 @@ class SensitivityAnalysisServiceFactorsCountTest {
                 )
         );
 
-        assertEquals(SensitivityAnalysisBusinessErrorCode.FILTERS_OR_CONTINGENCIES_LIST_NOT_FOUND, exception.getErrorCode());
+        assertEquals(SensitivityAnalysisBusinessErrorCode.FILTERS_OR_CONTINGENCIES_LISTS_NOT_FOUND, exception.getErrorCode());
         assertEquals("Some filters or contingencies lists are not found", exception.getMessage());
     }
 

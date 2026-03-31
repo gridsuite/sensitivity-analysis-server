@@ -13,7 +13,7 @@ import com.powsybl.ws.commons.error.BusinessErrorCode;
  */
 public enum SensitivityAnalysisBusinessErrorCode implements BusinessErrorCode {
     TOO_MANY_FACTORS("sensitivityAnalysis.tooManyFactors"),
-    FILTERS_OR_CONTINGENCIES_LIST_NOT_FOUND("sensitivityAnalysis.filtersOrContingenciesListNotFound");
+    FILTERS_OR_CONTINGENCIES_LISTS_NOT_FOUND("sensitivityAnalysis.filtersOrContingenciesListsNotFound");
 
     private final String code;
 

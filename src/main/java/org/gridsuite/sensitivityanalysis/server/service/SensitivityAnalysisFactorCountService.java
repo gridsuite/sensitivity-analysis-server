@@ -80,13 +80,11 @@ public class SensitivityAnalysisFactorCountService {
         );
 
         Map<String, CountWithMissingUuids> equipmentCounts = fetchIdentifiableCounts(factors, networkUuid, variantId);
-        if (throwExceptionIfMissingFiltersOrContingencies && equipmentCounts.entrySet().stream().anyMatch(e -> !e.getValue().missingUuids().isEmpty())) {
-            throw new SensitivityAnalysisException(SensitivityAnalysisBusinessErrorCode.FILTERS_OR_CONTINGENCIES_LIST_NOT_FOUND, "Some filters or contingencies lists are not found");
-        }
-
         Map<String, CountWithMissingUuids> contingencyCounts = fetchContingencyCounts(factors, networkUuid, variantId);
-        if (throwExceptionIfMissingFiltersOrContingencies && contingencyCounts.entrySet().stream().anyMatch(e -> !e.getValue().missingUuids().isEmpty())) {
-            throw new SensitivityAnalysisException(SensitivityAnalysisBusinessErrorCode.FILTERS_OR_CONTINGENCIES_LIST_NOT_FOUND, "Some filters or contingencies lists are not found");
+        if (throwExceptionIfMissingFiltersOrContingencies &&
+            (equipmentCounts.entrySet().stream().anyMatch(e -> !e.getValue().missingUuids().isEmpty()) ||
+             contingencyCounts.entrySet().stream().anyMatch(e -> !e.getValue().missingUuids().isEmpty()))) {
+            throw new SensitivityAnalysisException(SensitivityAnalysisBusinessErrorCode.FILTERS_OR_CONTINGENCIES_LISTS_NOT_FOUND, "Some filters or contingencies lists are not found");
         }
 
         return computeFactorCounts(
