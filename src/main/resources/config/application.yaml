@@ -55,6 +55,11 @@ powsybl-ws:
     customQuery: ${powsybl-ws.database.customQueryBegin}reWriteBatchedInserts=true
     name: sensitivityanalysis
 
+computation:
+  rabbit:
+    loadbalanced-group:
+      - sensitivityanalysisGroup
+
 # default value for loadflow provider "OpenLoadFlow"
 sensitivity-analysis:
   default-provider: OpenLoadFlow

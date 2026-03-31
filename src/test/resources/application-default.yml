@@ -10,7 +10,7 @@ spring:
       ddl-auto: none
   cloud:
     function:
-      # disable consumeRun2 during test - all of them receive the "loadflowGroup" messages otherwise
+      # disable consumeRun2 during test - all of them receive the "sensitivityanalysisGroup" messages otherwise
       definition: consumeRun1;consumeCancel
 
 logging:
