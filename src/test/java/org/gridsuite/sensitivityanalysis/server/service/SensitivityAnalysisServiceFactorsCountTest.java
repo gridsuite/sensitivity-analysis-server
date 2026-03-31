@@ -9,6 +9,8 @@ package org.gridsuite.sensitivityanalysis.server.service;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.FactorCount;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
+import org.gridsuite.sensitivityanalysis.server.error.SensitivityAnalysisBusinessErrorCode;
+import org.gridsuite.sensitivityanalysis.server.error.SensitivityAnalysisException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -377,6 +379,65 @@ class SensitivityAnalysisServiceFactorsCountTest {
 
         assertEquals(10_000L, result.variableCount());
         assertEquals(500_000_000L, result.resultCount());
+    }
+
+    @Test
+    void testThrowExceptionOnMissingFilters() {
+        UUID missingFilterUuid = UUID.randomUUID();
+        SensitivityAnalysisParametersInfos parameters = createParameters(
+                null,
+                List.of(createInjection(true, List.of(BRANCH1_UUID), List.of(GEN1_UUID), List.of())),
+                null, null, null
+        );
+
+        mockFilterServiceResponse(Map.of(
+                "monitored-0", new CountWithMissingUuids(1L, List.of(missingFilterUuid)),
+                "variables-0", new CountWithMissingUuids(2L, Collections.emptyList())
+        ));
+
+        SensitivityAnalysisException exception = assertThrows(
+                SensitivityAnalysisException.class,
+                () -> factorCountService.getFactorCount(
+                        NETWORK_UUID, VARIANT_ID,
+                        parameters.getSensitivityInjectionsSet(),
+                        parameters.getSensitivityInjection(),
+                        parameters.getSensitivityHVDC(),
+                        parameters.getSensitivityPST(),
+                        parameters.getSensitivityNodes(),
+                        true
+                )
+        );
+
+        assertEquals(SensitivityAnalysisBusinessErrorCode.FILTERS_OR_CONTINGENCIES_LIST_NOT_FOUND, exception.getErrorCode());
+        assertEquals("Some filters or contingencies lists are not found", exception.getMessage());
+    }
+
+    @Test
+    void testThrowExceptionOnMissingContingencies() {
+        UUID missingContingencyListUuid = UUID.randomUUID();
+        SensitivityAnalysisParametersInfos parameters = createParameters(
+                List.of(createInjectionsSet(true, List.of(BRANCH1_UUID), List.of(CONTINGENCY1_UUID))),
+                null, null, null, null
+        );
+
+        mockFilterServiceResponse(Map.of("monitored-0", new CountWithMissingUuids(1L, Collections.emptyList())));
+        mockContingencyServiceResponse(Map.of("contingencies-0", new CountWithMissingUuids(1L, List.of(missingContingencyListUuid))));
+
+        SensitivityAnalysisException exception = assertThrows(
+                SensitivityAnalysisException.class,
+                () -> factorCountService.getFactorCount(
+                        NETWORK_UUID, VARIANT_ID,
+                        parameters.getSensitivityInjectionsSet(),
+                        parameters.getSensitivityInjection(),
+                        parameters.getSensitivityHVDC(),
+                        parameters.getSensitivityPST(),
+                        parameters.getSensitivityNodes(),
+                        true
+                )
+        );
+
+        assertEquals(SensitivityAnalysisBusinessErrorCode.FILTERS_OR_CONTINGENCIES_LIST_NOT_FOUND, exception.getErrorCode());
+        assertEquals("Some filters or contingencies lists are not found", exception.getMessage());
     }
 
     private SensitivityAnalysisParametersInfos createParameters(
