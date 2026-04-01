@@ -43,7 +43,7 @@ class SensitivityAnalysisExceptionHandlerTest {
         exception = new SensitivityAnalysisException(FILTERS_OR_CONTINGENCIES_LISTS_NOT_FOUND, "Filters or contingencies lists not found to run sensitivity analysis");
         response = handler.handleSensitivityAnalysisException(exception, request);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).isNotNull();
         assertEquals("sensitivityAnalysis.filtersOrContingenciesListsNotFound", response.getBody().getBusinessErrorCode());
     }
