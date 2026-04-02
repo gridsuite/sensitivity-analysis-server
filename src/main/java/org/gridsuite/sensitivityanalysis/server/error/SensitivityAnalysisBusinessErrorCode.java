@@ -12,7 +12,8 @@ import com.powsybl.ws.commons.error.BusinessErrorCode;
  * @author Antoine Bouhours {@literal <antoine.bouhours at rte-france.com>}
  */
 public enum SensitivityAnalysisBusinessErrorCode implements BusinessErrorCode {
-    TOO_MANY_FACTORS("sensitivityAnalysis.tooManyFactors"),;
+    TOO_MANY_FACTORS("sensitivityAnalysis.tooManyFactors"),
+    FILTERS_OR_CONTINGENCIES_LISTS_NOT_FOUND("sensitivityAnalysis.filtersOrContingenciesListsNotFound");
 
     private final String code;
 
