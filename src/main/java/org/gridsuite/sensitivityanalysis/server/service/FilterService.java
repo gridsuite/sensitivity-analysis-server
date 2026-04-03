@@ -15,6 +15,7 @@ import org.gridsuite.computation.service.AbstractFilterService;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.sensitivityanalysis.server.dto.FilterEquipments;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
+import org.gridsuite.sensitivityanalysis.server.dto.CountWithMissingUuids;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,7 +44,7 @@ public class FilterService extends AbstractFilterService {
         super(restTemplateBuilder, networkStoreService, filterServerBaseUri);
     }
 
-    public Map<String, Long> getIdentifiablesCountByGroup(SensitivityFactorsIdsByGroup factorsIds, UUID networkUuid, String variantId) {
+    public Map<String, CountWithMissingUuids> getIdentifiablesCountByGroup(SensitivityFactorsIdsByGroup factorsIds, UUID networkUuid, String variantId) {
         var uriComponentsBuilder = UriComponentsBuilder
                 .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/identifiables-count")
                 .queryParam(NETWORK_UUID, networkUuid);
@@ -57,7 +58,7 @@ public class FilterService extends AbstractFilterService {
 
         var path = uriComponentsBuilder.build().toUriString();
 
-        return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<Map<String, Long>>() {
+        return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<Map<String, CountWithMissingUuids>>() {
         }).getBody();
     }
 
