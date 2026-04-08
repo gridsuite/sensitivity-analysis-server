@@ -136,7 +136,8 @@ public class SensitivityAnalysisController {
                 parametersInfos.getSensitivityInjection(),
                 parametersInfos.getSensitivityHVDC(),
                 parametersInfos.getSensitivityPST(),
-                parametersInfos.getSensitivityNodes());
+                parametersInfos.getSensitivityNodes(),
+                false);
         return ResponseEntity.ok().body(factorCount);
     }
 
