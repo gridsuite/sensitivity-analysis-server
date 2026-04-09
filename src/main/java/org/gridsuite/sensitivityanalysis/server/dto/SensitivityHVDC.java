@@ -32,7 +32,7 @@ public class SensitivityHVDC {
 
     List<UUID> hvdcs;
 
-    List<UUID> contingencies;
+    List<UUID> contingencyLists;
 
     boolean activated;
 }

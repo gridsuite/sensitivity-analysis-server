@@ -18,6 +18,7 @@ import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import org.gridsuite.sensitivityanalysis.server.configuration.RestTemplateConfig;
 import org.gridsuite.sensitivityanalysis.server.dto.ContingencyListExportResult;
+import org.gridsuite.sensitivityanalysis.server.dto.CountWithMissingUuids;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -56,9 +58,9 @@ class ActionsServiceTest {
     private static final UUID LIST2_UUID = UUID.randomUUID();
     private static final String CONTINGENCY_ID_1 = "contingency-1";
     private static final String CONTINGENCY_ID_2 = "contingency-2";
-    private static final Long CONTINGENCY_COUNT_1 = 7L;
-    private static final Long CONTINGENCY_COUNT_2 = 3L;
-    public static final Map<String, Long> EXPECTED_CONTINGENCY_COUNTS = Map.of(CONTINGENCY_ID_1, CONTINGENCY_COUNT_1, CONTINGENCY_ID_2, CONTINGENCY_COUNT_2);
+    private static final CountWithMissingUuids CONTINGENCY_COUNT_1 = new CountWithMissingUuids(7L, Collections.emptyList());
+    private static final CountWithMissingUuids CONTINGENCY_COUNT_2 = new CountWithMissingUuids(3L, Collections.emptyList());
+    public static final Map<String, CountWithMissingUuids> EXPECTED_CONTINGENCY_COUNTS = Map.of(CONTINGENCY_ID_1, CONTINGENCY_COUNT_1, CONTINGENCY_ID_2, CONTINGENCY_COUNT_2);
 
     private static final UUID VERY_LARGE_LIST_UUID = UUID.randomUUID();
 
@@ -134,7 +136,7 @@ class ActionsServiceTest {
     @Test
     void testGetContingencyCountByGroup() {
         Map<String, List<UUID>> contingencyIds = Map.of(CONTINGENCY_ID_1, List.of(LIST_UUID, LIST2_UUID), CONTINGENCY_ID_2, List.of(LIST_UUID));
-        Map<String, Long> count = actionsService.getContingencyCountByGroup(
+        Map<String, CountWithMissingUuids> count = actionsService.getContingencyCountByGroup(
                 SensitivityFactorsIdsByGroup.builder().ids(contingencyIds).build(),
                 UUID.fromString(NETWORK_UUID),
                 null);

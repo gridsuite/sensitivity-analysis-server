@@ -8,6 +8,7 @@ package org.gridsuite.sensitivityanalysis.server.service;
 
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.sensitivityanalysis.server.dto.ContingencyListExportResult;
+import org.gridsuite.sensitivityanalysis.server.dto.CountWithMissingUuids;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -48,7 +49,7 @@ public class ActionsService {
         this.actionsServerBaseUri = actionsServerBaseUri;
     }
 
-    public Map<String, Long> getContingencyCountByGroup(SensitivityFactorsIdsByGroup contingencyListIdsByGroup, UUID networkUuid, String variantId) {
+    public Map<String, CountWithMissingUuids> getContingencyCountByGroup(SensitivityFactorsIdsByGroup contingencyListIdsByGroup, UUID networkUuid, String variantId) {
         var uriComponentsBuilder = UriComponentsBuilder
                 .fromPath(DELIMITER + ACTIONS_API_VERSION + "/contingency-lists/count-by-group")
                 .queryParam(NETWORK_UUID, networkUuid);
@@ -61,7 +62,7 @@ public class ActionsService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<SensitivityFactorsIdsByGroup> httpEntity = new HttpEntity<>(contingencyListIdsByGroup, headers);
 
-        return restTemplate.exchange(actionsServerBaseUri + path, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<Map<String, Long>>() { }).getBody();
+        return restTemplate.exchange(actionsServerBaseUri + path, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<Map<String, CountWithMissingUuids>>() { }).getBody();
     }
 
     public ContingencyListExportResult getContingencyList(List<UUID> contingencyListIds, UUID networkUuid, String variantId) {

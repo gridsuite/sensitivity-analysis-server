@@ -97,7 +97,7 @@ public class SensitivityAnalysisParametersEntity {
                 entity.setDistributionType(sensitivityInjectionsSet.getDistributionType());
                 entity.setMonitoredBranch(copyIds(sensitivityInjectionsSet.getMonitoredBranches()));
                 entity.setInjections(copyIds(sensitivityInjectionsSet.getInjections()));
-                entity.setContingencies(copyIds(sensitivityInjectionsSet.getContingencies()));
+                entity.setContingencies(copyIds(sensitivityInjectionsSet.getContingencyLists()));
                 entity.setActivated(sensitivityInjectionsSet.isActivated());
                 sensitivityInjectionsSetEntities.add(entity);
             }
@@ -112,7 +112,7 @@ public class SensitivityAnalysisParametersEntity {
                 SensitivityFactorForInjectionEntity entity = new SensitivityFactorForInjectionEntity();
                 entity.setMonitoredBranch(copyIds(sensitivityInjection.getMonitoredBranches()));
                 entity.setInjections(copyIds(sensitivityInjection.getInjections()));
-                entity.setContingencies(copyIds(sensitivityInjection.getContingencies()));
+                entity.setContingencies(copyIds(sensitivityInjection.getContingencyLists()));
                 entity.setActivated(sensitivityInjection.isActivated());
                 sensitivityInjectionEntities.add(entity);
             }
@@ -128,7 +128,7 @@ public class SensitivityAnalysisParametersEntity {
                 entity.setMonitoredBranch(copyIds(sensitivityHvdc.getMonitoredBranches()));
                 entity.setInjections(copyIds(sensitivityHvdc.getHvdcs()));
                 entity.setSensitivityType(sensitivityHvdc.getSensitivityType());
-                entity.setContingencies(copyIds(sensitivityHvdc.getContingencies()));
+                entity.setContingencies(copyIds(sensitivityHvdc.getContingencyLists()));
                 entity.setActivated(sensitivityHvdc.isActivated());
                 sensitivityHvdcEntities.add(entity);
             }
@@ -144,7 +144,7 @@ public class SensitivityAnalysisParametersEntity {
                 entity.setSensitivityType(sensitivityPst.getSensitivityType());
                 entity.setMonitoredBranch(copyIds(sensitivityPst.getMonitoredBranches()));
                 entity.setInjections(copyIds(sensitivityPst.getPsts()));
-                entity.setContingencies(copyIds(sensitivityPst.getContingencies()));
+                entity.setContingencies(copyIds(sensitivityPst.getContingencyLists()));
                 entity.setActivated(sensitivityPst.isActivated());
                 sensitivityPstEntities.add(entity);
             }
@@ -159,7 +159,7 @@ public class SensitivityAnalysisParametersEntity {
                 SensitivityFactorForNodeEntity entity = new SensitivityFactorForNodeEntity();
                 entity.setMonitoredBranch(copyIds(sensitivityNode.getMonitoredVoltageLevels()));
                 entity.setInjections(copyIds(sensitivityNode.getEquipmentsInVoltageRegulation()));
-                entity.setContingencies(copyIds(sensitivityNode.getContingencies()));
+                entity.setContingencies(copyIds(sensitivityNode.getContingencyLists()));
                 entity.setActivated(sensitivityNode.isActivated());
                 sensitivityNodeEntities.add(entity);
             }

@@ -80,7 +80,8 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
                 runContext.getParameters().getSensitivityInjections(),
                 runContext.getParameters().getSensitivityHVDCs(),
                 runContext.getParameters().getSensitivityPSTs(),
-                runContext.getParameters().getSensitivityNodes());
+                runContext.getParameters().getSensitivityNodes(),
+                true);
         if (factorCount.resultCount() > MAX_RESULTS_THRESHOLD || factorCount.variableCount() > MAX_VARIABLES_THRESHOLD) {
             throw new SensitivityAnalysisException(SensitivityAnalysisBusinessErrorCode.TOO_MANY_FACTORS, "Too many factors to run sensitivity analysis", Map.of("resultCount", factorCount.resultCount(), "resultCountLimit", MAX_RESULTS_THRESHOLD, "variableCount", factorCount.variableCount(), "variableCountLimit", MAX_VARIABLES_THRESHOLD));
         }
