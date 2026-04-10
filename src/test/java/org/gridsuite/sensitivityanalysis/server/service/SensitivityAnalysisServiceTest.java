@@ -13,6 +13,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.parameters.FactorCount;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalysisParametersInfos;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
+import org.gridsuite.sensitivityanalysis.server.error.SensitivityAnalysisBusinessErrorCode;
 import org.gridsuite.sensitivityanalysis.server.error.SensitivityAnalysisException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,7 @@ import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.DEFAULT_PR
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
@@ -65,7 +67,7 @@ class SensitivityAnalysisServiceTest {
         given(parametersService.buildInputData(any(), any())).willReturn(inputData);
 
         FactorCount mockedFactorCount = new FactorCount(10, 1000);
-        given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any())).willReturn(mockedFactorCount);
+        given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any(), anyBoolean())).willReturn(mockedFactorCount);
     }
 
     @Test
@@ -92,7 +94,7 @@ class SensitivityAnalysisServiceTest {
 
     @Test
     void testRunAndSaveThrowsIfTooManyResults() {
-        given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any()))
+        given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any(), anyBoolean()))
                 .willReturn(new FactorCount(10, SensitivityAnalysisService.MAX_RESULTS_THRESHOLD + 1));
         SensitivityAnalysisRunContext sensitivityAnalysisRunContext = new SensitivityAnalysisRunContext(
                 UUID.randomUUID(),
@@ -116,7 +118,7 @@ class SensitivityAnalysisServiceTest {
 
     @Test
     void testRunAndSaveThrowsIfTooManyVariables() {
-        given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any()))
+        given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any(), anyBoolean()))
                 .willReturn(new FactorCount(SensitivityAnalysisService.MAX_VARIABLES_THRESHOLD + 1, 100));
         SensitivityAnalysisRunContext sensitivityAnalysisRunContext = new SensitivityAnalysisRunContext(
                 UUID.randomUUID(),
@@ -133,6 +135,33 @@ class SensitivityAnalysisServiceTest {
         );
 
         assertThat(exception.getMessage()).contains("Too many factors to run sensitivity analysis");
+
+        verify(sensitivityAnalysisResultService, times(0)).insertStatus(any(), eq(SensitivityAnalysisStatus.RUNNING));
+        verify(notificationService, times(0)).sendRunMessage(any());
+    }
+
+    @Test
+    void testRunAndSaveThrowsIfMissingFiltersOrContingencies() {
+        given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any(), eq(true)))
+                .willThrow(new SensitivityAnalysisException(
+                        SensitivityAnalysisBusinessErrorCode.FILTERS_OR_CONTINGENCIES_LISTS_NOT_FOUND,
+                        "Some filters or contingencies lists are not found"
+                ));
+        SensitivityAnalysisRunContext sensitivityAnalysisRunContext = new SensitivityAnalysisRunContext(
+                UUID.randomUUID(),
+                "variantId",
+                "me",
+                Mockito.mock(ReportInfos.class),
+                "userId",
+                DEFAULT_PROVIDER,
+                Mockito.mock(SensitivityAnalysisInputData.class)
+        );
+
+        SensitivityAnalysisException exception = assertThrows(SensitivityAnalysisException.class, () ->
+                analysisService.runAndSaveResult(sensitivityAnalysisRunContext)
+        );
+
+        assertThat(exception.getMessage()).contains("Some filters or contingencies lists are not found");
 
         verify(sensitivityAnalysisResultService, times(0)).insertStatus(any(), eq(SensitivityAnalysisStatus.RUNNING));
         verify(notificationService, times(0)).sendRunMessage(any());

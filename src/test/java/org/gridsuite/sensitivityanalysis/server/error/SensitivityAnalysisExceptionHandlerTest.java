@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.gridsuite.sensitivityanalysis.server.error.SensitivityAnalysisBusinessErrorCode.FILTERS_OR_CONTINGENCIES_LISTS_NOT_FOUND;
 import static org.gridsuite.sensitivityanalysis.server.error.SensitivityAnalysisBusinessErrorCode.TOO_MANY_FACTORS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -30,7 +31,7 @@ class SensitivityAnalysisExceptionHandlerTest {
     }
 
     @Test
-    void mapsInteralErrorBusinessErrorToStatus() {
+    void mapsInternalErrorBusinessErrorToStatus() {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/results-endpoint/uuid");
         SensitivityAnalysisException exception = new SensitivityAnalysisException(TOO_MANY_FACTORS, "Too many factors to run sensitivity analysis");
         ResponseEntity<PowsyblWsProblemDetail> response = handler.handleSensitivityAnalysisException(exception, request);
@@ -38,5 +39,12 @@ class SensitivityAnalysisExceptionHandlerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
         assertThat(response.getBody()).isNotNull();
         assertEquals("sensitivityAnalysis.tooManyFactors", response.getBody().getBusinessErrorCode());
+
+        exception = new SensitivityAnalysisException(FILTERS_OR_CONTINGENCIES_LISTS_NOT_FOUND, "Filters or contingencies lists not found to run sensitivity analysis");
+        response = handler.handleSensitivityAnalysisException(exception, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).isNotNull();
+        assertEquals("sensitivityAnalysis.filtersOrContingenciesListsNotFound", response.getBody().getBusinessErrorCode());
     }
 }

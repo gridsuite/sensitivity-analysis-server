@@ -30,6 +30,7 @@ import org.gridsuite.filter.expertfilter.expertrule.NumberExpertRule;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.filter.utils.expertfilter.FieldType;
 import org.gridsuite.filter.utils.expertfilter.OperatorType;
+import org.gridsuite.sensitivityanalysis.server.dto.CountWithMissingUuids;
 import org.gridsuite.sensitivityanalysis.server.dto.FilterEquipments;
 import org.gridsuite.sensitivityanalysis.server.dto.IdentifiableAttributes;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
@@ -163,8 +164,10 @@ class FilterServiceTest {
     }
 
     @NotNull
-    private static Map<String, Integer> countResultMap() {
-        return Map.of("0", 6, "1", 6, "2", 6);
+    private static Map<String, CountWithMissingUuids> countResultMap() {
+        return Map.of("0", new CountWithMissingUuids(6L, Collections.emptyList()),
+                      "1", new CountWithMissingUuids(6L, Collections.emptyList()),
+                      "2", new CountWithMissingUuids(6L, Collections.emptyList()));
     }
 
     private static List<IdentifiableAttributes> createVeryLargeList() {
@@ -215,7 +218,7 @@ class FilterServiceTest {
 
     @Test
     void testGetFactorsCount() throws Exception {
-        Map<String, Long> list = filterService.getIdentifiablesCountByGroup(IDENTIFIABLES_UUID, UUID.fromString(NETWORK_UUID), null);
+        Map<String, CountWithMissingUuids> list = filterService.getIdentifiablesCountByGroup(IDENTIFIABLES_UUID, UUID.fromString(NETWORK_UUID), null);
         assertEquals(objectMapper.writeValueAsString(countResultMap()), objectMapper.writeValueAsString(list));
         list = filterService.getIdentifiablesCountByGroup(IDENTIFIABLES_UUID, UUID.fromString(NETWORK_UUID), VARIANT_ID);
         assertEquals(objectMapper.writeValueAsString(countResultMap()), objectMapper.writeValueAsString(list));

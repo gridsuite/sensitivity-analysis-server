@@ -153,7 +153,7 @@ class SensitivityAnalysisControllerTest {
         given(filterService.getIdentifiablesFromFilters(eq(List.of(GEN1_CONTAINER_UUID, GEN2_CONTAINER_UUID)), any(), any())).willReturn(List.of(GEN1, GEN2));
 
         FactorCount mockedFactorCount = new FactorCount(10, 1000);
-        given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any())).willReturn(mockedFactorCount);
+        given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any(), anyBoolean())).willReturn(mockedFactorCount);
 
         LoadFlowParametersValues loadFlowParametersValues = LoadFlowParametersValues.builder()
                 .commonParameters(LoadFlowParameters.load())
