@@ -32,7 +32,7 @@ public class SensitivityPST {
 
     List<UUID> psts;
 
-    List<UUID> contingencyLists;
+    List<UUID> contingencies;
 
     boolean activated;
 }

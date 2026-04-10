@@ -107,7 +107,7 @@ public class SensitivityAnalysisFactorCountService {
             .forEach(injectionsSet -> factors.add(new Factor(
                                         injectionsSet.getMonitoredBranches(),
                                         null,
-                                        injectionsSet.getContingencyLists(),
+                                        injectionsSet.getContingencies(),
                                         FactorType.INJECTIONS_SET
                                 )
                         )
@@ -118,7 +118,7 @@ public class SensitivityAnalysisFactorCountService {
             .forEach(injection -> factors.add(new Factor(
                                         injection.getMonitoredBranches(),
                                         injection.getInjections(),
-                                        injection.getContingencyLists(),
+                                        injection.getContingencies(),
                                         FactorType.INJECTIONS
                                 )
                         )
@@ -129,7 +129,7 @@ public class SensitivityAnalysisFactorCountService {
             .forEach(hvdc -> factors.add(new Factor(
                                         hvdc.getMonitoredBranches(),
                                         hvdc.getHvdcs(),
-                                        hvdc.getContingencyLists(),
+                                        hvdc.getContingencies(),
                                         FactorType.HVDC
                                 )
                         )
@@ -140,7 +140,7 @@ public class SensitivityAnalysisFactorCountService {
             .forEach(pst -> factors.add(new Factor(
                                         pst.getMonitoredBranches(),
                                         pst.getPsts(),
-                                        pst.getContingencyLists(),
+                                        pst.getContingencies(),
                                         FactorType.PST
                                 )
                         )
@@ -151,7 +151,7 @@ public class SensitivityAnalysisFactorCountService {
             .forEach(node -> factors.add(new Factor(
                                         node.getMonitoredVoltageLevels(),
                                         node.getEquipmentsInVoltageRegulation(),
-                                        node.getContingencyLists(),
+                                        node.getContingencies(),
                                         FactorType.NODES
                                 )
                         )

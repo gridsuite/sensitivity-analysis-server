@@ -32,7 +32,7 @@ public class SensitivityInjectionsSet {
 
     SensitivityAnalysisInputData.DistributionType distributionType;
 
-    List<UUID> contingencyLists;
+    List<UUID> contingencies;
 
     boolean activated;
 }

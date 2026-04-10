@@ -30,7 +30,7 @@ public class SensitivityInjection {
 
     List<UUID> injections;
 
-    List<UUID> contingencyLists;
+    List<UUID> contingencies;
 
     boolean activated;
 }

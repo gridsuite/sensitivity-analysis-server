@@ -169,7 +169,7 @@ class SensitivityAnalysisControllerTest {
                                         GEN1_CONTAINER_UUID,
                                         GEN2_CONTAINER_UUID
                                 ))
-                                .contingencyLists(List.of(
+                                .contingencies(List.of(
                                         CONTINGENCY1_CONTAINER_UUID,
                                         CONTINGENCY2_CONTAINER_UUID
                                 ))
@@ -188,7 +188,7 @@ class SensitivityAnalysisControllerTest {
                                         BRANCH1_CONTAINER_UUID,
                                         BRANCH2_CONTAINER_UUID
                                 ))
-                                .contingencyLists(List.of(
+                                .contingencies(List.of(
                                         CONTINGENCY1_CONTAINER_UUID
                                 ))
                                 .activated(true)
@@ -207,7 +207,7 @@ class SensitivityAnalysisControllerTest {
                                         GEN1_CONTAINER_UUID,
                                         GEN2_CONTAINER_UUID
                                 ))
-                                .contingencyLists(List.of(
+                                .contingencies(List.of(
                                         CONTINGENCY1_CONTAINER_UUID
                                 ))
                                 .activated(true)

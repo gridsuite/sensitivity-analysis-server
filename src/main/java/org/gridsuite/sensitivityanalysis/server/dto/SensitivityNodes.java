@@ -30,7 +30,7 @@ public class SensitivityNodes {
 
     List<UUID> equipmentsInVoltageRegulation;
 
-    List<UUID> contingencyLists;
+    List<UUID> contingencies;
 
     boolean activated;
 }
