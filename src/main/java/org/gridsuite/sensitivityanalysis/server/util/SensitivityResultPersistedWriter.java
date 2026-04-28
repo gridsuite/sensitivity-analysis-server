@@ -39,20 +39,20 @@ public class SensitivityResultPersistedWriter implements SensitivityResultWriter
     }
 
     @Override
-    public void writeSensitivityValue(int factorIndex, int contingencyIndex, double value, double functionReference) {
+    public void writeSensitivityValue(int factorIndex, int contingencyIndex, int operatorStrategyIndex, double value, double functionReference) {
         throwOnExecutorShutdown();
 
         if (Double.isNaN(functionReference) || Double.isNaN(value)) {
             return;
         }
-        sensitivityBatchAsyncPoller.add(new SensitivityValue(factorIndex, contingencyIndex, value, functionReference));
+        sensitivityBatchAsyncPoller.add(new SensitivityValue(factorIndex, contingencyIndex, operatorStrategyIndex, value, functionReference));
     }
 
     @Override
-    public void writeContingencyStatus(int contingencyIndex, SensitivityAnalysisResult.Status status) {
+    public void writeStateStatus(int contingencyIndex, int operatorStrategyIndex, SensitivityAnalysisResult.Status status) {
         throwOnExecutorShutdown();
 
-        contingencyBatchAsyncPoller.add(new ContingencyResult(contingencyIndex, status));
+        contingencyBatchAsyncPoller.add(new ContingencyResult(contingencyIndex, operatorStrategyIndex, status));
     }
 
     @Override

@@ -8,4 +8,4 @@ package org.gridsuite.sensitivityanalysis.server.util;
 
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 
-public record ContingencyResult(int contingencyIndex, SensitivityAnalysisResult.Status status) { }
+public record ContingencyResult(int contingencyIndex, int operatorStrategyIndex, SensitivityAnalysisResult.Status status) { }
