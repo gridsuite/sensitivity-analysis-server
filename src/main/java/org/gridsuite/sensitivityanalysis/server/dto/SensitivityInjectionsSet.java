@@ -14,6 +14,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -25,13 +26,13 @@ import java.util.List;
 @Setter
 @Schema(description = "Sensitivity relatively to injections set")
 public class SensitivityInjectionsSet {
-    List<EquipmentsContainer> monitoredBranches;
+    List<UUID> monitoredBranches;
 
-    List<EquipmentsContainer> injections;
+    List<UUID> injections;
 
     SensitivityAnalysisInputData.DistributionType distributionType;
 
-    List<EquipmentsContainer> contingencies;
+    List<UUID> contingencies;
 
     boolean activated;
 }
