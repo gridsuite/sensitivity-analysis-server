@@ -275,7 +275,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
         List<Contingency> contingencies = new ArrayList<>(context.getSensitivityAnalysisInputs().getContingencies());
 
         SensitivityFactorReader sensitivityFactorReader = new SensitivityFactorModelReader(factors, network);
-        SensitivityResultModelWriter writer = new SensitivityResultModelWriter(contingencies);
+        SensitivityResultModelWriter writer = new SensitivityResultModelWriter(contingencies, List.of());
 
         CompletableFuture<Void> future = sensitivityAnalysisRunner.runAsync(
                 network,
@@ -287,7 +287,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
                 parameters,
                 executionService.getComputationManager(),
                 reporter);
-        return future.thenApply(r -> new SensitivityAnalysisResult(factors, writer.getContingencyStatuses(), writer.getValues()));
+        return future.thenApply(r -> new SensitivityAnalysisResult(factors, writer.getStateStatuses(), contingencies.stream().map(Contingency::getId).toList(), List.of(), writer.getValues()));
     }
 
     private void syncWriterCompletion(Throwable throwable, SensitivityResultPersistedWriter persistedWriter) {

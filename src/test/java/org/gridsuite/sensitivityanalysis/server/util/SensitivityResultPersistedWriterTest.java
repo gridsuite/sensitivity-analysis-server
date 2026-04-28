@@ -48,8 +48,8 @@ class SensitivityResultPersistedWriterTest {
 
     public static Stream<Arguments> provideInvalidSensitivityValue() {
         return Stream.of(
-                Arguments.of(1, 2, 0.5, Double.NaN),
-                Arguments.of(3, 4, Double.NaN, 0.8)
+                Arguments.of(1, 2, -1, 0.5, Double.NaN),
+                Arguments.of(3, 4, -1, Double.NaN, 0.8)
         );
     }
 
@@ -83,8 +83,9 @@ class SensitivityResultPersistedWriterTest {
         int expectedContingencyIndex = 2;
         double expectedValue = 0.5;
         double expectedFunctionReference = 1.0;
+        int expectedOperatorStrategyIndex = -1;
 
-        sensitivityResultPersistedWriter.writeSensitivityValue(expectedFactorIndex, expectedContingencyIndex, expectedValue, expectedFunctionReference);
+        sensitivityResultPersistedWriter.writeSensitivityValue(expectedFactorIndex, expectedContingencyIndex, expectedOperatorStrategyIndex, expectedValue, expectedFunctionReference);
 
         ArgumentCaptor<SensitivityValue> sensitivityValueCaptor = ArgumentCaptor.forClass(SensitivityValue.class);
         verify(sensitivityPollerMock).add(sensitivityValueCaptor.capture());
@@ -98,8 +99,8 @@ class SensitivityResultPersistedWriterTest {
 
     @ParameterizedTest
     @MethodSource("provideInvalidSensitivityValue")
-    void whenWriteSensitivityValueCalledWithInvalidValuesThenShouldDoNothing(int expectedFactorIndex, int expectedContingencyIndex, double expectedValue, double expectedFunctionReference) {
-        sensitivityResultPersistedWriter.writeSensitivityValue(expectedFactorIndex, expectedContingencyIndex, expectedValue, expectedFunctionReference);
+    void whenWriteSensitivityValueCalledWithInvalidValuesThenShouldDoNothing(int expectedFactorIndex, int expectedContingencyIndex, int expectedOperatorStrategyIndex, double expectedValue, double expectedFunctionReference) {
+        sensitivityResultPersistedWriter.writeSensitivityValue(expectedFactorIndex, expectedContingencyIndex, expectedOperatorStrategyIndex, expectedValue, expectedFunctionReference);
 
         verifyNoInteractions(sensitivityPollerMock);
     }
@@ -107,10 +108,11 @@ class SensitivityResultPersistedWriterTest {
     @Test
     void whenWriteContingencyStatusCalledWithValidValuesThenValueIsAddedToPoller() {
         int expectedContingencyIndex = 2;
+        int expectedOperatorStrategyIndex = -1;
         SensitivityAnalysisResult.Status expectedStatus = SensitivityAnalysisResult.Status.SUCCESS;
-        ContingencyResult expectedContingencyResult = new ContingencyResult(expectedContingencyIndex, expectedStatus);
+        ContingencyResult expectedContingencyResult = new ContingencyResult(expectedContingencyIndex, expectedOperatorStrategyIndex, expectedStatus);
 
-        sensitivityResultPersistedWriter.writeContingencyStatus(expectedContingencyIndex, expectedStatus);
+        sensitivityResultPersistedWriter.writeStateStatus(expectedContingencyIndex, expectedOperatorStrategyIndex, expectedStatus);
 
         verify(contingencyPollerMock).add(expectedContingencyResult);
     }
@@ -121,18 +123,20 @@ class SensitivityResultPersistedWriterTest {
         int expectedContingencyIndex = 2;
         double expectedValue = 0.5;
         double expectedFunctionReference = 1.0;
+        int expectedOperatorStrategyIndex = -1;
 
         when(scheduledExecutorServiceMock.isShutdown()).thenReturn(true);
-        assertThrows(IllegalStateException.class, () -> sensitivityResultPersistedWriter.writeSensitivityValue(expectedFactorIndex, expectedContingencyIndex, expectedValue, expectedFunctionReference));
+        assertThrows(IllegalStateException.class, () -> sensitivityResultPersistedWriter.writeSensitivityValue(expectedFactorIndex, expectedContingencyIndex, expectedOperatorStrategyIndex, expectedValue, expectedFunctionReference));
     }
 
     @Test
     void whenWriterWasClosedThenShouldThrowExceptionOnContingencyWrite() {
         int expectedContingencyIndex = 2;
+        int expectedOperatorStrategyIndex = -1;
         SensitivityAnalysisResult.Status expectedStatus = SensitivityAnalysisResult.Status.SUCCESS;
 
         when(scheduledExecutorServiceMock.isShutdown()).thenReturn(true);
-        assertThrows(IllegalStateException.class, () -> sensitivityResultPersistedWriter.writeContingencyStatus(expectedContingencyIndex, expectedStatus));
+        assertThrows(IllegalStateException.class, () -> sensitivityResultPersistedWriter.writeStateStatus(expectedContingencyIndex, expectedOperatorStrategyIndex, expectedStatus));
     }
 
     @Test
