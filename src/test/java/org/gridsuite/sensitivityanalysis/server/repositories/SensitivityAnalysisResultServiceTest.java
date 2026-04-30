@@ -225,7 +225,7 @@ class SensitivityAnalysisResultServiceTest {
         assertDoesNotThrow(
             () -> sensitivityAnalysisResultService.writeContingenciesStatus(
                 resultUuid,
-                List.of(new ContingencyResult(10, SensitivityAnalysisResult.Status.SUCCESS)))
+                List.of(new ContingencyResult(10, -1, SensitivityAnalysisResult.Status.SUCCESS)))
         );
     }
 
@@ -245,18 +245,18 @@ class SensitivityAnalysisResultServiceTest {
 
     private void fillResult(UUID resultUuid) {
         final List<SensitivityValue> sensitivityValues = new ArrayList<>(List.of(
-            new SensitivityValue(0, -1, 0.1, 501),
-            new SensitivityValue(1, 0, 0.2, 502),
-            new SensitivityValue(2, 1, 0.3, 503),
-            new SensitivityValue(3, 2, 0.4, 504),
-            new SensitivityValue(4, -1, 0.5, 505),
-            new SensitivityValue(5, -1, 0.6, 506),
-            new SensitivityValue(6, 1, 0.7, 507),
-            new SensitivityValue(7, 0, 0.8, 508),
-            new SensitivityValue(8, 2, 0.9, 509),
-            new SensitivityValue(9, -1, 1.0, 510),
-            new SensitivityValue(10, 1, -1.0, 511),
-            new SensitivityValue(11, 0, -0.4, 512)
+            new SensitivityValue(0, -1, -1, 0.1, 501),
+            new SensitivityValue(1, 0, -1, 0.2, 502),
+            new SensitivityValue(2, 1, -1, 0.3, 503),
+            new SensitivityValue(3, 2, -1, 0.4, 504),
+            new SensitivityValue(4, -1, -1, 0.5, 505),
+            new SensitivityValue(5, -1, -1, 0.6, 506),
+            new SensitivityValue(6, 1, -1, 0.7, 507),
+            new SensitivityValue(7, 0, -1, 0.8, 508),
+            new SensitivityValue(8, 2, -1, 0.9, 509),
+            new SensitivityValue(9, -1, -1, 1.0, 510),
+            new SensitivityValue(10, 1, -1, -1.0, 511),
+            new SensitivityValue(11, 0, -1, -0.4, 512)
         ));
         sensitivityAnalysisResultService.writeSensitivityValues(resultUuid, sensitivityValues);
     }
