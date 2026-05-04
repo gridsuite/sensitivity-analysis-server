@@ -244,8 +244,8 @@ class SensitivityAnalysisControllerTest {
         SensitivityAnalysisResult result = runInMemory();
         assertEquals(12, result.getFactors().size());
         assertEquals(12, result.getValues().size());
-        assertEquals(2, result.getContingencyStatuses().size());
-        assertTrue(result.getContingencyStatuses().stream().allMatch(cs -> cs.getStatus() == SensitivityAnalysisResult.Status.SUCCESS));
+        assertEquals(2, result.getStateStatuses().size());
+        assertTrue(result.getStateStatuses().stream().allMatch(cs -> cs.getStatus() == SensitivityAnalysisResult.Status.SUCCESS));
     }
 
     @Test
