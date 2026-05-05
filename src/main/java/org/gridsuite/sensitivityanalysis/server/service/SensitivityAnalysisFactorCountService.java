@@ -105,9 +105,9 @@ public class SensitivityAnalysisFactorCountService {
         injectionsSets.stream()
             .filter(SensitivityInjectionsSet::isActivated)
             .forEach(injectionsSet -> factors.add(new Factor(
-                                        extractContainerIds(injectionsSet.getMonitoredBranches()),
+                                        injectionsSet.getMonitoredBranches(),
                                         null,
-                                        extractContainerIds(injectionsSet.getContingencies()),
+                                        injectionsSet.getContingencies(),
                                         FactorType.INJECTIONS_SET
                                 )
                         )
@@ -116,9 +116,9 @@ public class SensitivityAnalysisFactorCountService {
         injections.stream()
             .filter(SensitivityInjection::isActivated)
             .forEach(injection -> factors.add(new Factor(
-                                        extractContainerIds(injection.getMonitoredBranches()),
-                                        extractContainerIds(injection.getInjections()),
-                                        extractContainerIds(injection.getContingencies()),
+                                        injection.getMonitoredBranches(),
+                                        injection.getInjections(),
+                                        injection.getContingencies(),
                                         FactorType.INJECTIONS
                                 )
                         )
@@ -127,9 +127,9 @@ public class SensitivityAnalysisFactorCountService {
         hvdcs.stream()
             .filter(SensitivityHVDC::isActivated)
             .forEach(hvdc -> factors.add(new Factor(
-                                        extractContainerIds(hvdc.getMonitoredBranches()),
-                                        extractContainerIds(hvdc.getHvdcs()),
-                                        extractContainerIds(hvdc.getContingencies()),
+                                        hvdc.getMonitoredBranches(),
+                                        hvdc.getHvdcs(),
+                                        hvdc.getContingencies(),
                                         FactorType.HVDC
                                 )
                         )
@@ -138,9 +138,9 @@ public class SensitivityAnalysisFactorCountService {
         psts.stream()
             .filter(SensitivityPST::isActivated)
             .forEach(pst -> factors.add(new Factor(
-                                        extractContainerIds(pst.getMonitoredBranches()),
-                                        extractContainerIds(pst.getPsts()),
-                                        extractContainerIds(pst.getContingencies()),
+                                        pst.getMonitoredBranches(),
+                                        pst.getPsts(),
+                                        pst.getContingencies(),
                                         FactorType.PST
                                 )
                         )
@@ -149,21 +149,15 @@ public class SensitivityAnalysisFactorCountService {
         nodes.stream()
             .filter(SensitivityNodes::isActivated)
             .forEach(node -> factors.add(new Factor(
-                                        extractContainerIds(node.getMonitoredVoltageLevels()),
-                                        extractContainerIds(node.getEquipmentsInVoltageRegulation()),
-                                        extractContainerIds(node.getContingencies()),
+                                        node.getMonitoredVoltageLevels(),
+                                        node.getEquipmentsInVoltageRegulation(),
+                                        node.getContingencies(),
                                         FactorType.NODES
                                 )
                         )
             );
 
         return factors;
-    }
-
-    private List<UUID> extractContainerIds(List<EquipmentsContainer> containers) {
-        return containers.stream()
-                .map(EquipmentsContainer::getContainerId)
-                .toList();
     }
 
     private Map<String, CountWithMissingUuids> fetchIdentifiableCounts(List<Factor> factors, UUID networkUuid, String variantId) {
