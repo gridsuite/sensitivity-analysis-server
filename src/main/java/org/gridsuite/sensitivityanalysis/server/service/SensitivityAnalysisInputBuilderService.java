@@ -51,7 +51,7 @@ public class SensitivityAnalysisInputBuilderService {
             LOGGER.error("Could not get contingencies from {}", id);
             reporter.newReportNode()
                 .withMessageTemplate("sensitivity.analysis.server.contingencyTranslationFailure")
-                .withUntypedValue(ID, containerId.toString())
+                .withUntypedValue(ID, id.toString())
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .add();
         });
@@ -114,7 +114,7 @@ public class SensitivityAnalysisInputBuilderService {
         }
     }
 
-    private Stream<IdentifiableAttributes> getIdentifiablesFromContainers(SensitivityAnalysisRunContext context, List<UUID> filterIds,
+    private Stream<IdentifiableAttributes> getIdentifiables(SensitivityAnalysisRunContext context, List<UUID> filterIds,
                                                                           List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter) {
         String idsString = joinToStringIds(filterIds);
         List<IdentifiableAttributes> listIdentifiableAttributes = goGetIdentifiables(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter);
@@ -134,7 +134,7 @@ public class SensitivityAnalysisInputBuilderService {
     }
 
     private String joinToStringIds(List<UUID> filterIds) {
-          return "[" + filterIds.stream().map(UUID::toString).collect(Collectors.joining(", ")) + "]";
+        return "[" + filterIds.stream().map(UUID::toString).collect(Collectors.joining(", ")) + "]";
     }
 
     private Stream<IdentifiableAttributes> getMonitoredIdentifiables(SensitivityAnalysisRunContext context, Network network, List<UUID> filterIds, List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter) {
@@ -215,7 +215,7 @@ public class SensitivityAnalysisInputBuilderService {
         Stream<Pair<String, List<IdentifiableAttributes>>> variablesLists = Stream.of(Pair.of(idsString, monitoredVariablesLists))
                 .filter(list -> !list.getRight().isEmpty());
 
-        variablesContainersLists.forEach(variablesList -> {
+        variablesLists.forEach(variablesList -> {
             List<WeightedSensitivityVariable> variables = new ArrayList<>();
             if (variablesList.getRight().get(0).getType() == IdentifiableType.LOAD && distributionType == SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP) {
                 reporter.newReportNode()
