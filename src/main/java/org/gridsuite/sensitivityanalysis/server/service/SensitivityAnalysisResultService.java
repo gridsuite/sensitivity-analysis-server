@@ -148,6 +148,14 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, SensitivityAnalysisStatus> findStatuses(List<UUID> resultUuids) {
+        Objects.requireNonNull(resultUuids);
+        List<GlobalStatusEntity> globalEntities = globalStatusRepository.findByResultUuidIn(resultUuids);
+        return globalEntities.stream().collect(Collectors.toMap(GlobalStatusEntity::getResultUuid, e -> SensitivityAnalysisStatus.valueOf(e.getStatus())));
+    }
+
     @Transactional(readOnly = true)
     public SensitivityResultFilterOptions getSensitivityResultFilterOptions(UUID resultUuid, ResultsSelector selector) {
         AnalysisResultEntity sas = analysisResultRepository.findByResultUuid(resultUuid);
