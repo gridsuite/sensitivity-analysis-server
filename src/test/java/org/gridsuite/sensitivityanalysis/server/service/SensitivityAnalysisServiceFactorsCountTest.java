@@ -55,7 +55,7 @@ class SensitivityAnalysisServiceFactorsCountTest {
     @Test
     void testInjectionsSetWithoutContingencies() {
         SensitivityAnalysisParametersInfos parameters = createParameters(
-                List.of(createInjectionsSet(true, List.of(BRANCH1_UUID, BRANCH2_UUID), List.of())),
+                List.of(new SensitivityInjectionsSet(List.of(BRANCH1_UUID, BRANCH2_UUID), null, null, List.of(), true)),
                 null, null, null, null
         );
 
@@ -78,8 +78,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
     @Test
     void testInjectionsSetWithContingencies() {
         SensitivityAnalysisParametersInfos parameters = createParameters(
-                List.of(createInjectionsSet(true, List.of(BRANCH1_UUID, BRANCH2_UUID),
-                        List.of(CONTINGENCY1_UUID, CONTINGENCY2_UUID))),
+                List.of(new SensitivityInjectionsSet(List.of(BRANCH1_UUID, BRANCH2_UUID), null, null,
+                        List.of(CONTINGENCY1_UUID, CONTINGENCY2_UUID), true)),
                 null, null, null, null
         );
 
@@ -104,7 +104,7 @@ class SensitivityAnalysisServiceFactorsCountTest {
     void testInjectionsWithoutContingencies() {
         SensitivityAnalysisParametersInfos parameters = createParameters(
                 null,
-                List.of(createInjection(true, List.of(BRANCH1_UUID), List.of(GEN1_UUID, GEN2_UUID), List.of())),
+                List.of(new SensitivityInjection(List.of(BRANCH1_UUID), List.of(GEN1_UUID, GEN2_UUID), List.of(), true)),
                 null, null, null
         );
 
@@ -131,8 +131,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
     void testInjectionsWithContingencies() {
         SensitivityAnalysisParametersInfos parameters = createParameters(
                 null,
-                List.of(createInjection(true, List.of(BRANCH1_UUID, BRANCH2_UUID),
-                        List.of(GEN1_UUID, GEN2_UUID), List.of(CONTINGENCY1_UUID))),
+                List.of(new SensitivityInjection(List.of(BRANCH1_UUID, BRANCH2_UUID),
+                        List.of(GEN1_UUID, GEN2_UUID), List.of(CONTINGENCY1_UUID), true)),
                 null, null, null
         );
 
@@ -160,7 +160,7 @@ class SensitivityAnalysisServiceFactorsCountTest {
     void testHVDC() {
         SensitivityAnalysisParametersInfos parameters = createParameters(
                 null, null,
-                List.of(createHVDC(true, List.of(BRANCH1_UUID), List.of(HVDC1_UUID), List.of())),
+                List.of(new SensitivityHVDC(List.of(BRANCH1_UUID), null, List.of(HVDC1_UUID), List.of(), true)),
                 null, null
         );
 
@@ -187,7 +187,7 @@ class SensitivityAnalysisServiceFactorsCountTest {
     void testPST() {
         SensitivityAnalysisParametersInfos parameters = createParameters(
                 null, null, null,
-                List.of(createPST(true, List.of(BRANCH1_UUID), List.of(PST1_UUID), List.of())),
+                List.of(new SensitivityPST(List.of(BRANCH1_UUID), null, List.of(PST1_UUID), List.of(), true)),
                 null
         );
 
@@ -214,8 +214,8 @@ class SensitivityAnalysisServiceFactorsCountTest {
     void testNodesWithEmpiricalFactor() {
         SensitivityAnalysisParametersInfos parameters = createParameters(
                 null, null, null, null,
-                List.of(createNodes(true, List.of(VOLTAGE_LEVEL1_UUID),
-                        List.of(EQUIPMENT_REGULATION1_UUID), List.of()))
+                List.of(new SensitivityNodes(List.of(VOLTAGE_LEVEL1_UUID),
+                        List.of(EQUIPMENT_REGULATION1_UUID), List.of(), true))
         );
 
         mockFilterServiceResponse(Map.of(
@@ -241,11 +241,11 @@ class SensitivityAnalysisServiceFactorsCountTest {
     void testInactivatedFactorsAreIgnored() {
         SensitivityAnalysisParametersInfos parameters = createParameters(
                 List.of(
-                        createInjectionsSet(true, List.of(BRANCH1_UUID), List.of()),
-                        createInjectionsSet(false, List.of(BRANCH2_UUID), List.of())
+                        new SensitivityInjectionsSet(List.of(BRANCH1_UUID), null, null, List.of(), true),
+                        new SensitivityInjectionsSet(List.of(BRANCH2_UUID), null, null, List.of(), false)
                 ),
                 List.of(
-                        createInjection(false, List.of(BRANCH1_UUID), List.of(GEN1_UUID), List.of())
+                        new SensitivityInjection(List.of(BRANCH1_UUID), List.of(GEN1_UUID), List.of(), false)
                 ),
                 null, null, null
         );
@@ -290,7 +290,7 @@ class SensitivityAnalysisServiceFactorsCountTest {
     @Test
     void testEmptyContingenciesListDoesNotCallActionsService() {
         SensitivityAnalysisParametersInfos parameters = createParameters(
-                List.of(createInjectionsSet(true, List.of(BRANCH1_UUID), List.of())),
+                List.of(new SensitivityInjectionsSet(List.of(BRANCH1_UUID), null, null, List.of(), true)),
                 null, null, null, null
         );
 
@@ -312,14 +312,14 @@ class SensitivityAnalysisServiceFactorsCountTest {
     @Test
     void testAllTypes() {
         SensitivityAnalysisParametersInfos parameters = createParameters(
-                List.of(createInjectionsSet(true, List.of(BRANCH1_UUID, BRANCH2_UUID),
-                        List.of(CONTINGENCY1_UUID))),
-                List.of(createInjection(true, List.of(BRANCH1_UUID), List.of(GEN1_UUID, GEN2_UUID),
-                        List.of(CONTINGENCY1_UUID, CONTINGENCY2_UUID))),
-                List.of(createHVDC(true, List.of(BRANCH2_UUID), List.of(HVDC1_UUID), List.of())),
-                List.of(createPST(true, List.of(BRANCH1_UUID), List.of(PST1_UUID), List.of())),
-                List.of(createNodes(true, List.of(VOLTAGE_LEVEL1_UUID),
-                        List.of(EQUIPMENT_REGULATION1_UUID), List.of(CONTINGENCY1_UUID)))
+                List.of(new SensitivityInjectionsSet(List.of(BRANCH1_UUID, BRANCH2_UUID), null, null,
+                        List.of(CONTINGENCY1_UUID), true)),
+                List.of(new SensitivityInjection(List.of(BRANCH1_UUID), List.of(GEN1_UUID, GEN2_UUID),
+                        List.of(CONTINGENCY1_UUID, CONTINGENCY2_UUID), true)),
+                List.of(new SensitivityHVDC(List.of(BRANCH2_UUID), null, List.of(HVDC1_UUID), List.of(), true)),
+                List.of(new SensitivityPST(List.of(BRANCH1_UUID), null, List.of(PST1_UUID), List.of(), true)),
+                List.of(new SensitivityNodes(List.of(VOLTAGE_LEVEL1_UUID),
+                        List.of(EQUIPMENT_REGULATION1_UUID), List.of(CONTINGENCY1_UUID), true))
         );
 
         mockFilterServiceResponse(Map.of(
@@ -358,7 +358,7 @@ class SensitivityAnalysisServiceFactorsCountTest {
     void testLargeNumbers() {
         SensitivityAnalysisParametersInfos parameters = createParameters(
                 null,
-                List.of(createInjection(true, List.of(BRANCH1_UUID), List.of(GEN1_UUID), List.of())),
+                List.of(new SensitivityInjection(List.of(BRANCH1_UUID), List.of(GEN1_UUID), List.of(), true)),
                 null, null, null
         );
 
@@ -386,7 +386,7 @@ class SensitivityAnalysisServiceFactorsCountTest {
         UUID missingFilterUuid = UUID.randomUUID();
         SensitivityAnalysisParametersInfos parameters = createParameters(
                 null,
-                List.of(createInjection(true, List.of(BRANCH1_UUID), List.of(GEN1_UUID), List.of())),
+                List.of(new SensitivityInjection(List.of(BRANCH1_UUID), List.of(GEN1_UUID), List.of(), true)),
                 null, null, null
         );
 
@@ -416,7 +416,7 @@ class SensitivityAnalysisServiceFactorsCountTest {
     void testThrowExceptionOnMissingContingencies() {
         UUID missingContingencyListUuid = UUID.randomUUID();
         SensitivityAnalysisParametersInfos parameters = createParameters(
-                List.of(createInjectionsSet(true, List.of(BRANCH1_UUID), List.of(CONTINGENCY1_UUID))),
+                List.of(new SensitivityInjectionsSet(List.of(BRANCH1_UUID), List.of(), null, List.of(CONTINGENCY1_UUID), true)),
                 null, null, null, null
         );
 
@@ -454,84 +454,6 @@ class SensitivityAnalysisServiceFactorsCountTest {
         params.setSensitivityPST(pst != null ? pst : List.of());
         params.setSensitivityNodes(nodes != null ? nodes : List.of());
         return params;
-    }
-
-    private SensitivityInjectionsSet createInjectionsSet(
-            boolean activated,
-            List<UUID> monitoredBranches,
-            List<UUID> contingencies
-    ) {
-        SensitivityInjectionsSet set = new SensitivityInjectionsSet();
-        set.setActivated(activated);
-        set.setMonitoredBranches(createContainers(monitoredBranches));
-        set.setContingencies(createContainers(contingencies));
-        return set;
-    }
-
-    private SensitivityInjection createInjection(
-            boolean activated,
-            List<UUID> monitoredBranches,
-            List<UUID> injections,
-            List<UUID> contingencies
-    ) {
-        SensitivityInjection injection = new SensitivityInjection();
-        injection.setActivated(activated);
-        injection.setMonitoredBranches(createContainers(monitoredBranches));
-        injection.setInjections(createContainers(injections));
-        injection.setContingencies(createContainers(contingencies));
-        return injection;
-    }
-
-    private SensitivityHVDC createHVDC(
-            boolean activated,
-            List<UUID> monitoredBranches,
-            List<UUID> hvdcs,
-            List<UUID> contingencies
-    ) {
-        SensitivityHVDC hvdc = new SensitivityHVDC();
-        hvdc.setActivated(activated);
-        hvdc.setMonitoredBranches(createContainers(monitoredBranches));
-        hvdc.setHvdcs(createContainers(hvdcs));
-        hvdc.setContingencies(createContainers(contingencies));
-        return hvdc;
-    }
-
-    private SensitivityPST createPST(
-            boolean activated,
-            List<UUID> monitoredBranches,
-            List<UUID> psts,
-            List<UUID> contingencies
-    ) {
-        SensitivityPST pst = new SensitivityPST();
-        pst.setActivated(activated);
-        pst.setMonitoredBranches(createContainers(monitoredBranches));
-        pst.setPsts(createContainers(psts));
-        pst.setContingencies(createContainers(contingencies));
-        return pst;
-    }
-
-    private SensitivityNodes createNodes(
-            boolean activated,
-            List<UUID> monitoredVoltageLevels,
-            List<UUID> equipmentsInVoltageRegulation,
-            List<UUID> contingencies
-    ) {
-        SensitivityNodes nodes = new SensitivityNodes();
-        nodes.setActivated(activated);
-        nodes.setMonitoredVoltageLevels(createContainers(monitoredVoltageLevels));
-        nodes.setEquipmentsInVoltageRegulation(createContainers(equipmentsInVoltageRegulation));
-        nodes.setContingencies(createContainers(contingencies));
-        return nodes;
-    }
-
-    private List<EquipmentsContainer> createContainers(List<UUID> uuids) {
-        return uuids.stream()
-                .map(uuid -> {
-                    EquipmentsContainer container = new EquipmentsContainer();
-                    container.setContainerId(uuid);
-                    return container;
-                })
-                .toList();
     }
 
     private void mockFilterServiceResponse(Map<String, CountWithMissingUuids> response) {

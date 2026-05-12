@@ -14,6 +14,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -25,11 +26,11 @@ import java.util.List;
 @Setter
 @Schema(description = "Sensitivity relatively to nodes")
 public class SensitivityNodes {
-    List<EquipmentsContainer> monitoredVoltageLevels;
+    List<UUID> monitoredVoltageLevels;
 
-    List<EquipmentsContainer> equipmentsInVoltageRegulation;
+    List<UUID> equipmentsInVoltageRegulation;
 
-    List<EquipmentsContainer> contingencies;
+    List<UUID> contingencies;
 
     boolean activated;
 }

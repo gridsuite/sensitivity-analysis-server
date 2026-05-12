@@ -20,8 +20,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-import static org.gridsuite.computation.service.NotificationService.HEADER_USER_ID;
-
 /**
  * @author Florent MILLOT <florent.millot at rte-france.com>
  */
@@ -57,9 +55,8 @@ public class SensitivityAnalysisParametersController {
     @ApiResponse(responseCode = "200", description = "parameters were duplicated")
     @ApiResponse(responseCode = "404", description = "source parameters were not found")
     public ResponseEntity<UUID> duplicateParameters(
-        @Parameter(description = "source parameters UUID") @RequestParam("duplicateFrom") UUID sourceParametersUuid,
-        @RequestHeader(HEADER_USER_ID) String userId) {
-        return ResponseEntity.of(parametersService.duplicateParameters(sourceParametersUuid, userId));
+        @Parameter(description = "source parameters UUID") @RequestParam("duplicateFrom") UUID sourceParametersUuid) {
+        return ResponseEntity.of(parametersService.duplicateParameters(sourceParametersUuid));
     }
 
     @GetMapping(value = "/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -67,17 +64,15 @@ public class SensitivityAnalysisParametersController {
     @ApiResponse(responseCode = "200", description = "parameters were returned")
     @ApiResponse(responseCode = "404", description = "parameters were not found")
     public ResponseEntity<SensitivityAnalysisParametersInfos> getParameters(
-        @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid,
-        @RequestHeader(HEADER_USER_ID) String userId) {
-        return ResponseEntity.of(parametersService.getParameters(parametersUuid, userId));
+        @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid) {
+        return ResponseEntity.of(parametersService.getParameters(parametersUuid));
     }
 
     @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get all parameters")
     @ApiResponse(responseCode = "200", description = "the list of all parameters was returned")
-    public ResponseEntity<List<SensitivityAnalysisParametersInfos>> getAllParameters(
-            @RequestHeader(HEADER_USER_ID) String userId) {
-        return ResponseEntity.ok(parametersService.getAllParameters(userId));
+    public ResponseEntity<List<SensitivityAnalysisParametersInfos>> getAllParameters() {
+        return ResponseEntity.ok(parametersService.getAllParameters());
     }
 
     @PutMapping(value = "/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

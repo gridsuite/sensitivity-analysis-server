@@ -68,6 +68,16 @@ public class SensitivityAnalysisParametersEntity {
         assignAttributes(parametersInfos);
     }
 
+    /**
+     * Copy used to duplicate in DB with .save.
+     * The ID is changed. The date is updated.
+     *
+     * @return a copy of the entity
+     */
+    public SensitivityAnalysisParametersEntity copy() {
+        return this.toInfos().toEntity();
+    }
+
     public void update(@NonNull SensitivityAnalysisParametersInfos parametersInfos) {
         assignAttributes(parametersInfos);
     }
@@ -95,9 +105,9 @@ public class SensitivityAnalysisParametersEntity {
             for (SensitivityInjectionsSet sensitivityInjectionsSet : sensitivityInjectionsSets) {
                 SensitivityFactorWithDistribTypeEntity entity = new SensitivityFactorWithDistribTypeEntity();
                 entity.setDistributionType(sensitivityInjectionsSet.getDistributionType());
-                entity.setMonitoredBranch(sensitivityInjectionsSet.getMonitoredBranches().stream().map(EquipmentsContainer::getContainerId).toList());
-                entity.setInjections(sensitivityInjectionsSet.getInjections().stream().map(EquipmentsContainer::getContainerId).toList());
-                entity.setContingencies(sensitivityInjectionsSet.getContingencies().stream().map(EquipmentsContainer::getContainerId).toList());
+                entity.setMonitoredBranch(copyIds(sensitivityInjectionsSet.getMonitoredBranches()));
+                entity.setInjections(copyIds(sensitivityInjectionsSet.getInjections()));
+                entity.setContingencies(copyIds(sensitivityInjectionsSet.getContingencies()));
                 entity.setActivated(sensitivityInjectionsSet.isActivated());
                 sensitivityInjectionsSetEntities.add(entity);
             }
@@ -110,9 +120,9 @@ public class SensitivityAnalysisParametersEntity {
         if (sensitivityInjections != null) {
             for (SensitivityInjection sensitivityInjection : sensitivityInjections) {
                 SensitivityFactorForInjectionEntity entity = new SensitivityFactorForInjectionEntity();
-                entity.setMonitoredBranch(sensitivityInjection.getMonitoredBranches().stream().map(EquipmentsContainer::getContainerId).toList());
-                entity.setInjections(sensitivityInjection.getInjections().stream().map(EquipmentsContainer::getContainerId).toList());
-                entity.setContingencies(sensitivityInjection.getContingencies().stream().map(EquipmentsContainer::getContainerId).toList());
+                entity.setMonitoredBranch(copyIds(sensitivityInjection.getMonitoredBranches()));
+                entity.setInjections(copyIds(sensitivityInjection.getInjections()));
+                entity.setContingencies(copyIds(sensitivityInjection.getContingencies()));
                 entity.setActivated(sensitivityInjection.isActivated());
                 sensitivityInjectionEntities.add(entity);
             }
@@ -125,10 +135,10 @@ public class SensitivityAnalysisParametersEntity {
         if (sensitivityHvdcs != null) {
             for (SensitivityHVDC sensitivityHvdc : sensitivityHvdcs) {
                 SensitivityFactorWithSensiTypeForHvdcEntity entity = new SensitivityFactorWithSensiTypeForHvdcEntity();
-                entity.setMonitoredBranch(sensitivityHvdc.getMonitoredBranches().stream().map(EquipmentsContainer::getContainerId).toList());
-                entity.setInjections(sensitivityHvdc.getHvdcs().stream().map(EquipmentsContainer::getContainerId).toList());
+                entity.setMonitoredBranch(copyIds(sensitivityHvdc.getMonitoredBranches()));
+                entity.setInjections(copyIds(sensitivityHvdc.getHvdcs()));
                 entity.setSensitivityType(sensitivityHvdc.getSensitivityType());
-                entity.setContingencies(sensitivityHvdc.getContingencies().stream().map(EquipmentsContainer::getContainerId).toList());
+                entity.setContingencies(copyIds(sensitivityHvdc.getContingencies()));
                 entity.setActivated(sensitivityHvdc.isActivated());
                 sensitivityHvdcEntities.add(entity);
             }
@@ -142,9 +152,9 @@ public class SensitivityAnalysisParametersEntity {
             for (SensitivityPST sensitivityPst : sensitivityPsts) {
                 SensitivityFactorWithSensiTypeForPstEntity entity = new SensitivityFactorWithSensiTypeForPstEntity();
                 entity.setSensitivityType(sensitivityPst.getSensitivityType());
-                entity.setMonitoredBranch(sensitivityPst.getMonitoredBranches().stream().map(EquipmentsContainer::getContainerId).toList());
-                entity.setInjections(sensitivityPst.getPsts().stream().map(EquipmentsContainer::getContainerId).toList());
-                entity.setContingencies(sensitivityPst.getContingencies().stream().map(EquipmentsContainer::getContainerId).toList());
+                entity.setMonitoredBranch(copyIds(sensitivityPst.getMonitoredBranches()));
+                entity.setInjections(copyIds(sensitivityPst.getPsts()));
+                entity.setContingencies(copyIds(sensitivityPst.getContingencies()));
                 entity.setActivated(sensitivityPst.isActivated());
                 sensitivityPstEntities.add(entity);
             }
@@ -157,13 +167,76 @@ public class SensitivityAnalysisParametersEntity {
         if (sensitivityNodes != null) {
             for (SensitivityNodes sensitivityNode : sensitivityNodes) {
                 SensitivityFactorForNodeEntity entity = new SensitivityFactorForNodeEntity();
-                entity.setMonitoredBranch(sensitivityNode.getMonitoredVoltageLevels().stream().map(EquipmentsContainer::getContainerId).toList());
-                entity.setInjections(sensitivityNode.getEquipmentsInVoltageRegulation().stream().map(EquipmentsContainer::getContainerId).toList());
-                entity.setContingencies(sensitivityNode.getContingencies().stream().map(EquipmentsContainer::getContainerId).toList());
+                entity.setMonitoredBranch(copyIds(sensitivityNode.getMonitoredVoltageLevels()));
+                entity.setInjections(copyIds(sensitivityNode.getEquipmentsInVoltageRegulation()));
+                entity.setContingencies(copyIds(sensitivityNode.getContingencies()));
                 entity.setActivated(sensitivityNode.isActivated());
                 sensitivityNodeEntities.add(entity);
             }
         }
         return sensitivityNodeEntities;
+    }
+
+    private static List<UUID> copyIds(List<UUID> ids) {
+        return ids == null ? null : new ArrayList<>(ids);
+    }
+
+    public SensitivityAnalysisParametersInfos toInfos() {
+
+        List<SensitivityInjectionsSet> sensiInjectionsSets = this.sensitivityInjectionsSets.stream().map(
+            sensitivityInjectionsSet -> new SensitivityInjectionsSet(
+                copyIds(sensitivityInjectionsSet.getMonitoredBranch()),
+                copyIds(sensitivityInjectionsSet.getInjections()),
+                sensitivityInjectionsSet.getDistributionType(),
+                copyIds(sensitivityInjectionsSet.getContingencies()),
+                sensitivityInjectionsSet.isActivated()
+            )).toList();
+
+        List<SensitivityInjection> sensiInjections = this.sensitivityInjections.stream().map(
+            sensitivityInjection -> new SensitivityInjection(
+                copyIds(sensitivityInjection.getMonitoredBranch()),
+                copyIds(sensitivityInjection.getInjections()),
+                copyIds(sensitivityInjection.getContingencies()),
+                sensitivityInjection.isActivated()
+            )).toList();
+
+        List<SensitivityHVDC> sensiHvdcs = this.sensitivityHVDCs.stream().map(
+            sensitivityHvdc -> new SensitivityHVDC(
+                copyIds(sensitivityHvdc.getMonitoredBranch()),
+                sensitivityHvdc.getSensitivityType(),
+                copyIds(sensitivityHvdc.getInjections()),
+                copyIds(sensitivityHvdc.getContingencies()),
+                sensitivityHvdc.isActivated()
+            )).toList();
+
+        List<SensitivityPST> sensiPsts = this.sensitivityPSTs.stream().map(
+            sensitivityPst -> new SensitivityPST(
+                copyIds(sensitivityPst.getMonitoredBranch()),
+                sensitivityPst.getSensitivityType(),
+                copyIds(sensitivityPst.getInjections()),
+                copyIds(sensitivityPst.getContingencies()),
+                sensitivityPst.isActivated()
+            )).toList();
+
+        List<SensitivityNodes> sensiNodes = this.sensitivityNodes.stream().map(
+            sensitivityNode -> new SensitivityNodes(
+                copyIds(sensitivityNode.getMonitoredBranch()),
+                copyIds(sensitivityNode.getInjections()),
+                copyIds(sensitivityNode.getContingencies()),
+                sensitivityNode.isActivated()
+            )).toList();
+
+        return SensitivityAnalysisParametersInfos.builder()
+            .uuid(this.id)
+            .provider(this.provider)
+            .flowFlowSensitivityValueThreshold(this.flowFlowSensitivityValueThreshold)
+            .angleFlowSensitivityValueThreshold(this.angleFlowSensitivityValueThreshold)
+            .flowVoltageSensitivityValueThreshold(this.flowVoltageSensitivityValueThreshold)
+            .sensitivityInjectionsSet(sensiInjectionsSets)
+            .sensitivityInjection(sensiInjections)
+            .sensitivityHVDC(sensiHvdcs)
+            .sensitivityPST(sensiPsts)
+            .sensitivityNodes(sensiNodes)
+            .build();
     }
 }
