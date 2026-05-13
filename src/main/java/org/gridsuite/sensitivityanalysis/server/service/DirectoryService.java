@@ -59,14 +59,15 @@ public class DirectoryService {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         try {
-            return restTemplate.exchange(
+            Map<UUID, String> body = restTemplate.exchange(
                             baseUri + path,
                             HttpMethod.GET,
                             new HttpEntity<>(headers),
                             new ParameterizedTypeReference<Map<UUID, String>>() { }
                     ).getBody();
+            return body != null ? body : Map.of();
 
-        } catch (HttpClientErrorException e) {
+        } catch (RestClientException e) {
             return Map.of();
         }
     }
