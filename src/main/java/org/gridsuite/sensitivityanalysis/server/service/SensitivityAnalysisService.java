@@ -172,7 +172,6 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
             throw new ComputationException(RESULT_NOT_FOUND, "The sensitivity analysis result '" + resultUuid + "' does not exist");
         }
 
-        populateResultWithElementNames(result);
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
