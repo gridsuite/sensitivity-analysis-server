@@ -27,7 +27,5 @@ public interface GlobalStatusRepository extends JpaRepository<GlobalStatusEntity
 
     GlobalStatusEntity findByResultUuid(UUID resultUuid);
 
-    List<GlobalStatusEntity> findByResultUuidIn(List<UUID> resultUuids);
-
     void deleteByResultUuid(UUID resultUuid);
 }
