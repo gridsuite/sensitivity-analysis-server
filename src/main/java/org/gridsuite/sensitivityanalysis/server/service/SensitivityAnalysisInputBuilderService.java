@@ -20,9 +20,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.gridsuite.sensitivityanalysis.server.util.ResultUtils.formatVariationId;
+import static org.gridsuite.sensitivityanalysis.server.util.ResultUtils.joinToStringIds;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -133,10 +139,6 @@ public class SensitivityAnalysisInputBuilderService {
         return listIdentifiableAttributes.stream();
     }
 
-    private String joinToStringIds(List<UUID> filterIds) {
-        return "[" + filterIds.stream().map(UUID::toString).collect(Collectors.joining(", ")) + "]";
-    }
-
     private Stream<IdentifiableAttributes> getMonitoredIdentifiables(SensitivityAnalysisRunContext context, Network network, List<UUID> filterIds, List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter) {
         String idsString = joinToStringIds(filterIds);
         List<IdentifiableAttributes> listIdentAttributes = goGetIdentifiables(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter);
@@ -211,8 +213,7 @@ public class SensitivityAnalysisInputBuilderService {
         List<SensitivityVariableSet> result = new ArrayList<>();
         List<IdentifiableAttributes> monitoredVariablesLists = getIdentifiables(context, filterIds, variablesTypesAllowed, reporter)
                 .toList();
-        String idsString = joinToStringIds(filterIds);
-        Stream<Pair<String, List<IdentifiableAttributes>>> variablesLists = Stream.of(Pair.of(idsString, monitoredVariablesLists))
+        Stream<Pair<List<UUID>, List<IdentifiableAttributes>>> variablesLists = Stream.of(Pair.of(filterIds, monitoredVariablesLists))
                 .filter(list -> !list.getRight().isEmpty());
 
         variablesLists.forEach(variablesList -> {
@@ -257,7 +258,7 @@ public class SensitivityAnalysisInputBuilderService {
                         break;
                 }
             }
-            result.add(new SensitivityVariableSet(variablesList.getLeft() + " (" + distributionType.name() + ")", variables));
+            result.add(new SensitivityVariableSet(formatVariationId(variablesList.getLeft(), distributionType.name()), variables));
         });
 
         return result;
