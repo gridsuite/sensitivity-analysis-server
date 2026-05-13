@@ -6,6 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gdata.util.common.base.Pair;
 import com.powsybl.contingency.Contingency;
@@ -66,6 +67,7 @@ import static org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalys
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.unzip;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -91,6 +93,7 @@ class SensitivityAnalysisControllerTest {
     private UUID parametersUuid3;
     private static final UUID LOADFLOW_PARAMETERS_UUID = UUID.randomUUID();
     private static final UUID RESULT_UUID = UUID.randomUUID();
+    private static final UUID OTHER_RESULT_UUID = UUID.randomUUID();
 
     private static final IdentifiableAttributes BRANCH1 = new IdentifiableAttributes("L1-5-1", IdentifiableType.LINE, null);
     private static final IdentifiableAttributes BRANCH2 = new IdentifiableAttributes("L2-3-1", IdentifiableType.LINE, null);
@@ -536,6 +539,38 @@ class SensitivityAnalysisControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         assertEquals(SensitivityAnalysisStatus.NOT_DONE.name(), result.getResponse().getContentAsString());
+    }
+
+    @Test
+    void testStatuses() throws Exception {
+        MvcResult result = mockMvc.perform(post(
+                        "/" + VERSION + "/results/statuses")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(List.of(RESULT_UUID, OTHER_RESULT_UUID))))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        Map<UUID, SensitivityAnalysisStatus> statuses = mapper.readValue(result.getResponse().getContentAsString(),
+                new TypeReference<Map<UUID, SensitivityAnalysisStatus>>() {
+                });
+        assertTrue(statuses.isEmpty());
+
+        mockMvc.perform(put("/" + VERSION + "/results/invalidate-status?resultUuid=" + RESULT_UUID))
+                .andExpect(status().isOk());
+
+        result = mockMvc.perform(post(
+                        "/" + VERSION + "/results/statuses")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(List.of(RESULT_UUID, OTHER_RESULT_UUID))))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        statuses = mapper.readValue(result.getResponse().getContentAsString(),
+                new TypeReference<Map<UUID, SensitivityAnalysisStatus>>() {
+                });
+        assertEquals(1, statuses.size());
+        assertEquals(SensitivityAnalysisStatus.NOT_DONE, statuses.get(RESULT_UUID));
+        assertFalse(statuses.containsKey(OTHER_RESULT_UUID));
     }
 
     @Test
