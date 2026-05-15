@@ -27,6 +27,7 @@ public final class ResultUtils {
     }
 
     private static final String UUID_REGEX = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+    public static final Pattern UUID_PATTERN = Pattern.compile(UUID_REGEX, Pattern.CASE_INSENSITIVE);
 
     /**
      * Extracts all UUIDs from the given variation ID string based on a predefined format.
@@ -37,7 +38,7 @@ public final class ResultUtils {
      */
     public static List<UUID> extractUuidsFromVariationId(@NonNull String varId) {
         List<UUID> uuids = new ArrayList<>();
-        Matcher matcher = Pattern.compile(UUID_REGEX, Pattern.CASE_INSENSITIVE).matcher(varId);
+        Matcher matcher = UUID_PATTERN.matcher(varId);
         while (matcher.find()) {
             uuids.add(UUID.fromString(matcher.group()));
         }
@@ -53,7 +54,7 @@ public final class ResultUtils {
      * @return the resolved variation ID string with UUIDs replaced by their corresponding names where applicable
      */
     public static String resolveForVariationId(@NonNull String varId, Map<UUID, String> nameByUuid) {
-        return Pattern.compile(UUID_REGEX, Pattern.CASE_INSENSITIVE)
+        return UUID_PATTERN
                 .matcher(varId)
                 .replaceAll(match -> nameByUuid.getOrDefault(UUID.fromString(match.group()), match.group()));
     }
