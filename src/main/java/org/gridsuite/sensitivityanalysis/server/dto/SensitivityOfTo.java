@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 @Getter
@@ -26,6 +27,7 @@ import lombok.experimental.SuperBuilder;
 public class SensitivityOfTo {
     @NonNull
     private String funcId;
+    @Setter
     @NonNull
     private String varId;
     private boolean varIsAFilter;

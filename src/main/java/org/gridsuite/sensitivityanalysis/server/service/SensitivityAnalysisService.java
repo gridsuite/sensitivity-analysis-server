@@ -9,14 +9,14 @@ package org.gridsuite.sensitivityanalysis.server.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.sensitivity.SensitivityAnalysisProvider;
 import com.univocity.parsers.csv.CsvFormat;
-import org.gridsuite.computation.error.ComputationException;
+import com.univocity.parsers.csv.CsvWriter;
+import com.univocity.parsers.csv.CsvWriterSettings;
 import org.gridsuite.computation.dto.GlobalFilter;
 import org.gridsuite.computation.dto.ResourceFilterDTO;
+import org.gridsuite.computation.error.ComputationException;
 import org.gridsuite.computation.service.AbstractComputationService;
 import org.gridsuite.computation.service.NotificationService;
 import org.gridsuite.computation.service.UuidGeneratorService;
-import com.univocity.parsers.csv.CsvWriter;
-import com.univocity.parsers.csv.CsvWriterSettings;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.FactorCount;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
@@ -34,11 +34,15 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import static org.gridsuite.computation.error.ComputationBusinessErrorCode.INVALID_EXPORT_PARAMS;
 import static org.gridsuite.computation.error.ComputationBusinessErrorCode.RESULT_NOT_FOUND;
+import static org.gridsuite.sensitivityanalysis.server.util.ResultUtils.extractUuidsFromVariationId;
+import static org.gridsuite.sensitivityanalysis.server.util.ResultUtils.resolveForVariationId;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -55,6 +59,7 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
     private final SensitivityAnalysisFactorCountService sensitivityAnalysisFactorCountService;
 
     private final FilterService filterService;
+    private final DirectoryService directoryService;
 
     public SensitivityAnalysisService(@Value("${sensitivity-analysis.default-provider}") String defaultProvider,
                                       SensitivityAnalysisResultService resultService,
@@ -62,10 +67,12 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
                                       NotificationService notificationService,
                                       SensitivityAnalysisFactorCountService sensitivityAnalysisFactorCountService,
                                       FilterService filterService,
+                                      DirectoryService directoryService,
                                       ObjectMapper objectMapper) {
         super(notificationService, resultService, objectMapper, uuidGeneratorService, defaultProvider);
         this.sensitivityAnalysisFactorCountService = sensitivityAnalysisFactorCountService;
         this.filterService = filterService;
+        this.directoryService = directoryService;
     }
 
     @Override
@@ -101,7 +108,28 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
             Optional<ResourceFilterDTO> resourceGlobalFilters = filterService.getResourceFilter(networkUuid, variantId, globalFilter);
             resourceGlobalFilters.ifPresent(allResourceFilters::add);
         }
-        return resultService.getRunResult(resultUuid, selector, allResourceFilters);
+        SensitivityRunQueryResult result = resultService.getRunResult(resultUuid, selector, allResourceFilters);
+        if (result != null) {
+            populateResultWithElementNames(result);
+        }
+        return result;
+    }
+
+    /**
+     * Populates the SensitivityRunQueryResult by replacing UUIDs in sensitivity varId with
+     * corresponding element names.
+     */
+    private void populateResultWithElementNames(SensitivityRunQueryResult result) {
+        // collect all UUIDs from VarId
+        Stream<String> varIdStream = result.getSensitivities().stream().map(SensitivityOfTo::getVarId);
+        Set<UUID> allUUIDs = varIdStream.flatMap(varId -> extractUuidsFromVariationId(varId).stream()).collect(Collectors.toSet());
+
+        // fetch all element names for all UUIDs
+        Map<UUID, String> nameByUuid = directoryService.getElementNames(allUUIDs);
+
+        // replace UUIDs in sensitivity varId with corresponding element names
+        result.getSensitivities().forEach(sensitivity ->
+            sensitivity.setVarId(resolveForVariationId(sensitivity.getVarId(), nameByUuid)));
     }
 
     public SensitivityResultFilterOptions getSensitivityResultOptions(UUID resultUuid, ResultsSelector selector) {
