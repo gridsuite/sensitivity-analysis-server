@@ -50,8 +50,6 @@ import static org.gridsuite.sensitivityanalysis.server.util.ResultUtils.resolveF
 @Service
 public class SensitivityAnalysisService extends AbstractComputationService<SensitivityAnalysisRunContext, SensitivityAnalysisResultService, SensitivityAnalysisStatus> {
 
-    public static final String UUID_REGEX = "/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi";
-
     public static final char CSV_DELIMITER_FR = ';';
     public static final char CSV_DELIMITER_EN = ',';
     public static final char CSV_QUOTE_ESCAPE = '"';
