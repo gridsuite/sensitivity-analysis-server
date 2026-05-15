@@ -308,7 +308,7 @@ public class SensitivityAnalysisInputBuilderService {
             List<Contingency> cInjectionsSet = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityInjectionsSet.getContingencies(), reporter);
             List<SensitivityVariableSet> vInjectionsSets = buildSensitivityVariableSets(context,
                 network, reporter,
-                List.of(IdentifiableType.GENERATOR, IdentifiableType.LOAD),
+                List.of(IdentifiableType.GENERATOR, IdentifiableType.LOAD, IdentifiableType.BATTERY),
                 sensitivityInjectionsSet.getInjections(),
                 sensitivityInjectionsSet.getDistributionType());
             List<List<SensitivityFactor>> fInjectionsSet = buildSensitivityFactorsFromVariablesSets(
@@ -334,7 +334,7 @@ public class SensitivityAnalysisInputBuilderService {
                 context, network, reporter,
                 List.of(IdentifiableType.LINE, IdentifiableType.TWO_WINDINGS_TRANSFORMER),
                 sensitivityInjection.getMonitoredBranches(),
-                List.of(IdentifiableType.GENERATOR, IdentifiableType.LOAD),
+                List.of(IdentifiableType.GENERATOR, IdentifiableType.LOAD, IdentifiableType.BATTERY),
                 sensitivityInjection.getInjections(),
                 cInjections,
                 SensitivityFunctionType.BRANCH_ACTIVE_POWER_1,
