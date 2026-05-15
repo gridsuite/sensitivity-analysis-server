@@ -31,6 +31,7 @@ import java.util.UUID;
 public class DirectoryService {
     static final String DIRECTORY_API_VERSION = "v1";
     private static final String DELIMITER = "/";
+    public static final String DIRECTORY_API_GET_ELEMENTS_NAMES_ENDPOINT = DELIMITER + DIRECTORY_API_VERSION + "/elements/names";
     @Setter
     private String baseUri;
 
@@ -49,7 +50,7 @@ public class DirectoryService {
         }
 
         URI path = UriComponentsBuilder
-                .fromPath(DELIMITER + DIRECTORY_API_VERSION + "/elements/names")
+                .fromPath(DIRECTORY_API_GET_ELEMENTS_NAMES_ENDPOINT)
                 .queryParam("ids", elementUuids)
                 .queryParam("strictMode", "false") // to ignore non existing elements error
                 .build()
