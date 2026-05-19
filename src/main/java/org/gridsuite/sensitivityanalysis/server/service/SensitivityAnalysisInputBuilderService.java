@@ -62,39 +62,34 @@ public class SensitivityAnalysisInputBuilderService {
         return goGetContingencies(contingencyListIds, networkUuid, variantId, reporter);
     }
 
-    private double getGeneratorWeight(Generator generator, SensitivityAnalysisInputData.DistributionType distributionType, Double distributionKey) {
-        switch (distributionType) {
-            case PROPORTIONAL:
-                return !Double.isNaN(generator.getTerminal().getP()) ? generator.getTerminal().getP() : 0.;
-            case PROPORTIONAL_MAXP:
-                return generator.getMaxP();
-            case REGULAR:
-                return 1.;
-            case VENTILATION:
+    private double getInjectionWeight(Double p, Double maxP, SensitivityAnalysisInputData.DistributionType distributionType, Double distributionKey) {
+        return switch (distributionType) {
+            case PROPORTIONAL -> !Double.isNaN(p) ? p : 0.;
+            case PROPORTIONAL_MAXP -> maxP;
+            case REGULAR -> 1.;
+            case VENTILATION -> {
                 if (distributionKey == null) {
                     throw new PowsyblException("Distribution key required for VENTILATION distribution type !!");
                 }
-                return distributionKey;
-            default:
-                throw new UnsupportedOperationException("Distribution type not allowed for generator");
-        }
+                yield distributionKey;
+            }
+            default -> throw new UnsupportedOperationException("Distribution type not allowed for generator");
+        };
     }
 
     private double getLoadWeight(Load load, SensitivityAnalysisInputData.DistributionType distributionType, Double distributionKey) {
-        switch (distributionType) {
-            case PROPORTIONAL:
-            case PROPORTIONAL_MAXP: // simpler to use the same enum for generator and load
-                return load.getP0();
-            case REGULAR:
-                return 1.;
-            case VENTILATION:
+        return switch (distributionType) {
+            case PROPORTIONAL, PROPORTIONAL_MAXP -> // simpler to use the same enum for generator and load
+                load.getP0();
+            case REGULAR -> 1.;
+            case VENTILATION -> {
                 if (distributionKey == null) {
                     throw new PowsyblException("Distribution key required for VENTILATION distribution type !!");
                 }
-                return distributionKey;
-            default:
-                throw new UnsupportedOperationException("Distribution type not allowed for load");
-        }
+                yield distributionKey;
+            }
+            default -> throw new UnsupportedOperationException("Distribution type not allowed for load");
+        };
     }
 
     private List<IdentifiableAttributes> goGetIdentifiables(List<UUID> filterIds, UUID networkUuid, String variantId, ReportNode reporter) {
@@ -240,7 +235,7 @@ public class SensitivityAnalysisInputBuilderService {
                         if (generator == null) {
                             throw new PowsyblException("Generator '" + identifiableAttributes.getId() + "' not found !!");
                         }
-                        double weight = getGeneratorWeight(generator, distributionType, identifiableAttributes.getDistributionKey());
+                        double weight = getInjectionWeight(generator.getTerminal().getP(), generator.getMaxP(), distributionType, identifiableAttributes.getDistributionKey());
                         variables.add(new WeightedSensitivityVariable(identifiableAttributes.getId(), weight));
                         break;
                     }
@@ -250,6 +245,15 @@ public class SensitivityAnalysisInputBuilderService {
                             throw new PowsyblException("Load '" + identifiableAttributes.getId() + "' not found !!");
                         }
                         double weight = getLoadWeight(load, distributionType, identifiableAttributes.getDistributionKey());
+                        variables.add(new WeightedSensitivityVariable(identifiableAttributes.getId(), weight));
+                        break;
+                    }
+                    case BATTERY: {
+                        Battery battery = network.getBattery(identifiableAttributes.getId());
+                        if (battery == null) {
+                            throw new PowsyblException("Battery '" + identifiableAttributes.getId() + "' not found !!");
+                        }
+                        double weight = getInjectionWeight(battery.getTerminal().getP(), battery.getMaxP(), distributionType, identifiableAttributes.getDistributionKey());
                         variables.add(new WeightedSensitivityVariable(identifiableAttributes.getId(), weight));
                         break;
                     }
