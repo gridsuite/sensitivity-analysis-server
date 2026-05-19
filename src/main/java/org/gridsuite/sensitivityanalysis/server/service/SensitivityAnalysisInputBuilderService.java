@@ -73,13 +73,13 @@ public class SensitivityAnalysisInputBuilderService {
                 }
                 yield distributionKey;
             }
-            default -> throw new UnsupportedOperationException("Distribution type not allowed for generator");
+            default -> throw new UnsupportedOperationException("Distribution type not allowed for injection");
         };
     }
 
     private double getLoadWeight(Load load, SensitivityAnalysisInputData.DistributionType distributionType, Double distributionKey) {
         return switch (distributionType) {
-            case PROPORTIONAL, PROPORTIONAL_MAXP -> // simpler to use the same enum for generator and load
+            case PROPORTIONAL, PROPORTIONAL_MAXP -> // simpler to use the same enum for generator, battery and load
                 load.getP0();
             case REGULAR -> 1.;
             case VENTILATION -> {
