@@ -18,7 +18,6 @@ import com.powsybl.iidm.network.test.BatteryNetworkFactory;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import com.powsybl.sensitivity.SensitivityAnalysisParameters;
 import com.powsybl.sensitivity.SensitivityFactor;
-import org.gridsuite.sensitivityanalysis.server.report.SensitivityAnalysisServerReportResourceBundle;
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisInputBuilderService;
