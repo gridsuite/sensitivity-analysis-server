@@ -73,7 +73,6 @@ public class SensitivityAnalysisInputBuilderService {
                 }
                 yield distributionKey;
             }
-            default -> throw new UnsupportedOperationException("Distribution type not allowed for injection");
         };
     }
 
@@ -88,7 +87,6 @@ public class SensitivityAnalysisInputBuilderService {
                 }
                 yield distributionKey;
             }
-            default -> throw new UnsupportedOperationException("Distribution type not allowed for load");
         };
     }
 

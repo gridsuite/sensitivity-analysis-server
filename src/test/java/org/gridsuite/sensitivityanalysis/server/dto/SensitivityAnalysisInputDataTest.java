@@ -9,6 +9,7 @@ package org.gridsuite.sensitivityanalysis.server.dto;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
@@ -234,5 +235,32 @@ class SensitivityAnalysisInputDataTest {
         assertEquals(BRANCH_ACTIVE_POWER_1, sensitivityFactor.getFunctionType());
         assertEquals(injectionsFilterIds, sensitivityFactor.getVariableId());
         assertEquals(INJECTION_ACTIVE_POWER, sensitivityFactor.getVariableType());
+
+        // test battery not found
+        given(filterService.getIdentifiablesFromFilters(filterIdsList, NETWORK_UUID, VARIANT_ID))
+                .willReturn(List.of(new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR, 1.0),
+                        new IdentifiableAttributes("bat", IdentifiableType.BATTERY, 1.0),
+                        new IdentifiableAttributes("LOAD", IdentifiableType.LOAD, 1.0)));
+        String message = assertThrows(PowsyblException.class, () -> inputBuilderService.build(context, network, report)).getMessage();
+        assertEquals("Battery 'bat' not found !!", message);
+
+        // test VENTILATION with null distribution key
+        sensitivityInjectionsSets = new ArrayList<>();
+        sensitivityInjectionsSets.add(new SensitivityInjectionsSet(monitoredBranchIdsList, filterIdsList,
+                SensitivityAnalysisInputData.DistributionType.VENTILATION, Collections.emptyList(), true));
+        inputData = SensitivityAnalysisInputData.builder()
+                .sensitivityInjectionsSets(sensitivityInjectionsSets)
+                .sensitivityInjections(Collections.emptyList())
+                .sensitivityHVDCs(Collections.emptyList())
+                .sensitivityPSTs(Collections.emptyList())
+                .sensitivityNodes(Collections.emptyList())
+                .build();
+        SensitivityAnalysisRunContext context2 = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
+        given(filterService.getIdentifiablesFromFilters(filterIdsList, NETWORK_UUID, VARIANT_ID))
+                .willReturn(List.of(new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR, 1.0),
+                        new IdentifiableAttributes("BAT", IdentifiableType.BATTERY, null),
+                        new IdentifiableAttributes("LOAD", IdentifiableType.LOAD, 1.0)));
+        message = assertThrows(PowsyblException.class, () -> inputBuilderService.build(context2, network, report)).getMessage();
+        assertEquals("Distribution key required for VENTILATION distribution type !!", message);
     }
 }
