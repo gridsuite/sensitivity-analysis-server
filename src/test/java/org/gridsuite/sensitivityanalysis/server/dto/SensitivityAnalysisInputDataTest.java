@@ -10,10 +10,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.report.ReportNode;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
+import com.powsybl.iidm.network.test.BatteryNetworkFactory;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import com.powsybl.sensitivity.SensitivityAnalysisParameters;
+import com.powsybl.sensitivity.SensitivityFactor;
+import org.gridsuite.sensitivityanalysis.server.report.SensitivityAnalysisServerReportResourceBundle;
 import org.gridsuite.sensitivityanalysis.server.service.ActionsService;
 import org.gridsuite.sensitivityanalysis.server.service.FilterService;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisInputBuilderService;
@@ -25,18 +29,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.powsybl.sensitivity.SensitivityFunctionType.BRANCH_ACTIVE_POWER_1;
+import static com.powsybl.sensitivity.SensitivityVariableType.INJECTION_ACTIVE_POWER;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.DEFAULT_PROVIDER;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
@@ -187,5 +189,50 @@ class SensitivityAnalysisInputDataTest {
         Set<String> reportKeys = reports.stream().map(ReportNode::getMessageKey).collect(Collectors.toSet());
         assertThat(reportKeys.size(), is(1));
         assertThat(reportKeys, contains("sensitivity.analysis.server.sensitivityInputParametersTranslationFailure"));
+    }
+
+    @Test
+    void testInjections() {
+        Network network = BatteryNetworkFactory.create();
+        UUID idFilterGenerator = UUID.randomUUID();
+        UUID idFilterBattery = UUID.randomUUID();
+        UUID idFilterLoad = UUID.randomUUID();
+        UUID idLine = UUID.randomUUID();
+        List<UUID> filterIdsList = List.of(idFilterGenerator, idFilterBattery, idFilterLoad);
+        List<UUID> monitoredBranchIdsList = List.of(idLine);
+        given(filterService.getIdentifiablesFromFilters(filterIdsList, NETWORK_UUID, VARIANT_ID))
+                .willReturn(List.of(new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR, 1.0),
+                        new IdentifiableAttributes("BAT", IdentifiableType.BATTERY, 1.0),
+                        new IdentifiableAttributes("LOAD", IdentifiableType.LOAD, 1.0)));
+        given(filterService.getIdentifiablesFromFilters(monitoredBranchIdsList, NETWORK_UUID, VARIANT_ID))
+                .willReturn(List.of(new IdentifiableAttributes("NHV1_NHV2_1", IdentifiableType.LINE, 1.0)));
+        SensitivityAnalysisInputBuilderService inputBuilderService = new SensitivityAnalysisInputBuilderService(actionsService, filterService);
+        List<SensitivityInjection> sensitivityInjections = new ArrayList<>();
+        sensitivityInjections.add(new SensitivityInjection(monitoredBranchIdsList, filterIdsList, Collections.emptyList(), true));
+        List<SensitivityInjectionsSet> sensitivityInjectionsSets = new ArrayList<>();
+        sensitivityInjectionsSets.add(new SensitivityInjectionsSet(monitoredBranchIdsList, filterIdsList,
+                SensitivityAnalysisInputData.DistributionType.PROPORTIONAL, Collections.emptyList(), true));
+        SensitivityAnalysisInputData inputData = SensitivityAnalysisInputData.builder()
+                .sensitivityInjectionsSets(sensitivityInjectionsSets)
+                .sensitivityInjections(sensitivityInjections)
+                .sensitivityHVDCs(Collections.emptyList())
+                .sensitivityPSTs(Collections.emptyList())
+                .sensitivityNodes(Collections.emptyList())
+                .build();
+        SensitivityAnalysisRunContext context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
+        ReportNode report = ReportNode.newRootReportNode()
+                .withResourceBundles(SensitivityAnalysisServerReportResourceBundle.BASE_NAME)
+                .withMessageTemplate("test")
+                .build();
+        inputBuilderService.build(context, network, report);
+        List<List<SensitivityFactor>> factors = context.getSensitivityAnalysisInputs().getFactors();
+        assertEquals(4, factors.size());
+        String injectionsFilterIds = filterIdsList + " (" + SensitivityAnalysisInputData.DistributionType.PROPORTIONAL.name() + ")";
+        SensitivityFactor sensitivityFactor = factors.getFirst().getFirst();
+        assertNotNull(sensitivityFactor);
+        assertEquals("NHV1_NHV2_1", sensitivityFactor.getFunctionId());
+        assertEquals(BRANCH_ACTIVE_POWER_1, sensitivityFactor.getFunctionType());
+        assertEquals(injectionsFilterIds, sensitivityFactor.getVariableId());
+        assertEquals(INJECTION_ACTIVE_POWER, sensitivityFactor.getVariableType());
     }
 }
