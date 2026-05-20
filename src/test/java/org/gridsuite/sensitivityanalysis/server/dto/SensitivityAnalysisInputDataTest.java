@@ -230,6 +230,36 @@ class SensitivityAnalysisInputDataTest {
         assertEquals(BRANCH_ACTIVE_POWER_1, sensitivityFactor.getFunctionType());
         assertEquals(injectionsFilterIds, sensitivityFactor.getVariableId());
         assertEquals(INJECTION_ACTIVE_POWER, sensitivityFactor.getVariableType());
+
+        // test PROPORTIONAL_MAXP
+        sensitivityInjectionsSets = new ArrayList<>();
+        sensitivityInjectionsSets.add(new SensitivityInjectionsSet(monitoredBranchIdsList, filterIdsList,
+                SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP, Collections.emptyList(), true));
+        inputData = SensitivityAnalysisInputData.builder()
+                .sensitivityInjectionsSets(sensitivityInjectionsSets)
+                .sensitivityInjections(Collections.emptyList())
+                .sensitivityHVDCs(Collections.emptyList())
+                .sensitivityPSTs(Collections.emptyList())
+                .sensitivityNodes(Collections.emptyList())
+                .build();
+        context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
+        inputBuilderService.build(context, network, ReportNode.NO_OP);
+        assertEquals(1, context.getSensitivityAnalysisInputs().getFactors().size());
+
+        // test REGULAR
+        sensitivityInjectionsSets = new ArrayList<>();
+        sensitivityInjectionsSets.add(new SensitivityInjectionsSet(monitoredBranchIdsList, filterIdsList,
+                SensitivityAnalysisInputData.DistributionType.REGULAR, Collections.emptyList(), true));
+        inputData = SensitivityAnalysisInputData.builder()
+                .sensitivityInjectionsSets(sensitivityInjectionsSets)
+                .sensitivityInjections(Collections.emptyList())
+                .sensitivityHVDCs(Collections.emptyList())
+                .sensitivityPSTs(Collections.emptyList())
+                .sensitivityNodes(Collections.emptyList())
+                .build();
+        context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
+        inputBuilderService.build(context, network, ReportNode.NO_OP);
+        assertEquals(1, context.getSensitivityAnalysisInputs().getFactors().size());
     }
 
     @Test
