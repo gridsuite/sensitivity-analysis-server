@@ -156,4 +156,44 @@ public class SensitivityAnalysisParametersService {
                 sensitivityAnalysisParametersInfos.getProvider(),
                 inputData);
     }
+
+    public List<UUID> getContingencyListsAndFiltersParameters(UUID parametersUuid) {
+        Optional<SensitivityAnalysisParametersInfos> parameters = getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid));
+        if (parameters.isEmpty()) {
+            throw new IllegalArgumentException("No parameters found for parametersUuid: " + parametersUuid);
+        }
+        List<UUID> contingencyListsAndFiltersUuids = new ArrayList<>();
+
+        parameters.get().getSensitivityInjectionsSet().forEach(is -> {
+            contingencyListsAndFiltersUuids.addAll(is.getMonitoredBranches());
+            contingencyListsAndFiltersUuids.addAll(is.getInjections());
+            contingencyListsAndFiltersUuids.addAll(is.getContingencies());
+        });
+
+        parameters.get().getSensitivityInjection().forEach(i -> {
+            contingencyListsAndFiltersUuids.addAll(i.getMonitoredBranches());
+            contingencyListsAndFiltersUuids.addAll(i.getInjections());
+            contingencyListsAndFiltersUuids.addAll(i.getContingencies());
+        });
+
+        parameters.get().getSensitivityHVDC().forEach(hvdc -> {
+            contingencyListsAndFiltersUuids.addAll(hvdc.getMonitoredBranches());
+            contingencyListsAndFiltersUuids.addAll(hvdc.getHvdcs());
+            contingencyListsAndFiltersUuids.addAll(hvdc.getContingencies());
+        });
+
+        parameters.get().getSensitivityPST().forEach(pst -> {
+            contingencyListsAndFiltersUuids.addAll(pst.getMonitoredBranches());
+            contingencyListsAndFiltersUuids.addAll(pst.getPsts());
+            contingencyListsAndFiltersUuids.addAll(pst.getContingencies());
+        });
+
+        parameters.get().getSensitivityNodes().forEach(n -> {
+            contingencyListsAndFiltersUuids.addAll(n.getMonitoredVoltageLevels());
+            contingencyListsAndFiltersUuids.addAll(n.getEquipmentsInVoltageRegulation());
+            contingencyListsAndFiltersUuids.addAll(n.getContingencies());
+        });
+
+        return contingencyListsAndFiltersUuids;
+    }
 }
