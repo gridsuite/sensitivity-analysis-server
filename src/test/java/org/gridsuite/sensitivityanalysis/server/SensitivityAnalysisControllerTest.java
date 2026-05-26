@@ -393,7 +393,7 @@ class SensitivityAnalysisControllerTest {
     }
 
     @Test
-    void queryResultWithFilterNames()  throws Exception {
+    void queryResultWithFilterNames() throws Exception {
         UUID resultUuid = run(parametersUuid);
         checkComputationSucceeded(resultUuid);
 
