@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -98,7 +99,7 @@ public class SensitivityAnalysisParametersController {
     @Operation(summary = "Get the UUIDs of contingency lists and filters in given parameters")
     @ApiResponse(responseCode = "200", description = "parameters were returned")
     @ApiResponse(responseCode = "404", description = "parameters were not found")
-    public ResponseEntity<List<UUID>> getContingencyListsAndFiltersParameters(
+    public ResponseEntity<Set<UUID>> getContingencyListsAndFiltersParameters(
         @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid) {
         return ResponseEntity.ok(parametersService.getContingencyListsAndFiltersParameters(parametersUuid));
     }

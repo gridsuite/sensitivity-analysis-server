@@ -88,7 +88,7 @@ public class SensitivityAnalysisParametersService {
         sensitivityAnalysisParametersRepository.deleteById(parametersUuid);
     }
 
-    public SensitivityAnalysisInputData buildInputData(SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos, UUID loadFlowParametersUuid) {
+    public SensitivityAnalysisInputData buildInputData(SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos, UUID loadFlowParametersUuid, Map<UUID, String> elementsIdNameMap) {
 
         Objects.requireNonNull(loadFlowParametersUuid);
 
@@ -122,6 +122,7 @@ public class SensitivityAnalysisParametersService {
             .stream()
             .filter(SensitivityNodes::isActivated)
             .collect(Collectors.toList()));
+        sensitivityAnalysisInputData.setElementsIdNameMap(elementsIdNameMap);
 
         return sensitivityAnalysisInputData;
     }
@@ -136,7 +137,8 @@ public class SensitivityAnalysisParametersService {
                                                           ReportInfos reportInfos,
                                                           String userId,
                                                           UUID parametersUuid,
-                                                          UUID loadFlowParametersUuid) {
+                                                          UUID loadFlowParametersUuid,
+                                                          Map<UUID, String> elementsIdNameMap) {
         SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersUuid != null
                 ? getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid))
                 .orElse(getDefauSensitivityAnalysisParametersInfos())
@@ -146,7 +148,7 @@ public class SensitivityAnalysisParametersService {
             sensitivityAnalysisParametersInfos.setProvider(getDefauSensitivityAnalysisParametersInfos().getProvider());
         }
 
-        SensitivityAnalysisInputData inputData = buildInputData(sensitivityAnalysisParametersInfos, loadFlowParametersUuid);
+        SensitivityAnalysisInputData inputData = buildInputData(sensitivityAnalysisParametersInfos, loadFlowParametersUuid, elementsIdNameMap);
 
         return new SensitivityAnalysisRunContext(networkUuid,
                 variantId,
@@ -157,12 +159,12 @@ public class SensitivityAnalysisParametersService {
                 inputData);
     }
 
-    public List<UUID> getContingencyListsAndFiltersParameters(UUID parametersUuid) {
+    public Set<UUID> getContingencyListsAndFiltersParameters(UUID parametersUuid) {
         Optional<SensitivityAnalysisParametersInfos> parameters = getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid));
         if (parameters.isEmpty()) {
             throw new IllegalArgumentException("No parameters found for parametersUuid: " + parametersUuid);
         }
-        List<UUID> contingencyListsAndFiltersUuids = new ArrayList<>();
+        Set<UUID> contingencyListsAndFiltersUuids = new HashSet<>();
 
         parameters.get().getSensitivityInjectionsSet().forEach(is -> {
             contingencyListsAndFiltersUuids.addAll(is.getMonitoredBranches());

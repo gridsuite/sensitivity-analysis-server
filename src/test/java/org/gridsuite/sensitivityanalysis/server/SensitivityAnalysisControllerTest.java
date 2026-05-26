@@ -587,7 +587,9 @@ class SensitivityAnalysisControllerTest {
         MockHttpServletRequestBuilder req = post("/" + VERSION + "/networks/{networkUuid}/run", NETWORK_UUID)
                 .param("reportType", "SensitivityAnalysis")
                 .param("parametersUuid", parametersUuid.toString())
-                .param("loadFlowParametersUuid", LOADFLOW_PARAMETERS_UUID.toString());
+                .param("loadFlowParametersUuid", LOADFLOW_PARAMETERS_UUID.toString())
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+            .content(mapper.writeValueAsString(Map.of()));
         MvcResult result = mockMvc.perform(req.contentType(MediaType.APPLICATION_JSON).header(HEADER_USER_ID, "testUserId"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -604,7 +606,9 @@ class SensitivityAnalysisControllerTest {
                 .param("reportType", "SensitivityAnalysis")
                 .param("receiver", "me")
                 .param("parametersUuid", parametersUuid.toString())
-                .param("loadFlowParametersUuid", LOADFLOW_PARAMETERS_UUID.toString());
+                .param("loadFlowParametersUuid", LOADFLOW_PARAMETERS_UUID.toString())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsString(Map.of()));
         MvcResult result = mockMvc.perform(req.contentType(MediaType.APPLICATION_JSON).header(HEADER_USER_ID, "testUserId"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
