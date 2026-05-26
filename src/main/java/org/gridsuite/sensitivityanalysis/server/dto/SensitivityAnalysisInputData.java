@@ -60,5 +60,5 @@ public class SensitivityAnalysisInputData {
     private Map<String, String> loadFlowSpecificParameters;
 
     @Schema(description = "TODO")
-    private Map<UUID, String> elementsIdNameMap;
+    private Map<UUID, String> elementsIdNameMap = Map.of();
 }

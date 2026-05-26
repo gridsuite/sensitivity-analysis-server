@@ -59,10 +59,11 @@ public class SensitivityAnalysisParametersService {
 
     @Transactional(readOnly = true)
     public Optional<SensitivityAnalysisParametersInfos> getParameters(UUID parametersUuid) {
-        return getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid));
+        return doGetParameters(parametersUuid);
     }
 
-    private Optional<SensitivityAnalysisParametersInfos> getParameters(Optional<SensitivityAnalysisParametersEntity> parametersEntity) {
+    private Optional<SensitivityAnalysisParametersInfos> doGetParameters(UUID parametersUuid) {
+        Optional<SensitivityAnalysisParametersEntity> parametersEntity = sensitivityAnalysisParametersRepository.findById(parametersUuid);
         return parametersEntity.map(SensitivityAnalysisParametersEntity::toInfos);
     }
 
@@ -140,7 +141,7 @@ public class SensitivityAnalysisParametersService {
                                                           UUID loadFlowParametersUuid,
                                                           Map<UUID, String> elementsIdNameMap) {
         SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersUuid != null
-                ? getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid))
+                ? doGetParameters(parametersUuid)
                 .orElse(getDefauSensitivityAnalysisParametersInfos())
                 : getDefauSensitivityAnalysisParametersInfos();
 
@@ -159,11 +160,14 @@ public class SensitivityAnalysisParametersService {
                 inputData);
     }
 
+    @Transactional(readOnly = true)
     public Set<UUID> getContingencyListsAndFiltersParameters(UUID parametersUuid) {
-        Optional<SensitivityAnalysisParametersInfos> parameters = getParameters(sensitivityAnalysisParametersRepository.findById(parametersUuid));
+        Optional<SensitivityAnalysisParametersInfos> parameters = doGetParameters(parametersUuid);
+
         if (parameters.isEmpty()) {
-            throw new IllegalArgumentException("No parameters found for parametersUuid: " + parametersUuid);
+            return Collections.emptySet();
         }
+
         Set<UUID> contingencyListsAndFiltersUuids = new HashSet<>();
 
         parameters.get().getSensitivityInjectionsSet().forEach(is -> {
