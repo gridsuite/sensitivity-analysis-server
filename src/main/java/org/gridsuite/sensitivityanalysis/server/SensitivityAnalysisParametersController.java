@@ -101,6 +101,6 @@ public class SensitivityAnalysisParametersController {
     @ApiResponse(responseCode = "404", description = "parameters were not found")
     public ResponseEntity<Set<UUID>> getContingencyListsAndFiltersParameters(
         @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid) {
-        return ResponseEntity.ok(parametersService.getContingencyListsAndFiltersParameters(parametersUuid));
+        return ResponseEntity.of(parametersService.getContingencyListsAndFiltersParameters(parametersUuid));
     }
 }

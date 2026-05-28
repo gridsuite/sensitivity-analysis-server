@@ -161,45 +161,41 @@ public class SensitivityAnalysisParametersService {
     }
 
     @Transactional(readOnly = true)
-    public Set<UUID> getContingencyListsAndFiltersParameters(UUID parametersUuid) {
-        Optional<SensitivityAnalysisParametersInfos> parameters = doGetParameters(parametersUuid);
+    public Optional<Set<UUID>> getContingencyListsAndFiltersParameters(UUID parametersUuid) {
+        return doGetParameters(parametersUuid).map(parameters -> {
+            Set<UUID> contingencyListsAndFiltersUuids = new HashSet<>();
 
-        if (parameters.isEmpty()) {
-            return Collections.emptySet();
-        }
+            parameters.getSensitivityInjectionsSet().forEach(is -> {
+                contingencyListsAndFiltersUuids.addAll(is.getMonitoredBranches());
+                contingencyListsAndFiltersUuids.addAll(is.getInjections());
+                contingencyListsAndFiltersUuids.addAll(is.getContingencies());
+            });
 
-        Set<UUID> contingencyListsAndFiltersUuids = new HashSet<>();
+            parameters.getSensitivityInjection().forEach(i -> {
+                contingencyListsAndFiltersUuids.addAll(i.getMonitoredBranches());
+                contingencyListsAndFiltersUuids.addAll(i.getInjections());
+                contingencyListsAndFiltersUuids.addAll(i.getContingencies());
+            });
 
-        parameters.get().getSensitivityInjectionsSet().forEach(is -> {
-            contingencyListsAndFiltersUuids.addAll(is.getMonitoredBranches());
-            contingencyListsAndFiltersUuids.addAll(is.getInjections());
-            contingencyListsAndFiltersUuids.addAll(is.getContingencies());
+            parameters.getSensitivityHVDC().forEach(hvdc -> {
+                contingencyListsAndFiltersUuids.addAll(hvdc.getMonitoredBranches());
+                contingencyListsAndFiltersUuids.addAll(hvdc.getHvdcs());
+                contingencyListsAndFiltersUuids.addAll(hvdc.getContingencies());
+            });
+
+            parameters.getSensitivityPST().forEach(pst -> {
+                contingencyListsAndFiltersUuids.addAll(pst.getMonitoredBranches());
+                contingencyListsAndFiltersUuids.addAll(pst.getPsts());
+                contingencyListsAndFiltersUuids.addAll(pst.getContingencies());
+            });
+
+            parameters.getSensitivityNodes().forEach(n -> {
+                contingencyListsAndFiltersUuids.addAll(n.getMonitoredVoltageLevels());
+                contingencyListsAndFiltersUuids.addAll(n.getEquipmentsInVoltageRegulation());
+                contingencyListsAndFiltersUuids.addAll(n.getContingencies());
+            });
+
+            return contingencyListsAndFiltersUuids;
         });
-
-        parameters.get().getSensitivityInjection().forEach(i -> {
-            contingencyListsAndFiltersUuids.addAll(i.getMonitoredBranches());
-            contingencyListsAndFiltersUuids.addAll(i.getInjections());
-            contingencyListsAndFiltersUuids.addAll(i.getContingencies());
-        });
-
-        parameters.get().getSensitivityHVDC().forEach(hvdc -> {
-            contingencyListsAndFiltersUuids.addAll(hvdc.getMonitoredBranches());
-            contingencyListsAndFiltersUuids.addAll(hvdc.getHvdcs());
-            contingencyListsAndFiltersUuids.addAll(hvdc.getContingencies());
-        });
-
-        parameters.get().getSensitivityPST().forEach(pst -> {
-            contingencyListsAndFiltersUuids.addAll(pst.getMonitoredBranches());
-            contingencyListsAndFiltersUuids.addAll(pst.getPsts());
-            contingencyListsAndFiltersUuids.addAll(pst.getContingencies());
-        });
-
-        parameters.get().getSensitivityNodes().forEach(n -> {
-            contingencyListsAndFiltersUuids.addAll(n.getMonitoredVoltageLevels());
-            contingencyListsAndFiltersUuids.addAll(n.getEquipmentsInVoltageRegulation());
-            contingencyListsAndFiltersUuids.addAll(n.getContingencies());
-        });
-
-        return contingencyListsAndFiltersUuids;
     }
 }
