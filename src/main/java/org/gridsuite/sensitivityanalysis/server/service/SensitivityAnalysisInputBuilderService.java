@@ -48,10 +48,11 @@ public class SensitivityAnalysisInputBuilderService {
         }
 
         contingencies.getContingenciesNotFound().forEach(id -> {
-            LOGGER.error("Could not get contingencies from {}", elementsIdNameMap.getOrDefault(id, id.toString()));
+            String name = getName(id, elementsIdNameMap);
+            LOGGER.error("Could not get contingencies from {}", name);
             reporter.newReportNode()
                 .withMessageTemplate("sensitivity.analysis.server.contingencyTranslationFailure")
-                .withUntypedValue(NAME, elementsIdNameMap.getOrDefault(id, id.toString()))
+                .withUntypedValue(NAME, name)
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .add();
         });
@@ -127,8 +128,12 @@ public class SensitivityAnalysisInputBuilderService {
         return listIdentifiableAttributes.stream();
     }
 
+    private String getName(UUID id, Map<UUID, String> elementsIdNameMap) {
+        return elementsIdNameMap.getOrDefault(id, id.toString());
+    }
+
     private String getFilterNames(List<UUID> filterIds, Map<UUID, String> elementsIdNameMap) {
-        return "[" + filterIds.stream().map(id -> elementsIdNameMap.getOrDefault(id, id.toString())).collect(Collectors.joining(", ")) + "]";
+        return "[" + filterIds.stream().map(id -> getName(id, elementsIdNameMap)).collect(Collectors.joining(", ")) + "]";
     }
 
     private Stream<IdentifiableAttributes> getMonitoredIdentifiables(SensitivityAnalysisRunContext context, Network network, List<UUID> filterIds,
@@ -283,7 +288,6 @@ public class SensitivityAnalysisInputBuilderService {
 
         List<IdentifiableAttributes> monitoredEquipments = getMonitoredIdentifiables(context, network, monitoredEquipmentIds, monitoredEquipmentsTypesAllowed, reporter, elementsIdNameMap).collect(Collectors.toList());
 
-        // vérifier ce qu'il y a dans les varaibleSets
         return getSensitivityFactorsFromEquipments(variablesSets.stream().map(SensitivityVariableSet::getId).collect(Collectors.toList()),
             monitoredEquipments, contingencies, sensitivityFunctionType, sensitivityVariableType, true);
     }
