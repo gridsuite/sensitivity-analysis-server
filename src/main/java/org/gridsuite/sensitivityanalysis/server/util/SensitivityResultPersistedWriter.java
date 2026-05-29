@@ -34,8 +34,10 @@ public class SensitivityResultPersistedWriter implements SensitivityResultWriter
     public SensitivityResultPersistedWriter(UUID resultUuid, SensitivityAnalysisResultService sensitivityAnalysisResultService,
                                             ScheduledThreadPoolFactory scheduledThreadPoolFactory, BatchAsyncPollerFactory batchAsyncPollerFactory) {
         this.scheduledExecutorService = scheduledThreadPoolFactory.create(THREAD_POOL_SIZE, resultUuid);
-        this.sensitivityBatchAsyncPoller = batchAsyncPollerFactory.create(this.scheduledExecutorService, resultUuid, SENSITIVITY_WRITER_THREAD, sensitivityAnalysisResultService::writeSensitivityValues);
-        this.contingencyBatchAsyncPoller = batchAsyncPollerFactory.create(this.scheduledExecutorService, resultUuid, CONTINGENCY_WRITER_THREAD, sensitivityAnalysisResultService::writeContingenciesStatus);
+        this.sensitivityBatchAsyncPoller = batchAsyncPollerFactory.create(this.scheduledExecutorService, resultUuid, SENSITIVITY_WRITER_THREAD,
+                sensitivityAnalysisResultService::writeSensitivityValues);
+        this.contingencyBatchAsyncPoller = batchAsyncPollerFactory.create(this.scheduledExecutorService, resultUuid, CONTINGENCY_WRITER_THREAD,
+                sensitivityAnalysisResultService::writeContingenciesStatus);
     }
 
     @Override

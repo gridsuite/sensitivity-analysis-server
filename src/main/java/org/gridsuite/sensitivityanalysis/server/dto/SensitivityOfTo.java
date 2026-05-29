@@ -34,7 +34,8 @@ public class SensitivityOfTo {
     private double functionReference;
 
     // ObjectMapper.readValue to deserialize a list of, for tests
-    @SuppressWarnings("unused") protected SensitivityOfTo() {
+    @SuppressWarnings("unused")
+    protected SensitivityOfTo() {
         funcId = "sonar thinks";
         varId = "these are bugs";
     }

@@ -6,10 +6,9 @@
  */
 package org.gridsuite.sensitivityanalysis.server.util;
 
+import com.powsybl.sensitivity.SensitivityAnalysis;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import com.powsybl.sensitivity.SensitivityAnalysis;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>

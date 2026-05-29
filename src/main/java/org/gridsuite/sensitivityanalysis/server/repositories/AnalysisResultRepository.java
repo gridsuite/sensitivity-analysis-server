@@ -6,13 +6,12 @@
  */
 package org.gridsuite.sensitivityanalysis.server.repositories;
 
-import java.util.UUID;
-
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import java.util.UUID;
 
 /**
  * @author Laurent Garnier <laurent.garnier at rte-france.com>

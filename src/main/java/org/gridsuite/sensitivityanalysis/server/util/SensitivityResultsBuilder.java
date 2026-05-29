@@ -48,6 +48,7 @@ public final class SensitivityResultsBuilder {
             ));
     }
 
+    @SuppressWarnings("checkstyle:LambdaBodyLength")
     public static Pair<List<SensitivityResultEntity>, List<SensitivityResultEntity>> buildSensitivityResults(List<List<SensitivityFactor>> factorsGroups,
                                                                                                              AnalysisResultEntity analysisResult,
                                                                                                              Map<String, ContingencyResultEntity> contingenciesById) {

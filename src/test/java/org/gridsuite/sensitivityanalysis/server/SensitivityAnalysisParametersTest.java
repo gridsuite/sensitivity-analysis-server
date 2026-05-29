@@ -263,7 +263,8 @@ class SensitivityAnalysisParametersTest {
     }
 
     private static SensitivityAnalysisParametersInfos buildParameters() {
-        SensitivityInjectionsSet injectionsSet = new SensitivityInjectionsSet(List.of(EQUIPMENTS_ID_1), List.of(EQUIPMENTS_ID_2), SensitivityAnalysisInputData.DistributionType.PROPORTIONAL, List.of(EQUIPMENTS_ID_3), true);
+        SensitivityInjectionsSet injectionsSet = new SensitivityInjectionsSet(List.of(EQUIPMENTS_ID_1), List.of(EQUIPMENTS_ID_2), SensitivityAnalysisInputData.DistributionType.PROPORTIONAL,
+                List.of(EQUIPMENTS_ID_3), true);
         SensitivityInjection injections = new SensitivityInjection(List.of(EQUIPMENTS_ID_1), List.of(EQUIPMENTS_ID_2), List.of(EQUIPMENTS_ID_3), true);
         SensitivityHVDC hvdc = new SensitivityHVDC(List.of(EQUIPMENTS_ID_1), SensitivityAnalysisInputData.SensitivityType.DELTA_MW, List.of(EQUIPMENTS_ID_2), List.of(EQUIPMENTS_ID_3), true);
         SensitivityPST pst = new SensitivityPST(List.of(EQUIPMENTS_ID_1), SensitivityAnalysisInputData.SensitivityType.DELTA_MW, List.of(EQUIPMENTS_ID_2), List.of(EQUIPMENTS_ID_3), true);
