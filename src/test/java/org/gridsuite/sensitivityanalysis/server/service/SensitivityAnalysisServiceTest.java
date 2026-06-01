@@ -75,7 +75,7 @@ class SensitivityAnalysisServiceTest {
         SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersService.getParameters(UUID.randomUUID())
                 .orElse(parametersService.getDefauSensitivityAnalysisParametersInfos());
 
-        SensitivityAnalysisInputData inputData = parametersService.buildInputData(sensitivityAnalysisParametersInfos, UUID.randomUUID(), Map.of());
+        SensitivityAnalysisInputData inputData = parametersService.buildInputData(sensitivityAnalysisParametersInfos, UUID.randomUUID(), null);
 
         analysisService.runAndSaveResult(
                 new SensitivityAnalysisRunContext(
