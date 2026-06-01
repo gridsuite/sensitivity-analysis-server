@@ -59,6 +59,6 @@ public class SensitivityAnalysisInputData {
     @Schema(description = "Loadflow model-specific parameters")
     private Map<String, String> loadFlowSpecificParameters;
 
-    @Schema(description = "TODO")
+    @Schema(description = "Map of element ids used in the parameters to their corresponding names")
     private Map<UUID, String> elementsIdNameMap = Map.of();
 }
