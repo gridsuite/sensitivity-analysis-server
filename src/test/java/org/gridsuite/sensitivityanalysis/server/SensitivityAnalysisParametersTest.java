@@ -195,7 +195,7 @@ class SensitivityAnalysisParametersTest {
         wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/parameters/.*/values\\?provider=.*"))
             .willReturn(WireMock.ok().withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).withBody(mapper.writeValueAsString(loadFlowParametersValues))));
 
-        SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersInfos, UUID.randomUUID(), Map.of());
+        SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersInfos, UUID.randomUUID(), null);
 
         // now we check that each field contains the good value
         SensitivityAnalysisParameters sensitivityAnalysisParameters = inputData.getParameters();
