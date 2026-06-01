@@ -283,7 +283,6 @@ public class SensitivityAnalysisInputBuilderService {
 
         List<IdentifiableAttributes> monitoredEquipments = getMonitoredIdentifiables(context, network, monitoredEquipmentIds, monitoredEquipmentsTypesAllowed, reporter, elementsIdNameMap).collect(Collectors.toList());
 
-        // vérifier ce qu'il y a dans les varaibleSets
         return getSensitivityFactorsFromEquipments(variablesSets.stream().map(SensitivityVariableSet::getId).collect(Collectors.toList()),
             monitoredEquipments, contingencies, sensitivityFunctionType, sensitivityVariableType, true);
     }
