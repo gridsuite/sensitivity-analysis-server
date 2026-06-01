@@ -48,10 +48,11 @@ public class SensitivityAnalysisInputBuilderService {
         }
 
         contingencies.getContingenciesNotFound().forEach(id -> {
-            LOGGER.error("Could not get contingencies from {}", getElementName(id, elementsIdNameMap));
+            String contingenciesName = getElementName(id, elementsIdNameMap);
+            LOGGER.error("Could not get contingencies from {}", contingenciesName);
             reporter.newReportNode()
                 .withMessageTemplate("sensitivity.analysis.server.contingencyTranslationFailure")
-                .withUntypedValue(NAME, getElementName(id, elementsIdNameMap))
+                .withUntypedValue(NAME, contingenciesName)
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .add();
         });
