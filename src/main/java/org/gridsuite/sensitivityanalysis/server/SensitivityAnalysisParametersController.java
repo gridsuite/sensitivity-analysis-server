@@ -97,7 +97,7 @@ public class SensitivityAnalysisParametersController {
 
     @GetMapping(value = "/{uuid}/contingency-lists-and-filters", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get the UUIDs of contingency lists and filters in given parameters")
-    @ApiResponse(responseCode = "200", description = "parameters were returned")
+    @ApiResponse(responseCode = "200", description = "Uuids of contingency lists and filters were returned")
     @ApiResponse(responseCode = "404", description = "parameters were not found")
     public ResponseEntity<Set<UUID>> getContingencyListsAndFiltersParameters(
         @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid) {
