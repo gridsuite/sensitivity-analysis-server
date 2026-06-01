@@ -48,14 +48,18 @@ public class SensitivityAnalysisInputBuilderService {
         }
 
         contingencies.getContingenciesNotFound().forEach(id -> {
-            LOGGER.error("Could not get contingencies from {}", elementsIdNameMap.getOrDefault(id, id.toString()));
+            LOGGER.error("Could not get contingencies from {}", getElementName(id, elementsIdNameMap));
             reporter.newReportNode()
                 .withMessageTemplate("sensitivity.analysis.server.contingencyTranslationFailure")
-                .withUntypedValue(NAME, elementsIdNameMap.getOrDefault(id, id.toString()))
+                .withUntypedValue(NAME, getElementName(id, elementsIdNameMap))
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .add();
         });
         return contingencies.getContingenciesFound() == null ? List.of() : contingencies.getContingenciesFound();
+    }
+
+    private String getElementName(UUID id, Map<UUID, String> elementsIdNameMap) {
+        return elementsIdNameMap != null ? elementsIdNameMap.getOrDefault(id, id.toString()) : id.toString();
     }
 
     private List<Contingency> buildContingencies(UUID networkUuid, String variantId, List<UUID> contingencyListIds, ReportNode reporter, Map<UUID, String> elementsIdNameMap) {
@@ -128,7 +132,7 @@ public class SensitivityAnalysisInputBuilderService {
     }
 
     private String getFilterNames(List<UUID> filterIds, Map<UUID, String> elementsIdNameMap) {
-        return "[" + filterIds.stream().map(id -> elementsIdNameMap.getOrDefault(id, id.toString())).collect(Collectors.joining(", ")) + "]";
+        return "[" + filterIds.stream().map(id -> getElementName(id, elementsIdNameMap)).collect(Collectors.joining(", ")) + "]";
     }
 
     private Stream<IdentifiableAttributes> getMonitoredIdentifiables(SensitivityAnalysisRunContext context, Network network, List<UUID> filterIds,
