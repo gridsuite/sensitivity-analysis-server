@@ -110,7 +110,7 @@ public class SensitivityAnalysisController {
                                            @Parameter(description = "The type name for the report") @RequestParam(name = "reportType", required = false, defaultValue = "SensitivityAnalysis") String reportType,
                                            @Parameter(description = "parametersUuid") @RequestParam(name = "parametersUuid", required = false) UUID parametersUuid,
                                            @Parameter(description = "loadFlow parameters uuid") @RequestParam(name = "loadFlowParametersUuid") UUID loadFlowParametersUuid,
-                                           @Parameter(description = "names of the contingency lists and filters contained in the parameters") @RequestBody Map<UUID, String> elementsIdNameMap,
+                                           @Parameter(description = "names of the contingency lists and filters contained in the parameters") @RequestBody(required = false) Map<UUID, String> elementsIdNameMap,
                                            @RequestHeader(HEADER_USER_ID) String userId) {
         SensitivityAnalysisRunContext runContext = sensitivityAnalysisParametersService.createRunContext(
                 networkUuid,
