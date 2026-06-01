@@ -623,8 +623,7 @@ class SensitivityAnalysisControllerTest {
                 .param("reportType", "SensitivityAnalysis")
                 .param("parametersUuid", parametersUuid.toString())
                 .param("loadFlowParametersUuid", LOADFLOW_PARAMETERS_UUID.toString())
-            .contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(mapper.writeValueAsString(Map.of()));
+            .contentType(MediaType.APPLICATION_JSON_VALUE);
         MvcResult result = mockMvc.perform(req.contentType(MediaType.APPLICATION_JSON).header(HEADER_USER_ID, "testUserId"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
