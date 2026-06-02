@@ -131,7 +131,10 @@ public class SensitivityAnalysisInputBuilderService {
         return "[" + filterIds.stream().map(UUID::toString).collect(Collectors.joining(", ")) + "]";
     }
 
-    private Stream<IdentifiableAttributes> getMonitoredIdentifiables(SensitivityAnalysisRunContext context, Network network, List<UUID> filterIds, List<IdentifiableType> equipmentsTypesAllowed,
+    private Stream<IdentifiableAttributes> getMonitoredIdentifiables(
+            SensitivityAnalysisRunContext context,
+            Network network, List<UUID> filterIds,
+            List<IdentifiableType> equipmentsTypesAllowed,
             ReportNode reporter) {
         String idsString = joinToStringIds(filterIds);
         List<IdentifiableAttributes> listIdentAttributes = goGetIdentifiables(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter);
@@ -147,7 +150,7 @@ public class SensitivityAnalysisInputBuilderService {
             return Stream.empty();
         }
 
-        if (listIdentAttributes.isEmpty() || listIdentAttributes.get(0).getType() != IdentifiableType.VOLTAGE_LEVEL) {
+        if (listIdentAttributes.isEmpty() || listIdentAttributes.getFirst().getType() != IdentifiableType.VOLTAGE_LEVEL) {
             return listIdentAttributes.stream();
         }
 
@@ -158,10 +161,12 @@ public class SensitivityAnalysisInputBuilderService {
                 throw new PowsyblException("Voltage level '" + voltageLevel.getId() + "' not found !!");
             }
             return vl.getTopologyKind() == TopologyKind.NODE_BREAKER ?
-                vl.getNodeBreakerView().getBusbarSectionStream().filter(bbs -> bbs.getTerminal().getBusView().getBus() != null).map(bbs -> new IdentifiableAttributes(bbs.getId(), bbs.getType(),
-                        null)) :
-                vl.getBusBreakerView().getBusStream().filter(bus -> bus.getConnectedTerminalStream().map(t -> t.getBusView().getBus()).anyMatch(Objects::nonNull)).map(
-                        bus -> new IdentifiableAttributes(bus.getId(), bus.getType(), null));
+                vl.getNodeBreakerView().getBusbarSectionStream()
+                        .filter(bbs -> bbs.getTerminal().getBusView().getBus() != null)
+                        .map(bbs -> new IdentifiableAttributes(bbs.getId(), bbs.getType(), null)) :
+                vl.getBusBreakerView().getBusStream()
+                        .filter(bus -> bus.getConnectedTerminalStream().map(t -> t.getBusView().getBus()).anyMatch(Objects::nonNull))
+                        .map(bus -> new IdentifiableAttributes(bus.getId(), bus.getType(), null));
         });
     }
 
@@ -208,7 +213,6 @@ public class SensitivityAnalysisInputBuilderService {
         List<SensitivityVariableSet> result = new ArrayList<>();
         List<IdentifiableAttributes> monitoredVariablesLists = getIdentifiables(context, filterIds, variablesTypesAllowed, reporter)
                 .toList();
-        @SuppressWarnings("checkstyle:LambdaBodyLength")
         String idsString = joinToStringIds(filterIds);
         Stream<Pair<String, List<IdentifiableAttributes>>> variablesLists = Stream.of(Pair.of(idsString, monitoredVariablesLists))
                 .filter(list -> !list.getRight().isEmpty());

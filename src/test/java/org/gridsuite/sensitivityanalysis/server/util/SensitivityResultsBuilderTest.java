@@ -71,7 +71,8 @@ class SensitivityResultsBuilderTest {
     private static List<List<SensitivityFactor>> getGroupedFactors() {
         return List.of(
             List.of(
-                new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, FUNCTION_ID_1, SensitivityVariableType.INJECTION_ACTIVE_POWER, VARIABLE_ID_1, false, ContingencyContext.none()),
+                new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, FUNCTION_ID_1, SensitivityVariableType.INJECTION_ACTIVE_POWER, VARIABLE_ID_1, false,
+                        ContingencyContext.none()),
                 new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, FUNCTION_ID_1, SensitivityVariableType.INJECTION_ACTIVE_POWER, VARIABLE_ID_1, false,
                         ContingencyContext.specificContingency(CONTINGENCY_ID_1)),
                 new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, FUNCTION_ID_1, SensitivityVariableType.INJECTION_ACTIVE_POWER, VARIABLE_ID_1, false,
@@ -80,7 +81,8 @@ class SensitivityResultsBuilderTest {
                         ContingencyContext.specificContingency(CONTINGENCY_ID_3))
             ),
             List.of(
-                new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_2, FUNCTION_ID_2, SensitivityVariableType.TRANSFORMER_PHASE_1, VARIABLE_ID_2, true, ContingencyContext.none()),
+                new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_2, FUNCTION_ID_2, SensitivityVariableType.TRANSFORMER_PHASE_1, VARIABLE_ID_2, true,
+                        ContingencyContext.none()),
                 new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_2, FUNCTION_ID_2, SensitivityVariableType.TRANSFORMER_PHASE_1, VARIABLE_ID_2, true,
                         ContingencyContext.specificContingency(CONTINGENCY_ID_1)),
                 new SensitivityFactor(SensitivityFunctionType.BRANCH_ACTIVE_POWER_2, FUNCTION_ID_2, SensitivityVariableType.TRANSFORMER_PHASE_1, VARIABLE_ID_2, true,
