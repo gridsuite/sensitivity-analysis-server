@@ -95,6 +95,7 @@ class SensitivityAnalysisInputDataTest {
                 .equipmentsInVoltageRegulation(List.of(UUID.randomUUID()))
                 .contingencies(List.of()).build()))
             .parameters(SensitivityAnalysisParameters.load())
+            .elementsIdNameMap(Map.of())
             .build();
 
         String result1 = objectWriter.writeValueAsString(sensitivityAnalysisInputData1);
@@ -117,6 +118,7 @@ class SensitivityAnalysisInputDataTest {
             .sensitivityPSTs(List.of())
             .sensitivityNodes(List.of())
             .parameters(SensitivityAnalysisParameters.load())
+            .elementsIdNameMap(Map.of())
             .build();
         ReportNode reporter = ReportNode.newRootReportNode()
                 .withResourceBundles("i18n.reports")
@@ -156,6 +158,7 @@ class SensitivityAnalysisInputDataTest {
                 .injections(List.of(UUID.randomUUID(), UUID.randomUUID()))
                 .contingencies(List.of(u10Id, u11Id))
                 .build()))
+            .elementsIdNameMap(Map.of())
             .build();
         context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
         inputBuilderService.build(context, NETWORK, reporter);
@@ -218,6 +221,7 @@ class SensitivityAnalysisInputDataTest {
                 .sensitivityHVDCs(Collections.emptyList())
                 .sensitivityPSTs(Collections.emptyList())
                 .sensitivityNodes(Collections.emptyList())
+                .elementsIdNameMap(Collections.emptyMap())
                 .build();
         SensitivityAnalysisRunContext context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
         inputBuilderService.build(context, network, ReportNode.NO_OP);
@@ -241,6 +245,7 @@ class SensitivityAnalysisInputDataTest {
                 .sensitivityHVDCs(Collections.emptyList())
                 .sensitivityPSTs(Collections.emptyList())
                 .sensitivityNodes(Collections.emptyList())
+                .elementsIdNameMap(Collections.emptyMap())
                 .build();
         context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
         inputBuilderService.build(context, network, ReportNode.NO_OP);
@@ -256,6 +261,7 @@ class SensitivityAnalysisInputDataTest {
                 .sensitivityHVDCs(Collections.emptyList())
                 .sensitivityPSTs(Collections.emptyList())
                 .sensitivityNodes(Collections.emptyList())
+                .elementsIdNameMap(Collections.emptyMap())
                 .build();
         context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
         inputBuilderService.build(context, network, ReportNode.NO_OP);
@@ -281,6 +287,7 @@ class SensitivityAnalysisInputDataTest {
                 .sensitivityHVDCs(Collections.emptyList())
                 .sensitivityPSTs(Collections.emptyList())
                 .sensitivityNodes(Collections.emptyList())
+                .elementsIdNameMap(Collections.emptyMap())
                 .build();
         SensitivityAnalysisRunContext context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
 
@@ -303,6 +310,7 @@ class SensitivityAnalysisInputDataTest {
                 .sensitivityHVDCs(Collections.emptyList())
                 .sensitivityPSTs(Collections.emptyList())
                 .sensitivityNodes(Collections.emptyList())
+                .elementsIdNameMap(Collections.emptyMap())
                 .build();
         SensitivityAnalysisRunContext context2 = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
         given(filterService.getIdentifiablesFromFilters(filterIdsList, NETWORK_UUID, VARIANT_ID))

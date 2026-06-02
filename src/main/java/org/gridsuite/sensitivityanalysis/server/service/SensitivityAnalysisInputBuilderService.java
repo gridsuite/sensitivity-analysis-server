@@ -34,32 +34,37 @@ public class SensitivityAnalysisInputBuilderService {
     private final ActionsService actionsService;
     private final FilterService filterService;
 
-    private static final String ID = "id";
+    private static final String NAME = "name";
 
     public SensitivityAnalysisInputBuilderService(ActionsService actionsService, FilterService filterService) {
         this.actionsService = actionsService;
         this.filterService = filterService;
     }
 
-    private List<Contingency> goGetContingencies(List<UUID> contingencyListIds, UUID networkUuid, String variantId, ReportNode reporter) {
+    private List<Contingency> goGetContingencies(List<UUID> contingencyListIds, UUID networkUuid, String variantId, ReportNode reporter, Map<UUID, String> elementsIdNameMap) {
         ContingencyListExportResult contingencies = actionsService.getContingencyList(contingencyListIds, networkUuid, variantId);
         if (contingencies == null) {
             return List.of();
         }
 
         contingencies.getContingenciesNotFound().forEach(id -> {
-            LOGGER.error("Could not get contingencies from {}", id);
+            String contingenciesName = getElementName(id, elementsIdNameMap);
+            LOGGER.error("Could not get contingencies from {}", contingenciesName);
             reporter.newReportNode()
                 .withMessageTemplate("sensitivity.analysis.server.contingencyTranslationFailure")
-                .withUntypedValue(ID, id.toString())
+                .withUntypedValue(NAME, contingenciesName)
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .add();
         });
         return contingencies.getContingenciesFound() == null ? List.of() : contingencies.getContingenciesFound();
     }
 
-    private List<Contingency> buildContingencies(UUID networkUuid, String variantId, List<UUID> contingencyListIds, ReportNode reporter) {
-        return goGetContingencies(contingencyListIds, networkUuid, variantId, reporter);
+    private String getElementName(UUID id, Map<UUID, String> elementsIdNameMap) {
+        return elementsIdNameMap != null ? elementsIdNameMap.getOrDefault(id, id.toString()) : id.toString();
+    }
+
+    private List<Contingency> buildContingencies(UUID networkUuid, String variantId, List<UUID> contingencyListIds, ReportNode reporter, Map<UUID, String> elementsIdNameMap) {
+        return goGetContingencies(contingencyListIds, networkUuid, variantId, reporter, elementsIdNameMap);
     }
 
     private double getInjectionWeight(Double p, Double maxP, SensitivityAnalysisInputData.DistributionType distributionType, Double distributionKey) {
@@ -90,17 +95,17 @@ public class SensitivityAnalysisInputBuilderService {
         };
     }
 
-    private List<IdentifiableAttributes> goGetIdentifiables(List<UUID> filterIds, UUID networkUuid, String variantId, ReportNode reporter) {
-        String idsString = joinToStringIds(filterIds);
+    private List<IdentifiableAttributes> goGetIdentifiables(List<UUID> filterIds, UUID networkUuid, String variantId, ReportNode reporter, Map<UUID, String> elementsIdNameMap) {
+        String filtersNames = getFilterNames(filterIds, elementsIdNameMap);
         try {
             //extract container id from filters
             return filterService.getIdentifiablesFromFilters(filterIds, networkUuid, variantId);
         } catch (Exception ex) {
-            LOGGER.error("Could not get identifiables from filter " + idsString, ex);
+            LOGGER.error("Could not get identifiables from filter " + filtersNames, ex);
             reporter.newReportNode()
                 .withMessageTemplate("sensitivity.analysis.server.filterTranslationFailure")
                 .withUntypedValue("exception", ex.getMessage())
-                .withUntypedValue(ID, idsString)
+                .withUntypedValue(NAME, filtersNames)
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .add();
             return List.of();
@@ -108,15 +113,16 @@ public class SensitivityAnalysisInputBuilderService {
     }
 
     private Stream<IdentifiableAttributes> getIdentifiables(SensitivityAnalysisRunContext context, List<UUID> filterIds,
-                                                                          List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter) {
-        String idsString = joinToStringIds(filterIds);
-        List<IdentifiableAttributes> listIdentifiableAttributes = goGetIdentifiables(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter);
+                                                                          List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter,
+                                                                          Map<UUID, String> elementsIdNameMap) {
+        String filtersNames = getFilterNames(filterIds, elementsIdNameMap);
+        List<IdentifiableAttributes> listIdentifiableAttributes = goGetIdentifiables(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter, elementsIdNameMap);
 
         // check that monitored equipments type is allowed
         if (!listIdentifiableAttributes.stream().allMatch(i -> equipmentsTypesAllowed.contains(i.getType()))) {
             reporter.newReportNode()
                 .withMessageTemplate("sensitivity.analysis.server.badEquipmentType")
-                .withUntypedValue(ID, idsString)
+                .withUntypedValue(NAME, filtersNames)
                 .withUntypedValue(EXPECTED_TYPE, equipmentsTypesAllowed.toString())
                 .withSeverity(TypedValue.WARN_SEVERITY)
                 .add();
@@ -126,19 +132,20 @@ public class SensitivityAnalysisInputBuilderService {
         return listIdentifiableAttributes.stream();
     }
 
-    private String joinToStringIds(List<UUID> filterIds) {
-        return "[" + filterIds.stream().map(UUID::toString).collect(Collectors.joining(", ")) + "]";
+    private String getFilterNames(List<UUID> filterIds, Map<UUID, String> elementsIdNameMap) {
+        return "[" + filterIds.stream().map(id -> getElementName(id, elementsIdNameMap)).collect(Collectors.joining(", ")) + "]";
     }
 
-    private Stream<IdentifiableAttributes> getMonitoredIdentifiables(SensitivityAnalysisRunContext context, Network network, List<UUID> filterIds, List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter) {
-        String idsString = joinToStringIds(filterIds);
-        List<IdentifiableAttributes> listIdentAttributes = goGetIdentifiables(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter);
+    private Stream<IdentifiableAttributes> getMonitoredIdentifiables(SensitivityAnalysisRunContext context, Network network, List<UUID> filterIds,
+                                                                     List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter, Map<UUID, String> elementsIdNameMap) {
+        String filtersNames = getFilterNames(filterIds, elementsIdNameMap);
+        List<IdentifiableAttributes> listIdentAttributes = goGetIdentifiables(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter, elementsIdNameMap);
 
         // check that monitored equipments type is allowed
         if (!listIdentAttributes.stream().allMatch(i -> equipmentsTypesAllowed.contains(i.getType()))) {
             reporter.newReportNode()
                 .withMessageTemplate("sensitivity.analysis.server.badMonitoredEquipmentType")
-                .withUntypedValue(ID, idsString)
+                .withUntypedValue(NAME, filtersNames)
                 .withUntypedValue(EXPECTED_TYPE, equipmentsTypesAllowed.toString())
                 .withSeverity(TypedValue.WARN_SEVERITY)
                 .add();
@@ -200,12 +207,13 @@ public class SensitivityAnalysisInputBuilderService {
     private List<SensitivityVariableSet> buildSensitivityVariableSets(SensitivityAnalysisRunContext context, Network network, ReportNode reporter,
                                                                       List<IdentifiableType> variablesTypesAllowed,
                                                                       List<UUID> filterIds,
-                                                                      SensitivityAnalysisInputData.DistributionType distributionType) {
+                                                                      SensitivityAnalysisInputData.DistributionType distributionType,
+                                                                      Map<UUID, String> elementsIdNameMap) {
         List<SensitivityVariableSet> result = new ArrayList<>();
-        List<IdentifiableAttributes> monitoredVariablesLists = getIdentifiables(context, filterIds, variablesTypesAllowed, reporter)
+        List<IdentifiableAttributes> monitoredVariablesLists = getIdentifiables(context, filterIds, variablesTypesAllowed, reporter, elementsIdNameMap)
                 .toList();
-        String idsString = joinToStringIds(filterIds);
-        Stream<Pair<String, List<IdentifiableAttributes>>> variablesLists = Stream.of(Pair.of(idsString, monitoredVariablesLists))
+        String filterNames = getFilterNames(filterIds, elementsIdNameMap);
+        Stream<Pair<String, List<IdentifiableAttributes>>> variablesLists = Stream.of(Pair.of(filterNames, monitoredVariablesLists))
                 .filter(list -> !list.getRight().isEmpty());
 
         variablesLists.forEach(variablesList -> {
@@ -272,12 +280,13 @@ public class SensitivityAnalysisInputBuilderService {
                                                                                    List<SensitivityVariableSet> variablesSets,
                                                                                    List<Contingency> contingencies,
                                                                                    SensitivityFunctionType sensitivityFunctionType,
-                                                                                   SensitivityVariableType sensitivityVariableType) {
+                                                                                   SensitivityVariableType sensitivityVariableType,
+                                                                                   Map<UUID, String> elementsIdNameMap) {
         if (variablesSets.isEmpty()) {
             return List.of();
         }
 
-        List<IdentifiableAttributes> monitoredEquipments = getMonitoredIdentifiables(context, network, monitoredEquipmentIds, monitoredEquipmentsTypesAllowed, reporter).collect(Collectors.toList());
+        List<IdentifiableAttributes> monitoredEquipments = getMonitoredIdentifiables(context, network, monitoredEquipmentIds, monitoredEquipmentsTypesAllowed, reporter, elementsIdNameMap).collect(Collectors.toList());
 
         return getSensitivityFactorsFromEquipments(variablesSets.stream().map(SensitivityVariableSet::getId).collect(Collectors.toList()),
             monitoredEquipments, contingencies, sensitivityFunctionType, sensitivityVariableType, true);
@@ -291,14 +300,15 @@ public class SensitivityAnalysisInputBuilderService {
                                                                                 List<UUID> filterIds,
                                                                                 List<Contingency> contingencies,
                                                                                 SensitivityFunctionType sensitivityFunctionType,
-                                                                                SensitivityVariableType sensitivityVariableType) {
+                                                                                SensitivityVariableType sensitivityVariableType,
+                                                                                Map<UUID, String> elementsIdNameMap) {
 
-        List<IdentifiableAttributes> equipments = getIdentifiables(context, filterIds, equipmentsTypesAllowed, reporter).toList();
+        List<IdentifiableAttributes> equipments = getIdentifiables(context, filterIds, equipmentsTypesAllowed, reporter, elementsIdNameMap).toList();
 
         if (equipments.isEmpty()) {
             return List.of();
         }
-        List<IdentifiableAttributes> monitoredEquipments = getMonitoredIdentifiables(context, network, monitoredEquipmentIds, monitoredEquipmentsTypesAllowed, reporter).toList();
+        List<IdentifiableAttributes> monitoredEquipments = getMonitoredIdentifiables(context, network, monitoredEquipmentIds, monitoredEquipmentsTypesAllowed, reporter, elementsIdNameMap).toList();
 
         return getSensitivityFactorsFromEquipments(equipments.stream().map(IdentifiableAttributes::getId).collect(Collectors.toList()),
                 monitoredEquipments, contingencies, sensitivityFunctionType, sensitivityVariableType, false);
@@ -306,13 +316,15 @@ public class SensitivityAnalysisInputBuilderService {
 
     private void buildSensitivityInjectionsSets(SensitivityAnalysisRunContext context, Network network, ReportNode reporter) {
         List<SensitivityInjectionsSet> sensitivityInjectionsSets = context.getSensitivityAnalysisInputData().getSensitivityInjectionsSets();
+        Map<UUID, String> elementsIdNameMap = context.getSensitivityAnalysisInputData().getElementsIdNameMap();
         sensitivityInjectionsSets.forEach(sensitivityInjectionsSet -> {
-            List<Contingency> cInjectionsSet = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityInjectionsSet.getContingencies(), reporter);
+            List<Contingency> cInjectionsSet = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityInjectionsSet.getContingencies(), reporter, elementsIdNameMap);
             List<SensitivityVariableSet> vInjectionsSets = buildSensitivityVariableSets(context,
                 network, reporter,
                 List.of(IdentifiableType.GENERATOR, IdentifiableType.LOAD, IdentifiableType.BATTERY),
                 sensitivityInjectionsSet.getInjections(),
-                sensitivityInjectionsSet.getDistributionType());
+                sensitivityInjectionsSet.getDistributionType(),
+                elementsIdNameMap);
             List<List<SensitivityFactor>> fInjectionsSet = buildSensitivityFactorsFromVariablesSets(
                 context, network, reporter,
                 List.of(IdentifiableType.LINE, IdentifiableType.TWO_WINDINGS_TRANSFORMER),
@@ -320,7 +332,8 @@ public class SensitivityAnalysisInputBuilderService {
                 vInjectionsSets,
                 cInjectionsSet,
                 SensitivityFunctionType.BRANCH_ACTIVE_POWER_1,
-                SensitivityVariableType.INJECTION_ACTIVE_POWER);
+                SensitivityVariableType.INJECTION_ACTIVE_POWER,
+                elementsIdNameMap);
 
             context.getSensitivityAnalysisInputs().addContingencies(cInjectionsSet);
             context.getSensitivityAnalysisInputs().addSensitivityVariableSets(vInjectionsSets);
@@ -330,8 +343,9 @@ public class SensitivityAnalysisInputBuilderService {
 
     private void buildSensitivityInjections(SensitivityAnalysisRunContext context, Network network, ReportNode reporter) {
         List<SensitivityInjection> sensitivityInjections = context.getSensitivityAnalysisInputData().getSensitivityInjections();
+        Map<UUID, String> elementsIdNameMap = context.getSensitivityAnalysisInputData().getElementsIdNameMap();
         sensitivityInjections.forEach(sensitivityInjection -> {
-            List<Contingency> cInjections = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityInjection.getContingencies(), reporter);
+            List<Contingency> cInjections = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityInjection.getContingencies(), reporter, elementsIdNameMap);
             List<List<SensitivityFactor>> fInjections = buildSensitivityFactorsFromEquipments(
                 context, network, reporter,
                 List.of(IdentifiableType.LINE, IdentifiableType.TWO_WINDINGS_TRANSFORMER),
@@ -340,7 +354,8 @@ public class SensitivityAnalysisInputBuilderService {
                 sensitivityInjection.getInjections(),
                 cInjections,
                 SensitivityFunctionType.BRANCH_ACTIVE_POWER_1,
-                SensitivityVariableType.INJECTION_ACTIVE_POWER);
+                SensitivityVariableType.INJECTION_ACTIVE_POWER,
+                elementsIdNameMap);
 
             context.getSensitivityAnalysisInputs().addContingencies(cInjections);
             context.getSensitivityAnalysisInputs().addSensitivityFactors(fInjections);
@@ -349,8 +364,9 @@ public class SensitivityAnalysisInputBuilderService {
 
     private void buildSensitivityHVDCs(SensitivityAnalysisRunContext context, Network network, ReportNode reporter) {
         List<SensitivityHVDC> sensitivityHVDCs = context.getSensitivityAnalysisInputData().getSensitivityHVDCs();
+        Map<UUID, String> elementsIdNameMap = context.getSensitivityAnalysisInputData().getElementsIdNameMap();
         sensitivityHVDCs.forEach(sensitivityHVDC -> {
-            List<Contingency> cHVDC = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityHVDC.getContingencies(), reporter);
+            List<Contingency> cHVDC = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityHVDC.getContingencies(), reporter, elementsIdNameMap);
             SensitivityFunctionType sensitivityFunctionType = sensitivityHVDC.getSensitivityType() == SensitivityAnalysisInputData.SensitivityType.DELTA_MW
                 ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1
                 : SensitivityFunctionType.BRANCH_CURRENT_1;
@@ -363,7 +379,8 @@ public class SensitivityAnalysisInputBuilderService {
                 sensitivityHVDC.getHvdcs(),
                 cHVDC,
                 sensitivityFunctionType,
-                SensitivityVariableType.HVDC_LINE_ACTIVE_POWER);
+                SensitivityVariableType.HVDC_LINE_ACTIVE_POWER,
+                elementsIdNameMap);
 
             context.getSensitivityAnalysisInputs().addContingencies(cHVDC);
             context.getSensitivityAnalysisInputs().addSensitivityFactors(fHVDC);
@@ -372,8 +389,9 @@ public class SensitivityAnalysisInputBuilderService {
 
     private void buildSensitivityPSTs(SensitivityAnalysisRunContext context, Network network, ReportNode reporter) {
         List<SensitivityPST> sensitivityPSTs = context.getSensitivityAnalysisInputData().getSensitivityPSTs();
+        Map<UUID, String> elementsIdNameMap = context.getSensitivityAnalysisInputData().getElementsIdNameMap();
         sensitivityPSTs.forEach(sensitivityPST -> {
-            List<Contingency> cPST = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityPST.getContingencies(), reporter);
+            List<Contingency> cPST = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityPST.getContingencies(), reporter, elementsIdNameMap);
             List<List<SensitivityFactor>> fPST = buildSensitivityFactorsFromEquipments(
                 context, network, reporter,
                 List.of(IdentifiableType.LINE, IdentifiableType.TWO_WINDINGS_TRANSFORMER),
@@ -384,7 +402,8 @@ public class SensitivityAnalysisInputBuilderService {
                 sensitivityPST.getSensitivityType() == SensitivityAnalysisInputData.SensitivityType.DELTA_MW
                     ? SensitivityFunctionType.BRANCH_ACTIVE_POWER_1
                     : SensitivityFunctionType.BRANCH_CURRENT_1,
-                SensitivityVariableType.TRANSFORMER_PHASE);
+                SensitivityVariableType.TRANSFORMER_PHASE,
+                elementsIdNameMap);
 
             context.getSensitivityAnalysisInputs().addContingencies(cPST);
             context.getSensitivityAnalysisInputs().addSensitivityFactors(fPST);
@@ -393,6 +412,7 @@ public class SensitivityAnalysisInputBuilderService {
 
     private void buildSensitivityNodes(SensitivityAnalysisRunContext context, Network network, ReportNode reporter) {
         List<SensitivityNodes> sensitivityNodes = context.getSensitivityAnalysisInputData().getSensitivityNodes();
+        Map<UUID, String> elementsIdNameMap = context.getSensitivityAnalysisInputData().getElementsIdNameMap();
         // TODO: nodes sensitivity is only available with OpenLoadFlow
         // check to be removed further ...
         if (!sensitivityNodes.isEmpty() && !StringUtils.equals("OpenLoadFlow", context.getProvider())) {
@@ -403,7 +423,7 @@ public class SensitivityAnalysisInputBuilderService {
             return;
         }
         sensitivityNodes.forEach(sensitivityNode -> {
-            List<Contingency> cNodes = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityNode.getContingencies(), reporter);
+            List<Contingency> cNodes = buildContingencies(context.getNetworkUuid(), context.getVariantId(), sensitivityNode.getContingencies(), reporter, elementsIdNameMap);
             List<List<SensitivityFactor>> fNodes = buildSensitivityFactorsFromEquipments(
                 context, network, reporter,
                 List.of(IdentifiableType.VOLTAGE_LEVEL),
@@ -413,7 +433,8 @@ public class SensitivityAnalysisInputBuilderService {
                 sensitivityNode.getEquipmentsInVoltageRegulation(),
                 cNodes,
                 SensitivityFunctionType.BUS_VOLTAGE,
-                SensitivityVariableType.BUS_TARGET_VOLTAGE);
+                SensitivityVariableType.BUS_TARGET_VOLTAGE,
+                elementsIdNameMap);
 
             context.getSensitivityAnalysisInputs().addContingencies(cNodes);
             context.getSensitivityAnalysisInputs().addSensitivityFactors(fNodes);

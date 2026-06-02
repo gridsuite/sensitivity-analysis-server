@@ -64,7 +64,7 @@ class SensitivityAnalysisServiceTest {
         given(parametersService.getParameters(any(UUID.class))).willReturn(Optional.of(parametersInfos));
 
         var inputData = Mockito.mock(SensitivityAnalysisInputData.class);
-        given(parametersService.buildInputData(any(), any())).willReturn(inputData);
+        given(parametersService.buildInputData(any(), any(), any())).willReturn(inputData);
 
         FactorCount mockedFactorCount = new FactorCount(10, 1000);
         given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any(), anyBoolean())).willReturn(mockedFactorCount);
@@ -75,7 +75,7 @@ class SensitivityAnalysisServiceTest {
         SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersService.getParameters(UUID.randomUUID())
                 .orElse(parametersService.getDefauSensitivityAnalysisParametersInfos());
 
-        SensitivityAnalysisInputData inputData = parametersService.buildInputData(sensitivityAnalysisParametersInfos, UUID.randomUUID());
+        SensitivityAnalysisInputData inputData = parametersService.buildInputData(sensitivityAnalysisParametersInfos, UUID.randomUUID(), null);
 
         analysisService.runAndSaveResult(
                 new SensitivityAnalysisRunContext(

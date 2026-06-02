@@ -34,6 +34,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -194,7 +195,7 @@ class SensitivityAnalysisParametersTest {
         wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/parameters/.*/values\\?provider=.*"))
             .willReturn(WireMock.ok().withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).withBody(mapper.writeValueAsString(loadFlowParametersValues))));
 
-        SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersInfos, UUID.randomUUID());
+        SensitivityAnalysisInputData inputData = parametersService.buildInputData(parametersInfos, UUID.randomUUID(), null);
 
         // now we check that each field contains the good value
         SensitivityAnalysisParameters sensitivityAnalysisParameters = inputData.getParameters();
@@ -221,6 +222,19 @@ class SensitivityAnalysisParametersTest {
         assertThat(inputData.getSensitivityHVDCs().get(0)).recursivelyEquals(parametersInfos.getSensitivityHVDC().get(0));
         assertEquals(inputData.getSensitivityNodes().size(), parametersInfos.getSensitivityNodes().size());
         assertThat(inputData.getSensitivityNodes().get(0)).recursivelyEquals(parametersInfos.getSensitivityNodes().get(0));
+    }
+
+    @Test
+    void testGetContingencyListsAndFiltersFromParameters() throws Exception {
+        SensitivityAnalysisParametersInfos parametersToRead = buildParameters();
+        UUID parametersUuid = saveAndReturnId(parametersToRead);
+
+        MvcResult mvcResult = mockMvc.perform(get(URI_PARAMETERS_GET_PUT + parametersUuid + "/contingency-lists-and-filters"))
+            .andExpect(status().isOk()).andReturn();
+        String resultAsString = mvcResult.getResponse().getContentAsString();
+        Set<UUID> receivedUuids = mapper.readValue(resultAsString, new TypeReference<>() { });
+
+        assertThat(receivedUuids).isEqualTo(Set.of(EQUIPMENTS_ID_1, EQUIPMENTS_ID_2, EQUIPMENTS_ID_3));
     }
 
     private SensitivityAnalysisParametersInfos getParameters(UUID parameterUuid) throws Exception {
