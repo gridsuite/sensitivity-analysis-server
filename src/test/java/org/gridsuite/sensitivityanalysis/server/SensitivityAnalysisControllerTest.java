@@ -56,6 +56,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.powsybl.network.store.model.NetworkStoreApi.VERSION;
@@ -92,20 +93,34 @@ class SensitivityAnalysisControllerTest {
     private static final UUID LOADFLOW_PARAMETERS_UUID = UUID.randomUUID();
     private static final UUID RESULT_UUID = UUID.randomUUID();
 
-    private static final IdentifiableAttributes BRANCH1 = new IdentifiableAttributes("L1-5-1", IdentifiableType.LINE, null);
-    private static final IdentifiableAttributes BRANCH2 = new IdentifiableAttributes("L2-3-1", IdentifiableType.LINE, null);
-    private static final IdentifiableAttributes GEN1 = new IdentifiableAttributes("B1-G", IdentifiableType.GENERATOR, null);
-    private static final IdentifiableAttributes GEN2 = new IdentifiableAttributes("B2-G", IdentifiableType.GENERATOR, null);
-    private static final Contingency CONTINGENCY1 = new Contingency("contingency1", new TwoWindingsTransformerContingency("L1-5-1"));
-    private static final Contingency CONTINGENCY2 = new Contingency("contingency2", new TwoWindingsTransformerContingency("L2-3-1"));
-    private static final UUID BRANCH1_CONTAINER_UUID = UUID.randomUUID();
-    private static final UUID BRANCH2_CONTAINER_UUID = UUID.randomUUID();
-    private static final UUID GEN1_CONTAINER_UUID = UUID.randomUUID();
-    private static final UUID GEN2_CONTAINER_UUID = UUID.randomUUID();
-    private static final UUID CONTINGENCY1_CONTAINER_UUID = UUID.randomUUID();
-    private static final UUID CONTINGENCY2_CONTAINER_UUID = UUID.randomUUID();
+    private static final UUID BRANCH1_UUID = UUID.randomUUID();
+    private static final UUID BRANCH2_UUID = UUID.randomUUID();
+    private static final UUID GEN1_UUID = UUID.randomUUID();
+    private static final UUID GEN2_UUID = UUID.randomUUID();
+    private static final UUID CONTINGENCY1_UUID = UUID.randomUUID();
+    private static final UUID CONTINGENCY2_UUID = UUID.randomUUID();
     private static final UUID GENERIC_FILTER_UUID_1 = UUID.randomUUID();
     private static final UUID GENERIC_FILTER_UUID_2 = UUID.randomUUID();
+    private static final String BRANCH1_NAME = "L1-5-1";
+    private static final String BRANCH2_NAME = "L2-3-1";
+    private static final String GEN1_NAME = "B1-G";
+    private static final String GEN2_NAME = "B2-G";
+    private static final String CONTINGENCY1_NAME = "contingency1";
+    private static final String CONTINGENCY2_NAME = "contingency2";
+    private static final IdentifiableAttributes BRANCH1 = new IdentifiableAttributes(BRANCH1_NAME, IdentifiableType.LINE, null);
+    private static final IdentifiableAttributes BRANCH2 = new IdentifiableAttributes(BRANCH2_NAME, IdentifiableType.LINE, null);
+    private static final IdentifiableAttributes GEN1 = new IdentifiableAttributes(GEN1_NAME, IdentifiableType.GENERATOR, null);
+    private static final IdentifiableAttributes GEN2 = new IdentifiableAttributes(GEN2_NAME, IdentifiableType.GENERATOR, null);
+    private static final Contingency CONTINGENCY1 = new Contingency(CONTINGENCY1_NAME, new TwoWindingsTransformerContingency(BRANCH1_NAME));
+    private static final Contingency CONTINGENCY2 = new Contingency(CONTINGENCY2_NAME, new TwoWindingsTransformerContingency(BRANCH2_NAME));
+    private static final Map<UUID, String> ELEMENTS_ID_NAME_MAP = Map.of(
+        BRANCH1_UUID, BRANCH1_NAME,
+        BRANCH2_UUID, BRANCH2_NAME,
+        GEN1_UUID, GEN1_NAME,
+        GEN2_UUID, GEN2_NAME,
+        CONTINGENCY1_UUID, CONTINGENCY1_NAME,
+        CONTINGENCY2_UUID, CONTINGENCY2_NAME
+    );
 
     @Autowired
     private OutputDestination output;
@@ -144,11 +159,10 @@ class SensitivityAnalysisControllerTest {
         given(networkStoreService.getNetwork(NETWORK_FAILED_UUID, PreloadingStrategy.COLLECTION)).willReturn(failedNetwork);
         given(networkStoreService.getNetwork(NETWORK_ERROR_UUID, PreloadingStrategy.COLLECTION)).willThrow(new RuntimeException(ERROR_MESSAGE));
 
-        given(actionsService.getContingencyList(eq(List.of(CONTINGENCY1_CONTAINER_UUID, CONTINGENCY2_CONTAINER_UUID)), any(), any())).willReturn(new ContingencyListExportResult(List.of(CONTINGENCY1,
-                CONTINGENCY2), List.of()));
-        given(filterService.getIdentifiablesFromFilters(eq(List.of(GEN1_CONTAINER_UUID, GEN2_CONTAINER_UUID)), any(), any())).willReturn(List.of(GEN1, GEN2));
-        given(filterService.getIdentifiablesFromFilters(eq(List.of(BRANCH1_CONTAINER_UUID, BRANCH2_CONTAINER_UUID)), any(), any())).willReturn(List.of(BRANCH1, BRANCH2));
-        given(filterService.getIdentifiablesFromFilters(eq(List.of(GEN1_CONTAINER_UUID, GEN2_CONTAINER_UUID)), any(), any())).willReturn(List.of(GEN1, GEN2));
+        given(actionsService.getContingencyList(eq(List.of(CONTINGENCY1_UUID, CONTINGENCY2_UUID)), any(), any())).willReturn(new ContingencyListExportResult(List.of(CONTINGENCY1, CONTINGENCY2), List.of()));
+        given(filterService.getIdentifiablesFromFilters(eq(List.of(GEN1_UUID, GEN2_UUID)), any(), any())).willReturn(List.of(GEN1, GEN2));
+        given(filterService.getIdentifiablesFromFilters(eq(List.of(BRANCH1_UUID, BRANCH2_UUID)), any(), any())).willReturn(List.of(BRANCH1, BRANCH2));
+        given(filterService.getIdentifiablesFromFilters(eq(List.of(GEN1_UUID, GEN2_UUID)), any(), any())).willReturn(List.of(GEN1, GEN2));
 
         FactorCount mockedFactorCount = new FactorCount(10, 1000);
         given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any(), anyBoolean())).willReturn(mockedFactorCount);
@@ -163,16 +177,16 @@ class SensitivityAnalysisControllerTest {
                 .sensitivityInjection(List.of(
                         SensitivityInjection.builder()
                                 .monitoredBranches(List.of(
-                                        BRANCH1_CONTAINER_UUID,
-                                        BRANCH2_CONTAINER_UUID
+                                    BRANCH1_UUID,
+                                    BRANCH2_UUID
                                 ))
                                 .injections(List.of(
-                                        GEN1_CONTAINER_UUID,
-                                        GEN2_CONTAINER_UUID
+                                    GEN1_UUID,
+                                    GEN2_UUID
                                 ))
                                 .contingencies(List.of(
-                                        CONTINGENCY1_CONTAINER_UUID,
-                                        CONTINGENCY2_CONTAINER_UUID
+                                    CONTINGENCY1_UUID,
+                                    CONTINGENCY2_UUID
                                 ))
                                 .activated(true)
                                 .build()
@@ -183,14 +197,14 @@ class SensitivityAnalysisControllerTest {
                 .sensitivityInjection(List.of(
                         SensitivityInjection.builder()
                                 .monitoredBranches(List.of(
-                                        BRANCH1_CONTAINER_UUID
+                                    BRANCH1_UUID
                                 ))
                                 .injections(List.of(
-                                        BRANCH1_CONTAINER_UUID,
-                                        BRANCH2_CONTAINER_UUID
+                                    BRANCH1_UUID,
+                                    BRANCH2_UUID
                                 ))
                                 .contingencies(List.of(
-                                        CONTINGENCY1_CONTAINER_UUID
+                                    CONTINGENCY1_UUID
                                 ))
                                 .activated(true)
                                 .build()
@@ -201,15 +215,15 @@ class SensitivityAnalysisControllerTest {
                 .sensitivityInjection(List.of(
                         SensitivityInjection.builder()
                                 .monitoredBranches(List.of(
-                                        GEN1_CONTAINER_UUID,
-                                        GEN2_CONTAINER_UUID
+                                    GEN1_UUID,
+                                    GEN2_UUID
                                 ))
                                 .injections(List.of(
-                                        GEN1_CONTAINER_UUID,
-                                        GEN2_CONTAINER_UUID
+                                    GEN1_UUID,
+                                    GEN2_UUID
                                 ))
                                 .contingencies(List.of(
-                                        CONTINGENCY1_CONTAINER_UUID
+                                    CONTINGENCY1_UUID
                                 ))
                                 .activated(true)
                                 .build()
@@ -376,6 +390,26 @@ class SensitivityAnalysisControllerTest {
 
         // should return not found if result does not exist
         mockMvc.perform(get("/" + VERSION + "/results/{resultUuid}", UUID.randomUUID())).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void queryResultWithFilterNames() throws Exception {
+        UUID resultUuid = run(parametersUuid);
+        checkComputationSucceeded(resultUuid);
+
+        // check results contain the names of the filters as given
+        ResultsSelector selectorN = ResultsSelector.builder()
+            .tabSelection(ResultTab.N)
+            .functionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
+            .build();
+        SensitivityRunQueryResult resN = queryResult(resultUuid, selectorN);
+        assertEquals(4, (long) resN.getTotalSensitivitiesCount());
+
+        List<SensitivityOfTo> sensitivities = (List<SensitivityOfTo>) resN.getSensitivities();
+        String funcIds = sensitivities.stream().map(SensitivityOfTo::getFuncId).collect(Collectors.joining(","));
+        String varIds = sensitivities.stream().map(SensitivityOfTo::getVarId).collect(Collectors.joining(","));
+        assertThat(funcIds).contains(BRANCH1_NAME, BRANCH2_NAME);
+        assertThat(varIds).contains(GEN1_NAME, GEN2_NAME);
     }
 
     @Test
@@ -588,7 +622,8 @@ class SensitivityAnalysisControllerTest {
         MockHttpServletRequestBuilder req = post("/" + VERSION + "/networks/{networkUuid}/run", NETWORK_UUID)
                 .param("reportType", "SensitivityAnalysis")
                 .param("parametersUuid", parametersUuid.toString())
-                .param("loadFlowParametersUuid", LOADFLOW_PARAMETERS_UUID.toString());
+                .param("loadFlowParametersUuid", LOADFLOW_PARAMETERS_UUID.toString())
+            .contentType(MediaType.APPLICATION_JSON_VALUE);
         MvcResult result = mockMvc.perform(req.contentType(MediaType.APPLICATION_JSON).header(HEADER_USER_ID, "testUserId"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -605,7 +640,9 @@ class SensitivityAnalysisControllerTest {
                 .param("reportType", "SensitivityAnalysis")
                 .param("receiver", "me")
                 .param("parametersUuid", parametersUuid.toString())
-                .param("loadFlowParametersUuid", LOADFLOW_PARAMETERS_UUID.toString());
+                .param("loadFlowParametersUuid", LOADFLOW_PARAMETERS_UUID.toString())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsString(ELEMENTS_ID_NAME_MAP));
         MvcResult result = mockMvc.perform(req.contentType(MediaType.APPLICATION_JSON).header(HEADER_USER_ID, "testUserId"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))

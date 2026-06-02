@@ -15,6 +15,7 @@ import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -57,4 +58,7 @@ public class SensitivityAnalysisInputData {
 
     @Schema(description = "Loadflow model-specific parameters")
     private Map<String, String> loadFlowSpecificParameters;
+
+    @Schema(description = "Map of element ids used in the parameters to their corresponding names")
+    private Map<UUID, String> elementsIdNameMap;
 }

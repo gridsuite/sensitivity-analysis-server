@@ -48,6 +48,8 @@
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:sensitivity-analysis-server</sonar.projectKey>
+        <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
+        <powsybl-network-store.version>1.44.0</powsybl-network-store.version>
     </properties>
 
     <build>
@@ -109,6 +111,25 @@
                 <groupId>com.vladmihalcea</groupId>
                 <artifactId>db-util</artifactId>
                 <version>${db-util.version}</version>
+            </dependency>
+
+            <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-network-store-client</artifactId>
+                <version>${powsybl-network-store.version}</version>
+            </dependency>
+            <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-network-store-iidm-impl</artifactId>
+                <version>${powsybl-network-store.version}</version>
+            </dependency>
+            <!-- FIXME: to be removed at next release of gridsuite-dependencies or powsybl-ws-dependencies -->
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-network-store-model</artifactId>
+                <version>${powsybl-network-store.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

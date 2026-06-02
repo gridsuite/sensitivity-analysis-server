@@ -36,6 +36,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import static org.gridsuite.computation.service.NotificationService.HEADER_USER_ID;
 import static org.springframework.http.MediaType.*;
@@ -88,8 +89,9 @@ public class SensitivityAnalysisController {
                                                                  "SensitivityAnalysis") String reportType,
                                                          @Parameter(description = "parametersUuid") @RequestParam(name = "parametersUuid", required = false) UUID parametersUuid,
                                                          @Parameter(description = "loadFlow parameters uuid") @RequestParam(name = "loadFlowParametersUuid") UUID loadFlowParametersUuid,
+                                                         @Parameter(description = "names of the contingency lists and filters contained in the parameters") @RequestBody(required = false) Map<UUID, String> elementsIdNameMap,
                                                          @RequestHeader(HEADER_USER_ID) String userId) {
-        SensitivityAnalysisResult result = workerService.run(networkUuid, variantId, new ReportInfos(reportUuid, reporterId, reportType), userId, parametersUuid, loadFlowParametersUuid);
+        SensitivityAnalysisResult result = workerService.run(networkUuid, variantId, new ReportInfos(reportUuid, reporterId, reportType), userId, parametersUuid, loadFlowParametersUuid, elementsIdNameMap);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(result);
     }
 
@@ -108,6 +110,7 @@ public class SensitivityAnalysisController {
                                                    reportType,
                                            @Parameter(description = "parametersUuid") @RequestParam(name = "parametersUuid", required = false) UUID parametersUuid,
                                            @Parameter(description = "loadFlow parameters uuid") @RequestParam(name = "loadFlowParametersUuid") UUID loadFlowParametersUuid,
+                                           @Parameter(description = "names of the contingency lists and filters contained in the parameters") @RequestBody(required = false) Map<UUID, String> elementsIdNameMap,
                                            @RequestHeader(HEADER_USER_ID) String userId) {
         SensitivityAnalysisRunContext runContext = sensitivityAnalysisParametersService.createRunContext(
                 networkUuid,
@@ -116,7 +119,8 @@ public class SensitivityAnalysisController {
                 new ReportInfos(reportUuid, reporterId, reportType),
                 userId,
                 parametersUuid,
-                loadFlowParametersUuid
+                loadFlowParametersUuid,
+                elementsIdNameMap
         );
         UUID resultUuid = service.runAndSaveResult(runContext);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(resultUuid);
