@@ -191,7 +191,8 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
      * The following run, runInMemory, runSensitivityAnalysisAsync and runAsyncInMemory functions are specific to the "run in memory" alternative run mode.
      * This mode is different from the default mode that saves results in database as you run and uses the default functions from the AbstractWorkerService service class.
      */
-    public SensitivityAnalysisResult run(UUID networkUuid, String variantId, ReportInfos reportInfos, String userId, UUID parametersUuid, UUID loadFlowParametersUuid, Map<UUID, String> elementsIdNameMap) {
+    public SensitivityAnalysisResult run(UUID networkUuid, String variantId, ReportInfos reportInfos,
+                                         String userId, UUID parametersUuid, UUID loadFlowParametersUuid, Map<UUID, String> elementsIdNameMap) {
 
         SensitivityAnalysisParametersInfos sensitivityAnalysisParametersInfos = parametersUuid != null
                 ? parametersService.getParameters(parametersUuid)

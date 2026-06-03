@@ -137,7 +137,6 @@ public class SensitivityAnalysisInputBuilderService {
         return "[" + filterIds.stream().map(id -> getElementName(id, elementsIdNameMap)).collect(Collectors.joining(", ")) + "]";
     }
 
-
     private Stream<IdentifiableAttributes> getMonitoredIdentifiables(SensitivityAnalysisRunContext context, Network network, List<UUID> filterIds,
                                                                      List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter, Map<UUID, String> elementsIdNameMap) {
         String filtersNames = getFilterNames(filterIds, elementsIdNameMap);
@@ -292,7 +291,8 @@ public class SensitivityAnalysisInputBuilderService {
             return List.of();
         }
 
-        List<IdentifiableAttributes> monitoredEquipments = getMonitoredIdentifiables(context, network, monitoredEquipmentIds, monitoredEquipmentsTypesAllowed, reporter, elementsIdNameMap).collect(Collectors.toList());
+        List<IdentifiableAttributes> monitoredEquipments = getMonitoredIdentifiables(context, network, monitoredEquipmentIds, monitoredEquipmentsTypesAllowed, reporter, elementsIdNameMap)
+                .collect(Collectors.toList());
 
         return getSensitivityFactorsFromEquipments(variablesSets.stream().map(SensitivityVariableSet::getId).collect(Collectors.toList()),
             monitoredEquipments, contingencies, sensitivityFunctionType, sensitivityVariableType, true);
