@@ -102,7 +102,7 @@ public class SensitivityAnalysisInputBuilderService {
             //extract container id from filters
             return filterService.getIdentifiablesFromFilters(filterIds, networkUuid, variantId);
         } catch (Exception ex) {
-            LOGGER.error("Could not get identifiables from filter " + filtersNames, ex);
+            LOGGER.error("Could not get identifiables from filters {}", filtersNames, ex);
             reporter.newReportNode()
                 .withMessageTemplate("sensitivity.analysis.server.filterTranslationFailure")
                 .withUntypedValue("exception", ex.getMessage())
