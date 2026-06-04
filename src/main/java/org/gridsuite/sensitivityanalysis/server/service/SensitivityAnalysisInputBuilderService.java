@@ -223,7 +223,7 @@ public class SensitivityAnalysisInputBuilderService {
 
         variablesLists.forEach(variablesList -> {
             List<WeightedSensitivityVariable> variables = new ArrayList<>();
-            if (variablesList.getRight().get(0).getType() == IdentifiableType.LOAD && distributionType == SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP) {
+            if (variablesList.getRight().getFirst().getType() == IdentifiableType.LOAD && distributionType == SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP) {
                 reporter.newReportNode()
                     .withMessageTemplate("sensitivity.analysis.server.distributionTypeNotAllowedWithLoadFilters")
                     .withUntypedValue("distributionType", distributionType.name())
@@ -231,7 +231,7 @@ public class SensitivityAnalysisInputBuilderService {
                     .add();
                 return;
             }
-            if (variablesList.getRight().get(0).getDistributionKey() == null && distributionType == SensitivityAnalysisInputData.DistributionType.VENTILATION) {
+            if (variablesList.getRight().getFirst().getDistributionKey() == null && distributionType == SensitivityAnalysisInputData.DistributionType.VENTILATION) {
                 reporter.newReportNode()
                     .withMessageTemplate("sensitivity.analysis.server.distributionTypeAllowedOnlyWithExplicitNamingFilters")
                     .withUntypedValue("distributionType", distributionType.name())
