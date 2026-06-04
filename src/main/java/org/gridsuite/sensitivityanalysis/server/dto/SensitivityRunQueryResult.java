@@ -6,8 +6,6 @@
  */
 package org.gridsuite.sensitivityanalysis.server.dto;
 
-import java.util.List;
-
 import com.powsybl.sensitivity.SensitivityFunctionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
+import java.util.List;
 
 /**
  * @author Laurent Garnier <laurent.garnier at rte-france.com>

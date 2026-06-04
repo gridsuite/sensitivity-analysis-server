@@ -9,14 +9,14 @@ package org.gridsuite.sensitivityanalysis.server.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.sensitivity.SensitivityAnalysisProvider;
 import com.univocity.parsers.csv.CsvFormat;
-import org.gridsuite.computation.error.ComputationException;
+import com.univocity.parsers.csv.CsvWriter;
+import com.univocity.parsers.csv.CsvWriterSettings;
 import org.gridsuite.computation.dto.GlobalFilter;
 import org.gridsuite.computation.dto.ResourceFilterDTO;
+import org.gridsuite.computation.error.ComputationException;
 import org.gridsuite.computation.service.AbstractComputationService;
 import org.gridsuite.computation.service.NotificationService;
 import org.gridsuite.computation.service.UuidGeneratorService;
-import com.univocity.parsers.csv.CsvWriter;
-import com.univocity.parsers.csv.CsvWriterSettings;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.FactorCount;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
@@ -26,7 +26,6 @@ import org.gridsuite.sensitivityanalysis.server.error.SensitivityAnalysisExcepti
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -36,7 +35,6 @@ import java.text.NumberFormat;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
 import static org.gridsuite.computation.error.ComputationBusinessErrorCode.INVALID_EXPORT_PARAMS;
 import static org.gridsuite.computation.error.ComputationBusinessErrorCode.RESULT_NOT_FOUND;
 
@@ -83,7 +81,8 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
                 runContext.getParameters().getSensitivityNodes(),
                 true);
         if (factorCount.resultCount() > MAX_RESULTS_THRESHOLD || factorCount.variableCount() > MAX_VARIABLES_THRESHOLD) {
-            throw new SensitivityAnalysisException(SensitivityAnalysisBusinessErrorCode.TOO_MANY_FACTORS, "Too many factors to run sensitivity analysis", Map.of("resultCount", factorCount.resultCount(), "resultCountLimit", MAX_RESULTS_THRESHOLD, "variableCount", factorCount.variableCount(), "variableCountLimit", MAX_VARIABLES_THRESHOLD));
+            throw new SensitivityAnalysisException(SensitivityAnalysisBusinessErrorCode.TOO_MANY_FACTORS, "Too many factors to run sensitivity analysis", Map.of("resultCount",
+                    factorCount.resultCount(), "resultCountLimit", MAX_RESULTS_THRESHOLD, "variableCount", factorCount.variableCount(), "variableCountLimit", MAX_VARIABLES_THRESHOLD));
         }
 
         // update status to running status
@@ -117,25 +116,27 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
 
     private static void setFormat(CsvFormat format, String language) {
         format.setLineSeparator(System.lineSeparator());
-        format.setDelimiter(language != null && language.equals("fr") ? CSV_DELIMITER_FR : CSV_DELIMITER_EN);
+        format.setDelimiter(language != null && "fr".equals(language) ? CSV_DELIMITER_FR : CSV_DELIMITER_EN);
         format.setQuoteEscape(CSV_QUOTE_ESCAPE);
     }
 
     private static String convertDoubleToLocale(Double value, String language) {
         if (value != null) {
-            NumberFormat nf = NumberFormat.getInstance(language != null && language.equals("fr") ? Locale.FRENCH : Locale.US);
+            NumberFormat nf = NumberFormat.getInstance(language != null && "fr".equals(language) ? Locale.FRENCH : Locale.US);
             nf.setGroupingUsed(false);
             return nf.format(value);
         }
         return null;
     }
 
-    public byte[] exportSensitivityResultsAsCsv(UUID resultUuid, SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos, UUID networkUuid, String variantId, ResultsSelector selector, List<ResourceFilterDTO> resourceFilters, GlobalFilter globalFilter) {
+    public byte[] exportSensitivityResultsAsCsv(UUID resultUuid, SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos, UUID networkUuid, String variantId, ResultsSelector selector,
+            List<ResourceFilterDTO> resourceFilters, GlobalFilter globalFilter) {
         if (sensitivityAnalysisCsvFileInfos == null ||
                 sensitivityAnalysisCsvFileInfos.getSensitivityFunctionType() == null ||
                 sensitivityAnalysisCsvFileInfos.getResultTab() == null ||
                 CollectionUtils.isEmpty(sensitivityAnalysisCsvFileInfos.getCsvHeaders())) {
-            throw new ComputationException(INVALID_EXPORT_PARAMS, "Missing information to export sensitivity result as csv : Sensitivity result tab, sensitivity function type and csv file headers must be provided");
+            throw new ComputationException(INVALID_EXPORT_PARAMS,
+                    "Missing information to export sensitivity result as csv : Sensitivity result tab, sensitivity function type and csv file headers must be provided");
         }
         SensitivityRunQueryResult result = getRunResult(resultUuid, networkUuid, variantId, selector, resourceFilters, globalFilter);
         if (result == null) {
@@ -183,9 +184,9 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
     }
 
     private static void writeUTF8Bom(OutputStream outputStream) throws IOException {
-        outputStream.write(0xef);
-        outputStream.write(0xbb);
-        outputStream.write(0xbf);
+        outputStream.write(0xEF);
+        outputStream.write(0xBB);
+        outputStream.write(0xBF);
     }
 
     private static Double nullIfNan(double d) {

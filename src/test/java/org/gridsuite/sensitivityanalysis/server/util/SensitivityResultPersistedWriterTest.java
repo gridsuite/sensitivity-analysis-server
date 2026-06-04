@@ -99,7 +99,8 @@ class SensitivityResultPersistedWriterTest {
 
     @ParameterizedTest
     @MethodSource("provideInvalidSensitivityValue")
-    void whenWriteSensitivityValueCalledWithInvalidValuesThenShouldDoNothing(int expectedFactorIndex, int expectedContingencyIndex, int expectedOperatorStrategyIndex, double expectedValue, double expectedFunctionReference) {
+    void whenWriteSensitivityValueCalledWithInvalidValuesThenShouldDoNothing(int expectedFactorIndex, int expectedContingencyIndex, int expectedOperatorStrategyIndex, double expectedValue,
+            double expectedFunctionReference) {
         sensitivityResultPersistedWriter.writeSensitivityValue(expectedFactorIndex, expectedContingencyIndex, expectedOperatorStrategyIndex, expectedValue, expectedFunctionReference);
 
         verifyNoInteractions(sensitivityPollerMock);
@@ -126,7 +127,8 @@ class SensitivityResultPersistedWriterTest {
         int expectedOperatorStrategyIndex = -1;
 
         when(scheduledExecutorServiceMock.isShutdown()).thenReturn(true);
-        assertThrows(IllegalStateException.class, () -> sensitivityResultPersistedWriter.writeSensitivityValue(expectedFactorIndex, expectedContingencyIndex, expectedOperatorStrategyIndex, expectedValue, expectedFunctionReference));
+        assertThrows(IllegalStateException.class, () -> sensitivityResultPersistedWriter.writeSensitivityValue(expectedFactorIndex, expectedContingencyIndex, expectedOperatorStrategyIndex,
+                expectedValue, expectedFunctionReference));
     }
 
     @Test

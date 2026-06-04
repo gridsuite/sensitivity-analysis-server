@@ -82,7 +82,10 @@ class FilterServiceTest {
 
     private static final UUID LIST_UUID = UUID.randomUUID();
 
-    private static final SensitivityFactorsIdsByGroup IDENTIFIABLES_UUID = SensitivityFactorsIdsByGroup.builder().ids(Map.of("0", List.of(LIST_UUID), "1", List.of(LIST_UUID), "2", List.of(LIST_UUID))).build();
+    private static final SensitivityFactorsIdsByGroup IDENTIFIABLES_UUID = SensitivityFactorsIdsByGroup.builder()
+            .ids(Map.of("0", List.of(LIST_UUID),
+                    "1", List.of(LIST_UUID),
+                    "2", List.of(LIST_UUID))).build();
 
     private static final UUID VERY_LARGE_LIST_UUID = UUID.randomUUID();
 

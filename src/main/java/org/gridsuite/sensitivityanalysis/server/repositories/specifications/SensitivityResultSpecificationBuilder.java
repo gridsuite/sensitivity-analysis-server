@@ -6,10 +6,10 @@
  */
 package org.gridsuite.sensitivityanalysis.server.repositories.specifications;
 
-import org.gridsuite.computation.dto.ResourceFilterDTO;
-import org.gridsuite.computation.specification.AbstractCommonSpecificationBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
+import org.gridsuite.computation.dto.ResourceFilterDTO;
+import org.gridsuite.computation.specification.AbstractCommonSpecificationBuilder;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.RawSensitivityResultEntity;
@@ -17,7 +17,6 @@ import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;

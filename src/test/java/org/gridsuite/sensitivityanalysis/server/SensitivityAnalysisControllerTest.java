@@ -159,7 +159,8 @@ class SensitivityAnalysisControllerTest {
         given(networkStoreService.getNetwork(NETWORK_FAILED_UUID, PreloadingStrategy.COLLECTION)).willReturn(failedNetwork);
         given(networkStoreService.getNetwork(NETWORK_ERROR_UUID, PreloadingStrategy.COLLECTION)).willThrow(new RuntimeException(ERROR_MESSAGE));
 
-        given(actionsService.getContingencyList(eq(List.of(CONTINGENCY1_UUID, CONTINGENCY2_UUID)), any(), any())).willReturn(new ContingencyListExportResult(List.of(CONTINGENCY1, CONTINGENCY2), List.of()));
+        given(actionsService.getContingencyList(eq(List.of(CONTINGENCY1_UUID, CONTINGENCY2_UUID)), any(), any()))
+                .willReturn(new ContingencyListExportResult(List.of(CONTINGENCY1, CONTINGENCY2), List.of()));
         given(filterService.getIdentifiablesFromFilters(eq(List.of(GEN1_UUID, GEN2_UUID)), any(), any())).willReturn(List.of(GEN1, GEN2));
         given(filterService.getIdentifiablesFromFilters(eq(List.of(BRANCH1_UUID, BRANCH2_UUID)), any(), any())).willReturn(List.of(BRANCH1, BRANCH2));
         given(filterService.getIdentifiablesFromFilters(eq(List.of(GEN1_UUID, GEN2_UUID)), any(), any())).willReturn(List.of(GEN1, GEN2));
@@ -479,7 +480,7 @@ class SensitivityAnalysisControllerTest {
     }
 
     private static Double getValueFromString(String value, String language) throws Exception {
-        return NumberFormat.getInstance(language.equals("fr") ? Locale.FRENCH : Locale.US).parse(value).doubleValue();
+        return NumberFormat.getInstance("fr".equals(language) ? Locale.FRENCH : Locale.US).parse(value).doubleValue();
     }
 
     @Test
@@ -489,7 +490,7 @@ class SensitivityAnalysisControllerTest {
 
         // export results as csv
         for (String language : List.of("fr", "en")) {
-            String fieldSeparator = language.equals("fr") ? ";" : ",";
+            String fieldSeparator = "fr".equals(language) ? ";" : ",";
             SensitivityAnalysisCsvFileInfos sensitivityAnalysisCsvFileInfos = SensitivityAnalysisCsvFileInfos.builder()
                 .sensitivityFunctionType(SensitivityFunctionType.BRANCH_ACTIVE_POWER_1)
                 .resultTab(ResultTab.N)

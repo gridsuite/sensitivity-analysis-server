@@ -9,16 +9,14 @@ package org.gridsuite.sensitivityanalysis.server.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.gridsuite.computation.service.AbstractResultContext;
 import org.gridsuite.computation.dto.ReportInfos;
+import org.gridsuite.computation.service.AbstractResultContext;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
-
 import java.io.UncheckedIOException;
 import java.util.Objects;
 import java.util.UUID;
-
 import static org.gridsuite.computation.service.NotificationService.HEADER_USER_ID;
 import static org.gridsuite.computation.utils.MessageUtils.getNonNullHeader;
 

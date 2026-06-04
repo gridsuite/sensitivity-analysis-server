@@ -28,6 +28,7 @@ import java.util.stream.Stream;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
+@SuppressWarnings("checkstyle:LambdaBodyLength")
 public class SensitivityAnalysisInputBuilderService {
     private static final String EXPECTED_TYPE = "expectedType";
     private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisInputBuilderService.class);
@@ -101,7 +102,7 @@ public class SensitivityAnalysisInputBuilderService {
             //extract container id from filters
             return filterService.getIdentifiablesFromFilters(filterIds, networkUuid, variantId);
         } catch (Exception ex) {
-            LOGGER.error("Could not get identifiables from filter " + filtersNames, ex);
+            LOGGER.error("Could not get identifiables from filters {}", filtersNames, ex);
             reporter.newReportNode()
                 .withMessageTemplate("sensitivity.analysis.server.filterTranslationFailure")
                 .withUntypedValue("exception", ex.getMessage())
@@ -152,7 +153,7 @@ public class SensitivityAnalysisInputBuilderService {
             return Stream.empty();
         }
 
-        if (listIdentAttributes.isEmpty() || listIdentAttributes.get(0).getType() != IdentifiableType.VOLTAGE_LEVEL) {
+        if (listIdentAttributes.isEmpty() || listIdentAttributes.getFirst().getType() != IdentifiableType.VOLTAGE_LEVEL) {
             return listIdentAttributes.stream();
         }
 
@@ -163,8 +164,12 @@ public class SensitivityAnalysisInputBuilderService {
                 throw new PowsyblException("Voltage level '" + voltageLevel.getId() + "' not found !!");
             }
             return vl.getTopologyKind() == TopologyKind.NODE_BREAKER ?
-                vl.getNodeBreakerView().getBusbarSectionStream().filter(bbs -> bbs.getTerminal().getBusView().getBus() != null).map(bbs -> new IdentifiableAttributes(bbs.getId(), bbs.getType(), null)) :
-                vl.getBusBreakerView().getBusStream().filter(bus -> bus.getConnectedTerminalStream().map(t -> t.getBusView().getBus()).anyMatch(Objects::nonNull)).map(bus -> new IdentifiableAttributes(bus.getId(), bus.getType(), null));
+                vl.getNodeBreakerView().getBusbarSectionStream()
+                        .filter(bbs -> bbs.getTerminal().getBusView().getBus() != null)
+                        .map(bbs -> new IdentifiableAttributes(bbs.getId(), bbs.getType(), null)) :
+                vl.getBusBreakerView().getBusStream()
+                        .filter(bus -> bus.getConnectedTerminalStream().map(t -> t.getBusView().getBus()).anyMatch(Objects::nonNull))
+                        .map(bus -> new IdentifiableAttributes(bus.getId(), bus.getType(), null));
         });
     }
 
@@ -218,7 +223,7 @@ public class SensitivityAnalysisInputBuilderService {
 
         variablesLists.forEach(variablesList -> {
             List<WeightedSensitivityVariable> variables = new ArrayList<>();
-            if (variablesList.getRight().get(0).getType() == IdentifiableType.LOAD && distributionType == SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP) {
+            if (variablesList.getRight().getFirst().getType() == IdentifiableType.LOAD && distributionType == SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP) {
                 reporter.newReportNode()
                     .withMessageTemplate("sensitivity.analysis.server.distributionTypeNotAllowedWithLoadFilters")
                     .withUntypedValue("distributionType", distributionType.name())
@@ -226,7 +231,7 @@ public class SensitivityAnalysisInputBuilderService {
                     .add();
                 return;
             }
-            if (variablesList.getRight().get(0).getDistributionKey() == null && distributionType == SensitivityAnalysisInputData.DistributionType.VENTILATION) {
+            if (variablesList.getRight().getFirst().getDistributionKey() == null && distributionType == SensitivityAnalysisInputData.DistributionType.VENTILATION) {
                 reporter.newReportNode()
                     .withMessageTemplate("sensitivity.analysis.server.distributionTypeAllowedOnlyWithExplicitNamingFilters")
                     .withUntypedValue("distributionType", distributionType.name())
@@ -286,7 +291,8 @@ public class SensitivityAnalysisInputBuilderService {
             return List.of();
         }
 
-        List<IdentifiableAttributes> monitoredEquipments = getMonitoredIdentifiables(context, network, monitoredEquipmentIds, monitoredEquipmentsTypesAllowed, reporter, elementsIdNameMap).collect(Collectors.toList());
+        List<IdentifiableAttributes> monitoredEquipments = getMonitoredIdentifiables(context, network, monitoredEquipmentIds, monitoredEquipmentsTypesAllowed, reporter, elementsIdNameMap)
+                .collect(Collectors.toList());
 
         return getSensitivityFactorsFromEquipments(variablesSets.stream().map(SensitivityVariableSet::getId).collect(Collectors.toList()),
             monitoredEquipments, contingencies, sensitivityFunctionType, sensitivityVariableType, true);

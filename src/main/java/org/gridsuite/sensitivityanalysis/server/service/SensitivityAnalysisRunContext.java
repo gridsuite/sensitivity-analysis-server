@@ -7,11 +7,10 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import lombok.Getter;
-import org.gridsuite.computation.service.AbstractComputationRunContext;
 import org.gridsuite.computation.dto.ReportInfos;
+import org.gridsuite.computation.service.AbstractComputationRunContext;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityAnalysisInputData;
 import org.springframework.beans.factory.annotation.Value;
-
 import java.util.UUID;
 
 /**
