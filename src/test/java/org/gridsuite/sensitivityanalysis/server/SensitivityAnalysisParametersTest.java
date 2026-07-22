@@ -174,7 +174,7 @@ class SensitivityAnalysisParametersTest {
         UUID parametersUuid = postParameters(parametersToCreate);
         SensitivityAnalysisParametersInfos createdParameters = getParameters(parametersUuid);
 
-        mockMvc.perform(post(URI_PARAMETERS_BASE).queryParam("duplicateFrom", UUID.randomUUID().toString()))
+        mockMvc.perform(post(URI_PARAMETERS_BASE + "/{uuid}/duplicate", UUID.randomUUID()))
             .andExpect(status().isNotFound());
 
         UUID duplicatedParametersUuid = duplicateParameters(createdParameters.getUuid());
@@ -263,7 +263,7 @@ class SensitivityAnalysisParametersTest {
     }
 
     private UUID duplicateParameters(UUID parametersUuid) throws Exception {
-        MvcResult mvcPostResult = mockMvc.perform(post(URI_PARAMETERS_BASE).queryParam("duplicateFrom", parametersUuid.toString()))
+        MvcResult mvcPostResult = mockMvc.perform(post(URI_PARAMETERS_BASE + "/{uuid}/duplicate", parametersUuid))
             .andExpect(status().isOk()).andReturn();
 
         return mapper.readValue(mvcPostResult.getResponse().getContentAsString(), UUID.class);
