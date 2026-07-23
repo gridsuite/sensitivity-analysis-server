@@ -51,12 +51,12 @@ public class SensitivityAnalysisParametersController {
         return ResponseEntity.ok(parametersService.createParameters(parametersInfos));
     }
 
-    @PostMapping(value = "", params = "duplicateFrom", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/{uuid}/duplicate", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Duplicate parameters")
     @ApiResponse(responseCode = "200", description = "parameters were duplicated")
     @ApiResponse(responseCode = "404", description = "source parameters were not found")
     public ResponseEntity<UUID> duplicateParameters(
-        @Parameter(description = "source parameters UUID") @RequestParam("duplicateFrom") UUID sourceParametersUuid) {
+        @Parameter(description = "source parameters UUID") @PathVariable("uuid") UUID sourceParametersUuid) {
         return ResponseEntity.of(parametersService.duplicateParameters(sourceParametersUuid));
     }
 
