@@ -299,6 +299,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
             // failure of the computation -> we don't wait for the writer : we don't need to persist results
             if (throwable == null) {
                 persistedWriter.waitForCompletion();
+                resultService.analyzeResultTables();
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
