@@ -210,6 +210,13 @@ public class SensitivityAnalysisController {
         return ResponseEntity.ok().body(result == null ? null : result.name());
     }
 
+    @PostMapping(value = "/results/statuses", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get sensitivity analysis statuses from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis statuses")})
+    public ResponseEntity<Map<UUID, SensitivityAnalysisStatus>> getStatuses(@Parameter(description = "Result uuids") @RequestBody List<UUID> resultUuids) {
+        return ResponseEntity.ok().body(service.getStatuses(resultUuids));
+    }
+
     @PutMapping(value = "/results/invalidate-status", produces = APPLICATION_JSON_VALUE)
     @Operation(summary = "Invalidate the sensitivity analysis status from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The sensitivity analysis status has been invalidated")})
