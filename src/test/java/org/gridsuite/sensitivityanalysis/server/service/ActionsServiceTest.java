@@ -16,7 +16,7 @@ import mockwebserver3.RecordedRequest;
 import mockwebserver3.junit5.internal.MockWebServerExtension;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
-import org.gridsuite.sensitivityanalysis.server.configuration.RestTemplateConfig;
+import org.gridsuite.sensitivityanalysis.server.configuration.RestClientConfig;
 import org.gridsuite.sensitivityanalysis.server.dto.ContingencyListExportResult;
 import org.gridsuite.sensitivityanalysis.server.dto.CountWithMissingUuids;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
@@ -68,8 +68,8 @@ class ActionsServiceTest {
 
     private static final Contingency CONTINGENCY_VARIANT = new Contingency("c2", new BranchContingency("b2"));
 
-    private final RestTemplateConfig restTemplateConfig = new RestTemplateConfig();
-    private final ObjectMapper objectMapper = restTemplateConfig.objectMapper();
+    private final RestClientConfig restClientConfig = new RestClientConfig();
+    private final ObjectMapper objectMapper = restClientConfig.objectMapper();
 
     @Autowired
     private ActionsService actionsService;
