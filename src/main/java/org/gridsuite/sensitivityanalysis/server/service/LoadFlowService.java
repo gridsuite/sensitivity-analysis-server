@@ -9,7 +9,7 @@ package org.gridsuite.sensitivityanalysis.server.service;
 import org.gridsuite.sensitivityanalysis.server.dto.parameters.LoadFlowParametersValues;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import java.util.UUID;
 
@@ -25,11 +25,11 @@ public class LoadFlowService {
 
     private String baseUri;
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
-    public LoadFlowService(@Value("${gridsuite.services.loadflow-server.base-uri:http://loadflow-server/}") String baseUri, RestTemplate restTemplate) {
+    public LoadFlowService(@Value("${gridsuite.services.loadflow-server.base-uri:http://loadflow-server/}") String baseUri, RestClient restClient) {
         this.baseUri = baseUri;
-        this.restTemplate = restTemplate;
+        this.restClient = restClient;
     }
 
     public void setLoadFlowServiceBaseUri(String baseUri) {
@@ -40,6 +40,9 @@ public class LoadFlowService {
         String path = UriComponentsBuilder.fromPath(DELIMITER + LAODFLOW_API_VERSION + "/parameters/{parametersUuid}/values")
             .queryParam("provider", provider)
             .buildAndExpand(parametersUuid).toUriString();
-        return restTemplate.getForObject(baseUri + path, LoadFlowParametersValues.class);
+        return restClient.get()
+            .uri(baseUri + path)
+            .retrieve()
+            .body(LoadFlowParametersValues.class);
     }
 }
