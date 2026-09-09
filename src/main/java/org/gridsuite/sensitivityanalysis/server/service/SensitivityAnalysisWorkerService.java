@@ -299,6 +299,11 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
             // failure of the computation -> we don't wait for the writer : we don't need to persist results
             if (throwable == null) {
                 persistedWriter.waitForCompletion();
+                // Run ANALYZE once all persisted batches have been saved to refresh statistics
+                // with the final table contents. Without up-to-date statistics, the query planner may
+                // choose an extremely expensive nested-loop plan, making the first result query after
+                // a large run very slow (20 minutes).
+                resultService.analyzeResultTables();
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
