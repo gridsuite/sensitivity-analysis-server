@@ -7,6 +7,8 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.powsybl.sensitivity.SensitivityValue;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.AllArgsConstructor;
 import org.gridsuite.computation.dto.ResourceFilterDTO;
 import org.gridsuite.computation.service.AbstractComputationResultService;
@@ -61,6 +63,9 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
     private final SensitivityResultSpecificationBuilder sensitivityResultSpecificationBuilder;
     private final SensitivityResultNKSpecificationBuilder sensitivityResultNkSpecificationBuilder;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @Transactional
     @Override
     public void insertStatus(List<UUID> resultUuids, SensitivityAnalysisStatus status) {
@@ -107,6 +112,11 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
                 () -> LOGGER.warn("Contingency with index {} for analysis '{}' was not found. Status will not be persisted.", c.contingencyIndex(), resultUuid)
             );
         });
+    }
+
+    @Transactional
+    public void analyzeResultTables() {
+        entityManager.createNativeQuery("ANALYZE sensitivity_result, raw_sensitivity_result").executeUpdate();
     }
 
     @Transactional
