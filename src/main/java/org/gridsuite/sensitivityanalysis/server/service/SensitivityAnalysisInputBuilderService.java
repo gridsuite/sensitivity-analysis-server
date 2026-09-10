@@ -86,11 +86,12 @@ public class SensitivityAnalysisInputBuilderService {
     }
 
     private Map<UUID, List<IdentifiableAttributes>> goGetIdentifiables(List<UUID> filterIds, UUID networkUuid, String variantId, ReportNode reporter, Map<UUID, String> elementsIdNameMap) {
-        String filtersNames = getFilterNames(filterIds, elementsIdNameMap);
+
         try {
             //extract container id from filters
             return filterService.getFilterEquipmentsByFilterUuid(filterIds, networkUuid, variantId);
         } catch (Exception ex) {
+            String filtersNames = getFilterNames(filterIds, elementsIdNameMap);
             LOGGER.error("Could not get identifiables from filters {}", filtersNames, ex);
             reporter.newReportNode()
                 .withMessageTemplate("sensitivity.analysis.server.filterTranslationFailure")
@@ -233,15 +234,15 @@ public class SensitivityAnalysisInputBuilderService {
                 return;
             }
             validFilterNames.add(filterName);
-            addWeights(network, equipmentList, distributionType, variables);
+            variables.addAll(getWeightedSensitivityVariables(network, equipmentList, distributionType));
         });
         result.add(new SensitivityVariableSet(validFilterNames + " (" + distributionType.name() + ")", variables));
         return result;
     }
 
-    private void addWeights(Network network, List<IdentifiableAttributes> equipmentList,
-                            SensitivityAnalysisInputData.DistributionType distributionType,
-                            List<WeightedSensitivityVariable> variables) {
+    private List<WeightedSensitivityVariable> getWeightedSensitivityVariables(Network network, List<IdentifiableAttributes> equipmentList,
+                            SensitivityAnalysisInputData.DistributionType distributionType) {
+        List<WeightedSensitivityVariable> variables = new ArrayList<>();
         for (IdentifiableAttributes identifiableAttributes : equipmentList) {
             switch (identifiableAttributes.getType()) {
                 case GENERATOR: {
@@ -275,6 +276,7 @@ public class SensitivityAnalysisInputBuilderService {
                     break;
             }
         }
+        return variables;
     }
 
     private List<List<SensitivityFactor>> buildSensitivityFactorsFromVariablesSets(SensitivityAnalysisRunContext context,
