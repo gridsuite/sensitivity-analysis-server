@@ -106,9 +106,9 @@ public class SensitivityAnalysisInputBuilderService {
     private Map<UUID, List<IdentifiableAttributes>> getAndCheckIdentifiablesByFilterIdMap(SensitivityAnalysisRunContext context, List<UUID> filterIds,
                                                                                           List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter,
                                                                                           Map<UUID, String> elementsIdNameMap) {
-        Map<UUID, List<IdentifiableAttributes>> filterEquipmentsByFilterUuid = getIdentifiablesByFilterIdMap(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter, elementsIdNameMap);
+        Map<UUID, List<IdentifiableAttributes>> filterEquipmentsByFilterIdMap = getIdentifiablesByFilterIdMap(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter, elementsIdNameMap);
         Map<UUID, List<IdentifiableAttributes>> filterEquipmentsByFilterId = new HashMap<>();
-        for (Map.Entry<UUID, List<IdentifiableAttributes>> entry : filterEquipmentsByFilterUuid.entrySet()) {
+        for (Map.Entry<UUID, List<IdentifiableAttributes>> entry : filterEquipmentsByFilterIdMap.entrySet()) {
             String filterName = elementsIdNameMap.get(entry.getKey());
             // check that monitored equipments type is allowed
             if (!entry.getValue().stream().allMatch(i -> equipmentsTypesAllowed.contains(i.getType()))) {

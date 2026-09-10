@@ -82,15 +82,15 @@ public class FilterService extends AbstractFilterService {
     public Map<UUID, List<IdentifiableAttributes>> getIdentifiablesByFilterId(List<UUID> filterIds, UUID networkUuid, String variantId) {
         List<FilterEquipments> filterEquipments = getFilterEquipments(filterIds, networkUuid, variantId);
 
-        Map<UUID, List<IdentifiableAttributes>> filterEquipmentsByFilterUuid = new HashMap<>();
+        Map<UUID, List<IdentifiableAttributes>> filterEquipmentsByFilterId = new HashMap<>();
         for (FilterEquipments filterEquipment : filterEquipments) {
-            filterEquipmentsByFilterUuid.put(filterEquipment.getFilterId(), filterEquipment.getIdentifiableAttributes());
+            filterEquipmentsByFilterId.put(filterEquipment.getFilterId(), filterEquipment.getIdentifiableAttributes());
         }
-        return filterEquipmentsByFilterUuid;
+        return filterEquipmentsByFilterId;
     }
 
-    public List<IdentifiableAttributes> getIdentifiables(List<UUID> filterUuids, UUID networkUuid, String variantId) {
-        List<FilterEquipments> filterEquipments = getFilterEquipments(filterUuids, networkUuid, variantId);
+    public List<IdentifiableAttributes> getIdentifiables(List<UUID> filterIds, UUID networkUuid, String variantId) {
+        List<FilterEquipments> filterEquipments = getFilterEquipments(filterIds, networkUuid, variantId);
 
         List<IdentifiableAttributes> mergedIdentifiables = new ArrayList<>();
         for (FilterEquipments filterEquipment : filterEquipments) {
@@ -100,8 +100,8 @@ public class FilterService extends AbstractFilterService {
         return mergedIdentifiables;
     }
 
-    public List<IdentifiableAttributes> getIdentifiables(UUID filterUuid, UUID networkUuid, String variantId) {
-        return getIdentifiables(List.of(filterUuid), networkUuid, variantId);
+    public List<IdentifiableAttributes> getIdentifiables(UUID filterId, UUID networkUuid, String variantId) {
+        return getIdentifiables(List.of(filterId), networkUuid, variantId);
     }
 
     public Optional<ResourceFilterDTO> getResourceFilter(@NonNull UUID networkUuid, @NonNull String variantId, @NonNull GlobalFilter globalFilter) {
