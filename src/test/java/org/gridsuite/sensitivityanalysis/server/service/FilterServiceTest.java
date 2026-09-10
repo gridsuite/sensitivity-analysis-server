@@ -196,24 +196,24 @@ class FilterServiceTest {
 
     @Test
     void test() throws Exception {
-        List<IdentifiableAttributes> list = filterService.getIdentifiablesFromFilters(List.of(LIST_UUID), UUID.fromString(NETWORK_UUID), null);
+        List<IdentifiableAttributes> list = filterService.getIdentifiables(List.of(LIST_UUID), UUID.fromString(NETWORK_UUID), null);
         assertEquals(objectMapper.writeValueAsString(List.of(IDENTIFIABLE)), objectMapper.writeValueAsString(list));
-        list = filterService.getIdentifiablesFromFilters(List.of(LIST_UUID), UUID.fromString(NETWORK_UUID), VARIANT_ID);
+        list = filterService.getIdentifiables(List.of(LIST_UUID), UUID.fromString(NETWORK_UUID), VARIANT_ID);
         assertEquals(objectMapper.writeValueAsString(List.of(IDENTIFIABLE_VARIANT)), objectMapper.writeValueAsString(list));
     }
 
     @Test
     void testVeryLargeList() throws Exception {
         // DataBufferLimitException should not be thrown with this message : "Exceeded limit on max bytes to buffer : DATA_BUFFER_LIMIT"
-        List<IdentifiableAttributes> list = filterService.getIdentifiablesFromFilters(List.of(VERY_LARGE_LIST_UUID), UUID.fromString(NETWORK_UUID), null);
+        List<IdentifiableAttributes> list = filterService.getIdentifiables(List.of(VERY_LARGE_LIST_UUID), UUID.fromString(NETWORK_UUID), null);
         assertEquals(objectMapper.writeValueAsString(createVeryLargeList()), objectMapper.writeValueAsString(list));
-        list = filterService.getIdentifiablesFromFilters(List.of(VERY_LARGE_LIST_UUID), UUID.fromString(NETWORK_UUID), VARIANT_ID);
+        list = filterService.getIdentifiables(List.of(VERY_LARGE_LIST_UUID), UUID.fromString(NETWORK_UUID), VARIANT_ID);
         assertEquals(objectMapper.writeValueAsString(createVeryLargeList()), objectMapper.writeValueAsString(list));
     }
 
     @Test
     void testGetMultipleLists() throws Exception {
-        List<IdentifiableAttributes> list = filterService.getIdentifiablesFromFilters(List.of(VERY_LARGE_LIST_UUID, LIST_UUID), UUID.fromString(NETWORK_UUID), null);
+        List<IdentifiableAttributes> list = filterService.getIdentifiables(List.of(VERY_LARGE_LIST_UUID, LIST_UUID), UUID.fromString(NETWORK_UUID), null);
         List<IdentifiableAttributes> expectedList = new ArrayList<>(createVeryLargeList());
         expectedList.add(IDENTIFIABLE);
         assertEquals(objectMapper.writeValueAsString(expectedList), objectMapper.writeValueAsString(list));
@@ -314,7 +314,7 @@ class FilterServiceTest {
 
     @Test
     void testGetIdentifiablesFromFilter() {
-        List<IdentifiableAttributes> result = filterService.getIdentifiablesFromFilter(LIST_UUID, UUID.fromString(NETWORK_UUID), null);
+        List<IdentifiableAttributes> result = filterService.getIdentifiables(LIST_UUID, UUID.fromString(NETWORK_UUID), null);
         assertEquals(1, result.size());
         assertEquals(IDENTIFIABLE.getId(), result.getFirst().getId());
     }

@@ -161,9 +161,10 @@ class SensitivityAnalysisControllerTest {
 
         given(actionsService.getContingencyList(eq(List.of(CONTINGENCY1_UUID, CONTINGENCY2_UUID)), any(), any()))
                 .willReturn(new ContingencyListExportResult(List.of(CONTINGENCY1, CONTINGENCY2), List.of()));
-        given(filterService.getIdentifiablesFromFilters(eq(List.of(GEN1_UUID, GEN2_UUID)), any(), any())).willReturn(List.of(GEN1, GEN2));
-        given(filterService.getIdentifiablesFromFilters(eq(List.of(BRANCH1_UUID, BRANCH2_UUID)), any(), any())).willReturn(List.of(BRANCH1, BRANCH2));
-        given(filterService.getIdentifiablesFromFilters(eq(List.of(GEN1_UUID, GEN2_UUID)), any(), any())).willReturn(List.of(GEN1, GEN2));
+        given(filterService.getIdentifiablesByFilterId(eq(List.of(GEN1_UUID, GEN2_UUID)), any(), any()))
+                .willReturn(Map.of(GEN1_UUID, List.of(GEN1), GEN2_UUID, List.of(GEN2)));
+        given(filterService.getIdentifiablesByFilterId(eq(List.of(BRANCH1_UUID, BRANCH2_UUID)), any(), any()))
+                .willReturn(Map.of(BRANCH1_UUID, List.of(BRANCH1), BRANCH2_UUID, List.of(BRANCH2)));
 
         FactorCount mockedFactorCount = new FactorCount(10, 1000);
         given(sensitivityAnalysisFactorCountService.getFactorCount(any(), any(), any(), any(), any(), any(), any(), anyBoolean())).willReturn(mockedFactorCount);
@@ -620,11 +621,15 @@ class SensitivityAnalysisControllerTest {
     }
 
     private SensitivityAnalysisResult runInMemory() throws Exception {
+        Map<UUID, String> elementsIdNameMap = new HashMap<>();
+        elementsIdNameMap.put(GEN1_UUID, GEN1_NAME);
+        elementsIdNameMap.put(GEN2_UUID, GEN2_NAME);
         MockHttpServletRequestBuilder req = post("/" + VERSION + "/networks/{networkUuid}/run", NETWORK_UUID)
                 .param("reportType", "SensitivityAnalysis")
                 .param("parametersUuid", parametersUuid.toString())
                 .param("loadFlowParametersUuid", LOADFLOW_PARAMETERS_UUID.toString())
-            .contentType(MediaType.APPLICATION_JSON_VALUE);
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(mapper.writeValueAsString(elementsIdNameMap));
         MvcResult result = mockMvc.perform(req.contentType(MediaType.APPLICATION_JSON).header(HEADER_USER_ID, "testUserId"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
