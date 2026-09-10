@@ -59,13 +59,13 @@ public class FilterService extends AbstractFilterService {
                 });
     }
 
-    public List<FilterEquipments> getFilterEquipments(List<UUID> filterUuids, UUID networkUuid, String variantId) {
-        Objects.requireNonNull(filterUuids);
+    public List<FilterEquipments> getFilterEquipments(List<UUID> filterIds, UUID networkUuid, String variantId) {
+        Objects.requireNonNull(filterIds);
         Objects.requireNonNull(networkUuid);
 
         var uriComponentsBuilder = UriComponentsBuilder
                 .fromPath(DELIMITER + FILTER_API_VERSION + "/filters/export")
-                .queryParam(IDS, filterUuids)
+                .queryParam(IDS, filterIds)
                 .queryParam(NETWORK_UUID, networkUuid.toString());
         if (!StringUtils.isBlank(variantId)) {
             uriComponentsBuilder.queryParam(QUERY_PARAM_VARIANT_ID, variantId);
@@ -79,8 +79,8 @@ public class FilterService extends AbstractFilterService {
                 });
     }
 
-    public Map<UUID, List<IdentifiableAttributes>> getFilterEquipmentsByFilterUuid(List<UUID> filterUuids, UUID networkUuid, String variantId) {
-        List<FilterEquipments> filterEquipments = getFilterEquipments(filterUuids, networkUuid, variantId);
+    public Map<UUID, List<IdentifiableAttributes>> getIdentifiablesByFilterId(List<UUID> filterIds, UUID networkUuid, String variantId) {
+        List<FilterEquipments> filterEquipments = getFilterEquipments(filterIds, networkUuid, variantId);
 
         Map<UUID, List<IdentifiableAttributes>> filterEquipmentsByFilterUuid = new HashMap<>();
         for (FilterEquipments filterEquipment : filterEquipments) {
@@ -89,7 +89,7 @@ public class FilterService extends AbstractFilterService {
         return filterEquipmentsByFilterUuid;
     }
 
-    public List<IdentifiableAttributes> getIdentifiablesFromFilters(List<UUID> filterUuids, UUID networkUuid, String variantId) {
+    public List<IdentifiableAttributes> getIdentifiables(List<UUID> filterUuids, UUID networkUuid, String variantId) {
         List<FilterEquipments> filterEquipments = getFilterEquipments(filterUuids, networkUuid, variantId);
 
         List<IdentifiableAttributes> mergedIdentifiables = new ArrayList<>();
@@ -100,8 +100,8 @@ public class FilterService extends AbstractFilterService {
         return mergedIdentifiables;
     }
 
-    public List<IdentifiableAttributes> getIdentifiablesFromFilter(UUID filterUuid, UUID networkUuid, String variantId) {
-        return getIdentifiablesFromFilters(List.of(filterUuid), networkUuid, variantId);
+    public List<IdentifiableAttributes> getIdentifiables(UUID filterUuid, UUID networkUuid, String variantId) {
+        return getIdentifiables(List.of(filterUuid), networkUuid, variantId);
     }
 
     public Optional<ResourceFilterDTO> getResourceFilter(@NonNull UUID networkUuid, @NonNull String variantId, @NonNull GlobalFilter globalFilter) {

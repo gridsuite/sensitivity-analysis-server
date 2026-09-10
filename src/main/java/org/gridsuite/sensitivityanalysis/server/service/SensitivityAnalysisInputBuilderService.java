@@ -85,11 +85,11 @@ public class SensitivityAnalysisInputBuilderService {
         };
     }
 
-    private Map<UUID, List<IdentifiableAttributes>> goGetIdentifiables(List<UUID> filterIds, UUID networkUuid, String variantId, ReportNode reporter, Map<UUID, String> elementsIdNameMap) {
+    private Map<UUID, List<IdentifiableAttributes>> getIdentifiablesByFilterIdMap(List<UUID> filterIds, UUID networkUuid, String variantId, ReportNode reporter, Map<UUID, String> elementsIdNameMap) {
 
         try {
             //extract container id from filters
-            return filterService.getFilterEquipmentsByFilterUuid(filterIds, networkUuid, variantId);
+            return filterService.getIdentifiablesByFilterId(filterIds, networkUuid, variantId);
         } catch (Exception ex) {
             String filtersNames = getFilterNames(filterIds, elementsIdNameMap);
             LOGGER.error("Could not get identifiables from filters {}", filtersNames, ex);
@@ -103,10 +103,10 @@ public class SensitivityAnalysisInputBuilderService {
         }
     }
 
-    private Map<UUID, List<IdentifiableAttributes>> getIdentifiablesByFilterId(SensitivityAnalysisRunContext context, List<UUID> filterIds,
-                                                                                 List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter,
-                                                                                 Map<UUID, String> elementsIdNameMap) {
-        Map<UUID, List<IdentifiableAttributes>> filterEquipmentsByFilterUuid = goGetIdentifiables(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter, elementsIdNameMap);
+    private Map<UUID, List<IdentifiableAttributes>> getAndCheckIdentifiablesByFilterIdMap(SensitivityAnalysisRunContext context, List<UUID> filterIds,
+                                                                                          List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter,
+                                                                                          Map<UUID, String> elementsIdNameMap) {
+        Map<UUID, List<IdentifiableAttributes>> filterEquipmentsByFilterUuid = getIdentifiablesByFilterIdMap(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter, elementsIdNameMap);
         Map<UUID, List<IdentifiableAttributes>> filterEquipmentsByFilterId = new HashMap<>();
         for (Map.Entry<UUID, List<IdentifiableAttributes>> entry : filterEquipmentsByFilterUuid.entrySet()) {
             String filterName = elementsIdNameMap.get(entry.getKey());
@@ -132,7 +132,7 @@ public class SensitivityAnalysisInputBuilderService {
     private Stream<IdentifiableAttributes> getMonitoredIdentifiables(SensitivityAnalysisRunContext context, Network network, List<UUID> filterIds,
                                                                      List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter, Map<UUID, String> elementsIdNameMap) {
         String filtersNames = getFilterNames(filterIds, elementsIdNameMap);
-        List<IdentifiableAttributes> listIdentAttributes = goGetIdentifiables(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter, elementsIdNameMap)
+        List<IdentifiableAttributes> listIdentAttributes = getIdentifiablesByFilterIdMap(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter, elementsIdNameMap)
                 .values().stream().flatMap(Collection::stream).toList();
 
         // check that monitored equipments type is allowed
@@ -208,7 +208,7 @@ public class SensitivityAnalysisInputBuilderService {
                                                                       SensitivityAnalysisInputData.DistributionType distributionType,
                                                                       Map<UUID, String> elementsIdNameMap) {
         List<SensitivityVariableSet> result = new ArrayList<>();
-        Map<UUID, List<IdentifiableAttributes>> monitoredVariablesListByFilterId = getIdentifiablesByFilterId(context, filterIds, variablesTypesAllowed, reporter, elementsIdNameMap);
+        Map<UUID, List<IdentifiableAttributes>> monitoredVariablesListByFilterId = getAndCheckIdentifiablesByFilterIdMap(context, filterIds, variablesTypesAllowed, reporter, elementsIdNameMap);
         List<WeightedSensitivityVariable> variables = new ArrayList<>();
         List<String> validFilterNames = new ArrayList<>();
         monitoredVariablesListByFilterId.forEach((filterId, equipmentList) -> {
@@ -310,7 +310,7 @@ public class SensitivityAnalysisInputBuilderService {
                                                                                 SensitivityVariableType sensitivityVariableType,
                                                                                 Map<UUID, String> elementsIdNameMap) {
 
-        List<IdentifiableAttributes> equipments = getIdentifiablesByFilterId(context, filterIds, equipmentsTypesAllowed, reporter, elementsIdNameMap)
+        List<IdentifiableAttributes> equipments = getAndCheckIdentifiablesByFilterIdMap(context, filterIds, equipmentsTypesAllowed, reporter, elementsIdNameMap)
                 .values().stream().flatMap(Collection::stream).toList();
 
         if (equipments.isEmpty()) {

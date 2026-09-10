@@ -161,9 +161,9 @@ class SensitivityAnalysisControllerTest {
 
         given(actionsService.getContingencyList(eq(List.of(CONTINGENCY1_UUID, CONTINGENCY2_UUID)), any(), any()))
                 .willReturn(new ContingencyListExportResult(List.of(CONTINGENCY1, CONTINGENCY2), List.of()));
-        given(filterService.getFilterEquipmentsByFilterUuid(eq(List.of(GEN1_UUID, GEN2_UUID)), any(), any()))
+        given(filterService.getIdentifiablesByFilterId(eq(List.of(GEN1_UUID, GEN2_UUID)), any(), any()))
                 .willReturn(Map.of(GEN1_UUID, List.of(GEN1), GEN2_UUID, List.of(GEN2)));
-        given(filterService.getFilterEquipmentsByFilterUuid(eq(List.of(BRANCH1_UUID, BRANCH2_UUID)), any(), any()))
+        given(filterService.getIdentifiablesByFilterId(eq(List.of(BRANCH1_UUID, BRANCH2_UUID)), any(), any()))
                 .willReturn(Map.of(BRANCH1_UUID, List.of(BRANCH1), BRANCH2_UUID, List.of(BRANCH2)));
 
         FactorCount mockedFactorCount = new FactorCount(10, 1000);

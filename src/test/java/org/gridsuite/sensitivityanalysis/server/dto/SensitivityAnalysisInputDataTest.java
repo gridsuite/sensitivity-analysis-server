@@ -107,7 +107,7 @@ class SensitivityAnalysisInputDataTest {
     @Test
     void testEmptyInputTranslation() {
         SensitivityAnalysisInputBuilderService inputBuilderService;
-        given(filterService.getIdentifiablesFromFilters(any(), any(), any())).willThrow(new RuntimeException("FilterException"));
+        given(filterService.getIdentifiables(any(List.class), any(), any())).willThrow(new RuntimeException("FilterException"));
         given(actionsService.getContingencyList(any(), any(), any())).willThrow(new RuntimeException("ContingencyException"));
         inputBuilderService = new SensitivityAnalysisInputBuilderService(actionsService, filterService);
         SensitivityAnalysisInputData.SensitivityAnalysisInputDataBuilder<?, ?> inputBuilder = SensitivityAnalysisInputData.builder();
@@ -138,7 +138,7 @@ class SensitivityAnalysisInputDataTest {
 
         UUID u10Id = UUID.randomUUID();
         UUID u11Id = UUID.randomUUID();
-        given(filterService.getIdentifiablesFromFilters(any(), any(), any())).willThrow(new RuntimeException("FilterException"));
+        given(filterService.getIdentifiables(any(List.class), any(), any())).willThrow(new RuntimeException("FilterException"));
         given(actionsService.getContingencyList(anyList(), any(), any())).willReturn(new ContingencyListExportResult(null, List.of(u10Id, u11Id)));
         inputBuilderService = new SensitivityAnalysisInputBuilderService(actionsService, filterService);
         SensitivityAnalysisInputData.SensitivityAnalysisInputDataBuilder<?, ?> inputBuilder = SensitivityAnalysisInputData.builder();
@@ -203,11 +203,11 @@ class SensitivityAnalysisInputDataTest {
         UUID idFilterLine = UUID.randomUUID();
         List<UUID> filterIdsList = List.of(idFilterGenerator, idFilterBattery, idFilterLoad);
         List<UUID> monitoredBranchIdsList = List.of(idFilterLine);
-        given(filterService.getFilterEquipmentsByFilterUuid(filterIdsList, NETWORK_UUID, VARIANT_ID))
+        given(filterService.getIdentifiablesByFilterId(filterIdsList, NETWORK_UUID, VARIANT_ID))
                 .willReturn(Map.of(idFilterGenerator, List.of(new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR, 1.0)),
                         idFilterBattery, List.of(new IdentifiableAttributes("BAT", IdentifiableType.BATTERY, 1.0)),
                         idFilterLoad, List.of(new IdentifiableAttributes("LOAD", IdentifiableType.LOAD, 1.0))));
-        given(filterService.getFilterEquipmentsByFilterUuid(monitoredBranchIdsList, NETWORK_UUID, VARIANT_ID))
+        given(filterService.getIdentifiablesByFilterId(monitoredBranchIdsList, NETWORK_UUID, VARIANT_ID))
                 .willReturn(Map.of(idFilterLine, List.of(new IdentifiableAttributes("NHV1_NHV2_1", IdentifiableType.LINE, 1.0))));
         SensitivityAnalysisInputBuilderService inputBuilderService = new SensitivityAnalysisInputBuilderService(actionsService, filterService);
         List<SensitivityInjection> sensitivityInjections = new ArrayList<>();
@@ -294,7 +294,7 @@ class SensitivityAnalysisInputDataTest {
         SensitivityAnalysisRunContext context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
 
         // test battery not found
-        given(filterService.getFilterEquipmentsByFilterUuid(filterIdsList, NETWORK_UUID, VARIANT_ID))
+        given(filterService.getIdentifiablesByFilterId(filterIdsList, NETWORK_UUID, VARIANT_ID))
                 .willReturn(Map.of(idFilterGenerator, List.of(new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR, 1.0)),
                         idFilterBattery, List.of(new IdentifiableAttributes("bat", IdentifiableType.BATTERY, 1.0)),
                         idFilterLoad, List.of(new IdentifiableAttributes("LOAD", IdentifiableType.LOAD, 1.0))));
@@ -315,14 +315,14 @@ class SensitivityAnalysisInputDataTest {
                 .elementsIdNameMap(Map.of(idFilterBattery, "FilterBattery", idFilterLoad, "FilterLoad", idFilterGenerator, "FilterGenerator"))
                 .build();
         SensitivityAnalysisRunContext context2 = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
-        given(filterService.getFilterEquipmentsByFilterUuid(filterIdsList, NETWORK_UUID, VARIANT_ID))
+        given(filterService.getIdentifiablesByFilterId(filterIdsList, NETWORK_UUID, VARIANT_ID))
                 .willReturn(Map.of(idFilterGenerator, List.of(new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR, 1.0)),
                         idFilterBattery, List.of(new IdentifiableAttributes("BAT", IdentifiableType.BATTERY, null)),
                         idFilterLoad, List.of(new IdentifiableAttributes("LOAD", IdentifiableType.LOAD, 1.0))));
         assertDoesNotThrow(() -> inputBuilderService.build(context2, network, ReportNode.NO_OP));
 
         // test VENTILATION with null distribution key for load
-        given(filterService.getFilterEquipmentsByFilterUuid(filterIdsList, NETWORK_UUID, VARIANT_ID))
+        given(filterService.getIdentifiablesByFilterId(filterIdsList, NETWORK_UUID, VARIANT_ID))
                 .willReturn(Map.of(idFilterGenerator, List.of(new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR, 1.0)),
                         idFilterBattery, List.of(new IdentifiableAttributes("BAT", IdentifiableType.BATTERY, 1.0)),
                         idFilterLoad, List.of(new IdentifiableAttributes("LOAD", IdentifiableType.LOAD, null))));
