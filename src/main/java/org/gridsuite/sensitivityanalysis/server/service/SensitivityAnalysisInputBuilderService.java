@@ -14,7 +14,6 @@ import com.powsybl.contingency.ContingencyContext;
 import com.powsybl.iidm.network.*;
 import com.powsybl.sensitivity.*;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.sensitivityanalysis.server.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,12 +72,7 @@ public class SensitivityAnalysisInputBuilderService {
             case PROPORTIONAL -> !Double.isNaN(p) ? p : 0.;
             case PROPORTIONAL_MAXP -> maxP;
             case REGULAR -> 1.;
-            case VENTILATION -> {
-                if (distributionKey == null) {
-                    throw new PowsyblException("Distribution key required for VENTILATION distribution type !!");
-                }
-                yield distributionKey;
-            }
+            case VENTILATION -> distributionKey;
         };
     }
 
@@ -87,20 +81,15 @@ public class SensitivityAnalysisInputBuilderService {
             case PROPORTIONAL, PROPORTIONAL_MAXP -> // simpler to use the same enum for generator, battery and load
                 load.getP0();
             case REGULAR -> 1.;
-            case VENTILATION -> {
-                if (distributionKey == null) {
-                    throw new PowsyblException("Distribution key required for VENTILATION distribution type !!");
-                }
-                yield distributionKey;
-            }
+            case VENTILATION -> distributionKey;
         };
     }
 
-    private List<IdentifiableAttributes> goGetIdentifiables(List<UUID> filterIds, UUID networkUuid, String variantId, ReportNode reporter, Map<UUID, String> elementsIdNameMap) {
+    private Map<UUID, List<IdentifiableAttributes>> goGetIdentifiables(List<UUID> filterIds, UUID networkUuid, String variantId, ReportNode reporter, Map<UUID, String> elementsIdNameMap) {
         String filtersNames = getFilterNames(filterIds, elementsIdNameMap);
         try {
             //extract container id from filters
-            return filterService.getIdentifiablesFromFilters(filterIds, networkUuid, variantId);
+            return filterService.getFilterEquipmentsByFilterUuid(filterIds, networkUuid, variantId);
         } catch (Exception ex) {
             LOGGER.error("Could not get identifiables from filters {}", filtersNames, ex);
             reporter.newReportNode()
@@ -109,28 +98,30 @@ public class SensitivityAnalysisInputBuilderService {
                 .withUntypedValue(NAME, filtersNames)
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .add();
-            return List.of();
+            return Map.of();
         }
     }
 
-    private Stream<IdentifiableAttributes> getIdentifiables(SensitivityAnalysisRunContext context, List<UUID> filterIds,
-                                                                          List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter,
-                                                                          Map<UUID, String> elementsIdNameMap) {
-        String filtersNames = getFilterNames(filterIds, elementsIdNameMap);
-        List<IdentifiableAttributes> listIdentifiableAttributes = goGetIdentifiables(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter, elementsIdNameMap);
-
-        // check that monitored equipments type is allowed
-        if (!listIdentifiableAttributes.stream().allMatch(i -> equipmentsTypesAllowed.contains(i.getType()))) {
-            reporter.newReportNode()
-                .withMessageTemplate("sensitivity.analysis.server.badEquipmentType")
-                .withUntypedValue(NAME, filtersNames)
-                .withUntypedValue(EXPECTED_TYPE, equipmentsTypesAllowed.toString())
-                .withSeverity(TypedValue.WARN_SEVERITY)
-                .add();
-            return Stream.empty();
+    private Map<String, List<IdentifiableAttributes>> getIdentifiablesByFilterName(SensitivityAnalysisRunContext context, List<UUID> filterIds,
+                                                                        List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter,
+                                                                        Map<UUID, String> elementsIdNameMap) {
+        Map<UUID, List<IdentifiableAttributes>> filterEquipmentsByFilterUuid = goGetIdentifiables(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter, elementsIdNameMap);
+        Map<String, List<IdentifiableAttributes>> filterEquipmentsByFilterName = new HashMap<>();
+        for (Map.Entry<UUID, List<IdentifiableAttributes>> entry : filterEquipmentsByFilterUuid.entrySet()) {
+            String filterName = elementsIdNameMap.get(entry.getKey());
+            // check that monitored equipments type is allowed
+            if (!entry.getValue().stream().allMatch(i -> equipmentsTypesAllowed.contains(i.getType()))) {
+                reporter.newReportNode()
+                        .withMessageTemplate("sensitivity.analysis.server.badEquipmentType")
+                        .withUntypedValue(NAME, filterName)
+                        .withUntypedValue(EXPECTED_TYPE, equipmentsTypesAllowed.toString())
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .add();
+            } else {
+                filterEquipmentsByFilterName.put(elementsIdNameMap.get(entry.getKey()), entry.getValue());
+            }
         }
-
-        return listIdentifiableAttributes.stream();
+        return filterEquipmentsByFilterName;
     }
 
     private String getFilterNames(List<UUID> filterIds, Map<UUID, String> elementsIdNameMap) {
@@ -140,7 +131,8 @@ public class SensitivityAnalysisInputBuilderService {
     private Stream<IdentifiableAttributes> getMonitoredIdentifiables(SensitivityAnalysisRunContext context, Network network, List<UUID> filterIds,
                                                                      List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter, Map<UUID, String> elementsIdNameMap) {
         String filtersNames = getFilterNames(filterIds, elementsIdNameMap);
-        List<IdentifiableAttributes> listIdentAttributes = goGetIdentifiables(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter, elementsIdNameMap);
+        List<IdentifiableAttributes> listIdentAttributes = goGetIdentifiables(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter, elementsIdNameMap)
+                .values().stream().flatMap(Collection::stream).toList();
 
         // check that monitored equipments type is allowed
         if (!listIdentAttributes.stream().allMatch(i -> equipmentsTypesAllowed.contains(i.getType()))) {
@@ -215,15 +207,12 @@ public class SensitivityAnalysisInputBuilderService {
                                                                       SensitivityAnalysisInputData.DistributionType distributionType,
                                                                       Map<UUID, String> elementsIdNameMap) {
         List<SensitivityVariableSet> result = new ArrayList<>();
-        List<IdentifiableAttributes> monitoredVariablesLists = getIdentifiables(context, filterIds, variablesTypesAllowed, reporter, elementsIdNameMap)
-                .toList();
-        String filterNames = getFilterNames(filterIds, elementsIdNameMap);
-        Stream<Pair<String, List<IdentifiableAttributes>>> variablesLists = Stream.of(Pair.of(filterNames, monitoredVariablesLists))
-                .filter(list -> !list.getRight().isEmpty());
-
-        variablesLists.forEach(variablesList -> {
-            List<WeightedSensitivityVariable> variables = new ArrayList<>();
-            if (variablesList.getRight().getFirst().getType() == IdentifiableType.LOAD && distributionType == SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP) {
+        Map<String, List<IdentifiableAttributes>> monitoredVariablesListByFilterName = getIdentifiablesByFilterName(context, filterIds, variablesTypesAllowed, reporter, elementsIdNameMap);
+        List<WeightedSensitivityVariable> variables = new ArrayList<>();
+        List<String> validFilterNames = new ArrayList<>();
+        monitoredVariablesListByFilterName.forEach((filterName, equipmentList) -> {
+            // only first element is checked because filter get only one type of equipment
+            if (equipmentList.getFirst().getType() == IdentifiableType.LOAD && distributionType == SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP) {
                 reporter.newReportNode()
                     .withMessageTemplate("sensitivity.analysis.server.distributionTypeNotAllowedWithLoadFilters")
                     .withUntypedValue("distributionType", distributionType.name())
@@ -231,51 +220,60 @@ public class SensitivityAnalysisInputBuilderService {
                     .add();
                 return;
             }
-            if (variablesList.getRight().getFirst().getDistributionKey() == null && distributionType == SensitivityAnalysisInputData.DistributionType.VENTILATION) {
+            // only first element is checked for distribution key
+            // because filter has either a distribution key everywhere or nowhere
+            if (distributionType == SensitivityAnalysisInputData.DistributionType.VENTILATION &&
+                    equipmentList.getFirst().getDistributionKey() == null) {
                 reporter.newReportNode()
-                    .withMessageTemplate("sensitivity.analysis.server.distributionTypeAllowedOnlyWithExplicitNamingFilters")
-                    .withUntypedValue("distributionType", distributionType.name())
-                    .withSeverity(TypedValue.WARN_SEVERITY)
-                    .add();
+                        .withMessageTemplate("sensitivity.analysis.server.distributionKeyNeededForVentilation")
+                        .withUntypedValue("filterName", filterName)
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .add();
                 return;
             }
-            for (IdentifiableAttributes identifiableAttributes : variablesList.getRight()) {
-                switch (identifiableAttributes.getType()) {
-                    case GENERATOR: {
-                        Generator generator = network.getGenerator(identifiableAttributes.getId());
-                        if (generator == null) {
-                            throw new PowsyblException("Generator '" + identifiableAttributes.getId() + "' not found !!");
-                        }
-                        double weight = getInjectionWeight(generator.getTerminal().getP(), generator.getMaxP(), distributionType, identifiableAttributes.getDistributionKey());
-                        variables.add(new WeightedSensitivityVariable(identifiableAttributes.getId(), weight));
-                        break;
-                    }
-                    case LOAD: {
-                        Load load = network.getLoad(identifiableAttributes.getId());
-                        if (load == null) {
-                            throw new PowsyblException("Load '" + identifiableAttributes.getId() + "' not found !!");
-                        }
-                        double weight = getLoadWeight(load, distributionType, identifiableAttributes.getDistributionKey());
-                        variables.add(new WeightedSensitivityVariable(identifiableAttributes.getId(), weight));
-                        break;
-                    }
-                    case BATTERY: {
-                        Battery battery = network.getBattery(identifiableAttributes.getId());
-                        if (battery == null) {
-                            throw new PowsyblException("Battery '" + identifiableAttributes.getId() + "' not found !!");
-                        }
-                        double weight = getInjectionWeight(battery.getTerminal().getP(), battery.getMaxP(), distributionType, identifiableAttributes.getDistributionKey());
-                        variables.add(new WeightedSensitivityVariable(identifiableAttributes.getId(), weight));
-                        break;
-                    }
-                    default:
-                        break;
-                }
-            }
-            result.add(new SensitivityVariableSet(variablesList.getLeft() + " (" + distributionType.name() + ")", variables));
+            validFilterNames.add(filterName);
+            addWeights(network, equipmentList, distributionType, variables);
         });
-
+        result.add(new SensitivityVariableSet(validFilterNames + " (" + distributionType.name() + ")", variables));
         return result;
+    }
+
+    private void addWeights(Network network, List<IdentifiableAttributes> equipmentList,
+                            SensitivityAnalysisInputData.DistributionType distributionType,
+                            List<WeightedSensitivityVariable> variables) {
+        for (IdentifiableAttributes identifiableAttributes : equipmentList) {
+            switch (identifiableAttributes.getType()) {
+                case GENERATOR: {
+                    Generator generator = network.getGenerator(identifiableAttributes.getId());
+                    if (generator == null) {
+                        throw new PowsyblException("Generator '" + identifiableAttributes.getId() + "' not found !!");
+                    }
+                    double weight = getInjectionWeight(generator.getTerminal().getP(), generator.getMaxP(), distributionType, identifiableAttributes.getDistributionKey());
+                    variables.add(new WeightedSensitivityVariable(identifiableAttributes.getId(), weight));
+                    break;
+                }
+                case LOAD: {
+                    Load load = network.getLoad(identifiableAttributes.getId());
+                    if (load == null) {
+                        throw new PowsyblException("Load '" + identifiableAttributes.getId() + "' not found !!");
+                    }
+                    double weight = getLoadWeight(load, distributionType, identifiableAttributes.getDistributionKey());
+                    variables.add(new WeightedSensitivityVariable(identifiableAttributes.getId(), weight));
+                    break;
+                }
+                case BATTERY: {
+                    Battery battery = network.getBattery(identifiableAttributes.getId());
+                    if (battery == null) {
+                        throw new PowsyblException("Battery '" + identifiableAttributes.getId() + "' not found !!");
+                    }
+                    double weight = getInjectionWeight(battery.getTerminal().getP(), battery.getMaxP(), distributionType, identifiableAttributes.getDistributionKey());
+                    variables.add(new WeightedSensitivityVariable(identifiableAttributes.getId(), weight));
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
     }
 
     private List<List<SensitivityFactor>> buildSensitivityFactorsFromVariablesSets(SensitivityAnalysisRunContext context,
@@ -309,7 +307,8 @@ public class SensitivityAnalysisInputBuilderService {
                                                                                 SensitivityVariableType sensitivityVariableType,
                                                                                 Map<UUID, String> elementsIdNameMap) {
 
-        List<IdentifiableAttributes> equipments = getIdentifiables(context, filterIds, equipmentsTypesAllowed, reporter, elementsIdNameMap).toList();
+        List<IdentifiableAttributes> equipments = getIdentifiablesByFilterName(context, filterIds, equipmentsTypesAllowed, reporter, elementsIdNameMap)
+                .values().stream().flatMap(Collection::stream).toList();
 
         if (equipments.isEmpty()) {
             return List.of();

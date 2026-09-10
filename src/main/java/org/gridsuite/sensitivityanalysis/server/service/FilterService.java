@@ -79,6 +79,16 @@ public class FilterService extends AbstractFilterService {
                 });
     }
 
+    public Map<UUID, List<IdentifiableAttributes>> getFilterEquipmentsByFilterUuid(List<UUID> filterUuids, UUID networkUuid, String variantId) {
+        List<FilterEquipments> filterEquipments = getFilterEquipments(filterUuids, networkUuid, variantId);
+
+        Map<UUID, List<IdentifiableAttributes>> filterEquipmentsByFilterUuid = new HashMap<>();
+        for (FilterEquipments filterEquipment : filterEquipments) {
+            filterEquipmentsByFilterUuid.put(filterEquipment.getFilterId(), filterEquipment.getIdentifiableAttributes());
+        }
+        return filterEquipmentsByFilterUuid;
+    }
+
     public List<IdentifiableAttributes> getIdentifiablesFromFilters(List<UUID> filterUuids, UUID networkUuid, String variantId) {
         List<FilterEquipments> filterEquipments = getFilterEquipments(filterUuids, networkUuid, variantId);
 
