@@ -12,12 +12,9 @@ import org.gridsuite.sensitivityanalysis.server.dto.CountWithMissingUuids;
 import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
@@ -38,11 +35,11 @@ public class ActionsService {
     private static final String QUERY_PARAM_VARIANT_ID = "variantId";
     private static final String QUERY_PARAM_CONTINGENCY_LIST_IDS = "contingencyListIds";
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
-    public ActionsService(@Value("${gridsuite.services.actions-server.base-uri:http://actions-server/}") String actionsServerBaseUri, RestTemplate restTemplate) {
+    public ActionsService(@Value("${gridsuite.services.actions-server.base-uri:http://actions-server/}") String actionsServerBaseUri, RestClient restClient) {
         this.actionsServerBaseUri = actionsServerBaseUri;
-        this.restTemplate = restTemplate;
+        this.restClient = restClient;
     }
 
     public void setActionsServerBaseUri(String actionsServerBaseUri) {
@@ -58,11 +55,12 @@ public class ActionsService {
         }
         var path = uriComponentsBuilder.toUriString();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<SensitivityFactorsIdsByGroup> httpEntity = new HttpEntity<>(contingencyListIdsByGroup, headers);
-
-        return restTemplate.exchange(actionsServerBaseUri + path, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<Map<String, CountWithMissingUuids>>() { }).getBody();
+        return restClient.post()
+                .uri(actionsServerBaseUri + path)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(contingencyListIdsByGroup)
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() { });
     }
 
     public ContingencyListExportResult getContingencyList(List<UUID> contingencyListIds, UUID networkUuid, String variantId) {
@@ -81,8 +79,10 @@ public class ActionsService {
         uriComponentsBuilder.queryParam(QUERY_PARAM_CONTINGENCY_LIST_IDS, contingencyListIds);
         var path = uriComponentsBuilder.build().toUriString();
 
-        return restTemplate.exchange(actionsServerBaseUri + path, HttpMethod.GET, null,
-                new ParameterizedTypeReference<ContingencyListExportResult>() {
-                }).getBody();
+        return restClient.get()
+                .uri(actionsServerBaseUri + path)
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() {
+                });
     }
 }
