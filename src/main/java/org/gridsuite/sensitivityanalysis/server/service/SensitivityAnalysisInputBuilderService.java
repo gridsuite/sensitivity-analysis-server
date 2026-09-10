@@ -102,11 +102,11 @@ public class SensitivityAnalysisInputBuilderService {
         }
     }
 
-    private Map<String, List<IdentifiableAttributes>> getIdentifiablesByFilterName(SensitivityAnalysisRunContext context, List<UUID> filterIds,
-                                                                        List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter,
-                                                                        Map<UUID, String> elementsIdNameMap) {
+    private Map<UUID, List<IdentifiableAttributes>> getIdentifiablesByFilterId(SensitivityAnalysisRunContext context, List<UUID> filterIds,
+                                                                                 List<IdentifiableType> equipmentsTypesAllowed, ReportNode reporter,
+                                                                                 Map<UUID, String> elementsIdNameMap) {
         Map<UUID, List<IdentifiableAttributes>> filterEquipmentsByFilterUuid = goGetIdentifiables(filterIds, context.getNetworkUuid(), context.getVariantId(), reporter, elementsIdNameMap);
-        Map<String, List<IdentifiableAttributes>> filterEquipmentsByFilterName = new HashMap<>();
+        Map<UUID, List<IdentifiableAttributes>> filterEquipmentsByFilterId = new HashMap<>();
         for (Map.Entry<UUID, List<IdentifiableAttributes>> entry : filterEquipmentsByFilterUuid.entrySet()) {
             String filterName = elementsIdNameMap.get(entry.getKey());
             // check that monitored equipments type is allowed
@@ -118,10 +118,10 @@ public class SensitivityAnalysisInputBuilderService {
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .add();
             } else {
-                filterEquipmentsByFilterName.put(elementsIdNameMap.get(entry.getKey()), entry.getValue());
+                filterEquipmentsByFilterId.put(entry.getKey(), entry.getValue());
             }
         }
-        return filterEquipmentsByFilterName;
+        return filterEquipmentsByFilterId;
     }
 
     private String getFilterNames(List<UUID> filterIds, Map<UUID, String> elementsIdNameMap) {
@@ -207,10 +207,10 @@ public class SensitivityAnalysisInputBuilderService {
                                                                       SensitivityAnalysisInputData.DistributionType distributionType,
                                                                       Map<UUID, String> elementsIdNameMap) {
         List<SensitivityVariableSet> result = new ArrayList<>();
-        Map<String, List<IdentifiableAttributes>> monitoredVariablesListByFilterName = getIdentifiablesByFilterName(context, filterIds, variablesTypesAllowed, reporter, elementsIdNameMap);
+        Map<UUID, List<IdentifiableAttributes>> monitoredVariablesListByFilterId = getIdentifiablesByFilterId(context, filterIds, variablesTypesAllowed, reporter, elementsIdNameMap);
         List<WeightedSensitivityVariable> variables = new ArrayList<>();
         List<String> validFilterNames = new ArrayList<>();
-        monitoredVariablesListByFilterName.forEach((filterName, equipmentList) -> {
+        monitoredVariablesListByFilterId.forEach((filterId, equipmentList) -> {
             // only first element is checked because filter get only one type of equipment
             if (equipmentList.getFirst().getType() == IdentifiableType.LOAD && distributionType == SensitivityAnalysisInputData.DistributionType.PROPORTIONAL_MAXP) {
                 reporter.newReportNode()
@@ -222,6 +222,7 @@ public class SensitivityAnalysisInputBuilderService {
             }
             // only first element is checked for distribution key
             // because filter has either a distribution key everywhere or nowhere
+            String filterName = elementsIdNameMap.get(filterId);
             if (distributionType == SensitivityAnalysisInputData.DistributionType.VENTILATION &&
                     equipmentList.getFirst().getDistributionKey() == null) {
                 reporter.newReportNode()
@@ -307,7 +308,7 @@ public class SensitivityAnalysisInputBuilderService {
                                                                                 SensitivityVariableType sensitivityVariableType,
                                                                                 Map<UUID, String> elementsIdNameMap) {
 
-        List<IdentifiableAttributes> equipments = getIdentifiablesByFilterName(context, filterIds, equipmentsTypesAllowed, reporter, elementsIdNameMap)
+        List<IdentifiableAttributes> equipments = getIdentifiablesByFilterId(context, filterIds, equipmentsTypesAllowed, reporter, elementsIdNameMap)
                 .values().stream().flatMap(Collection::stream).toList();
 
         if (equipments.isEmpty()) {

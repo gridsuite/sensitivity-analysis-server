@@ -227,12 +227,14 @@ class SensitivityAnalysisInputDataTest {
         inputBuilderService.build(context, network, ReportNode.NO_OP);
         List<List<SensitivityFactor>> factors = context.getSensitivityAnalysisInputs().getFactors();
         assertEquals(4, factors.size());
-        String injectionsFilterIds = "[FilterLoad, FilterGenerator, FilterBattery] (" + SensitivityAnalysisInputData.DistributionType.PROPORTIONAL.name() + ")";
         SensitivityFactor sensitivityFactor = factors.getFirst().getFirst();
         assertNotNull(sensitivityFactor);
         assertEquals("NHV1_NHV2_1", sensitivityFactor.getFunctionId());
         assertEquals(BRANCH_ACTIVE_POWER_1, sensitivityFactor.getFunctionType());
-        assertEquals(injectionsFilterIds, sensitivityFactor.getVariableId());
+        assertTrue(sensitivityFactor.getVariableId().contains("FilterGenerator"));
+        assertTrue(sensitivityFactor.getVariableId().contains("FilterLoad"));
+        assertTrue(sensitivityFactor.getVariableId().contains("FilterBattery"));
+        assertTrue(sensitivityFactor.getVariableId().contains(SensitivityAnalysisInputData.DistributionType.PROPORTIONAL.name()));
         assertEquals(INJECTION_ACTIVE_POWER, sensitivityFactor.getVariableType());
 
         // test PROPORTIONAL_MAXP
