@@ -8,6 +8,7 @@ package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
@@ -54,12 +55,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.testReportNode;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
@@ -81,6 +79,8 @@ class FilterServiceTest {
     private static final String VARIANT_ID = "variant_id";
 
     private static final UUID LIST_UUID = UUID.randomUUID();
+    private static final UUID FILTER_ID1 = UUID.randomUUID();
+    private static final UUID FILTER_ID2 = UUID.randomUUID();
 
     private static final SensitivityFactorsIdsByGroup IDENTIFIABLES_UUID = SensitivityFactorsIdsByGroup.builder()
             .ids(Map.of("0", List.of(LIST_UUID),
@@ -134,6 +134,7 @@ class FilterServiceTest {
         String jsonLargeFilterEquipment = objectMapper.writeValueAsString(createFilterEquipments());
         String jsonVariantExpected = objectMapper.writeValueAsString(createFromIdentifiableList(LIST_UUID, List.of(IDENTIFIABLE_VARIANT)));
         String jsonIdentifiablesExpected = objectMapper.writeValueAsString(countResultMap());
+        String jsonFilterEquipmentExpectedWithNotFoundElement = objectMapper.writeValueAsString(createFilterEquipmentsWithNotFoundElement());
         String jsonFiltersExpected = objectMapper.writeValueAsString(TEST_FILTERS);
         final Dispatcher dispatcher = new Dispatcher() {
             @NotNull
@@ -154,6 +155,8 @@ class FilterServiceTest {
                     return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE), jsonIdentifiablesExpected);
                 } else if (requestPath.matches("/v1/filters/metadata\\?ids=.*")) {
                     return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE), jsonFiltersExpected);
+                } else if (requestPath.matches(String.format("/v1/filters/export\\?ids&networkUuid=%s", NETWORK_UUID))) {
+                    return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE), jsonFilterEquipmentExpectedWithNotFoundElement);
                 } else {
                     return new MockResponse.Builder().code(HttpStatus.NOT_FOUND.value()).body("Path not supported: " + request.getPath()).build();
                 }
@@ -171,6 +174,13 @@ class FilterServiceTest {
         return Map.of("0", new CountWithMissingUuids(6L, Collections.emptyList()),
                       "1", new CountWithMissingUuids(6L, Collections.emptyList()),
                       "2", new CountWithMissingUuids(6L, Collections.emptyList()));
+    }
+
+    private static List<FilterEquipments> createFilterEquipmentsWithNotFoundElement() {
+        return List.of(
+                new FilterEquipments(FILTER_ID1, List.of(), List.of("notFoundEquipment1")),
+                new FilterEquipments(FILTER_ID2, List.of(new IdentifiableAttributes("Generator", IdentifiableType.GENERATOR, null)), List.of("notFoundEquipment2"))
+                );
     }
 
     private static List<IdentifiableAttributes> createVeryLargeList() {
@@ -317,5 +327,17 @@ class FilterServiceTest {
         List<IdentifiableAttributes> result = filterService.getIdentifiables(LIST_UUID, UUID.fromString(NETWORK_UUID), null);
         assertEquals(1, result.size());
         assertEquals(IDENTIFIABLE.getId(), result.getFirst().getId());
+    }
+
+    @Test
+    void testMissingEquipments() throws IOException {
+        ReportNode reporter = ReportNode.newRootReportNode()
+                .withResourceBundles("i18n.reports", "org.gridsuite.sensitivityanalysis.server.reports")
+                .withMessageTemplate("test")
+                .build();
+        Map<UUID, List<IdentifiableAttributes>> result = filterService.getIdentifiablesByFilterId(
+                List.of(), UUID.fromString(NETWORK_UUID), null, reporter,
+                Map.of(FILTER_ID1, "filter1", FILTER_ID2, "filter2"));
+        testReportNode(reporter, "/report/missingEquipments.txt");
     }
 }
