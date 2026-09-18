@@ -90,20 +90,21 @@ public class FilterService extends AbstractFilterService {
             }
             if (!filterEquipment.getNotFoundEquipments().isEmpty()) {
                 String filterName = elementsIdNameMap.get(filterEquipment.getFilterId());
+                ReportNode parentReport;
                 if (filterEquipment.getIdentifiableAttributes().isEmpty()) {
-                    reporter.newReportNode()
+                    parentReport = reporter.newReportNode()
                             .withMessageTemplate("sensitivity.analysis.server.noneEquipmentsFoundInFilter")
                             .withUntypedValue("name", filterName)
                             .withSeverity(TypedValue.WARN_SEVERITY)
                             .add();
                 } else {
-                    reporter.newReportNode()
+                    parentReport = reporter.newReportNode()
                             .withMessageTemplate("sensitivity.analysis.server.someEquipmentsFoundInFilter")
                             .withUntypedValue("name", filterName)
                             .withSeverity(TypedValue.INFO_SEVERITY)
                             .add();
                 }
-                reporter.newReportNode()
+                parentReport.newReportNode()
                         .withMessageTemplate("sensitivity.analysis.server.equipmentsNotFoundInFilter")
                         .withUntypedValue("equipmentIds", filterEquipment.getNotFoundEquipments().toString())
                         .withSeverity(TypedValue.DETAIL_SEVERITY)
