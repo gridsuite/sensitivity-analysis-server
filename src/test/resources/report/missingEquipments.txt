@@ -1,0 +1,5 @@
++ test
+   + No equipment in filter filter1 were found in network : filter is ignored
+      In filter, equipments not found : [notFoundEquipment1]
+   + Some of the equipment in filter filter2 were not found in network
+      In filter, equipments not found : [notFoundEquipment2]

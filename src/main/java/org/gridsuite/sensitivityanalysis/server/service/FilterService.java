@@ -6,6 +6,8 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -79,12 +81,35 @@ public class FilterService extends AbstractFilterService {
                 });
     }
 
-    public Map<UUID, List<IdentifiableAttributes>> getIdentifiablesByFilterId(List<UUID> filterIds, UUID networkUuid, String variantId) {
+    public Map<UUID, List<IdentifiableAttributes>> getIdentifiablesByFilterId(List<UUID> filterIds, UUID networkUuid, String variantId, ReportNode reporter, Map<UUID, String> elementsIdNameMap) {
         List<FilterEquipments> filterEquipments = getFilterEquipments(filterIds, networkUuid, variantId);
-
         Map<UUID, List<IdentifiableAttributes>> filterEquipmentsByFilterId = new HashMap<>();
         for (FilterEquipments filterEquipment : filterEquipments) {
-            filterEquipmentsByFilterId.put(filterEquipment.getFilterId(), filterEquipment.getIdentifiableAttributes());
+            if (!filterEquipment.getIdentifiableAttributes().isEmpty()) {
+                filterEquipmentsByFilterId.put(filterEquipment.getFilterId(), filterEquipment.getIdentifiableAttributes());
+            }
+            if (!filterEquipment.getNotFoundEquipments().isEmpty()) {
+                String filterName = elementsIdNameMap.get(filterEquipment.getFilterId());
+                ReportNode parentReport;
+                if (filterEquipment.getIdentifiableAttributes().isEmpty()) {
+                    parentReport = reporter.newReportNode()
+                            .withMessageTemplate("sensitivity.analysis.server.noneEquipmentsFoundInFilter")
+                            .withUntypedValue("name", filterName)
+                            .withSeverity(TypedValue.WARN_SEVERITY)
+                            .add();
+                } else {
+                    parentReport = reporter.newReportNode()
+                            .withMessageTemplate("sensitivity.analysis.server.someEquipmentsFoundInFilter")
+                            .withUntypedValue("name", filterName)
+                            .withSeverity(TypedValue.INFO_SEVERITY)
+                            .add();
+                }
+                parentReport.newReportNode()
+                        .withMessageTemplate("sensitivity.analysis.server.equipmentsNotFoundInFilter")
+                        .withUntypedValue("equipmentIds", filterEquipment.getNotFoundEquipments().toString())
+                        .withSeverity(TypedValue.DETAIL_SEVERITY)
+                        .add();
+            }
         }
         return filterEquipmentsByFilterId;
     }

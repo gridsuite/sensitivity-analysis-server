@@ -6,11 +6,17 @@
  */
 package org.gridsuite.sensitivityanalysis.server.util;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import com.google.common.io.ByteStreams;
+import com.powsybl.commons.report.ReportNode;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.zip.ZipInputStream;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Hugo Marcellin <hugo.marcelin at rte-france.com>
@@ -42,5 +48,27 @@ public final class TestUtils {
             return outputStream.toByteArray();
         }
         return new byte[0];
+    }
+
+    public static void testReportNode(ReportNode reportNode, String reportsFile) throws IOException {
+        Optional<ReportNode> report = reportNode.getChildren().stream().findFirst();
+        assertTrue(report.isPresent());
+
+        StringWriter sw = new StringWriter();
+        reportNode.print(sw);
+
+        String expected;
+        try (InputStream refStream = TestUtils.class.getResourceAsStream(reportsFile)) {
+            assertNotNull(refStream);
+            expected = new String(ByteStreams.toByteArray(refStream), StandardCharsets.UTF_8);
+        }
+        String expectedStr = normalizeLineSeparator(expected);
+        String actualStr = normalizeLineSeparator(sw.toString());
+        assertEquals(expectedStr, actualStr);
+    }
+
+    private static String normalizeLineSeparator(String str) {
+        return Objects.requireNonNull(str).replace("\r\n", "\n")
+                .replace("\r", "\n");
     }
 }

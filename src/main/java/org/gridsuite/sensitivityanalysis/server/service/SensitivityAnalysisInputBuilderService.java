@@ -89,7 +89,7 @@ public class SensitivityAnalysisInputBuilderService {
 
         try {
             //extract container id from filters
-            return filterService.getIdentifiablesByFilterId(filterIds, networkUuid, variantId);
+            return filterService.getIdentifiablesByFilterId(filterIds, networkUuid, variantId, reporter, elementsIdNameMap);
         } catch (Exception ex) {
             String filtersNames = getFilterNames(filterIds, elementsIdNameMap);
             LOGGER.error("Could not get identifiables from filters {}", filtersNames, ex);
