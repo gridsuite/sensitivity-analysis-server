@@ -41,6 +41,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 /**
@@ -203,11 +204,11 @@ class SensitivityAnalysisInputDataTest {
         UUID idFilterLine = UUID.randomUUID();
         List<UUID> filterIdsList = List.of(idFilterGenerator, idFilterBattery, idFilterLoad);
         List<UUID> monitoredBranchIdsList = List.of(idFilterLine);
-        given(filterService.getIdentifiablesByFilterId(filterIdsList, NETWORK_UUID, VARIANT_ID))
+        given(filterService.getIdentifiablesByFilterId(eq(filterIdsList), eq(NETWORK_UUID), eq(VARIANT_ID), any(), any()))
                 .willReturn(Map.of(idFilterGenerator, List.of(new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR, 1.0)),
                         idFilterBattery, List.of(new IdentifiableAttributes("BAT", IdentifiableType.BATTERY, 1.0)),
                         idFilterLoad, List.of(new IdentifiableAttributes("LOAD", IdentifiableType.LOAD, 1.0))));
-        given(filterService.getIdentifiablesByFilterId(monitoredBranchIdsList, NETWORK_UUID, VARIANT_ID))
+        given(filterService.getIdentifiablesByFilterId(eq(monitoredBranchIdsList), eq(NETWORK_UUID), eq(VARIANT_ID), any(), any()))
                 .willReturn(Map.of(idFilterLine, List.of(new IdentifiableAttributes("NHV1_NHV2_1", IdentifiableType.LINE, 1.0))));
         SensitivityAnalysisInputBuilderService inputBuilderService = new SensitivityAnalysisInputBuilderService(actionsService, filterService);
         List<SensitivityInjection> sensitivityInjections = new ArrayList<>();
@@ -294,7 +295,7 @@ class SensitivityAnalysisInputDataTest {
         SensitivityAnalysisRunContext context = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
 
         // test battery not found
-        given(filterService.getIdentifiablesByFilterId(filterIdsList, NETWORK_UUID, VARIANT_ID))
+        given(filterService.getIdentifiablesByFilterId(eq(filterIdsList), eq(NETWORK_UUID), eq(VARIANT_ID), any(), any()))
                 .willReturn(Map.of(idFilterGenerator, List.of(new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR, 1.0)),
                         idFilterBattery, List.of(new IdentifiableAttributes("bat", IdentifiableType.BATTERY, 1.0)),
                         idFilterLoad, List.of(new IdentifiableAttributes("LOAD", IdentifiableType.LOAD, 1.0))));
@@ -315,14 +316,14 @@ class SensitivityAnalysisInputDataTest {
                 .elementsIdNameMap(Map.of(idFilterBattery, "FilterBattery", idFilterLoad, "FilterLoad", idFilterGenerator, "FilterGenerator"))
                 .build();
         SensitivityAnalysisRunContext context2 = new SensitivityAnalysisRunContext(NETWORK_UUID, VARIANT_ID, null, null, null, DEFAULT_PROVIDER, inputData);
-        given(filterService.getIdentifiablesByFilterId(filterIdsList, NETWORK_UUID, VARIANT_ID))
+        given(filterService.getIdentifiablesByFilterId(eq(filterIdsList), eq(NETWORK_UUID), eq(VARIANT_ID), any(), any()))
                 .willReturn(Map.of(idFilterGenerator, List.of(new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR, 1.0)),
                         idFilterBattery, List.of(new IdentifiableAttributes("BAT", IdentifiableType.BATTERY, null)),
                         idFilterLoad, List.of(new IdentifiableAttributes("LOAD", IdentifiableType.LOAD, 1.0))));
         assertDoesNotThrow(() -> inputBuilderService.build(context2, network, ReportNode.NO_OP));
 
         // test VENTILATION with null distribution key for load
-        given(filterService.getIdentifiablesByFilterId(filterIdsList, NETWORK_UUID, VARIANT_ID))
+        given(filterService.getIdentifiablesByFilterId(eq(filterIdsList), eq(NETWORK_UUID), eq(VARIANT_ID), any(), any()))
                 .willReturn(Map.of(idFilterGenerator, List.of(new IdentifiableAttributes("GEN", IdentifiableType.GENERATOR, 1.0)),
                         idFilterBattery, List.of(new IdentifiableAttributes("BAT", IdentifiableType.BATTERY, 1.0)),
                         idFilterLoad, List.of(new IdentifiableAttributes("LOAD", IdentifiableType.LOAD, null))));
