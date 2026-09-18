@@ -30,6 +30,14 @@ import java.util.UUID;
 @Service
 public class SensitivityResultSpecificationBuilder extends AbstractCommonSpecificationBuilder<SensitivityResultEntity> {
 
+    // Override added to use "between(X,X)" instead of "equal(X)" from abstract
+    // parent class because of catastrophic postgres plan in real world cases.
+    // To remove when a better solution is found.
+    @Override
+    public Specification<SensitivityResultEntity> resultUuidEquals(UUID value) {
+        return (root, cq, cb) -> cb.between(getResultIdPath(root), value, value);
+    }
+
     @Override
     public boolean isNotParentFilter(ResourceFilterDTO filter) {
         return List.of(SensitivityResultEntity.Fields.id, SensitivityResultEntity.Fields.rawSensitivityResult)
