@@ -335,7 +335,7 @@ class FilterServiceTest {
                 .withResourceBundles("i18n.reports", "org.gridsuite.sensitivityanalysis.server.reports")
                 .withMessageTemplate("test")
                 .build();
-        Map<UUID, List<IdentifiableAttributes>> result = filterService.getIdentifiablesByFilterId(
+        filterService.getIdentifiablesByFilterId(
                 List.of(), UUID.fromString(NETWORK_UUID), null, reporter,
                 Map.of(FILTER_ID1, "filter1", FILTER_ID2, "filter2"));
         testReportNode(reporter, "/report/missingEquipments.txt");
