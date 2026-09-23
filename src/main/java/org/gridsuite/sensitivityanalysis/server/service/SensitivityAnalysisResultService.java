@@ -7,6 +7,7 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.powsybl.sensitivity.SensitivityValue;
+import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;
 import org.gridsuite.computation.dto.ResourceFilterDTO;
 import org.gridsuite.computation.service.AbstractComputationResultService;
@@ -60,6 +61,8 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
 
     private final SensitivityResultSpecificationBuilder sensitivityResultSpecificationBuilder;
     private final SensitivityResultNKSpecificationBuilder sensitivityResultNkSpecificationBuilder;
+
+    private final EntityManager entityManager;
 
     @Transactional
     @Override
@@ -186,6 +189,11 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
     private SensitivityResultSpecificationBuilder getSpecBuilder(ResultsSelector selector) {
         return selector.getTabSelection() == ResultTab.N_K ?
                 sensitivityResultNkSpecificationBuilder : sensitivityResultSpecificationBuilder;
+    }
+
+    @Transactional
+    public void analyzeResultTables() {
+        entityManager.createNativeQuery("ANALYZE raw_sensitivity_result, sensitivity_result").executeUpdate();
     }
 
     private static Pageable getPageable(ResultsSelector selector) {
