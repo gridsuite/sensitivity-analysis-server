@@ -321,4 +321,9 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
         // false since the computation failed
         return false;
     }
+
+    @Override
+    protected void setRunningStatus(UUID resultUuid) {
+        resultService.insertStatus(List.of(resultUuid), SensitivityAnalysisStatus.RUNNING);
+    }
 }
