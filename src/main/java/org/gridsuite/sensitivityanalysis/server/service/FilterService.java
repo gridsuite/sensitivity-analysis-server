@@ -88,7 +88,7 @@ public class FilterService extends AbstractFilterService {
             if (!filterEquipment.getIdentifiableAttributes().isEmpty()) {
                 filterEquipmentsByFilterId.put(filterEquipment.getFilterId(), filterEquipment.getIdentifiableAttributes());
             }
-            if (!filterEquipment.getNotFoundEquipments().isEmpty()) {
+            if (filterEquipment.getNotFoundEquipments() != null && !filterEquipment.getNotFoundEquipments().isEmpty()) {
                 String filterName = elementsIdNameMap.get(filterEquipment.getFilterId());
                 ReportNode parentReport;
                 if (filterEquipment.getIdentifiableAttributes().isEmpty()) {
