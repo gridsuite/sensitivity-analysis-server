@@ -81,6 +81,7 @@ class FilterServiceTest {
     private static final UUID LIST_UUID = UUID.randomUUID();
     private static final UUID FILTER_ID1 = UUID.randomUUID();
     private static final UUID FILTER_ID2 = UUID.randomUUID();
+    private static final UUID FILTER_ID3 = UUID.randomUUID();
 
     private static final SensitivityFactorsIdsByGroup IDENTIFIABLES_UUID = SensitivityFactorsIdsByGroup.builder()
             .ids(Map.of("0", List.of(LIST_UUID),
@@ -179,7 +180,8 @@ class FilterServiceTest {
     private static List<FilterEquipments> createFilterEquipmentsWithNotFoundElement() {
         return List.of(
                 new FilterEquipments(FILTER_ID1, List.of(), List.of("notFoundEquipment1")),
-                new FilterEquipments(FILTER_ID2, List.of(new IdentifiableAttributes("Generator", IdentifiableType.GENERATOR, null)), List.of("notFoundEquipment2"))
+                new FilterEquipments(FILTER_ID2, List.of(new IdentifiableAttributes("Generator", IdentifiableType.GENERATOR, null)), List.of("notFoundEquipment2")),
+                new FilterEquipments(FILTER_ID3, List.of(new IdentifiableAttributes("Load", IdentifiableType.LOAD, 0.1)), null)
                 );
     }
 
@@ -337,7 +339,7 @@ class FilterServiceTest {
                 .build();
         filterService.getIdentifiablesByFilterId(
                 List.of(), UUID.fromString(NETWORK_UUID), null, reporter,
-                Map.of(FILTER_ID1, "filter1", FILTER_ID2, "filter2"));
+                Map.of(FILTER_ID1, "filter1", FILTER_ID2, "filter2", FILTER_ID3, "filter3"));
         testReportNode(reporter, "/report/missingEquipments.txt");
     }
 }
