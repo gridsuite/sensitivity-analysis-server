@@ -321,4 +321,14 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
         // false since the computation failed
         return false;
     }
+
+    @Override
+    protected void setRunningStatus(UUID resultUuid) {
+        resultService.insertStatus(List.of(resultUuid), SensitivityAnalysisStatus.RUNNING);
+    }
+
+    @Override
+    protected boolean canBeCancelled(UUID resultUuid) {
+        return resultService.findStatus(resultUuid) == SensitivityAnalysisStatus.RUNNING;
+    }
 }
