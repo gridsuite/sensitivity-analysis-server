@@ -30,8 +30,6 @@ import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalys
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
-import org.gridsuite.sensitivityanalysis.server.error.SensitivityAnalysisBusinessErrorCode;
-import org.gridsuite.sensitivityanalysis.server.error.SensitivityAnalysisException;
 import org.gridsuite.sensitivityanalysis.server.util.BatchAsyncPollerFactory;
 import org.gridsuite.sensitivityanalysis.server.util.ScheduledThreadPoolFactory;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
@@ -330,9 +328,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
     }
 
     @Override
-    protected void canBeCancelled(UUID resultUuid) {
-        if (resultService.findStatus(resultUuid) != SensitivityAnalysisStatus.RUNNING) {
-            throw new SensitivityAnalysisException(SensitivityAnalysisBusinessErrorCode.CANNOT_BE_CANCELED, "Sensitivity analysis cannot be cancelled because it is not running");
-        }
+    protected boolean canBeCancelled(UUID resultUuid) {
+        return resultService.findStatus(resultUuid) == SensitivityAnalysisStatus.RUNNING;
     }
 }
