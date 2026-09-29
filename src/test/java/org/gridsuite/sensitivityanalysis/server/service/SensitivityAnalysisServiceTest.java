@@ -86,7 +86,7 @@ class SensitivityAnalysisServiceTest {
                         inputData
                 ));
 
-        verify(sensitivityAnalysisResultService, times(1)).insertStatus(any(), eq(SensitivityAnalysisStatus.RUNNING));
+        verify(sensitivityAnalysisResultService, times(1)).insertStatus(any(), eq(SensitivityAnalysisStatus.PRELOADING));
         verify(notificationService, times(1)).sendRunMessage(any());
     }
 
