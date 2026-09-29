@@ -332,7 +332,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
     @Override
     protected void canBeCancelled(UUID resultUuid) {
         if (resultService.findStatus(resultUuid) != SensitivityAnalysisStatus.RUNNING) {
-            throw new SensitivityAnalysisException(SensitivityAnalysisBusinessErrorCode.CANNOT_BE_CANCELED, "Security analysis cannot be cancelled because it is not running");
+            throw new SensitivityAnalysisException(SensitivityAnalysisBusinessErrorCode.CANNOT_BE_CANCELED, "Sensitivity analysis cannot be cancelled because it is not running");
         }
     }
 }
