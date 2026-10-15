@@ -41,6 +41,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -58,13 +59,14 @@ import java.util.stream.IntStream;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.testReportNode;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @ExtendWith(MockWebServerExtension.class)
+@ExtendWith(MockitoExtension.class)
 @SpringBootTest
 class FilterServiceTest {
 
@@ -125,8 +127,8 @@ class FilterServiceTest {
     void setUp(final MockWebServer mockWebServer) throws Exception {
         filterService = new FilterService(restClientBuilder, networkStoreService, initMockWebServer(mockWebServer));
         when(networkStoreService.getNetwork(eq(NOT_FOUND_NETWORK_ID), any(PreloadingStrategy.class))).thenThrow(new PowsyblException());
-        doNothing().when(variantManager).setWorkingVariant(anyString());
-        when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), any(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
+        lenient().doNothing().when(variantManager).setWorkingVariant(anyString());
+        lenient().when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), any(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
     }
 
     private String initMockWebServer(final MockWebServer server) throws IOException {
