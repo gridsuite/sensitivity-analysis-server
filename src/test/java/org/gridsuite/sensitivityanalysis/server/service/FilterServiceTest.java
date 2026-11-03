@@ -59,7 +59,6 @@ import java.util.stream.IntStream;
 import static org.gridsuite.sensitivityanalysis.server.util.TestUtils.testReportNode;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 /**
@@ -127,8 +126,7 @@ class FilterServiceTest {
     void setUp(final MockWebServer mockWebServer) throws Exception {
         filterService = new FilterService(restClientBuilder, networkStoreService, initMockWebServer(mockWebServer));
         when(networkStoreService.getNetwork(eq(NOT_FOUND_NETWORK_ID), any(PreloadingStrategy.class))).thenThrow(new PowsyblException());
-        lenient().doNothing().when(variantManager).setWorkingVariant(anyString());
-        lenient().when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), any(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
+        when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), any(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
     }
 
     private String initMockWebServer(final MockWebServer server) throws IOException {
