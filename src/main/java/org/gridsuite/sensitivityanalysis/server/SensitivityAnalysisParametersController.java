@@ -69,6 +69,22 @@ public class SensitivityAnalysisParametersController {
         return ResponseEntity.of(parametersService.getParameters(parametersUuid));
     }
 
+    @GetMapping(value = "/{uuid}/filter-uuids", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get filter uuids referenced by the given parameters")
+    @ApiResponse(responseCode = "200", description = "The filter uuids")
+    public ResponseEntity<List<UUID>> getFilterUuids(
+        @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid) {
+        return ResponseEntity.ok(parametersService.getFilterUuids(parametersUuid));
+    }
+
+    @GetMapping(value = "/{uuid}/contingency-list-uuids", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get contingency list uuids referenced by the given parameters")
+    @ApiResponse(responseCode = "200", description = "The contingency list uuids")
+    public ResponseEntity<List<UUID>> getContingencyListUuids(
+        @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid) {
+        return ResponseEntity.ok(parametersService.getContingencyListUuids(parametersUuid));
+    }
+
     @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get all parameters")
     @ApiResponse(responseCode = "200", description = "the list of all parameters was returned")
