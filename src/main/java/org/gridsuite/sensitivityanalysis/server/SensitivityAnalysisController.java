@@ -195,9 +195,9 @@ public class SensitivityAnalysisController {
     }
 
     @DeleteMapping(value = "/results", produces = APPLICATION_JSON_VALUE)
-    @Operation(summary = "Delete sensitivity analysis results from the database")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All sensitivity analysis results have been deleted")})
-    public ResponseEntity<Void> deleteResults(@Parameter(description = "Results UUID") @RequestParam(value = "resultsUuids", required = false) List<UUID> resultsUuids) {
+    @Operation(summary = "Delete the given sensitivity analysis results from the database")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The given sensitivity analysis results have been deleted")})
+    public ResponseEntity<Void> deleteResults(@Parameter(description = "Results UUID") @RequestParam(value = "resultsUuids") List<UUID> resultsUuids) {
         service.deleteResults(resultsUuids);
         return ResponseEntity.ok().build();
     }
