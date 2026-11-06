@@ -85,8 +85,8 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
                     factorCount.resultCount(), "resultCountLimit", MAX_RESULTS_THRESHOLD, "variableCount", factorCount.variableCount(), "variableCountLimit", MAX_VARIABLES_THRESHOLD));
         }
 
-        // update status to running status
-        setStatus(List.of(resultUuid), SensitivityAnalysisStatus.RUNNING);
+        // update status to preloading status
+        setStatus(List.of(resultUuid), SensitivityAnalysisStatus.PRELOADING);
         notificationService.sendRunMessage(new SensitivityAnalysisResultContext(resultUuid, runContext).toMessage(objectMapper));
         return resultUuid;
     }

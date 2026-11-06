@@ -48,6 +48,7 @@ import org.springframework.messaging.Message;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -148,6 +149,9 @@ class SensitivityAnalysisControllerTest {
 
     @MockitoBean
     private LoadFlowService loadflowService;
+
+    @MockitoSpyBean
+    private SensitivityAnalysisResultService sensitivityAnalysisResultService;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -596,6 +600,7 @@ class SensitivityAnalysisControllerTest {
     @Test
     void stopTest() throws Exception {
         UUID resultUuid = run(parametersUuid);
+        when(sensitivityAnalysisResultService.findStatus(resultUuid)).thenReturn(SensitivityAnalysisStatus.RUNNING);
         mockMvc.perform(put("/" + VERSION + "/results/{resultUuid}/stop", resultUuid)
                 .header(HEADER_USER_ID, "testUserId")
                 .param("receiver", "me"));
