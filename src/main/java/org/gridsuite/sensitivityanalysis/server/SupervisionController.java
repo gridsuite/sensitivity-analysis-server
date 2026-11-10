@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisService;
 import org.gridsuite.sensitivityanalysis.server.service.SupervisionService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,11 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Security analysis server - Supervision")
 public class SupervisionController {
     private final SupervisionService supervisionService;
-    private final SensitivityAnalysisService sensitivityAnalysisService;
 
-    public SupervisionController(SupervisionService supervisionService, SensitivityAnalysisService sensitivityAnalysisService) {
+    public SupervisionController(SupervisionService supervisionService) {
         this.supervisionService = supervisionService;
-        this.sensitivityAnalysisService = sensitivityAnalysisService;
     }
 
     @GetMapping(value = "/results-count")
@@ -45,7 +42,7 @@ public class SupervisionController {
     @Operation(summary = "Delete all sensitivity analysis results from the database")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All sensitivity analysis results have been deleted")})
     public ResponseEntity<Void> deleteAllResults() {
-        sensitivityAnalysisService.deleteAllResults();
+        supervisionService.deleteAllResults();
         return ResponseEntity.ok().build();
     }
 }
