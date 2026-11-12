@@ -79,12 +79,13 @@ public class SensitivityAnalysisParametersService {
     @Transactional
     public void updateParameters(UUID parametersUuid, SensitivityAnalysisParametersInfos parametersInfos) {
         SensitivityAnalysisParametersEntity sensitivityAnalysisParametersEntity = sensitivityAnalysisParametersRepository.findById(parametersUuid).orElseThrow();
-        //if the parameters is null it means it's a reset to defaultValues
-        if (parametersInfos == null) {
-            sensitivityAnalysisParametersEntity.update(getDefauSensitivityAnalysisParametersInfos());
-        } else {
-            sensitivityAnalysisParametersEntity.update(parametersInfos);
-        }
+        sensitivityAnalysisParametersEntity.update(parametersInfos);
+    }
+
+    @Transactional
+    public void resetParameters(UUID parametersUuid) {
+        SensitivityAnalysisParametersEntity sensitivityAnalysisParametersEntity = sensitivityAnalysisParametersRepository.findById(parametersUuid).orElseThrow();
+        sensitivityAnalysisParametersEntity.update(getDefauSensitivityAnalysisParametersInfos());
     }
 
     public void deleteParameters(UUID parametersUuid) {
