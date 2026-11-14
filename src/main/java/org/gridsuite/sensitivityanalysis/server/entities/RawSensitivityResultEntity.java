@@ -20,6 +20,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
+@IdClass(SensitivityResultId.class)
 @Entity
 @FieldNameConstants
 @Table(
@@ -28,14 +29,15 @@ import java.util.UUID;
         @Index(name = "raw_sensitivity_result_analysis_result", columnList = "analysis_result_id"),
         @Index(name = "raw_sensitivity_result_analysis_result_factor_index", columnList = "analysis_result_id, factor_index")
     })
-public class RawSensitivityResultEntity {
+public class RawSensitivityResultEntity extends AbstractManuallyAssignedIdentifierEntity<SensitivityResultId> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    @Column(name = "analysis_result_id")
+    private UUID analysisResultId;
 
-    @Column(name = "factor_index", nullable = false)
-    private int index;
+    @Id
+    @Column(name = "factor_index")
+    private int factorIndex;
 
     @Column(name = "value_", nullable = false)
     private double value;
@@ -44,16 +46,22 @@ public class RawSensitivityResultEntity {
     private double functionReference;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "analysis_result_id")
+    @JoinColumn(name = "analysis_result_id", insertable = false, updatable = false)
     private AnalysisResultEntity analysisResult;
 
-    public RawSensitivityResultEntity(int index,
+    public RawSensitivityResultEntity(int factorIndex,
                                       double value,
                                       double functionReference,
                                       AnalysisResultEntity analysisResult) {
-        this.index = index;
+        this.analysisResultId = analysisResult.getResultUuid();
+        this.factorIndex = factorIndex;
         this.value = value;
         this.functionReference = functionReference;
         this.analysisResult = analysisResult;
+    }
+
+    @Override
+    public SensitivityResultId getId() {
+        return new SensitivityResultId(analysisResultId, factorIndex);
     }
 }

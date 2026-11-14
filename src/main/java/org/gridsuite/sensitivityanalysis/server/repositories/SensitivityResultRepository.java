@@ -8,6 +8,7 @@ package org.gridsuite.sensitivityanalysis.server.repositories;
 
 import com.powsybl.sensitivity.SensitivityFunctionType;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
+import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -19,7 +20,7 @@ import java.util.UUID;
 /**
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
  */
-public interface SensitivityResultRepository extends JpaRepository<SensitivityResultEntity, UUID>, JpaSpecificationExecutor<SensitivityResultEntity> {
+public interface SensitivityResultRepository extends JpaRepository<SensitivityResultEntity, SensitivityResultId>, JpaSpecificationExecutor<SensitivityResultEntity> {
 
     @Modifying
     @Query(value = "DELETE FROM SensitivityResultEntity s WHERE s.analysisResult.resultUuid = :analysisResultUuid AND s.preContingencySensitivityResult is not null")

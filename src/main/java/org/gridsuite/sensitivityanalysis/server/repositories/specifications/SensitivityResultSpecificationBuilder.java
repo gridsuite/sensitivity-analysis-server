@@ -40,13 +40,13 @@ public class SensitivityResultSpecificationBuilder extends AbstractCommonSpecifi
 
     @Override
     public boolean isNotParentFilter(ResourceFilterDTO filter) {
-        return List.of(SensitivityResultEntity.Fields.id, SensitivityResultEntity.Fields.rawSensitivityResult)
+        return List.of(SensitivityResultEntity.Fields.factorIndex, SensitivityResultEntity.Fields.rawSensitivityResult)
                 .contains(filter.column());
     }
 
     @Override
     public String getIdFieldName() {
-        return SensitivityResultEntity.Fields.id;
+        throw new UnsupportedOperationException("SensitivityResultSpecificationBuilder does not support getIdFieldName");
     }
 
     @Override
