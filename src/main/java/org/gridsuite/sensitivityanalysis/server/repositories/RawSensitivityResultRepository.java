@@ -7,6 +7,7 @@
 package org.gridsuite.sensitivityanalysis.server.repositories;
 
 import org.gridsuite.sensitivityanalysis.server.entities.RawSensitivityResultEntity;
+import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,7 +17,7 @@ import java.util.UUID;
 /**
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
  */
-public interface RawSensitivityResultRepository extends JpaRepository<RawSensitivityResultEntity, UUID> {
+public interface RawSensitivityResultRepository extends JpaRepository<RawSensitivityResultEntity, SensitivityResultId> {
 
     @Modifying
     @Query(value = "DELETE FROM RawSensitivityResultEntity f WHERE f.analysisResult.resultUuid = :analysisResultUuid")

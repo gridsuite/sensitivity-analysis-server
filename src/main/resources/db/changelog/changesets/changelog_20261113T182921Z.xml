@@ -1,0 +1,55 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="phamquy (generated)" id="1794594577674-7">
+        <addColumn tableName="sensitivity_result">
+            <column name="pre_contingency_analysis_result_id" type="UUID"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-8">
+        <addColumn tableName="sensitivity_result">
+            <column name="pre_contingency_factor_index" type="INT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-13">
+        <dropForeignKeyConstraint baseTableName="SENSITIVITY_RESULT" constraintName="FKURQHY4QBYUDKM1ALHJJRQ4EY"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-14">
+        <dropUniqueConstraint constraintName="UK_GFIDY5C32PAGM2KVQKU1PP7AK" tableName="SENSITIVITY_RESULT"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-15">
+        <dropUniqueConstraint constraintName="UK_NDV6LS874G1MQRKRS2INL4HJ2" tableName="RAW_SENSITIVITY_RESULT"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-1">
+        <dropPrimaryKey tableName="raw_sensitivity_result"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-3">
+        <dropPrimaryKey tableName="sensitivity_result"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-5">
+        <dropIndex indexName="sensitivity_result_pre_contingency_sensitivity_result_id_idx" tableName="sensitivity_result"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-16">
+        <dropColumn columnName="ID" tableName="raw_sensitivity_result"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-17">
+        <dropColumn columnName="ID" tableName="sensitivity_result"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-18">
+        <dropColumn columnName="PRE_CONTINGENCY_SENSITIVITY_RESULT_ID" tableName="sensitivity_result"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-2">
+        <addPrimaryKey columnNames="analysis_result_id, factor_index" constraintName="raw_sensitivity_resultPK" tableName="raw_sensitivity_result"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-4">
+        <addPrimaryKey columnNames="analysis_result_id, factor_index" constraintName="sensitivity_resultPK" tableName="sensitivity_result"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-12">
+        <addForeignKeyConstraint baseColumnNames="pre_contingency_analysis_result_id,pre_contingency_factor_index" baseTableName="sensitivity_result" constraintName="FKlt0rtj9xsjvcnwp99ta3lf3r7" deferrable="false" initiallyDeferred="false" referencedColumnNames="analysis_result_id,factor_index" referencedTableName="sensitivity_result" validate="true"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-6">
+        <createIndex indexName="sensitivity_result_pre_contingency_sensitivity_result_id_idx" tableName="sensitivity_result" unique="false">
+            <column name="pre_contingency_analysis_result_id"/>
+            <column name="pre_contingency_factor_index"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
