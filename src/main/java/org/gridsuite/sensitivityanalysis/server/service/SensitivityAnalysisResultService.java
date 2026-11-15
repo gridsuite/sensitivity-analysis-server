@@ -28,6 +28,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -281,7 +282,7 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
             case SENSITIVITY, POST_SENSITIVITY -> "rawSensitivityResult.value";
             case REFERENCE, POST_REFERENCE -> "rawSensitivityResult.functionReference";
             case VARIABLE -> "variableId";
-            case CONTINGENCY -> "contingencyResult.contingencyId";
+            case CONTINGENCY -> "contingencyId";
         };
     }
 

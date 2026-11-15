@@ -21,6 +21,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
+@IdClass(ContingencyResultId.class)
 @Entity
 @FieldNameConstants
 @Table(
@@ -30,29 +31,38 @@ import java.util.UUID;
         @Index(name = "unique_contingency_analysis", columnList = "analysis_result_id, contingency_id", unique = true),
         @Index(name = "unique_contingency_index_analysis", columnList = "analysis_result_id, index", unique = true)
     })
-public class ContingencyResultEntity {
+public class ContingencyResultEntity extends AbstractManuallyAssignedIdentifierEntity<ContingencyResultId> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    @Column(name = "analysis_result_id")
+    private UUID analysisResultId;
+
+    @Id
+    @Column(name = "contingency_id")
+    private String contingencyId;
 
     @Column(name = "index", nullable = false)
     private int index;
 
-    @Column(name = "contingency_id", nullable = false)
-    private String contingencyId;
-
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
-    SensitivityAnalysisResult.Status status;
+    private SensitivityAnalysisResult.Status status;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "analysis_result_id")
+    @JoinColumn(name = "analysis_result_id", insertable = false, updatable = false)
     private AnalysisResultEntity analysisResult;
 
     public ContingencyResultEntity(int index, String contingencyId, AnalysisResultEntity analysisResult) {
+        this.analysisResultId = analysisResult.getResultUuid();
         this.index = index;
         this.contingencyId = contingencyId;
-        this.analysisResult = analysisResult;
+        // analysisResult is intentionally not assigned: the association is read-only and
+        // assigning it triggers a snapshot select at flush time
+        // Hibernate resolves the association when the entity is loaded from the database.
+    }
+
+    @Override
+    public ContingencyResultId getId() {
+        return new ContingencyResultId(analysisResultId, contingencyId);
     }
 }

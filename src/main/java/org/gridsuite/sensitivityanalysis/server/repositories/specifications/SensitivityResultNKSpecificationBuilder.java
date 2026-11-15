@@ -8,7 +8,6 @@ package org.gridsuite.sensitivityanalysis.server.repositories.specifications;
 
 import org.gridsuite.computation.dto.ResourceFilterDTO;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
-import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -35,8 +34,8 @@ public class SensitivityResultNKSpecificationBuilder extends SensitivityResultSp
         return super.buildSpecificationFromSelector(resultUuid, resourceFilters, selector)
                 .and(fieldIn(
                         selector.getContingencyIds(),
-                        SensitivityResultEntity.Fields.contingencyResult,
-                        ContingencyResultEntity.Fields.contingencyId)
+                        SensitivityResultEntity.Fields.contingencyId,
+                        null)
                 );
     }
 }

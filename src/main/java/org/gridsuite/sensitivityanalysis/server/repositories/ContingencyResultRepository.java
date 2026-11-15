@@ -8,6 +8,7 @@ package org.gridsuite.sensitivityanalysis.server.repositories;
 
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
+import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,7 +18,7 @@ import java.util.UUID;
 /**
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
  */
-public interface ContingencyResultRepository extends JpaRepository<ContingencyResultEntity, UUID> {
+public interface ContingencyResultRepository extends JpaRepository<ContingencyResultEntity, ContingencyResultId> {
 
     @Modifying
     @Query(value = "DELETE FROM ContingencyResultEntity f WHERE f.analysisResult.resultUuid = :analysisResultUuid")

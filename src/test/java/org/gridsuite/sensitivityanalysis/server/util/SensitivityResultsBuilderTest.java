@@ -131,7 +131,7 @@ class SensitivityResultsBuilderTest {
         if (r1 == r2) {
             return;
         }
-        compareAnalysisResultEntities(r1.getAnalysisResult(), r2.getAnalysisResult());
+        assertEquals(r1.getAnalysisResultId(), r2.getAnalysisResultId());
         compareSensitivityResultEntities(r1.getPreContingencySensitivityResult(), r2.getPreContingencySensitivityResult());
         compareContingencyResultEntities(r1.getContingencyResult(), r2.getContingencyResult());
         assertEquals(r1.getFunctionType(), r2.getFunctionType());
@@ -142,16 +142,11 @@ class SensitivityResultsBuilderTest {
         assertEquals(r1.getFactorIndex(), r2.getFactorIndex());
     }
 
-    private static void compareAnalysisResultEntities(AnalysisResultEntity r1, AnalysisResultEntity r2) {
-        assertEquals(r1.getResultUuid(), r2.getResultUuid());
-        assertEquals(r1.getWriteTimeStamp(), r2.getWriteTimeStamp());
-    }
-
     private static void compareContingencyResultEntities(ContingencyResultEntity r1, ContingencyResultEntity r2) {
         if (r1 == r2) {
             return;
         }
-        compareAnalysisResultEntities(r1.getAnalysisResult(), r2.getAnalysisResult());
+        assertEquals(r1.getAnalysisResultId(), r2.getAnalysisResultId());
         assertEquals(r1.getIndex(), r2.getIndex());
         assertEquals(r1.getContingencyId(), r2.getContingencyId());
         assertEquals(r1.getStatus(), r2.getStatus());

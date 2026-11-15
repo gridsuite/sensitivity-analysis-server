@@ -6,6 +6,7 @@
         <!-- These results are recomputable => truncate together tables before remove primary keys -->
         <sql dbms="postgresql">TRUNCATE TABLE sensitivity_result, raw_sensitivity_result, contingency_result</sql>
     </changeSet>
+    <!-- sensitivity result -->
     <changeSet author="phamquy (generated)" id="1794594577674-13">
         <dropForeignKeyConstraint baseTableName="SENSITIVITY_RESULT" constraintName="FKurqhy4qbyudkm1alhjjrq4ey"/>
     </changeSet>
@@ -49,13 +50,31 @@
     <changeSet author="phamquy (generated)" id="1794594577674-4">
         <addPrimaryKey columnNames="analysis_result_id, factor_index" constraintName="sensitivity_resultPK" tableName="sensitivity_result"/>
     </changeSet>
-    <changeSet author="phamquy (generated)" id="1794594577674-12">
-        <addForeignKeyConstraint baseColumnNames="pre_contingency_analysis_result_id,pre_contingency_factor_index" baseTableName="sensitivity_result" constraintName="FKlt0rtj9xsjvcnwp99ta3lf3r7" deferrable="false" initiallyDeferred="false" referencedColumnNames="analysis_result_id,factor_index" referencedTableName="sensitivity_result" validate="true"/>
-    </changeSet>
     <changeSet author="phamquy (generated)" id="1794594577674-6">
         <createIndex indexName="sensitivity_result_pre_contingency_sensitivity_result_id_idx" tableName="sensitivity_result" unique="false">
             <column name="pre_contingency_analysis_result_id"/>
             <column name="pre_contingency_factor_index"/>
         </createIndex>
     </changeSet>
+
+    <!-- contingency result -->
+    <changeSet author="phamquy (generated)" id="1794594577674-19">
+        <dropForeignKeyConstraint baseTableName="SENSITIVITY_RESULT" constraintName="FK20vyei58je9vvtoohrjdxlct3"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-20">
+        <dropPrimaryKey tableName="contingency_result"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-21">
+        <dropUniqueConstraint constraintName="unique_contingency_analysis" tableName="CONTINGENCY_RESULT"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-22">
+        <dropColumn columnName="ID" tableName="contingency_result"/>
+    </changeSet>
+    <changeSet author="phamquy" id="1794594577674-23">
+        <modifyDataType tableName="SENSITIVITY_RESULT" columnName="contingency_id" newDataType="varchar(255)"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-24">
+        <addPrimaryKey columnNames="analysis_result_id, contingency_id" constraintName="contingency_resultPK" tableName="contingency_result"/>
+    </changeSet>
+
 </databaseChangeLog>

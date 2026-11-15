@@ -77,7 +77,7 @@ class SensitivityAnalysisResultServiceTest {
         SQLStatementCountValidator.reset();
         createResult(resultUuid);
 
-        assertRequestsCount(4, 4, 0, 0);
+        assertRequestsCount(3, 4, 0, 0);
         assertThat(analysisResultRepository.findByResultUuid(resultUuid)).isNotNull();
         assertThat(contingencyResultRepository.findAll()).hasSize(2);
         assertThat(sensitivityResultRepository.findAll()).hasSize(12);

@@ -68,11 +68,25 @@ public class SensitivityResultEntity extends AbstractManuallyAssignedIdentifierE
     @JoinColumn(name = "analysis_result_id", insertable = false, updatable = false)
     private AnalysisResultEntity analysisResult;
 
+    // this key field declared and written explicitly: no entity reference, so no snapshot select at insert
+    @Column(name = "contingency_id")
+    private String contingencyId;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "contingency_id")
+    @JoinColumns(
+        value = {
+            @JoinColumn(name = "analysis_result_id",
+                    referencedColumnName = "analysis_result_id",
+                    insertable = false, updatable = false),
+            @JoinColumn(name = "contingency_id",
+                    referencedColumnName = "contingency_id",
+                    insertable = false, updatable = false)
+        },
+        foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT)
+    )
     private ContingencyResultEntity contingencyResult;
 
-    // these foreign keys fields declared explicitly to use to avoid N +1 select when insert
+    // these foreign keys declared and written explicitly: no entity reference, so no snapshot select on insert
     @Column(name = "pre_contingency_analysis_result_id")
     private UUID preContingencyAnalysisResultId;
 
@@ -89,7 +103,8 @@ public class SensitivityResultEntity extends AbstractManuallyAssignedIdentifierE
                     referencedColumnName = "factor_index",
                     insertable = false, updatable = false)
         },
-        foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT) // to avoid N +1 when insert
+        // foreign keys are managed explicitly to avoid Hibernate snapshot select on insert
+        foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT)
     )
     private SensitivityResultEntity preContingencySensitivityResult;
 
@@ -120,12 +135,14 @@ public class SensitivityResultEntity extends AbstractManuallyAssignedIdentifierE
         this.variableId = variableId;
         this.variableSet = variableSet;
         this.analysisResult = analysisResult;
-        this.contingencyResult = contingencyResult;
+        // only copy the key, do not set the association to avoid N + 1 select when insert
+        this.contingencyId = contingencyResult != null ? contingencyResult.getContingencyId() : null;
         // to avoid N + 1 select when insert, write direct fks values when dto => entity
         if (preContingencySensitivityResult != null) {
             this.preContingencyAnalysisResultId = preContingencySensitivityResult.getAnalysisResultId();
             this.preContingencyFactorIndex = preContingencySensitivityResult.getFactorIndex();
-            // leave preContingencySensitivityResult unset here to avoid N + 1 select
+            // preContingencySensitivityResult is intentionally not assigned: the association is read-only and
+            // assigning it triggers a snapshot select at flush time
             // Hibernate resolves the association when the entity is loaded from the database.
         }
     }

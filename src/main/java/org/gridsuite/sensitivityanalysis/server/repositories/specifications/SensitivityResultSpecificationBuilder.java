@@ -91,7 +91,7 @@ public class SensitivityResultSpecificationBuilder extends AbstractCommonSpecifi
 
     public Specification<SensitivityResultEntity> nullContingency() {
         return (root, query, criteriaBuilder) -> criteriaBuilder.and(
-                criteriaBuilder.isNull(root.get(SensitivityResultEntity.Fields.contingencyResult))
+                criteriaBuilder.isNull(root.get(SensitivityResultEntity.Fields.contingencyId))
         );
     }
 
