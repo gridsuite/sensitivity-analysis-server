@@ -121,10 +121,12 @@ public class SensitivityResultEntity extends AbstractManuallyAssignedIdentifierE
         this.variableSet = variableSet;
         this.analysisResult = analysisResult;
         this.contingencyResult = contingencyResult;
-        // to avoid N +1 select when insert, write direct fks values when dto => entity
+        // to avoid N + 1 select when insert, write direct fks values when dto => entity
         if (preContingencySensitivityResult != null) {
             this.preContingencyAnalysisResultId = preContingencySensitivityResult.getAnalysisResultId();
             this.preContingencyFactorIndex = preContingencySensitivityResult.getFactorIndex();
+            // leave preContingencySensitivityResult unset here to avoid N + 1 select
+            // Hibernate resolves the association when the entity is loaded from the database.
         }
     }
 

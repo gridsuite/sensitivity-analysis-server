@@ -46,7 +46,7 @@ public class SensitivityResultSpecificationBuilder extends AbstractCommonSpecifi
 
     @Override
     public String getIdFieldName() {
-        throw new UnsupportedOperationException("SensitivityResultSpecificationBuilder does not support getIdFieldName");
+        return SensitivityResultEntity.Fields.factorIndex;
     }
 
     @Override
