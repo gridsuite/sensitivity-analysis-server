@@ -5,7 +5,7 @@
     <changeSet author="phamquy" id="1794594577674-0">
         <!-- These results are recomputable => truncate together tables before remove primary keys -->
         <sql dbms="postgresql">TRUNCATE TABLE sensitivity_result, raw_sensitivity_result, contingency_result</sql>
-        <sql dbms="postgresql">UPDATE global_status SET status = 'NOT_DONE' WHEN status = 'COMPLETED'</sql>
+        <sql dbms="postgresql">UPDATE global_status SET status = 'NOT_DONE' WHERE status = 'COMPLETED'</sql>
     </changeSet>
     <changeSet author="phamquy (generated)" id="1794594577674-13">
         <dropForeignKeyConstraint baseTableName="SENSITIVITY_RESULT" constraintName="FKurqhy4qbyudkm1alhjjrq4ey"/>
