@@ -55,8 +55,6 @@
         <univocity-parsers.version>2.9.0</univocity-parsers.version>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:sensitivity-analysis-server</sonar.projectKey>
-        <!-- FIXME: to be removed at next gridsuite-dependencies upgrade  -->
-        <gridsuite-computation.version>2.8.0-SNAPSHOT</gridsuite-computation.version>
     </properties>
 
     <build>
@@ -192,8 +190,6 @@
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-computation</artifactId>
-            <!-- FIXME: to be removed at next gridsuite-dependencies upgrade  -->
-            <version>${gridsuite-computation.version}</version>
         </dependency>
 
         <!-- Runtime dependencies -->
