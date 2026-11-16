@@ -18,6 +18,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
 import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
+import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisResultService;
 import org.gridsuite.sensitivityanalysis.server.util.ContingencyResult;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder;
@@ -80,7 +81,8 @@ class SensitivityAnalysisResultServiceTest {
         assertRequestsCount(4, 4, 0, 0);
         assertThat(analysisResultRepository.findByResultUuid(resultUuid)).isNotNull();
         assertThat(contingencyResultRepository.findAll()).hasSize(2);
-        assertThat(sensitivityResultRepository.findAll()).hasSize(12);
+        List<SensitivityResultEntity> sensitivityResults = sensitivityResultRepository.findAll();
+        assertThat(sensitivityResults).hasSize(12);
     }
 
     @Test

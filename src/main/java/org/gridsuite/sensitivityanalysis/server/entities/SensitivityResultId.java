@@ -6,6 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.entities;
 
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
@@ -16,13 +17,9 @@ import java.util.UUID;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode
 public class SensitivityResultId implements Serializable {
     private UUID analysisResultId;
     private int factorIndex;
-
-    public SensitivityResultId(UUID analysisResultId, int factorIndex) {
-        this.analysisResultId = analysisResultId;
-        this.factorIndex = factorIndex;
-    }
 }
