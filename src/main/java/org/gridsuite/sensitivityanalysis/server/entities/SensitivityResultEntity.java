@@ -72,7 +72,7 @@ public class SensitivityResultEntity extends AbstractManuallyAssignedIdentifierE
     @JoinColumn(name = "contingency_id")
     private ContingencyResultEntity contingencyResult;
 
-    // these foreign keys fields declared explicitly to use to avoid N +1 select when insert
+    // these foreign keys declared and written explicitly: no entity reference, so no snapshot select on insert
     @Column(name = "pre_contingency_analysis_result_id")
     private UUID preContingencyAnalysisResultId;
 
@@ -89,7 +89,8 @@ public class SensitivityResultEntity extends AbstractManuallyAssignedIdentifierE
                     referencedColumnName = "factor_index",
                     insertable = false, updatable = false)
         },
-        foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT) // to avoid N +1 when insert
+        // foreign keys are managed explicitly to avoid Hibernate snapshot select on insert
+        foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT)
     )
     private SensitivityResultEntity preContingencySensitivityResult;
 
@@ -125,7 +126,8 @@ public class SensitivityResultEntity extends AbstractManuallyAssignedIdentifierE
         if (preContingencySensitivityResult != null) {
             this.preContingencyAnalysisResultId = preContingencySensitivityResult.getAnalysisResultId();
             this.preContingencyFactorIndex = preContingencySensitivityResult.getFactorIndex();
-            // leave preContingencySensitivityResult unset here to avoid N + 1 select
+            // preContingencySensitivityResult is intentionally not assigned: the association is read-only and
+            // assigning it triggers a snapshot select at flush time
             // Hibernate resolves the association when the entity is loaded from the database.
         }
     }

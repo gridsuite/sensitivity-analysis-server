@@ -49,9 +49,6 @@
     <changeSet author="phamquy (generated)" id="1794594577674-4">
         <addPrimaryKey columnNames="analysis_result_id, factor_index" constraintName="sensitivity_resultPK" tableName="sensitivity_result"/>
     </changeSet>
-    <changeSet author="phamquy (generated)" id="1794594577674-12">
-        <addForeignKeyConstraint baseColumnNames="pre_contingency_analysis_result_id,pre_contingency_factor_index" baseTableName="sensitivity_result" constraintName="FKlt0rtj9xsjvcnwp99ta3lf3r7" deferrable="false" initiallyDeferred="false" referencedColumnNames="analysis_result_id,factor_index" referencedTableName="sensitivity_result" validate="true"/>
-    </changeSet>
     <changeSet author="phamquy (generated)" id="1794594577674-6">
         <createIndex indexName="sensitivity_result_pre_contingency_sensitivity_result_id_idx" tableName="sensitivity_result" unique="false">
             <column name="pre_contingency_analysis_result_id"/>
