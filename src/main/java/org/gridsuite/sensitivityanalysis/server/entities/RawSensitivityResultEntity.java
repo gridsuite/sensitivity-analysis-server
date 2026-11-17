@@ -31,7 +31,7 @@ import java.util.UUID;
 public class RawSensitivityResultEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    // @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @Column(name = "factor_index", nullable = false)
@@ -47,10 +47,12 @@ public class RawSensitivityResultEntity {
     @JoinColumn(name = "analysis_result_id")
     private AnalysisResultEntity analysisResult;
 
-    public RawSensitivityResultEntity(int index,
+    public RawSensitivityResultEntity(UUID id,
+                                        int index,
                                       double value,
                                       double functionReference,
                                       AnalysisResultEntity analysisResult) {
+        this.id = id;
         this.index = index;
         this.value = value;
         this.functionReference = functionReference;

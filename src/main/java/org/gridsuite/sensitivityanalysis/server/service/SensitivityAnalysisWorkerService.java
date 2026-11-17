@@ -7,6 +7,7 @@
 package org.gridsuite.sensitivityanalysis.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.uuid.impl.TimeBasedEpochGenerator;
 import com.google.common.collect.Lists;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.extensions.Extension;
@@ -30,10 +31,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalys
 import org.gridsuite.sensitivityanalysis.server.entities.AnalysisResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
-import org.gridsuite.sensitivityanalysis.server.util.BatchAsyncPollerFactory;
-import org.gridsuite.sensitivityanalysis.server.util.ScheduledThreadPoolFactory;
-import org.gridsuite.sensitivityanalysis.server.util.SensitivityAnalysisRunnerSupplier;
-import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultPersistedWriter;
+import org.gridsuite.sensitivityanalysis.server.util.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
@@ -134,12 +132,12 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
 
         List<List<SensitivityFactor>> groupedFactors = runContext.getSensitivityAnalysisInputs().getFactors();
         List<Contingency> contingencies = new ArrayList<>(runContext.getSensitivityAnalysisInputs().getContingencies());
-
-        saveSensitivityResults(groupedFactors, resultUuid, contingencies);
+        TimeBasedEpochGenerator uuidGenerator = UuidUtil.newV7Generator();
+        saveSensitivityResults(groupedFactors, resultUuid, contingencies, uuidGenerator);
 
         List<SensitivityFactor> factors = groupedFactors.stream().flatMap(Collection::stream).toList();
         SensitivityFactorReader sensitivityFactorReader = new SensitivityFactorModelReader(factors, runContext.getNetwork());
-        SensitivityResultPersistedWriter sensitivityResultPersistedWriter = new SensitivityResultPersistedWriter(resultUuid, resultService, scheduledThreadPoolFactory, batchAsyncPollerFactory);
+        SensitivityResultPersistedWriter sensitivityResultPersistedWriter = new SensitivityResultPersistedWriter(resultUuid, resultService, scheduledThreadPoolFactory, batchAsyncPollerFactory, uuidGenerator);
 
         SensitivityAnalysisRunParameters runParameters = new SensitivityAnalysisRunParameters()
                 .setContingencies(contingencies)
@@ -154,7 +152,7 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
                 .exceptionally(throwable -> handleAsyncError(throwable, runContext));
     }
 
-    private void saveSensitivityResults(List<List<SensitivityFactor>> groupedFactors, UUID resultUuid, List<Contingency> contingencies) {
+    private void saveSensitivityResults(List<List<SensitivityFactor>> groupedFactors, UUID resultUuid, List<Contingency> contingencies, TimeBasedEpochGenerator uuidGenerator) {
         AnalysisResultEntity analysisResult = resultService.insertAnalysisResult(resultUuid);
 
         Map<String, ContingencyResultEntity> contingencyResults = buildContingencyResults(contingencies, analysisResult);
@@ -162,13 +160,22 @@ public class SensitivityAnalysisWorkerService extends AbstractWorkerService<Bool
                 .parallelStream()
                 .forEach(resultService::saveAllContingencyResultsAndFlush);
 
-        Pair<List<SensitivityResultEntity>, List<SensitivityResultEntity>> sensitivityResults = buildSensitivityResults(groupedFactors, analysisResult, contingencyResults);
-        Lists.partition(sensitivityResults.getLeft(), MAX_RESULTS_BUFFER_SIZE)
-                .parallelStream()
+        Pair<List<SensitivityResultEntity>, List<SensitivityResultEntity>> sensitivityResults = buildSensitivityResults(groupedFactors, analysisResult, contingencyResults, uuidGenerator);
+        List<SensitivityResultEntity> allSensitivityResults = new ArrayList<>(
+                sensitivityResults.getLeft().size() + sensitivityResults.getRight().size());
+        allSensitivityResults.addAll(sensitivityResults.getLeft());
+        allSensitivityResults.addAll(sensitivityResults.getRight());
+        allSensitivityResults.sort(Comparator.comparingInt(SensitivityResultEntity::getFactorIndex));
+
+        Lists.partition(allSensitivityResults, MAX_RESULTS_BUFFER_SIZE)
                 .forEach(resultService::saveAllResultsAndFlush);
-        Lists.partition(sensitivityResults.getRight(), MAX_RESULTS_BUFFER_SIZE)
-                .parallelStream()
-                .forEach(resultService::saveAllResultsAndFlush);
+
+//        Lists.partition(sensitivityResults.getLeft(), MAX_RESULTS_BUFFER_SIZE)
+//                .parallelStream()
+//                .forEach(resultService::saveAllResultsAndFlush);
+//        Lists.partition(sensitivityResults.getRight(), MAX_RESULTS_BUFFER_SIZE)
+//                .parallelStream()
+//                .forEach(resultService::saveAllResultsAndFlush);
     }
 
     @Override

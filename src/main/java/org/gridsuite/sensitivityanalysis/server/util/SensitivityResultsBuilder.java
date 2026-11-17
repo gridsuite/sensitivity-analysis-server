@@ -6,6 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.util;
 
+import com.fasterxml.uuid.impl.TimeBasedEpochGenerator;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.sensitivity.SensitivityFactor;
 import org.apache.commons.lang3.tuple.Pair;
@@ -51,7 +52,8 @@ public final class SensitivityResultsBuilder {
     @SuppressWarnings("checkstyle:LambdaBodyLength")
     public static Pair<List<SensitivityResultEntity>, List<SensitivityResultEntity>> buildSensitivityResults(List<List<SensitivityFactor>> factorsGroups,
                                                                                                              AnalysisResultEntity analysisResult,
-                                                                                                             Map<String, ContingencyResultEntity> contingenciesById) {
+                                                                                                             Map<String, ContingencyResultEntity> contingenciesById,
+                                                                                                             TimeBasedEpochGenerator uuidGenerator) {
         List<SensitivityResultEntity> preContingencySensitivityResults = new ArrayList<>();
         List<SensitivityResultEntity> postContingencySensitivityResults = new ArrayList<>();
 
@@ -67,7 +69,8 @@ public final class SensitivityResultsBuilder {
             SensitivityResultEntity preContingencySensitivityResult = buildNSensitivityResultEntity(
                 analysisResult,
                 preContingencySensitivityfactor,
-                factorCounter.getAndIncrement());
+                factorCounter.getAndIncrement(),
+                uuidGenerator);
 
             preContingencySensitivityResults.add(preContingencySensitivityResult);
 
@@ -84,15 +87,18 @@ public final class SensitivityResultsBuilder {
                     analysisResult,
                     preContingencySensitivityResult,
                     contingenciesById.get(sensitivityFactor.getContingencyContext().getContingencyId()),
-                    factorCounter.getAndIncrement())).toList());
+                    factorCounter.getAndIncrement(),
+                    uuidGenerator)).toList());
         });
         return Pair.of(preContingencySensitivityResults, postContingencySensitivityResults);
     }
 
     private static SensitivityResultEntity buildNSensitivityResultEntity(AnalysisResultEntity analysisResult,
                                                                          SensitivityFactor factor,
-                                                                         int index) {
+                                                                         int index,
+                                                                         TimeBasedEpochGenerator uuidGenerator) {
         return new SensitivityResultEntity(
+            uuidGenerator.generate(),
             index,
             factor.getFunctionType(),
             factor.getFunctionId(),
@@ -108,8 +114,10 @@ public final class SensitivityResultsBuilder {
     private static SensitivityResultEntity buildNKSensitivityResultEntity(AnalysisResultEntity analysisResult,
                                                                           SensitivityResultEntity preContingencySensitivityResult,
                                                                           ContingencyResultEntity contingencyResult,
-                                                                          int index) {
+                                                                          int index,
+                                                                          TimeBasedEpochGenerator uuidGenerator) {
         return new SensitivityResultEntity(
+            uuidGenerator.generate(),
             index,
             preContingencySensitivityResult.getFunctionType(),
             preContingencySensitivityResult.getFunctionId(),

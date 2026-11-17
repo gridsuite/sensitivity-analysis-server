@@ -6,6 +6,8 @@
  */
 package org.gridsuite.sensitivityanalysis.server.service;
 
+import com.fasterxml.uuid.impl.TimeBasedEpochGenerator;
+import com.google.common.collect.Lists;
 import com.powsybl.sensitivity.SensitivityValue;
 import lombok.AllArgsConstructor;
 import org.gridsuite.computation.dto.ResourceFilterDTO;
@@ -34,6 +36,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
+import static org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisWorkerService.MAX_RESULTS_BUFFER_SIZE;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -86,15 +90,18 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
     }
 
     @Transactional
-    public void writeSensitivityValues(UUID resultUuid, List<SensitivityValue> sensitivityValues) {
+    public void writeSensitivityValues(UUID resultUuid, List<SensitivityValue> sensitivityValues, TimeBasedEpochGenerator uuidGenerator) {
         AnalysisResultEntity analysisResult = analysisResultRepository.findByResultUuid(resultUuid);
         var rawSensitivityResults = sensitivityValues.stream().map(s -> new RawSensitivityResultEntity(
+            uuidGenerator.generate(),
             s.getFactorIndex(),
             s.getValue(),
             s.getFunctionReference(),
             analysisResult
-        )).collect(Collectors.toSet());
-        rawSensitivityResultRepository.saveAllAndFlush(rawSensitivityResults);
+    ))
+        .collect(Collectors.toCollection(() -> new ArrayList<>(sensitivityValues.size())));
+        Lists.partition(rawSensitivityResults, MAX_RESULTS_BUFFER_SIZE)
+                .forEach(rawSensitivityResultRepository::saveAllAndFlush);
     }
 
     @Transactional
