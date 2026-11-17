@@ -125,7 +125,6 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
     }
 
     @Transactional
-    @Override
     public void deleteAll() {
         globalStatusRepository.deleteAll();
         sensitivityResultRepository.deleteAllPostContingencies();

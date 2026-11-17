@@ -66,6 +66,10 @@ public class SensitivityAnalysisService extends AbstractComputationService<Sensi
         this.filterService = filterService;
     }
 
+    public void deleteAllResults() {
+        resultService.deleteAll();
+    }
+
     @Override
     public UUID runAndSaveResult(SensitivityAnalysisRunContext runContext) {
         Objects.requireNonNull(runContext);
