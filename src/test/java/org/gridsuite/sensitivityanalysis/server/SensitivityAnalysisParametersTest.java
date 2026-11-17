@@ -131,15 +131,18 @@ class SensitivityAnalysisParametersTest {
 
         SensitivityAnalysisParametersInfos updatedParameters = getParameters(parametersUuid);
         assertThat(updatedParameters).recursivelyEquals(parametersToUpdate);
+    }
 
-        // reset parameters
+    @Test
+    void testReset() throws Exception {
+        UUID parametersUuid = saveAndReturnId(buildParameters());
         SensitivityAnalysisParametersInfos defaultParameters = SensitivityAnalysisParametersInfos.builder().provider(defaultSensitivityAnalysisProvider).build();
 
-        mockMvc.perform(put(URI_PARAMETERS_GET_PUT + parametersUuid).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(put(URI_PARAMETERS_GET_PUT + parametersUuid + "/reset"))
             .andExpect(status().isOk());
 
-        updatedParameters = getParameters(parametersUuid);
-        assertThat(updatedParameters).recursivelyEquals(defaultParameters);
+        SensitivityAnalysisParametersInfos resetParameters = getParameters(parametersUuid);
+        assertThat(resetParameters).recursivelyEquals(defaultParameters);
     }
 
     @Test
