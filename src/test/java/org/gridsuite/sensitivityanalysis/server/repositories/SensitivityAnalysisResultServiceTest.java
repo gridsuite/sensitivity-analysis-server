@@ -20,6 +20,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
 import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
 import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisResultService;
+import org.gridsuite.sensitivityanalysis.server.service.SupervisionService;
 import org.gridsuite.sensitivityanalysis.server.util.ContingencyResult;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder;
 import org.junit.jupiter.api.AfterEach;
@@ -48,6 +49,9 @@ class SensitivityAnalysisResultServiceTest {
     private static final String CONTINGENCY_ID2 = "contingencyId2";
 
     @Autowired
+    private SupervisionService supervisionService;
+
+    @Autowired
     private SensitivityAnalysisResultService sensitivityAnalysisResultService;
 
     @Autowired
@@ -64,7 +68,7 @@ class SensitivityAnalysisResultServiceTest {
 
     @AfterEach
     void cleanDB() {
-        sensitivityAnalysisResultService.deleteAll();
+        supervisionService.deleteAllResults();
         analysisResultRepository.deleteAll();
         contingencyResultRepository.deleteAll();
         sensitivityResultRepository.deleteAll();
@@ -110,7 +114,7 @@ class SensitivityAnalysisResultServiceTest {
         });
 
         SQLStatementCountValidator.reset();
-        sensitivityAnalysisResultService.deleteAll();
+        supervisionService.deleteAllResults();
 
         assertRequestsCount(0, 0, 0, 6);
         assertThat(analysisResultRepository.findAll()).isEmpty();

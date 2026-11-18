@@ -124,17 +124,6 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
         LOGGER.info("Sensitivity analysis result '{}' has been deleted in {}ms", resultUuid, TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime.get()));
     }
 
-    @Transactional
-    @Override
-    public void deleteAll() {
-        globalStatusRepository.deleteAll();
-        sensitivityResultRepository.deleteAllPostContingencies();
-        sensitivityResultRepository.deleteAll();
-        rawSensitivityResultRepository.deleteAll();
-        contingencyResultRepository.deleteAll();
-        analysisResultRepository.deleteAll();
-    }
-
     @Transactional(readOnly = true)
     @Override
     public SensitivityAnalysisStatus findStatus(UUID resultUuid) {
