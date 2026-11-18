@@ -257,7 +257,7 @@ class SensitivityAnalysisControllerTest {
     // added for testStatus can return null, after runTest
     @AfterEach
     void tearDown() throws Exception {
-        mockMvc.perform(delete("/" + VERSION + "/results")).andExpect(status().isOk());
+        mockMvc.perform(delete("/" + VERSION + "/supervision/results")).andExpect(status().isOk());
     }
 
     @Test
@@ -552,6 +552,12 @@ class SensitivityAnalysisControllerTest {
     void deleteResultsTest() throws Exception {
         UUID resultUuid = run(parametersUuid);
         checkComputationSucceeded(resultUuid);
+
+        String resultsCount = mockMvc.perform(get("/" + VERSION + "/supervision/results-count")).andReturn().getResponse().getContentAsString();
+        assertNotEquals("0", resultsCount);
+        mockMvc.perform(delete("/" + VERSION + "/results")).andExpect(status().isBadRequest());
+        mockMvc.perform(delete("/" + VERSION + "/results").queryParam("resultsUuids", "")).andExpect(status().isOk());
+        mockMvc.perform(get("/" + VERSION + "/supervision/results-count")).andExpect(content().string(resultsCount));
 
         mockMvc.perform(delete("/" + VERSION + "/results").queryParam("resultsUuids", resultUuid.toString()))
                 .andExpect(status().isOk());
