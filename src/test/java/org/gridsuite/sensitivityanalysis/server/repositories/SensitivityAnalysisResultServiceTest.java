@@ -6,6 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.repositories;
 
+import com.fasterxml.uuid.impl.TimeBasedEpochGenerator;
 import com.powsybl.contingency.Contingency;
 import com.powsybl.contingency.ContingencyContext;
 import com.powsybl.sensitivity.*;
@@ -22,6 +23,7 @@ import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisResul
 import org.gridsuite.sensitivityanalysis.server.service.SupervisionService;
 import org.gridsuite.sensitivityanalysis.server.util.ContingencyResult;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder;
+import org.gridsuite.sensitivityanalysis.server.util.UuidUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +66,8 @@ class SensitivityAnalysisResultServiceTest {
 
     @Autowired
     private GlobalStatusRepository globalStatusRepository;
+
+    private TimeBasedEpochGenerator uuidGenerator = UuidUtil.newV7Generator();
 
     @AfterEach
     void cleanDB() {
@@ -242,7 +246,7 @@ class SensitivityAnalysisResultServiceTest {
         var analysisResult = sensitivityAnalysisResultService.insertAnalysisResult(resultUuid);
         Map<String, ContingencyResultEntity> contingencyResultsByContingencyId = SensitivityResultsBuilder.buildContingencyResults(contingencies, analysisResult);
         sensitivityAnalysisResultService.saveAllContingencyResultsAndFlush(contingencyResultsByContingencyId.values().stream().collect(Collectors.toSet()));
-        var results = SensitivityResultsBuilder.buildSensitivityResults(factors, analysisResult, contingencyResultsByContingencyId);
+        var results = SensitivityResultsBuilder.buildSensitivityResults(factors, analysisResult, contingencyResultsByContingencyId, uuidGenerator);
         sensitivityAnalysisResultService.saveAllResultsAndFlush(results.getLeft());
         sensitivityAnalysisResultService.saveAllResultsAndFlush(results.getRight());
     }
@@ -262,7 +266,7 @@ class SensitivityAnalysisResultServiceTest {
             new SensitivityValue(10, 1, -1, -1.0, 511),
             new SensitivityValue(11, 0, -1, -0.4, 512)
         ));
-        sensitivityAnalysisResultService.writeSensitivityValues(resultUuid, sensitivityValues);
+        sensitivityAnalysisResultService.writeSensitivityValues(resultUuid, sensitivityValues, uuidGenerator);
     }
 
     private static List<List<SensitivityFactor>> createFactors(List<String> branchIds, List<String> variableIds, List<Contingency> contingencies) {

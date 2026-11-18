@@ -6,6 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.util;
 
+import com.fasterxml.uuid.impl.TimeBasedEpochGenerator;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityValue;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisResultService;
@@ -45,6 +46,7 @@ class SensitivityResultPersistedWriterTest {
     private BatchAsyncPoller contingencyPollerMock;
 
     private UUID resultUuid;
+    private TimeBasedEpochGenerator uuidGenerator;
 
     public static Stream<Arguments> provideInvalidSensitivityValue() {
         return Stream.of(
@@ -63,12 +65,13 @@ class SensitivityResultPersistedWriterTest {
         contingencyPollerMock = mock(BatchAsyncPoller.class);
 
         resultUuid = UUID.randomUUID();
+        uuidGenerator = UuidUtil.newV7Generator();
 
         when(scheduledThreadPoolFactoryMock.create(2, resultUuid)).thenReturn(scheduledExecutorServiceMock);
         when(batchAsyncPollerFactoryMock.create(eq(scheduledExecutorServiceMock), eq(resultUuid), eq(SENSITIVITY_WRITER_THREAD), any(BiConsumer.class))).thenReturn(sensitivityPollerMock);
         when(batchAsyncPollerFactoryMock.create(eq(scheduledExecutorServiceMock), eq(resultUuid), eq(CONTINGENCY_WRITER_THREAD), any(BiConsumer.class))).thenReturn(contingencyPollerMock);
 
-        sensitivityResultPersistedWriter = new SensitivityResultPersistedWriter(resultUuid, sensitivityAnalysisResultServiceMock, scheduledThreadPoolFactoryMock, batchAsyncPollerFactoryMock);
+        sensitivityResultPersistedWriter = new SensitivityResultPersistedWriter(resultUuid, sensitivityAnalysisResultServiceMock, scheduledThreadPoolFactoryMock, batchAsyncPollerFactoryMock, uuidGenerator);
     }
 
     @Test

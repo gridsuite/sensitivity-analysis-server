@@ -6,6 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.util;
 
+import com.fasterxml.uuid.impl.TimeBasedEpochGenerator;
 import com.powsybl.sensitivity.SensitivityAnalysisResult;
 import com.powsybl.sensitivity.SensitivityResultWriter;
 import com.powsybl.sensitivity.SensitivityValue;
@@ -30,12 +31,12 @@ public class SensitivityResultPersistedWriter implements SensitivityResultWriter
     private final ScheduledExecutorService scheduledExecutorService;
     private final BatchAsyncPoller<SensitivityValue> sensitivityBatchAsyncPoller;
     private final BatchAsyncPoller<ContingencyResult> contingencyBatchAsyncPoller;
-
     public SensitivityResultPersistedWriter(UUID resultUuid, SensitivityAnalysisResultService sensitivityAnalysisResultService,
-                                            ScheduledThreadPoolFactory scheduledThreadPoolFactory, BatchAsyncPollerFactory batchAsyncPollerFactory) {
+                                            ScheduledThreadPoolFactory scheduledThreadPoolFactory, BatchAsyncPollerFactory batchAsyncPollerFactory,
+                                            TimeBasedEpochGenerator uuidGenerator) {
         this.scheduledExecutorService = scheduledThreadPoolFactory.create(THREAD_POOL_SIZE, resultUuid);
         this.sensitivityBatchAsyncPoller = batchAsyncPollerFactory.create(this.scheduledExecutorService, resultUuid, SENSITIVITY_WRITER_THREAD,
-                sensitivityAnalysisResultService::writeSensitivityValues);
+                (uuid, values) -> sensitivityAnalysisResultService.writeSensitivityValues(uuid, values, uuidGenerator));
         this.contingencyBatchAsyncPoller = batchAsyncPollerFactory.create(this.scheduledExecutorService, resultUuid, CONTINGENCY_WRITER_THREAD,
                 sensitivityAnalysisResultService::writeContingenciesStatus);
     }

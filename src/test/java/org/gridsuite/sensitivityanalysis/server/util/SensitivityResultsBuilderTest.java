@@ -6,6 +6,7 @@
  */
 package org.gridsuite.sensitivityanalysis.server.util;
 
+import com.fasterxml.uuid.impl.TimeBasedEpochGenerator;
 import com.powsybl.contingency.*;
 import com.powsybl.sensitivity.SensitivityFactor;
 import com.powsybl.sensitivity.SensitivityFunctionType;
@@ -35,6 +36,7 @@ class SensitivityResultsBuilderTest {
     private static final String CONTINGENCY_ID_1 = "contingencyId1";
     private static final String CONTINGENCY_ID_2 = "contingencyId2";
     private static final String CONTINGENCY_ID_3 = "contingencyId3";
+    private TimeBasedEpochGenerator uuidGenerator = UuidUtil.newV7Generator();
 
     @Test
     void testBuildContingencyResults() {
@@ -56,13 +58,13 @@ class SensitivityResultsBuilderTest {
         AnalysisResultEntity analysisResult = new AnalysisResultEntity(UUID.randomUUID(), Instant.now());
         Map<String, ContingencyResultEntity> contingencyResultsByContingencyId = SensitivityResultsBuilder.buildContingencyResults(contingencies, analysisResult);
 
-        var results = SensitivityResultsBuilder.buildSensitivityResults(groupedFactors, analysisResult, contingencyResultsByContingencyId);
+        var results = SensitivityResultsBuilder.buildSensitivityResults(groupedFactors, analysisResult, contingencyResultsByContingencyId, uuidGenerator);
 
-        SensitivityResultEntity preContingencySensitivityResult1 = new SensitivityResultEntity(0, SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, FUNCTION_ID_1,
+        SensitivityResultEntity preContingencySensitivityResult1 = new SensitivityResultEntity(uuidGenerator.generate(), 0, SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, FUNCTION_ID_1,
                 SensitivityVariableType.INJECTION_ACTIVE_POWER, VARIABLE_ID_1, false, analysisResult, null, null);
-        SensitivityResultEntity preContingencySensitivityResult2 = new SensitivityResultEntity(4, SensitivityFunctionType.BRANCH_ACTIVE_POWER_2, FUNCTION_ID_2,
+        SensitivityResultEntity preContingencySensitivityResult2 = new SensitivityResultEntity(uuidGenerator.generate(), 4, SensitivityFunctionType.BRANCH_ACTIVE_POWER_2, FUNCTION_ID_2,
                 SensitivityVariableType.TRANSFORMER_PHASE_1, VARIABLE_ID_2, true, analysisResult, null, null);
-        List<SensitivityResultEntity> expectedResults = getExpectedSensitivityResults(analysisResult, preContingencySensitivityResult1, preContingencySensitivityResult2);
+        List<SensitivityResultEntity> expectedResults = getExpectedSensitivityResults(analysisResult, preContingencySensitivityResult1, preContingencySensitivityResult2, uuidGenerator);
 
         List<SensitivityResultEntity> sortedResults = results.getRight().stream().sorted(Comparator.comparingDouble(SensitivityResultEntity::getFactorIndex)).toList();
         IntStream.range(0, sortedResults.size()).forEach(i -> compareSensitivityResultEntities(sortedResults.get(i), expectedResults.get(i)));
@@ -109,20 +111,20 @@ class SensitivityResultsBuilderTest {
     }
 
     private static List<SensitivityResultEntity> getExpectedSensitivityResults(AnalysisResultEntity analysisResult, SensitivityResultEntity preContingencySensitivityResult1,
-            SensitivityResultEntity preContingencySensitivityResult2) {
+            SensitivityResultEntity preContingencySensitivityResult2, TimeBasedEpochGenerator uuidGenerator ) {
         List<ContingencyResultEntity> expectedContingencyResults = getExpectedContingencyResultEntities(analysisResult);
         return List.of(
-            new SensitivityResultEntity(1, SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, FUNCTION_ID_1, SensitivityVariableType.INJECTION_ACTIVE_POWER, VARIABLE_ID_1, false, analysisResult,
+            new SensitivityResultEntity(uuidGenerator.generate(), 1, SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, FUNCTION_ID_1, SensitivityVariableType.INJECTION_ACTIVE_POWER, VARIABLE_ID_1, false, analysisResult,
                     expectedContingencyResults.get(0), preContingencySensitivityResult1),
-            new SensitivityResultEntity(2, SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, FUNCTION_ID_1, SensitivityVariableType.INJECTION_ACTIVE_POWER, VARIABLE_ID_1, false, analysisResult,
+            new SensitivityResultEntity(uuidGenerator.generate(), 2, SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, FUNCTION_ID_1, SensitivityVariableType.INJECTION_ACTIVE_POWER, VARIABLE_ID_1, false, analysisResult,
                     expectedContingencyResults.get(1), preContingencySensitivityResult1),
-            new SensitivityResultEntity(3, SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, FUNCTION_ID_1, SensitivityVariableType.INJECTION_ACTIVE_POWER, VARIABLE_ID_1, false, analysisResult,
+            new SensitivityResultEntity(uuidGenerator.generate(), 3, SensitivityFunctionType.BRANCH_ACTIVE_POWER_1, FUNCTION_ID_1, SensitivityVariableType.INJECTION_ACTIVE_POWER, VARIABLE_ID_1, false, analysisResult,
                     expectedContingencyResults.get(2), preContingencySensitivityResult1),
-            new SensitivityResultEntity(5, SensitivityFunctionType.BRANCH_ACTIVE_POWER_2, FUNCTION_ID_2, SensitivityVariableType.TRANSFORMER_PHASE_1, VARIABLE_ID_2, true, analysisResult,
+            new SensitivityResultEntity(uuidGenerator.generate(), 5, SensitivityFunctionType.BRANCH_ACTIVE_POWER_2, FUNCTION_ID_2, SensitivityVariableType.TRANSFORMER_PHASE_1, VARIABLE_ID_2, true, analysisResult,
                     expectedContingencyResults.get(0), preContingencySensitivityResult2),
-            new SensitivityResultEntity(6, SensitivityFunctionType.BRANCH_ACTIVE_POWER_2, FUNCTION_ID_2, SensitivityVariableType.TRANSFORMER_PHASE_1, VARIABLE_ID_2, true, analysisResult,
+            new SensitivityResultEntity(uuidGenerator.generate(), 6, SensitivityFunctionType.BRANCH_ACTIVE_POWER_2, FUNCTION_ID_2, SensitivityVariableType.TRANSFORMER_PHASE_1, VARIABLE_ID_2, true, analysisResult,
                     expectedContingencyResults.get(1), preContingencySensitivityResult2),
-            new SensitivityResultEntity(7, SensitivityFunctionType.BRANCH_ACTIVE_POWER_2, FUNCTION_ID_2, SensitivityVariableType.TRANSFORMER_PHASE_1, VARIABLE_ID_2, true, analysisResult,
+            new SensitivityResultEntity(uuidGenerator.generate(), 7, SensitivityFunctionType.BRANCH_ACTIVE_POWER_2, FUNCTION_ID_2, SensitivityVariableType.TRANSFORMER_PHASE_1, VARIABLE_ID_2, true, analysisResult,
                     expectedContingencyResults.get(2), preContingencySensitivityResult2)
         );
     }

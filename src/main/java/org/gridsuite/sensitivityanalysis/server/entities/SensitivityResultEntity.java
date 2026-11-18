@@ -39,7 +39,7 @@ import java.util.UUID;
 public class SensitivityResultEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    // @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @Column(name = "factor_index", nullable = false)
@@ -84,7 +84,8 @@ public class SensitivityResultEntity {
     )
     private RawSensitivityResultEntity rawSensitivityResult;
 
-    public SensitivityResultEntity(int factorIndex,
+    public SensitivityResultEntity(UUID id,
+                                   int factorIndex,
                                    SensitivityFunctionType functionType,
                                    String functionId,
                                    SensitivityVariableType variableType,
@@ -93,6 +94,7 @@ public class SensitivityResultEntity {
                                    AnalysisResultEntity analysisResult,
                                    ContingencyResultEntity contingencyResult,
                                    SensitivityResultEntity preContingencySensitivityResult) {
+        this.id = id;
         this.factorIndex = factorIndex;
         this.functionType = functionType;
         this.functionId = functionId;
