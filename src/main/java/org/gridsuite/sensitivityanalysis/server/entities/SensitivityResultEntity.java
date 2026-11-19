@@ -28,8 +28,6 @@ import java.util.UUID;
 @Table(
     name = "sensitivity_result",
     indexes = {
-        @Index(name = "sensitivity_result_analysis_result_idx", columnList = "analysis_result_id"),
-        @Index(name = "sensitivity_result_analysis_result_factor_index_idx", columnList = "analysis_result_id, factor_index"),
         @Index(name = "sensitivity_result_analysis_result_factor_index_search_idx", columnList = "analysis_result_id, factor_index, function_type, variable_type, function_id, variable_id"),
         // Greatly helps during deletion as it references itself as a foreign key
         @Index(name = "sensitivity_result_pre_contingency_sensitivity_result_id_idx", columnList = "pre_contingency_analysis_result_id, pre_contingency_factor_index"),
