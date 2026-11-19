@@ -14,6 +14,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.parameters.SensitivityAnalys
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
@@ -179,6 +180,23 @@ public class SensitivityAnalysisParametersEntity {
 
     private static List<UUID> copyIds(List<UUID> ids) {
         return ids == null ? null : new ArrayList<>(ids);
+    }
+
+    private Stream<AbstractSensitivityFactorEntity> allFactors() {
+        return Stream.<List<? extends AbstractSensitivityFactorEntity>>of(sensitivityInjectionsSets, sensitivityInjections, sensitivityHVDCs, sensitivityPSTs, sensitivityNodes).flatMap(List::stream);
+    }
+
+    private static Stream<UUID> nullSafe(List<UUID> ids) {
+        return ids == null ? Stream.empty() : ids.stream();
+    }
+
+    public List<UUID> getFilterUuids() {
+        return allFactors().flatMap(factor -> Stream.concat(nullSafe(factor.getMonitoredBranch()), nullSafe(factor.getInjections())))
+                .distinct().toList();
+    }
+
+    public List<UUID> getContingencyListUuids() {
+        return allFactors().flatMap(factor -> nullSafe(factor.getContingencies())).distinct().toList();
     }
 
     public SensitivityAnalysisParametersInfos toInfos() {

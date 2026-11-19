@@ -70,6 +70,18 @@ public class SensitivityAnalysisParametersService {
     }
 
     @Transactional(readOnly = true)
+    public List<UUID> getFilterUuids(UUID parametersUuid) {
+        return sensitivityAnalysisParametersRepository.findById(parametersUuid).map(SensitivityAnalysisParametersEntity::getFilterUuids)
+                .orElse(List.of());
+    }
+
+    @Transactional(readOnly = true)
+    public List<UUID> getContingencyListUuids(UUID parametersUuid) {
+        return sensitivityAnalysisParametersRepository.findById(parametersUuid).map(SensitivityAnalysisParametersEntity::getContingencyListUuids)
+                .orElse(List.of());
+    }
+
+    @Transactional(readOnly = true)
     public List<SensitivityAnalysisParametersInfos> getAllParameters() {
         return sensitivityAnalysisParametersRepository.findAll().stream()
                 .map(SensitivityAnalysisParametersEntity::toInfos)
