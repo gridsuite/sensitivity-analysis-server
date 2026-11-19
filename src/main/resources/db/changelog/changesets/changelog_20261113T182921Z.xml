@@ -56,11 +56,4 @@
             <column name="pre_contingency_factor_index"/>
         </createIndex>
     </changeSet>
-    <!-- remove redundant indexes -->
-    <changeSet author="phamquy" id="1794821505841-19">
-        <dropIndex indexName="sensitivity_result_analysis_result_idx" tableName="sensitivity_result"/>
-    </changeSet>
-    <changeSet author="phamquy" id="1794821505841-20">
-        <dropIndex indexName="raw_sensitivity_result_analysis_result" tableName="raw_sensitivity_result"/>
-    </changeSet>
 </databaseChangeLog>

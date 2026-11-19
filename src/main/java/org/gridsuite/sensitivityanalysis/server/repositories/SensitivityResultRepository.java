@@ -23,15 +23,15 @@ import java.util.UUID;
 public interface SensitivityResultRepository extends JpaRepository<SensitivityResultEntity, SensitivityResultId>, JpaSpecificationExecutor<SensitivityResultEntity> {
 
     @Modifying
-    @Query(value = "DELETE FROM SensitivityResultEntity s WHERE s.analysisResultId = :analysisResultUuid AND s.preContingencyAnalysisResultId is not null")
+    @Query(value = "DELETE FROM SensitivityResultEntity s WHERE s.analysisResult.resultUuid = :analysisResultUuid AND s.preContingencySensitivityResult is not null")
     void deleteAllPostContingenciesByAnalysisResultUuid(UUID analysisResultUuid);
 
     @Modifying
-    @Query(value = "DELETE FROM SensitivityResultEntity s WHERE s.analysisResultId = :analysisResultUuid")
+    @Query(value = "DELETE FROM SensitivityResultEntity s WHERE s.analysisResult.resultUuid = :analysisResultUuid")
     void deleteAllByAnalysisResultUuid(UUID analysisResultUuid);
 
     @Modifying
-    @Query(value = "DELETE FROM SensitivityResultEntity s WHERE s.preContingencyAnalysisResultId is not null")
+    @Query(value = "DELETE FROM SensitivityResultEntity s WHERE s.preContingencySensitivityResult is not null")
     void deleteAllPostContingencies();
 
     @Modifying
@@ -40,21 +40,21 @@ public interface SensitivityResultRepository extends JpaRepository<SensitivityRe
     void deleteAll();
 
     @Query(value = "SELECT distinct s.functionId from SensitivityResultEntity as s " +
-        "where s.analysisResultId = :resultUuid " +
+        "where s.analysisResult.resultUuid = :resultUuid " +
         "and s.functionType = :sensitivityFunctionType " +
         "and ((:withContingency = true and s.contingencyResult is not null ) or (:withContingency = false and s.contingencyResult is null ))" +
         "order by s.functionId")
     List<String> getDistinctFunctionIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType, boolean withContingency);
 
     @Query(value = "SELECT distinct s.variableId from SensitivityResultEntity as s " +
-        "where s.analysisResultId = :resultUuid " +
+        "where s.analysisResult.resultUuid = :resultUuid " +
         "and s.functionType = :sensitivityFunctionType " +
         "and ((:withContingency = true and s.contingencyResult is not null ) or (:withContingency = false and s.contingencyResult is null ))" +
         "order by s.variableId")
     List<String> getDistinctVariableIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType, boolean withContingency);
 
     @Query(value = "SELECT distinct s.contingencyResult.contingencyId from SensitivityResultEntity as s " +
-        "where s.analysisResultId = :resultUuid and s.functionType = :sensitivityFunctionType " +
+        "where s.analysisResult.resultUuid = :resultUuid and s.functionType = :sensitivityFunctionType " +
         "order by s.contingencyResult.contingencyId")
     List<String> getDistinctContingencyIds(UUID resultUuid, SensitivityFunctionType sensitivityFunctionType);
 }
