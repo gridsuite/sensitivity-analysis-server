@@ -20,7 +20,7 @@ import java.util.UUID;
 public interface RawSensitivityResultRepository extends JpaRepository<RawSensitivityResultEntity, SensitivityResultId> {
 
     @Modifying
-    @Query(value = "DELETE FROM RawSensitivityResultEntity f WHERE f.analysisResult.resultUuid = :analysisResultUuid")
+    @Query(value = "DELETE FROM RawSensitivityResultEntity f WHERE f.analysisResultId = :analysisResultUuid")
     void deleteAllByAnalysisResultUuid(UUID analysisResultUuid);
 
     @Modifying
