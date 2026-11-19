@@ -19,7 +19,7 @@ import mockwebserver3.Dispatcher;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
 import mockwebserver3.RecordedRequest;
-import mockwebserver3.junit5.internal.MockWebServerExtension;
+import mockwebserver3.junit5.StartStop;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import org.gridsuite.computation.dto.GlobalFilter;
@@ -39,7 +39,6 @@ import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +63,6 @@ import static org.mockito.Mockito.when;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-@ExtendWith(MockWebServerExtension.class)
 @SpringBootTest
 class FilterServiceTest {
 
@@ -121,8 +119,11 @@ class FilterServiceTest {
     @Autowired
     private FilterService filterService;
 
+    @StartStop
+    final MockWebServer mockWebServer = new MockWebServer();
+
     @BeforeEach
-    void setUp(final MockWebServer mockWebServer) throws Exception {
+    void setUp() throws Exception {
         filterService = new FilterService(restClientBuilder, networkStoreService, initMockWebServer(mockWebServer));
         when(networkStoreService.getNetwork(eq(NOT_FOUND_NETWORK_ID), any(PreloadingStrategy.class))).thenThrow(new PowsyblException());
         doNothing().when(variantManager).setWorkingVariant(anyString());
@@ -141,7 +142,7 @@ class FilterServiceTest {
             @NotNull
             @Override
             public MockResponse dispatch(RecordedRequest request) {
-                String requestPath = Objects.requireNonNull(request.getPath());
+                String requestPath = Objects.requireNonNull(request.getTarget());
                 if (requestPath.equals(String.format("/v1/filters/export?ids=%s&networkUuid=%s&variantId=%s", LIST_UUID, NETWORK_UUID, VARIANT_ID))) {
                     return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE), jsonVariantExpected);
                 } else if (requestPath.equals(String.format("/v1/filters/export?ids=%s&ids=%s&networkUuid=%s", VERY_LARGE_LIST_UUID, LIST_UUID, NETWORK_UUID))) {
@@ -159,7 +160,7 @@ class FilterServiceTest {
                 } else if (requestPath.matches(String.format("/v1/filters/export\\?ids&networkUuid=%s", NETWORK_UUID))) {
                     return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE), jsonFilterEquipmentExpectedWithNotFoundElement);
                 } else {
-                    return new MockResponse.Builder().code(HttpStatus.NOT_FOUND.value()).body("Path not supported: " + request.getPath()).build();
+                    return new MockResponse.Builder().code(HttpStatus.NOT_FOUND.value()).body("Path not supported: " + request.getTarget()).build();
                 }
             }
         };
