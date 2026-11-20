@@ -18,6 +18,7 @@ import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
 import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
+import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisResultService;
 import org.gridsuite.sensitivityanalysis.server.service.SupervisionService;
 import org.gridsuite.sensitivityanalysis.server.util.ContingencyResult;
@@ -84,7 +85,18 @@ class SensitivityAnalysisResultServiceTest {
         assertRequestsCount(4, 4, 0, 0);
         assertThat(analysisResultRepository.findByResultUuid(resultUuid)).isNotNull();
         assertThat(contingencyResultRepository.findAll()).hasSize(2);
-        assertThat(sensitivityResultRepository.findAll()).hasSize(12);
+        List<SensitivityResultEntity> sensitivityResults = sensitivityResultRepository.findAll();
+        // Each group contains one pre-contingency factor followed by two post-contingency factors.
+        assertThat(sensitivityResults).hasSize(12).allSatisfy(s -> {
+            if (s.getContingencyResult() == null) {
+                assertThat(s.getPreContingencyAnalysisResultId()).isNull();
+                assertThat(s.getPreContingencyFactorIndex()).isNull();
+            } else {
+                assertThat(s.getPreContingencyAnalysisResultId()).isEqualTo(resultUuid);
+                assertThat(s.getPreContingencyFactorIndex())
+                        .isEqualTo(s.getFactorIndex() - s.getFactorIndex() % 3);
+            }
+        });
     }
 
     @Test

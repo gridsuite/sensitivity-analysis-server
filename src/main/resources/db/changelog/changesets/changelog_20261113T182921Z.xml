@@ -1,0 +1,69 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="phamquy (generated)" id="1794594577674-13">
+        <dropForeignKeyConstraint baseTableName="SENSITIVITY_RESULT" constraintName="FKurqhy4qbyudkm1alhjjrq4ey"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-14">
+        <dropUniqueConstraint constraintName="UK_gfidy5c32pagm2kvqku1pp7ak" tableName="SENSITIVITY_RESULT"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-15">
+        <dropUniqueConstraint constraintName="UK_ndv6ls874g1mqrkrs2inl4hj2" tableName="RAW_SENSITIVITY_RESULT"/>
+    </changeSet>
+    <!-- replace self-foreign key for pre-contingency sensitivity_result but preserver relationship -->
+    <changeSet author="phamquy (generated)" id="1794594577674-7">
+        <addColumn tableName="sensitivity_result">
+            <column name="pre_contingency_analysis_result_id" type="UUID"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-8">
+        <addColumn tableName="sensitivity_result">
+            <column name="pre_contingency_factor_index" type="INT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-9">
+        <!-- preserver relationship between pre-contingency and post-contingency sensitivity_result -->
+        <sql dbms="postgresql">
+            UPDATE sensitivity_result AS sr
+            SET
+                pre_contingency_analysis_result_id = pre_sr.analysis_result_id,
+                pre_contingency_factor_index = pre_sr.factor_index
+                FROM sensitivity_result AS pre_sr
+            WHERE sr.pre_contingency_sensitivity_result_id IS NOT NULL
+              AND sr.pre_contingency_sensitivity_result_id = pre_sr.id;
+        </sql>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-5">
+        <dropIndex indexName="sensitivity_result_pre_contingency_sensitivity_result_id_idx" tableName="sensitivity_result"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-18">
+        <dropColumn columnName="PRE_CONTINGENCY_SENSITIVITY_RESULT_ID" tableName="sensitivity_result"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-6">
+        <createIndex indexName="sensitivity_result_pre_contingency_sensitivity_result_id_idx" tableName="sensitivity_result" unique="false">
+            <column name="pre_contingency_analysis_result_id"/>
+            <column name="pre_contingency_factor_index"/>
+        </createIndex>
+    </changeSet>
+    <!-- replace primary key for raw_sensitivity_result -->
+    <changeSet author="phamquy (generated)" id="1794594577674-1">
+        <dropPrimaryKey tableName="raw_sensitivity_result"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-2">
+        <addPrimaryKey columnNames="analysis_result_id, factor_index" constraintName="raw_sensitivity_resultPK" tableName="raw_sensitivity_result"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-16">
+        <dropColumn columnName="ID" tableName="raw_sensitivity_result"/>
+    </changeSet>
+    <!-- replace primary key for sensitivity_result -->
+    <changeSet author="phamquy (generated)" id="1794594577674-3">
+        <dropPrimaryKey tableName="sensitivity_result"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-4">
+        <addPrimaryKey columnNames="analysis_result_id, factor_index" constraintName="sensitivity_resultPK" tableName="sensitivity_result"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1794594577674-17">
+        <dropColumn columnName="ID" tableName="sensitivity_result"/>
+    </changeSet>
+</databaseChangeLog>
