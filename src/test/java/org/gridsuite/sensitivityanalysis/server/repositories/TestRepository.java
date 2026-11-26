@@ -35,7 +35,7 @@ public class TestRepository {
         //contingency.id comparator
         Comparator<ContingencyResultEntity> comparatorByContingencyId = comparing(ContingencyResultEntity::getContingencyId, Comparator.comparing(String::toString));
         //sensitivityId comparator (the toString is needed because UUID comparator is not the same as the string one)
-        Comparator<SensitivityResultEntity> comparatorBySensiId = comparing(s -> s.getId().toString());
+        Comparator<SensitivityResultEntity> comparatorBySensiId = comparing(SensitivityResultEntity::getFactorIndex);
         //contingency.id and resultUuid (in that order) comparator
         Comparator<SensitivityResultEntity> comparatorByContingencyIdAndSensiId = comparing(SensitivityResultEntity::getContingencyResult,
                 comparatorByContingencyId).thenComparing(comparatorBySensiId);

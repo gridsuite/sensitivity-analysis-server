@@ -44,7 +44,7 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SensitivityAnalysisResultService.class);
 
-    private static final String DEFAULT_SENSITIVITY_SORT_COLUMN = "id";
+    private static final String DEFAULT_SENSITIVITY_SORT_COLUMN = SensitivityResultEntity.Fields.factorIndex;
 
     private static final Sort.Direction DEFAULT_SORT_DIRECTION = Sort.Direction.ASC;
 
@@ -122,17 +122,6 @@ public class SensitivityAnalysisResultService extends AbstractComputationResultS
         contingencyResultRepository.deleteAllByAnalysisResultUuid(resultUuid);
         analysisResultRepository.deleteById(resultUuid);
         LOGGER.info("Sensitivity analysis result '{}' has been deleted in {}ms", resultUuid, TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime.get()));
-    }
-
-    @Transactional
-    @Override
-    public void deleteAll() {
-        globalStatusRepository.deleteAll();
-        sensitivityResultRepository.deleteAllPostContingencies();
-        sensitivityResultRepository.deleteAll();
-        rawSensitivityResultRepository.deleteAll();
-        contingencyResultRepository.deleteAll();
-        analysisResultRepository.deleteAll();
     }
 
     @Transactional(readOnly = true)

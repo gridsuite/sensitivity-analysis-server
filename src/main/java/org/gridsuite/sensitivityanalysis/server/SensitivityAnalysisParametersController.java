@@ -86,6 +86,15 @@ public class SensitivityAnalysisParametersController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping(value = "/{uuid}/reset", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "reset parameters to default values")
+    @ApiResponse(responseCode = "200", description = "parameters were reset")
+    public ResponseEntity<Void> resetParameters(
+            @Parameter(description = "parameters UUID") @PathVariable("uuid") UUID parametersUuid) {
+        parametersService.resetParameters(parametersUuid);
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping(value = "/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Delete parameters")
     @ApiResponse(responseCode = "200", description = "parameters were deleted")

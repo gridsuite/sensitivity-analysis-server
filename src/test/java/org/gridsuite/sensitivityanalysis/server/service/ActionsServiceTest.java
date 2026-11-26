@@ -13,7 +13,7 @@ import mockwebserver3.Dispatcher;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
 import mockwebserver3.RecordedRequest;
-import mockwebserver3.junit5.internal.MockWebServerExtension;
+import mockwebserver3.junit5.StartStop;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import org.gridsuite.sensitivityanalysis.server.configuration.RestClientConfig;
@@ -23,7 +23,6 @@ import org.gridsuite.sensitivityanalysis.server.dto.SensitivityFactorsIdsByGroup
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
@@ -31,11 +30,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -44,7 +39,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-@ExtendWith(MockWebServerExtension.class)
 @SpringBootTest
 class ActionsServiceTest {
 
@@ -74,8 +68,11 @@ class ActionsServiceTest {
     @Autowired
     private ActionsService actionsService;
 
+    @StartStop
+    final MockWebServer mockWebServer = new MockWebServer();
+
     @BeforeEach
-    void setUp(final MockWebServer mockWebServer) throws Exception {
+    void setUp() throws Exception {
         actionsService.setActionsServerBaseUri(initMockWebServer(mockWebServer));
     }
 
@@ -89,7 +86,7 @@ class ActionsServiceTest {
             @NotNull
             @Override
             public MockResponse dispatch(RecordedRequest request) {
-                String requestPath = Objects.requireNonNull(request.getPath());
+                String requestPath = Objects.requireNonNull(request.getTarget());
                 if (requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&variantId=%s&contingencyListIds=%s", NETWORK_UUID, VARIANT_ID, LIST_UUID))) {
                     return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE), jsonVariantExpected);
                 } else if (requestPath.equals(String.format("/v1/contingency-lists/export?networkUuid=%s&contingencyListIds=%s", NETWORK_UUID, LIST_UUID))) {
@@ -101,7 +98,7 @@ class ActionsServiceTest {
                         || requestPath.equals(String.format("/v1/contingency-lists/count-by-group?networkUuid=%s", NETWORK_UUID))) {
                     return new MockResponse(HttpStatus.OK.value(), Headers.of(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE), contingencyCountExpected);
                 } else {
-                    return new MockResponse.Builder().code(HttpStatus.NOT_FOUND.value()).body("Path not supported: " + request.getPath()).build();
+                    return new MockResponse.Builder().code(HttpStatus.NOT_FOUND.value()).body("Path not supported: " + request.getTarget()).build();
                 }
             }
         };

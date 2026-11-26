@@ -18,7 +18,9 @@ import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultTab;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.ResultsSelector;
 import org.gridsuite.sensitivityanalysis.server.dto.resultselector.SortKey;
 import org.gridsuite.sensitivityanalysis.server.entities.ContingencyResultEntity;
+import org.gridsuite.sensitivityanalysis.server.entities.SensitivityResultEntity;
 import org.gridsuite.sensitivityanalysis.server.service.SensitivityAnalysisResultService;
+import org.gridsuite.sensitivityanalysis.server.service.SupervisionService;
 import org.gridsuite.sensitivityanalysis.server.util.ContingencyResult;
 import org.gridsuite.sensitivityanalysis.server.util.SensitivityResultsBuilder;
 import org.junit.jupiter.api.AfterEach;
@@ -47,6 +49,9 @@ class SensitivityAnalysisResultServiceTest {
     private static final String CONTINGENCY_ID2 = "contingencyId2";
 
     @Autowired
+    private SupervisionService supervisionService;
+
+    @Autowired
     private SensitivityAnalysisResultService sensitivityAnalysisResultService;
 
     @Autowired
@@ -63,7 +68,7 @@ class SensitivityAnalysisResultServiceTest {
 
     @AfterEach
     void cleanDB() {
-        sensitivityAnalysisResultService.deleteAll();
+        supervisionService.deleteAllResults();
         analysisResultRepository.deleteAll();
         contingencyResultRepository.deleteAll();
         sensitivityResultRepository.deleteAll();
@@ -80,7 +85,18 @@ class SensitivityAnalysisResultServiceTest {
         assertRequestsCount(4, 4, 0, 0);
         assertThat(analysisResultRepository.findByResultUuid(resultUuid)).isNotNull();
         assertThat(contingencyResultRepository.findAll()).hasSize(2);
-        assertThat(sensitivityResultRepository.findAll()).hasSize(12);
+        List<SensitivityResultEntity> sensitivityResults = sensitivityResultRepository.findAll();
+        // Each group contains one pre-contingency factor followed by two post-contingency factors.
+        assertThat(sensitivityResults).hasSize(12).allSatisfy(s -> {
+            if (s.getContingencyResult() == null) {
+                assertThat(s.getPreContingencyAnalysisResultId()).isNull();
+                assertThat(s.getPreContingencyFactorIndex()).isNull();
+            } else {
+                assertThat(s.getPreContingencyAnalysisResultId()).isEqualTo(resultUuid);
+                assertThat(s.getPreContingencyFactorIndex())
+                        .isEqualTo(s.getFactorIndex() - s.getFactorIndex() % 3);
+            }
+        });
     }
 
     @Test
@@ -108,7 +124,7 @@ class SensitivityAnalysisResultServiceTest {
         });
 
         SQLStatementCountValidator.reset();
-        sensitivityAnalysisResultService.deleteAll();
+        supervisionService.deleteAllResults();
 
         assertRequestsCount(0, 0, 0, 6);
         assertThat(analysisResultRepository.findAll()).isEmpty();
